@@ -1,5 +1,6 @@
 package ix.utils;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -8,6 +9,7 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -42,6 +44,10 @@ public class Tuple<K,V>{
 	public static <K,V> Tuple<K,V> of(K k, V v){
 		return new Tuple<K,V>(k,v);
 		
+	}
+	
+	public Tuple<V,K> swap(){
+		return Tuple.of(this.v(),this.k());
 	}
 	
 	/**
@@ -98,6 +104,26 @@ public class Tuple<K,V>{
     	return Collectors.toMap(e->e.k(), e->e.v());
     }
 	
+	/**
+     * Collector to go from a stream of tuples to a map
+     * grouped by the keys (1st element), with a list of the
+     * valued (2nd element)
+     * @return
+     */
+    public static <T,U> Collector<Tuple<T,U>,?,Map<T,List<U>>> toGroupedMap(){
+        return toGroupedMap(Collectors.toList());
+    }
+    
+    /**
+     * Collector to go from a stream of tuples to a map
+     * grouped by the keys (1st element), with a provided
+     * collector for the values in each group
+     * @return
+     */
+    public static <T,U,V> Collector<Tuple<T,U>,?,Map<T,V>> toGroupedMap(Collector<U,?,V> collect){
+        return Collectors.groupingBy(t->t.k(), Collectors.mapping(t->t.v(), collect));
+    }
+	
 	
 	@Override
 	public int hashCode(){
@@ -142,5 +168,61 @@ public class Tuple<K,V>{
             }
         }
 	}
+
+    public static <K,V,T> Function<Tuple<K,V>, Stream<Tuple<K,T>>> vstream(Function<V,Stream<T>> smap) {
+        return (t)->{
+           return smap.apply(t.v())
+                      .map(v->Tuple.of(t.k(),v));
+        };
+    }
+    
+    public static <K,V,T> Function<Tuple<K,V>, Stream<Tuple<T,V>>> kstream(Function<K,Stream<T>> smap) {
+        return (t)->{
+           return smap.apply(t.k())
+                      .map(k->Tuple.of(k,t.v()));
+        };
+    }
 	
+    /**
+     * Returns a version of this Tuple that uses the hashcode and
+     * equals methods from the k value for equality testing.
+     * @return
+     */
+    public KEqualityTuple<K,V> withKEquality(){
+    	return new KEqualityTuple<K,V>(this.k, this.v);
+    }
+    
+    
+    /**
+     * Utility tuple class for doing uniqueness testing based on a specific key value.
+     * 
+     * @author tyler
+     *
+     * @param <K>
+     * @param <V>
+     */
+    public static class KEqualityTuple<K,V> extends Tuple<K,V>{
+
+		public KEqualityTuple(K k, V v) {
+			super(k, v);
+		}
+		
+		@Override
+		public boolean equals(Object o){
+			if(o==null)return false;
+			if(!(o instanceof Tuple))return false;
+			Tuple<K,V> other = (Tuple<K,V>)o;
+			if(this.k().equals(other.k()))return true;
+			return false;
+		}
+		
+		@Override
+		public int hashCode(){
+			if(this.k()==null)return 0;
+			return this.k().hashCode() ^ 0xBABAFEEF;
+		}
+    	
+    }
+    
+    
 }

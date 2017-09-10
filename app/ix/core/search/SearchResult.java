@@ -1,7 +1,15 @@
 package ix.core.search;
 
 import java.lang.ref.SoftReference;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ForkJoinPool;
@@ -12,13 +20,18 @@ import java.util.function.Consumer;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import ix.core.CacheStrategy;
+import ix.core.controllers.v1.InstantiatedNamedResource;
+import ix.core.controllers.v1.RouteFactory;
 import ix.core.search.LazyList.NamedCallable;
 import ix.core.search.text.TextIndexer.Facet;
 import ix.core.util.EntityUtils.EntityWrapper;
 import ix.core.util.EntityUtils.Key;
 import ix.core.util.TimeUtil;
 import ix.utils.Global;
+import ix.utils.RequestHelper;
+import ix.utils.Tuple;
 import ix.utils.Util.QueryStringManipulator;
+import play.mvc.Call;
 import play.mvc.Controller;
 
 @CacheStrategy(evictable = false)
@@ -52,6 +65,28 @@ public class SearchResult {
 	public SearchResult(SearchOptions options, String query) {
 		this.options = options;
 		this.query = query;
+		
+	}
+	
+	public Call asCall(){
+	    if(this.options.getKind()!=null){
+            InstantiatedNamedResource inr=RouteFactory._registry.get().getResourceFor(options.getKind());
+            String res=inr.getName();
+            return ix.core.controllers.v1.routes.RouteFactory.search(res, this.query,options.getTop(),options.getSkip(), options.getFdim());
+        }
+	    return null;
+	}
+	
+	@JsonIgnore
+	public Tuple<String, QueryStringManipulator> getSearchURLHelper(){
+	    Call c=asCall();
+	    if(c!=null){
+	        String navurl = Global.getHost() + asCall().url();
+	        String nav = navurl.split("\\?",2)[0];
+	        QueryStringManipulator man = QueryStringManipulator.extractQueryString(navurl);
+	        return Tuple.of(nav,man.clobber(this.options.asQueryParams()));
+	    }
+	    return null;
 	}
 
 	
@@ -282,6 +317,18 @@ public class SearchResult {
 	public int copyTo(List list, int start, int count) {
 		return copyTo(list, start, count, false);
 	}
+	
+	/**
+	 * Waits until the search has finished. This is equivalent
+	 * to calling {@link #getMatchesFuture()}, and then calling
+	 * {@link Future#get()}, except this method does not
+	 * return a list.
+	 */
+	public void waitForFinish() throws Exception{
+		this.getMatchesFuture().get();
+		return;
+	}
+	
 
 	/**
 	 * Get the result of {@link #getMatches()}}
@@ -405,20 +452,18 @@ public class SearchResult {
 	@JsonIgnore
 	public String getFacetURI(String facetName){
 	    try{
-            String base=Controller.request().uri().split("\\?")[0] + "/@facets";
-
-            Map<String, String[]> params=new HashMap<>(Controller.request().queryString());
-            QueryStringManipulator qManip = new QueryStringManipulator(params);
-
-
-            qManip.toggleInclusion("field", facetName);
-
-            String newQueryString =qManip.toQueryString();
-
-            if(newQueryString.length()<=0){
-                return Global.getHost() + base;
-            }
-            return Global.getHost() + base + "?" + newQueryString;
+	        
+	        Tuple<String,QueryStringManipulator> s = getSearchURLHelper();
+	        if(s!=null){
+	            s=Tuple.of(s.k() + "/@facets",s.v());
+	            s.v().toggleInclusion("field", facetName);
+	            String newQueryString = s.v().toQueryString();
+	            if(newQueryString.length()<=0){
+	                return s.k();
+	            }
+	            return s.k() + "?" + newQueryString;
+	        }
+	        return null;
         }catch(Exception e){
             e.printStackTrace();
             throw e;
@@ -441,9 +486,9 @@ public class SearchResult {
 	 */
 	public String getFacetToggleURI(String facetName, String facetValue){
 		try{
-			String base=Controller.request().uri().split("\\?")[0];
+			String base=RequestHelper.request().uri().split("\\?")[0];
 
-			Map<String, String[]> params=new HashMap<>(Controller.request().queryString());
+			Map<String, String[]> params=new HashMap<>(RequestHelper.request().queryString());
 			QueryStringManipulator qManip = new QueryStringManipulator(params);
 
 			String fselect= facetName + "/" + facetValue;

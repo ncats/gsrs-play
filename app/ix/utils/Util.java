@@ -1,6 +1,13 @@
 package ix.utils;
 
-import java.io.*;
+import java.io.BufferedInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.ObjectOutputStream;
+import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.nio.file.FileVisitResult;
@@ -15,7 +22,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -27,6 +33,7 @@ import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
+import java.util.function.IntFunction;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collector;
@@ -41,14 +48,21 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 import com.avaje.ebean.Expression;
+import com.fasterxml.jackson.databind.JsonNode;
 
 import ix.core.util.CachedSupplier;
 import ix.core.util.ConfigHelper;
+import ix.core.util.StreamUtil;
 import ix.core.util.TimeUtil;
 import play.Logger;
 import play.Play;
 import play.db.ebean.Model;
 import play.mvc.Http;
+
+import java.io.*;
+
+import ix.ginas.models.v1.GinasChemicalStructure;
+import ix.ginas.models.GinasCommonData;
 
 public class Util {
     static public final String[] UserAgents = {
@@ -69,6 +83,9 @@ public class Util {
     }
 
 
+    public static String toObjectToString(Object o){
+        return o.getClass().getName() + "@" + Integer.toHexString(o.hashCode());
+    }
     /**
      * This method is only to get what the current stack trace would be for debugging
      * It returns a string which is essentially the stack trace of a thrown and caught
@@ -103,6 +120,7 @@ public class Util {
                     }
                 });
     }
+    
     
     public static void printExecutionStackTrace(){
     	System.out.println(getExecutionPath());
@@ -540,8 +558,15 @@ public class Util {
 	
 	
 	private static class CounterFunction<K> implements Function<K,Tuple<Integer,K>>{
-		AtomicInteger count= new AtomicInteger();
-		
+		private final AtomicInteger count;
+
+        public CounterFunction(){
+            this(0);
+        }
+
+        public CounterFunction(int initialValue){
+            count = new AtomicInteger(initialValue);
+        }
 		@Override
 		public Tuple<Integer, K> apply(K k) {
 			
@@ -552,7 +577,9 @@ public class Util {
 	public static <K> Function<K,Tuple<Integer,K>> toIndexedTuple(){
 		return new CounterFunction<K>();
 	}
-	
+    public static <K> Function<K,Tuple<Integer,K>> toIndexedTuple(int initialValue){
+        return new CounterFunction<K>(initialValue);
+    }
 	
 	
 	
@@ -590,6 +617,14 @@ public class Util {
 	
 	public static <T> Comparator<T> comparator(Stream<T> order){
 		return comparitor(t->t, order);
+	}
+	
+	public static <T> Comparator<T> comparator(Collection<T> order){
+		return comparitor(t->t, order.stream());
+	}
+	
+	public static <T> Comparator<T> comparator(T[] order){
+		return comparitor(t->t, Arrays.stream(order));
 	}
 	
 	public static <T, V> Comparator<V> comparitor(Function<V,T> namer,Stream<T> order){
@@ -714,7 +749,14 @@ public class Util {
 					 .map(s->Tuple.of(es.getKey(), s));
 		}
 		
-		
+
+        public Map<String,String[]> getMap(){
+            return params.get().entrySet().stream()
+                    .map(Tuple::of)
+                    .map(Tuple.vmap(v->v.stream().toArray(i->new String[i])))
+                    .collect(Tuple.toMap());
+        }
+        
 		static String urlEncodeUTF8(String s) {
 	        try {
 	            return URLEncoder.encode(s, "UTF-8");
@@ -723,6 +765,49 @@ public class Util {
 	            throw new UnsupportedOperationException(e);
 	        }
 	    }
+		
+		static String urlDecodeUTF8(String s) {
+            try {
+                return URLDecoder.decode(s, "UTF-8");
+            } catch (UnsupportedEncodingException e) {
+                e.printStackTrace();
+                throw new UnsupportedOperationException(e);
+            }
+        }
+		public static QueryStringManipulator extractQueryString(String uri){
+		    String[] qp = uri.split("\\?",2);
+		    if(qp.length>=2){
+		        return fromQueryString(qp[1]);
+		    }else{
+		        return fromQueryString("");
+		    }
+		}
+		public static QueryStringManipulator fromQueryString(String qstr){
+		    Map<String,String[]> m=Arrays.stream(qstr.split("&"))
+		          .map(kv->kv.split("="))
+		          .map(kv->{
+		             String name= urlDecodeUTF8(kv[0]);
+		             
+		             String val=Arrays.stream(kv)
+		             .skip(1)
+		             .collect(Collectors.joining("="));
+		             return Tuple.of(name,urlDecodeUTF8(val));
+		             
+		          })
+		          .collect(Tuple.toGroupedMap(arrayCollector(i->new String[i])));
+		     return new QueryStringManipulator(m);
+		    
+        }
+		
+		public QueryStringManipulator clobber(Map<String,String[]> other){
+		    Map<String, String[]> gmap = getMap();
+		    
+		    other.forEach((k,v)->{
+		        gmap.put(k, v);
+		    });
+		    
+		    return new QueryStringManipulator(gmap);
+		}
 		
 	}
 
@@ -784,6 +869,78 @@ public class Util {
         return Stream.of(elements).collect(Collectors.toSet());
     }
     
+    //not optimal
+    public static <T> Collector<T,?,T[]> arrayCollector(IntFunction<T[]> f){
+       return Collectors.collectingAndThen(Collectors.toList(), l->l.stream().toArray(f));
+    }
+
+    public static List<String> toList(JsonNode an){
+    	return StreamUtil.forIterable(an)
+    			  .map(j->j.asText())
+		      	  .collect(Collectors.toList());    	
+   	}
     
+    
+    
+    
+    /**
+     * Encodes a p facet name + value pair as expected to be parsed. Specifically, the "/" character is used as the delimiter
+     * between facet name and a single (or set) of facet values. The "/" character inside either name or values will be encoded
+     * as "$$" 
+     * @param facetName
+     * @param facetValue
+     * @return
+     */
+    public static String facetEncode(String facetName, String ... facetValue){
+    	String fname = encodeFacetComponent(facetName);
+    	
+    	return fname + "/" + Arrays.stream(facetValue).map(f->encodeFacetComponent(f)).collect(Collectors.joining("/"));
+    	
+    }
+    
+    
+    public static String[] facetDecode(String fraw){
+
+    	return Arrays.stream(fraw.split("/"))
+    			     .map(f->decodeFacetComponent(f))
+    			     .toArray(i-> new String[i]);
+    	
+    }
+    
+    
+    public static String encodeFacetComponent(String fpiece){
+    	return fpiece.replace("/","$$");    	
+    }
+    
+    public static String decodeFacetComponent(String fpiece){
+    	return fpiece.replace("$$","/");    	
+    }
+    
+
+	
+	
+	
+	/**
+	 * Represent a GinasChemicalStructure as a GinasCommonData element
+	 * for use in other existing pipelines.
+	 * 
+	 * <p>
+	 * Note: This method exists here because ebean has difficulty dealing
+	 * with models embedded in other models. Ideally, GinasChemicalStructure
+	 * would just implement a common interface with GinasCommonData, and the need
+	 * for this method is a good reminder that this could be refactored.
+	 * </p>
+	 * 
+	 * @param struc
+	 * @return
+	 */
+	public static GinasCommonData asAuditInfo(GinasChemicalStructure struc){
+		GinasCommonData dat= new GinasCommonData();
+		dat.created=struc.created;
+		dat.createdBy=struc.createdBy;
+		dat.lastEdited=struc.lastEdited;
+		dat.lastEditedBy=struc.lastEditedBy;
+		return dat;
+	}	
 	
 }
