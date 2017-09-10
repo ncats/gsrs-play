@@ -9,12 +9,15 @@
     	
     	$scope.init = function (facets) {
     		$scope.allFacets=facets;
+    		
     	}
     	
     	//TODO: this should not be necessary when client-side is complete
     	$scope.addFacet = function (f, childScope) {
     		$scope.allFacets.push(f);
     		$scope.childred.push(childScope);
+
+    		
     	}
     	
     	
@@ -31,13 +34,12 @@
     	$scope.apply = function (){
     		$location.search("facet",$scope.getAllSelected());
             window.location = $location.absUrl();
-            console.log("test");
     	}
     	
     	$scope.getAllSelected = function(){
     		return _.flatMap($scope.allFacets,function(f){
     			return _.map(f.selectedLabels, function(l){
-    				return f.name + "/" + l;
+    				return f.name + "/" + l.replace(/\//g,"$$$");
     			});
     		});
     	}
@@ -85,6 +87,13 @@
         
         $scope.collased=false;
         
+        $scope.defquantity=5;
+        $scope.defquantitymax=20;
+        
+        
+        $scope.quantity=$scope.defquantity;
+        
+        
      
         
         $scope.init = function (base, pfacet) {
@@ -101,14 +110,25 @@
             	$scope.originalSelectedFacets=_.clone(pfacet.selectedLabels);
             	$scope.$parent.addFacet(pfacet, $scope);
             	
-            	_.forEach($scope.selectedFacets, function(s){
-            		_.forEach($scope.ofacets, function(of){
-            			if(of.label===s){
-            				of.checked=true;
-            			}
-            		});
-            	});
+            	var selfac=[];
             	
+            	_.forEach($scope.selectedFacets, function(s){
+            		var found=false;
+            		var fac=_.find($scope.ofacets, function(off){return off.label===s});
+            		if(fac){
+            			fac.checked=true;
+            			selfac.push(fac);
+            		}else{
+            			selfac.push({label:s,checked:true});
+            		}
+            	});
+            	_.chain($scope.ofacets)
+            	 .filter(function(fo){return !fo.checked;})
+            	 .forEach(function (fo){
+            		 selfac.push(fo);
+            	 })
+            	 .value();
+            	$scope.ofacets=selfac;
             }
         };
         $scope.dofilter = function () {
@@ -166,7 +186,6 @@
         	
         	if(_.isEqual($scope.selectedFacets.sort(),$scope.originalSelectedFacets.sort())){
         		$scope.changed=false;
-        		
         	}else{
         		$scope.changed=true;	
         	}
@@ -191,6 +210,7 @@
         	 .value();
         };
         
+        
         $scope.clear = function(){
         	$scope.selectedFacets.length = 0;
         	_.forEach($scope.ofacets, function(f){
@@ -199,10 +219,76 @@
         	_.forEach($scope.facets, function(f){
         		f.checked=false;
         	});
+        	if(_.isEqual($scope.selectedFacets.sort(),$scope.originalSelectedFacets.sort())){
+        		$scope.changed=false;
+        	}else{
+        		$scope.changed=true;	
+        	}
         };
+        
+        $scope.showMore = function(){
+        	$scope.quantity=$scope.defquantitymax;
+        }
+        $scope.showLess = function(){
+        	$scope.quantity=$scope.defquantity;
+        }
+        
+        $scope.showShowMore = function(){
+        	if($scope.quantity!==$scope.defquantity){
+        		return false;
+        	}
+        	if($scope.filtered){
+        		return ($scope.quantity<$scope.facets.length);
+        	}else{
+        		return ($scope.quantity<$scope.ofacets.length);
+        	}
+        }
+        
+        $scope.showShowLess = function(){
+        	if($scope.quantity===$scope.defquantity){
+        		return false;
+        	}
+        	return !$scope.showShowMore();
+        }
         
         
     });
     
 
 })();
+
+var gglob = window;
+
+function removeFacet (k,v) {
+    
+	v=v.replace(/\//g,"$$$");
+    //console.log('k='+k+' v='+v);
+    var q = [];
+    location.search.substr(1).split("&").forEach(function(item) {
+        var s = item.split("="),
+	    sk = decodeURIComponent(s[0]),
+	    sv = decodeURIComponent(s[1]).replace(/\+/g,' ');
+	//console.log('sk='+sk+' sv='+sv);
+	if (sk == 'facet' && sv.startsWith(k)) {
+           if (v == sv.split("/")[1]) {
+	      // remove
+	   }
+	   else {
+	      q.push(item);
+	   }
+        }
+	else {
+           q.push(item);
+	}
+    });
+    var url = location.href.split("?")[0];
+    if (q.length > 0) {
+       url = url + '?'+q[0];
+       for (var i = 1; i < q.length; ++i) {
+          url = url + '&'+q[i];
+       }
+    }
+    console.log(url);
+    location.href = url;
+}
+
