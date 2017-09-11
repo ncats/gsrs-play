@@ -1477,4 +1477,5 @@ span.nowrap-list {
     -moz-user-select: none;
     -ms-user-select: none;
     user-select: none;
+    margin-right: 35px;
 }
