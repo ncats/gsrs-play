@@ -300,7 +300,13 @@ public class GinasApp extends App {
     }
 
     static FacetDecorator[] decorate(Facet... facets) {
-        return Arrays.stream(facets).map(GinasFacetDecorator::new).filter(fd -> !fd.isHidden())
+    	
+    	//Always show selected facets on top
+        return Arrays.stream(facets).map(GinasFacetDecorator::new)
+        		.filter(fd -> !fd.isHidden())
+        		.sorted((a,b)->{
+        			return b.getFacet().getSelectedLabels().size()-a.getFacet().getSelectedLabels().size();
+        		})
                 .toArray(len -> new FacetDecorator[len]);
     }
 
