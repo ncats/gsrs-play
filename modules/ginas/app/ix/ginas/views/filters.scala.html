@@ -12,7 +12,7 @@
     <h3 ng-cloak class="panel-title" ng-click="collapsed=!collapsed">
         <i ng-cloak ="" ng-show="collapsed" class="fa fa-caret-right"></i>
         <i ng-cloak ="" ng-hide="collapsed" class="fa fa-caret-down"></i>
-        <span ng-bind="facetName"></span>
+        <span ng-bind=facetDisplay></span>
     </h3>
     <button ng-click="fshow=!fshow" class="btn btn-default" type="search" aria-label="Search" style="
 	    float: right;
@@ -44,7 +44,7 @@
 			      />
 			 </div>
 	     <div class="col-md-8 col-sm-8" >
-            <label>{{facet.label}}</label>
+            <label>{{facet.display}}</label>
          </div>
         	 <div class="col-md-1  col-sm-1" >
              <span class="badge pull-right">{{facet.count}}</span>

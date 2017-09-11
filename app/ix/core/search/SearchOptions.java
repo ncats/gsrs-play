@@ -15,6 +15,7 @@ import java.util.stream.Stream;
 import ix.core.controllers.RequestOptions;
 import ix.core.util.CachedSupplier;
 import ix.core.util.EntityUtils;
+import ix.core.util.StreamUtil;
 import ix.core.util.EntityUtils.EntityInfo;
 import play.Logger;
 import play.mvc.Http;
@@ -88,6 +89,12 @@ public class SearchOptions implements RequestOptions {
 	 * Facet is of the form: DIMENSION/VALUE...
 	 */
 	private List<String> facets = new ArrayList<String>();
+	
+	/**
+	 * Facet names for ad-hoc ranges
+	 */
+	private List<String> lfacets = new ArrayList<String>();
+	
 	private List<FacetLongRange> longRangeFacets = new ArrayList<FacetLongRange>();
 	private List<String> order = new ArrayList<String>();
 	private List<String> expand = new ArrayList<String>();
@@ -207,6 +214,7 @@ public class SearchOptions implements RequestOptions {
 				}
 			}
 		}
+		this.lfacets=remove;
 		this.facets.removeAll(remove);
 	}
 
@@ -256,8 +264,9 @@ public class SearchOptions implements RequestOptions {
 	public Map<String, List<DrillAndPath>> getDrillDownsMap() {
 		// parses to a map, though it doesn't NEED to be a map,
 	    // it could just as easily be a flat list
-		Map<String, List<DrillAndPath>> providedDrills =this.facets
-		                    .stream()
+		Map<String, List<DrillAndPath>> providedDrills = StreamUtil.with(this.facets.stream())
+				                                                   .and(this.lfacets.stream())
+				                                                   .stream()
 		                    .map(dd -> parseDrillAndPath(dd))
 		                    .filter(Objects::nonNull)
 		                    .collect(Collectors.groupingBy(d->d.getDrill()));

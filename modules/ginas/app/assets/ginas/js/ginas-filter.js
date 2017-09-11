@@ -99,7 +99,9 @@
         $scope.init = function (base, pfacet) {
             $scope.fbaseurl=base.replace("ffilter=","");
             if(pfacet){
+            	
             	$scope.parentFacet=pfacet;
+            	
             	$scope.selectedFacets=$scope.parentFacet.selectedLabels;
             	if(!$scope.selectedFacets){
             		$scope.selectedFacets=[];
@@ -107,6 +109,11 @@
             	}
             	$scope.facetName=pfacet.name;
             	$scope.ofacets=pfacet.values;
+            	_.forEach($scope.ofacets, function(f){
+            		f.display = getDisplayFacetValue($scope.facetName, f.label);
+            	});
+            	$scope.facetDisplay=getDisplayFacetName($scope.facetName);
+            	
             	$scope.originalSelectedFacets=_.clone(pfacet.selectedLabels);
             	$scope.$parent.addFacet(pfacet, $scope);
             	
@@ -115,13 +122,16 @@
             	_.forEach($scope.selectedFacets, function(s){
             		var found=false;
             		var fac=_.find($scope.ofacets, function(off){return off.label===s});
+            		
             		if(fac){
             			fac.checked=true;
+            			
             			selfac.push(fac);
             		}else{
-            			selfac.push({label:s,checked:true});
+            			selfac.push({label:s,display: getDisplayFacetValue($scope.facetName, s), checked:true});
             		}
             	});
+            	
             	_.chain($scope.ofacets)
             	 .filter(function(fo){return !fo.checked;})
             	 .forEach(function (fo){
@@ -181,8 +191,6 @@
 		   			 f.checked=facet.checked;
 		   		 })
 		   		 .value();
-        	console.log($scope.selectedFacets);
-        	console.log($scope.originalSelectedFacets);
         	
         	if(_.isEqual($scope.selectedFacets.sort(),$scope.originalSelectedFacets.sort())){
         		$scope.changed=false;
@@ -270,14 +278,12 @@ function removeFacet (k,v) {
 	    sv = decodeURIComponent(s[1]).replace(/\+/g,' ');
 	//console.log('sk='+sk+' sv='+sv);
 	if (sk == 'facet' && sv.startsWith(k)) {
-           if (v == sv.split("/")[1]) {
+       if (v == sv.split("/")[1]) {
 	      // remove
-	   }
-	   else {
+	   }else {
 	      q.push(item);
 	   }
-        }
-	else {
+    }else {
            q.push(item);
 	}
     });
@@ -288,7 +294,56 @@ function removeFacet (k,v) {
           url = url + '&'+q[i];
        }
     }
-    console.log(url);
     location.href = url;
+}
+
+function getDisplayFacetName(name){
+	if(name==="SubstanceStereoChemistry"){
+		return "Stereochemistry";
+	}
+	if(name==="root_lastEdited"){
+		 return "Last Edited";
+	}
+	if(name==="root_approved"){
+		return "Last Validated";
+	}
+	if(name==="root_lastEditedBy"){
+		return "Last Edited By";
+	}
+	if(name==="Substance Class"){
+		return "Substance Type";
+	}
+	return name.trim();	
+}
+
+function getDisplayFacetValue(name, label){
+	if(name === "Substance Class"){
+		if(label==="specifiedSubstanceG1" || label==="specifiedSubstance"){
+			return "Group 1 Specified Substance";
+		}
+		return _.startCase( label);
+	}else if(name === "Record Status"){
+		if(label === "approved"){
+			return "Validated (UNII)";
+		}
+	}else if(name === "Relationships"){
+		if(label.indexOf("->")>=0){
+			return label.split("->")[1] + " of " + label.split("->")[0];
+		}
+	}
+	
+	if(label === "EP"){
+		return "PH. EUR";
+	}
+	if ("non-approved" === label) {
+        return "Non-Validated";
+    }
+	
+	if (name === "root_approved" || name ==="root_lastEdited"){
+        return label.substr(1); // skip the prefix character
+    }
+	
+	
+	return label;
 }
 

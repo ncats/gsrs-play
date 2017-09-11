@@ -571,9 +571,7 @@ public class TextIndexer implements Closeable, ProcessListener {
 		 * @param label
 		 */
 		public void setSelectedLabel(String ... label){
-		    for(String l:label){
-		        this.selectedLabel.add(l);
-		    }
+			this.setSelectedLabels(Arrays.stream(label).collect(Collectors.toList()));   
 		}
 		
 		@JsonInclude(Include.NON_EMPTY)
@@ -752,6 +750,7 @@ public class TextIndexer implements Closeable, ProcessListener {
 		}
 
         public void setSelectedLabels(List<String> collect) {
+
             this.selectedLabel.clear();
             this.selectedLabel.addAll(collect);
             this.selectedFVfetch.resetCache();
@@ -2130,6 +2129,8 @@ public class TextIndexer implements Closeable, ProcessListener {
 
 	protected void collectLongRangeFacets(FacetsCollector fc, SearchResult searchResult) throws IOException {
 		SearchOptions options = searchResult.getOptions();
+		Map<String,List<DrillAndPath>> providedDrills = options.getDrillDownsMap();
+		
 		for (SearchOptions.FacetLongRange flr : options.getLongRangeFacets()) {
 			if (flr.range.isEmpty())
 				continue;
@@ -2151,8 +2152,19 @@ public class TextIndexer implements Closeable, ProcessListener {
 				Logger.info(" + [" + result.dim + "]");
 			}
 			
+			
+					
+			
 			Arrays.stream(result.labelValues)
 				.forEach(lv->f.add(lv.label, lv.value.intValue()));
+			
+			List<DrillAndPath> dp = providedDrills.get(f.name);
+			if (dp != null) {
+			    List<String> selected=dp.stream()
+			                        .map(l->l.asLabel())
+			                        .collect(Collectors.toList());
+				f.setSelectedLabels(selected);
+			}
 			
 			searchResult.addFacet(f);
 		}
