@@ -14,7 +14,7 @@
         <i ng-cloak ="" ng-hide="collapsed" class="fa fa-caret-down"></i>
         <span ng-bind=facetDisplay></span>
     </h3>
-    <button ng-click="fshow=!fshow" class="btn btn-default" type="search" aria-label="Search" style="
+    <button ng-show="!collapsed" ng-click="fshow=!fshow" class="btn btn-default" type="search" aria-label="Search" style="
 	    float: right;
 	    margin-top: -24px;
 	    padding: 3px;

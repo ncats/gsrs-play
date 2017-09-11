@@ -313,6 +313,9 @@ function getDisplayFacetName(name){
 	if(name==="Substance Class"){
 		return "Substance Type";
 	}
+	if(name==="GInAS Tag"){
+		return "Source Tag";
+	}
 	return name.trim();	
 }
 
