@@ -82,6 +82,19 @@ public class Administration extends App {
         newUser.username = requestData.get("username");
         String groupName = requestData.get("grpName");
 
+        
+        if(newUser.username==null || newUser.username.length()<=1){
+        	throw new IllegalStateException("Cannot register null username, or username less than 2 characters");
+        }
+        
+        Principal olduser = PrincipalFactory.byUserName(newUser.username);
+        
+        
+        if(olduser !=null){
+        	throw new IllegalStateException("That username already exists");
+        }
+        
+        
         ArrayList<Role> rolesChecked = new ArrayList<Role>();
        // ArrayList<Acl> aclsChecked = new ArrayList<Acl>();
         List<Group> groupsChecked = new ArrayList<Group>();
