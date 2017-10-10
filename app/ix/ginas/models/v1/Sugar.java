@@ -16,8 +16,8 @@ import ix.ginas.models.GinasCommonSubData;
 
 @SuppressWarnings("serial")
 @Entity
-@SingleParent
 @Table(name="ix_ginas_sugar")
+@SingleParent
 public class Sugar extends GinasCommonSubData {
 	@ManyToOne(cascade = CascadeType.PERSIST)
 	private NucleicAcid owner;

@@ -21,6 +21,8 @@ import javax.persistence.Table;
 import javax.persistence.Transient;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import play.Logger;
 
 @JSONEntity(title = "Nucleic Acid", isFinal = true)
@@ -61,7 +63,7 @@ public class NucleicAcid extends GinasCommonSubData {
 	@JSONEntity(title = "Sugars", isRequired = true)
 	@OneToMany(mappedBy = "owner", cascade = CascadeType.ALL)
     //@JoinTable(name="ix_ginas_nucleicacid_sugar")
-	public List<Sugar> sugars;
+	List<Sugar> sugars;
 
 	public List<Linkage> getLinkages() {
 		return linkages;
@@ -71,6 +73,7 @@ public class NucleicAcid extends GinasCommonSubData {
 		this.linkages = linkages;
 	}
 
+	
 	@JsonIgnore
 	public Modifications getModifications() {
 		return modifications;
