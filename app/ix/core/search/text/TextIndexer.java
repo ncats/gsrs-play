@@ -2777,8 +2777,9 @@ public class TextIndexer implements Closeable, ProcessListener {
 		facetsConfig.setRequireDimCount(iv.name(), true);
 		fieldTaker.accept(new FacetField(iv.name(), iv.value().toString()));
 		fieldTaker.accept(new TextField(iv.path(), TextIndexer.START_WORD + iv.value().toString() + TextIndexer.STOP_WORD, NO));
-		addSuggestedField(iv.name(),iv.value().toString());
-		
+		if(iv.suggest()){
+			addSuggestedField(iv.name(),iv.value().toString());
+		}
 	}
 
 	//make the fields for the primitive fields

@@ -993,9 +993,11 @@ public class EntityUtils {
 
 
 		public EntityInfo(Class<T> cls) {
+
 			Objects.requireNonNull(cls);
 
 			this.cls = cls;
+
 			this.hasBackup = (cls.getAnnotation(Backup.class) != null);
 
 			this.isIgnoredModel = (cls.getAnnotation(IgnoredModel.class) != null);
@@ -1025,6 +1027,7 @@ public class EntityUtils {
 				this.storeHistory = history.store();
 			}
 			kind = cls.getName();
+
 			// ixFields.add(new FacetField(DIM_CLASS, kind));
 			dyna = (DynamicFacet) cls.getAnnotation(DynamicFacet.class);
 			fields = Arrays.stream(cls.getFields())
@@ -1189,12 +1192,9 @@ public class EntityUtils {
     			   }else{
     			       
     			   }
-
-    			          
     			   
     			});
 			}
-
 		}
 
 
