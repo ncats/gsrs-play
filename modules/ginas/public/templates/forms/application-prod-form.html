@@ -1,0 +1,48 @@
+<div class="row info borderorange margintop40px">
+
+        <div class="row">
+            <div class="col-md-2 tabcomp">
+                <b>Product&nbsp;<span class="font15px-white">{{$index + 1}}</span></b>
+            </div>
+            <div class="col-md-10 delcomp" ng-if="($index != 0)">
+                <br><br><a href="#" id="delMoreComponentId" ng-click="DeleteApplicationProductList($prodIdx)">Delete Product</a>
+            </div>
+        </div>
+
+        <div class="row form-row2">
+            <div class="col-md-4">
+                <gsrs-input type="text" ng-model="productList.productName" field="productName" label="Product Name" formname=formApp></gsrs-input>
+            </div>
+            <div class="col-md-4">
+                <gsrs-input type="dropdown" ng-model="productList.dosageForm" field="dosageForm" label="Dosage Form" cv="DOSAGE_FORM" formname=formApp></gsrs-input>
+            </div>
+            <div class="col-md-4">
+                <gsrs-input type="dropdown" ng-model="productList.routeAdmin" field="routeAdmin" label="Route of Administration" cv="PROD_ROUTE_OF_ADMIN" formname=formApp></gsrs-input>
+            </div>
+        </div>
+
+        <div class="row form-row2">
+            <div class="col-md-4">
+                <gsrs-input type="dropdown" ng-model="productList.unitPresentation" field="unitPresentation" label="Unit Of Presentation" cv="PROD_UNIT_PRESENTATION" formname=formApp></gsrs-input>
+            </div>
+            <div class="col-md-4">
+                <gsrs-input type="text" ng-model="productList.amount" field="amount" label="Amount" formname=formApp></gsrs-input>
+            </div>
+            <div class="col-md-4">
+                <gsrs-input type="dropdown" ng-model="productList.unit" field="unit" label="unit" cv="APPLICATION_UNIT" formname=formApp></gsrs-input>
+            </div>
+        </div>
+
+        <div ng-repeat="ingredList in productList.applicationIngredientList" ng-init="ingIdx = $index">
+            <div class="row padleft70px-top20px">
+                <div class="col-md-8" ng-if="($index == 0)">
+                <b>Total Ingredient: <span class="font16px-purple">{{productList.applicationIngredientList.length}}</span></b>&nbsp;&nbsp;&nbsp;&nbsp;
+                <a href="#" id="addMoreLotId" ng-click="AddMoreApplicationIngredientList(prodIdx)">Add More Ingredient</a>
+                </div>
+            </div>
+
+        <application-ingredient-form></application-ingredient-form>
+        </div>
+
+</div>
+

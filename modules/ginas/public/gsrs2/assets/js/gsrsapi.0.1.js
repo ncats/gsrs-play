@@ -3,12 +3,12 @@ var GSRSAPI={
         var g_api={};
         g_api.GlobalSettings = {
        //   _url:"https://ginas.ncats.nih.gov/ginas/app/api/v1/",
-        _url:"http://localhost:9000/ginas/app/api/v1/",
+        _url:"http://localhost:5000/ginas/app/api/v1/",
        //   _url:"https://tripod.nih.gov/dev/ginas/app/api/v1/",
           getBaseURL: function() {
             return g_api.GlobalSettings._url;
           },
-	  setBaseURL: function(url) {
+	        setBaseURL: function(url) {
             g_api.GlobalSettings._url=url;
             return g_api.GlobalSettings;
           },
@@ -62,7 +62,9 @@ var GSRSAPI={
               },
               error: function(rep, error, t) {
                 console.log(error + "\t" + t);
-                cb(""); //for now
+                cb({isError:true, message:error, type:t });
+
+                //cb(""); //for now
               }
             });
           });
@@ -435,9 +437,27 @@ var GSRSAPI={
                 .url(g_api.GlobalSettings.getBaseURL() + "substances")
                 .method("PUT")
                 .body(simple);
-
               return g_api.httpProcess(req);
             };
+
+            simple.validate = function(save){
+              var req = g_api.Request.builder()
+                .url(g_api.GlobalSettings.getBaseURL() + "substances/@validate" )
+                .method("POST")
+                .body(simple);
+              return g_api.httpProcess(req);
+             /*   .andThen(function(resp){
+                  if(save){
+                    return simple.save();
+                  }else{
+                    return resp;
+                  }
+                });*/
+            };
+
+
+
+
             return simple;
           }
         };
@@ -900,6 +920,39 @@ var GSRSAPI={
             return name;
           }
         };
+
+      var Relationship = {
+        builder: function() {
+          var relationship = CommonData.builder();
+          relationship._type = "relationship";
+          relationship._path = "/relationships/-";
+
+          relationship.setAmount = function(am) {
+            relationship.amount = am;
+            return relationship;
+          };
+          relationship.setType = function(type) {
+            relationship.type = type;
+            return relationship;
+          };
+          relationship.setQualification = function(ql) {
+            relationship.qualification = ql;
+            return relationship;
+          };
+          relationship.setInteractionType = function(it) {
+            relationship.interactionType = it;
+            return relationship;
+          };
+          relationship.setRelatedSubstance = function(rs) {
+            relationship.relatedSubstance = rs;
+            return relationship;
+          };
+
+          return relationship;
+        }
+      };
+
+
 
         var Reference = {
           builder: function() {

@@ -1,0 +1,37 @@
+
+<div class="row form-row4 borderbrown">
+    <div class="row">
+        <div class="col-md-2 tablot">
+            <b>Lot&nbsp;<span class="font15px-white">{{$index + 1}}</span></b>
+        </div>
+        <div class="col-md-10 dellot" ng-if="($index != 0)">
+            <br><br><a href="#" id="delMoreLotId" ng-click="DeleteProductLotList(compIdx, lotIdx)">Delete Lot</a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-3">
+            <gsrs-input type="text" ng-model="lotList.lotNo" field="lotNo" label="Lot No" formname=formProd></gsrs-input>
+        </div>
+        <div class="col-md-3">
+            <gsrs-input type="text" ng-model="lotList.expiryDate" field="expiryDate" label="Expiry Date" formname=formProd></gsrs-input>
+        </div>
+        <div class="col-md-3">
+            <gsrs-input type="text" ng-model="lotList.manufactureDate" field="manufactureDate" label="Manufacture Date" formname=formProd></gsrs-input>
+        </div>
+        <div class="col-md-2">
+            <gsrs-input type="text" ng-model="lotList.lotSize" field="lotSize" label="Lot Size" formname=formProd></gsrs-input>
+        </div>
+    </div>
+
+    <div ng-repeat="ingredList in lotList.productIngredientList" ng-init="ingIdx = $index">
+        <div class="row padleft70px-top20px">
+            <div class="col-md-8" ng-if="($index == 0)">
+                <b>Total Ingredient: <span class="font16px-purple">{{lotList.productIngredientList.length}}</span></b>&nbsp;&nbsp;&nbsp;&nbsp;
+                <a href="#" id="addMoreLotId" ng-click="AddMoreProductIngredientList(compIdx, lotIdx)">Add More Ingredient</a>
+            </div>
+        </div>
+        <product-ingredient-form></product-ingredient-form>
+    </div>
+
+</div>

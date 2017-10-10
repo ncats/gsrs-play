@@ -1,0 +1,164 @@
+<div class="row info">
+    <div class="row">
+        <form-header type="Specific Tests" iscollapsed="iscollapsed"></form-header>
+    </div>
+    <div class="col-md-12" uib-collapse="iscollapsed">
+        <form class="" name="specificTestsForm" role="form" id="addAssayForm" novalidate>
+
+            <ng-form name="form">
+                <div class="form-div" ng-class="{'bg-warning' : form.$invalid && form.$flagged}">
+                    <div class="row">
+                        <div class="col-md-1 text-center">
+                            <delete-button delete="obj" path="assay"></delete-button>
+                        </div>
+                        <div class="col-md-9">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <gsrs-input type="text"
+                                                ng-model="obj.testDescription"
+                                                field="Test Description"
+                                                required="false"
+                                                formname=form>
+                                    </gsrs-input>
+                                </div>
+                                <div class="col-md-4">
+                                    <gsrs-input type="text"
+                                                ng-model="obj.test"
+                                                field="Test"
+                                                required="false"
+                                                formname=form>
+                                    </gsrs-input>
+                                </div>
+                                <div class="col-md-4">
+                                    <gsrs-input type="dropdown"
+                                                ng-model="obj.testType"
+                                                field="Test Type"
+                                                cv=""
+                                                max="1"
+                                                formname=form>
+                                    </gsrs-input>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-1 pull-right">
+                            <modal-form-button type="access"
+                                               referenceobj="obj"
+                                               parent="parent">
+                            </modal-form-button>
+                        </div>
+                        <div class="col-md-1 pull-right">
+                            <modal-form-button type="reference"
+                                               referenceobj="obj"
+                                               parent="parent">
+                            </modal-form-button>
+                        </div>
+                    </div>
+
+                    <!-- Second Row -->
+                    <div class="row">
+                        <div class="col-md-1 text-center">
+                            &nbsp;
+                        </div>
+                        <div class="col-md-9">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <gsrs-input type="dropdown"
+                                                ng-model="obj.acceptanceCriteriaType"
+                                                field="Acceptance Criteria Type"
+                                                cv=""
+                                                max="1"
+                                                formname=form>
+                                    </gsrs-input>
+                                </div>
+                                <div class="col-md-4">
+                                    <gsrs-input type="text"
+                                                ng-model="obj.acceptanceCriteria"
+                                                field="Acceptance Criteria"
+                                                required="false"
+                                                formname=form>
+                                    </gsrs-input>
+                                </div>
+                                <div class="col-md-4">
+                                    <gsrs-input type="text"
+                                                ng-model="obj.acceptanceCriteriaValues"
+                                                field="Acceptance Criteria Values"
+                                                required="false"
+                                                formname=form>
+                                    </gsrs-input>
+                                </div>
+                            </div>
+                        </div>
+                    </div> <!-- second row -->
+
+                    <!-- Third Row -->
+                    <div class="row">
+                        <div class="col-md-1 text-center">
+                            &nbsp;
+                        </div>
+                        <div class="col-md-9">
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <gsrs-input type="dropdown"
+                                                ng-model="obj.amountType"
+                                                field="Amount Type"
+                                                cv=""
+                                                max="1"
+                                                formname=form>
+                                    </gsrs-input>
+                                </div>
+                                <div class="col-md-2">
+                                    <gsrs-input type="text"
+                                                ng-model="obj.amountValue"
+                                                field="Amount Value"
+                                                required="false"
+                                                formname=form>
+                                    </gsrs-input>
+                                </div>
+                                <div class="col-md-3">
+                                    <gsrs-input type="text"
+                                                ng-model="obj.nonNumericResult"
+                                                field="Non Numeric Result"
+                                                required="false"
+                                                formname=form>
+                                    </gsrs-input>
+                                </div>
+                                <div class="col-md-4">
+                                        <gsrs-input type="text"
+                                                    ng-model="obj.meetsSpecification"
+                                                    field="Meets Specification"
+                                                    required="false"
+                                                    formname=form>
+                                        </gsrs-input>
+                                </div>
+                            </div>
+                        </div>
+                    </div> <!-- third row -->
+
+                    <!-- Fourth Row -->
+                    <div class="row">
+                        <div class="col-md-1 text-center">
+                            &nbsp;
+                        </div>
+                        <div class="col-md-9">
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <gsrs-input type="text"
+                                                ng-model="obj.comments"
+                                                field="Comments"
+                                                required="false"
+                                                formname=form>
+                                    </gsrs-input>
+                                </div>
+                            </div>
+                        </div>
+                    </div> <!-- Forth row -->
+
+
+                </div>
+                <hr>
+            </ng-form>
+
+        </form>
+    </div>
+</div>

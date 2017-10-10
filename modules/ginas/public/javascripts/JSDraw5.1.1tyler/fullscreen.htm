@@ -1,0 +1,40 @@
+﻿<!--
+//////////////////////////////////////////////////////////////////////////////////
+//
+// JSDraw
+// Copyright 2016,  Scilligence 
+// http://www.scilligence.com/
+//
+//////////////////////////////////////////////////////////////////////////////////
+-->
+
+<html>
+<head>
+  <title>JSDraw - A Javascript Chemical Structure Editor/Viewer</title>
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" >
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+    <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/dojo/1.11.2/dojo/dojo.js"></script>
+
+    <script type="text/javascript" src='Scilligence.JSDraw2.Pro.js'></script>
+    <script type="text/javascript" src='Service.aspx'></script>
+    <script type="text/javascript" src='Scilligence.JSDraw2.Resources.js'></script>
+
+
+  </head>
+<body>
+
+
+<div id='q' style="width:100%; height: 100%"></div>
+<script type='text/javascript'>
+    scil.ready(function () {
+        var div = scil.byId("q");
+        var d = dojo.window.getBox();
+
+        new JSDraw(div, { skin: "w8", width: d.w - 20, height: d.h - 20 });
+    });
+</script>
+
+
+</body>
+</html>

@@ -1,18 +1,19 @@
 <div ng-class="{'has-error' : formname[field].$invalid && formname.$flagged}">
-<label id="{{::field}}-label" class="text-capitalize">{{label || field}}<span ng-if="required==true" class = "danger"> *</span></label><br>
+    <label id="{{::field}}-label" class="text-capitalize">{{label || field}}<span ng-if="required==true" class = "danger"> *</span></label><br>
     <a ng-click="edit= !edit" ng-show="!edit" uib-tooltip ="click to edit">{{obj}}</a>
-        <input ng-show="edit || !obj"
-               type="text"
-               class="form-control"
-               ng-model= obj
-               ng-blur="edit = !edit"
-               ng-change="changeFunction({model: obj});"
-               ng-required="required"
-               placeholder ="{{label || field}}"
-               title="{{::field}}"
-               id="{{::name}}-{{::field}}"
-               name="{{::field}}"
-               aria-labelledby="{{::field}}-label"/>
+    <input ng-show="edit || !obj"
+           type="text"
+           class="form-control"
+           ng-model= obj
+           ng-blur="edit = !edit"
+           ng-change="changeFunction({model: obj});"
+           ng-required="required"
+           placeholder ="{{label || field}}"
+           title="{{::field}}"
+           id="{{::name}}-{{::field}}"
+           name="{{::field}}"
+           aria-labelledby="{{::field}}-label"
+           ng-model-options="{ debounce: 500 }" />
     <div ng-if="formname[field].$invalid && formname.$flagged" ng-messages="formname[field].$error" role="alert">
         <div ng-message="required" class ="danger">required field</div>
 

@@ -1,0 +1,31 @@
+<div class="row info bordergraylight">
+
+    <div ng-repeat="companyList in product.productCompanyList">
+        <div class="row form-row2">
+            <div class="col-md-3">
+                <gsrs-input type="text" ng-model="companyList.companyName" field="companyName" label="Company Name" formname=formProd></gsrs-input>
+            </div>
+            <div class="col-md-3">
+                <gsrs-input type="text" ng-model="companyList.companyAddress" field="companyAddress" label="Company Address" formname=formProd></gsrs-input>
+            </div>
+            <div class="col-md-2">
+                <gsrs-input type="dropdown" ng-model="companyList.companyRole" field="companyRole" label="Company Role" cv="PROD_COMPANY_ROLE" formname=formProd></gsrs-input>
+            </div>
+            <div class="col-md-2">
+                <gsrs-input type="text" ng-model="companyList.companyCode" field="companyCode" label="Company Code" formname=formProd></gsrs-input>
+            </div>
+            <div class="col-md-2">
+                <gsrs-input type="dropdown" ng-model="companyList.companyCodeType" field="companyCodeType" label="Company Code Type" cv="PROD_COMPANY_CODE_TYPE" formname=formProd></gsrs-input>
+            </div>
+            <!--
+            <div class="col-md-1" ng-if="($index == 0)">
+                <br><br><a href="#" id="addMoreCompanyId" ng-click="AddMoreProductCompanyList()">Add More</a>
+            </div>
+            <div class="col-md-1" ng-if="($index != 0)">
+                <br><br><a href="#" id="delMoreCompanyId" ng-click="DeleteProductCompanyList($index)">Delete</a>
+            </div>
+            -->
+        </div>
+    </div>
+
+</div>

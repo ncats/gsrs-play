@@ -1,0 +1,64 @@
+<div class="row form-row5 borderlightblue">
+    <div class="row">
+        <div class="col-md-2 tabingred">
+            <b>Ingredient&nbsp;<span class="font15px-white">{{ingIdx + 1}}</span></b>
+        </div>
+        <div class="col-md-10 delingred" ng-if="($index != 0)">
+            <br><br><a href="#" id="delMoreIngredId" ng-click="DeleteProductIngredientList(compIdx, lotIdx, ingIdx)">Delete Ingredient</a>
+        </div>
+    </div>
+
+    <div class="row form-row2">
+        <div class="col-md-3">
+            <gsrs-input type="text" ng-model="ingredList.applicantIngredName" field="applicantIngredName" label="Applicant Ingredient Name" formname=formProd></gsrs-input>
+        </div>
+        <div class="col-md-3">
+            <label id="searchExistName" class="text-capitalize">Search Existing Ingredient</label><br>
+            <input type="text" ng-model="ingredList.existIngName" size="10" class="form-control">
+            <div class="font12px-maroon padtop5px"><b>{{ingredList.ingredientName}}</b></div>
+            <input type="hidden" name="ingredList.bdnum" value="{{ingredList.bdnum}}">
+        </div>
+        <div class="col-md-1">
+            <br>
+            <button input type="button" ng-click="searchIngredientName(compIdx, lotIdx, ingIdx)">Search</button><br>
+            <span class="colorgreen"><b>{{ingredList.ingNameMessage}}</b></span>
+        </div>
+        <div class="col-md-4">
+            <label id="searchExistBasis" class="text-capitalize">Search Existing Basis of Strength</label><br>
+            <input type="text" ng-model="ingredList.existIngBasis" size="10" class="form-control">
+            <div class="font12px-maroon padtop5px"><b>{{ingredList.basisOfStrength}}</b></div>
+            <input type="hidden" name="ingredList.basisOfStrengthBdnum" value="{{ingredList.basisOfStrengthBdnum}}">
+        </div>
+        <div class="col-md-1">
+            <br>
+            <button input type="button" ng-click="searchIngredientBasis(compIdx, lotIdx, ingIdx)">Search</button><br>
+            <span class="colorgreen"><b>{{ingredList.ingBasisMessage}}</b></span>
+        </div>
+    </div>
+
+    <div class="row form-row2">
+        <div class="col-md-3">
+            <gsrs-input type="dropdown" ng-model="ingredList.ingredientType" field="ingredientType" label="Ingredient Type" cv="INGREDIENT_TYPE" formname=formProd></gsrs-input>
+        </div>
+        <div class="col-md-2">
+            <gsrs-input type="text" ng-model="ingredList.manufacturer" field="manufacturer" label="Manufacturer" formname=formProd></gsrs-input>
+        </div>
+        <div class="col-md-2">
+            <gsrs-input type="text" ng-model="ingredList.ingredLotNo" field="ingredLotNo" label="Lot No" formname=formProd></gsrs-input>
+        </div>
+        <div class="col-md-1">
+            <gsrs-input type="text" ng-model="ingredList.average" field="average"></gsrs-input>
+        </div>
+        <div class="col-md-1">
+            <gsrs-input type="text" ng-model="ingredList.low" field="low"></gsrs-input>
+        </div>
+        <div class="col-md-1">
+            <gsrs-input type="text" ng-model="ingredList.high" field="high" label="High" formname=formProd></gsrs-input>
+        </div>
+        <div class="col-md-2">
+            <gsrs-input type="dropdown" ng-model="ingredList.unit" field="unit" label="Unit" cv="PROD_UNIT" formname=formProd></gsrs-input>
+        </div>
+    </div>
+
+</div>
+

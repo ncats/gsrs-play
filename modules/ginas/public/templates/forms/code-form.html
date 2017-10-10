@@ -4,7 +4,7 @@
     </div>
     <div class="col-md-12" uib-collapse="iscollapsed">
         <br>
-        <button class="btn btn-primary"  ng-if = "!iscollapsed && parent.codes.length > 2" ng-click="addNew(codeForm, 'codes', '', true); scrollTo('code-bottom')"><i class="fa fa-plus"></i> Add a<span
+        <button class="btn btn-primary"  ng-if = "!iscollapsed && parent.codes.length > 2" ng-click="addNew(codeForm, 'codes'); scrollTo('code-bottom')"><i class="fa fa-plus"></i> Add a<span
                 ng-if="parent.codes.length>0">nother</span> code
         </button>
         <form class="form-horizontal" name="codeForm" role="form" id="addCodeForm" novalidate>
@@ -73,7 +73,7 @@
                                     <div class="col-md-12">
                                         <gsrs-input type="text-box"
                                                     ng-model="obj.comments"
-                                                    field="comments"
+                                                    field="Code Text"
                                                     rows=2
                                                     formname=form>
                                         </gsrs-input>

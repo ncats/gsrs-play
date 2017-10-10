@@ -1,0 +1,100 @@
+<div class="row info">
+    <div class="row">
+        <form-header type="Assay" iscollapsed="iscollapsed"></form-header>
+    </div>
+    <div class="col-md-12" uib-collapse="iscollapsed">
+        <form class="form-horizontal" name="assayForm" role="form" id="addAssayForm" novalidate>
+
+                <ng-form name="form">
+                    <div class="form-div" ng-class="{'bg-warning' : form.$invalid && form.$flagged}">
+                        <div class="row">
+                            <div class="col-md-1 text-center">
+                                <delete-button delete="obj" path="assay"></delete-button>
+                            </div>
+                            <div class="col-md-9">
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <gsrs-input type="dropdown"
+                                                    ng-model="obj.substanceMeasure"
+                                                    field="Substance Measure"
+                                                    cv=""
+                                                    max="1"
+                                                    formname=form>
+                                        </gsrs-input>
+                                    </div>
+                                    <div class="col-md-5">
+                                        <gsrs-input type="text"
+                                                    ng-model="obj.assayRange"
+                                                    field="Assay Range"
+                                                    required="false"
+                                                    formname=form>
+                                        </gsrs-input>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <gsrs-input type="dropdown"
+                                                    ng-model="obj.unit"
+                                                    field="Unit"
+                                                    cv=""
+                                                    formname=form>
+                                        </gsrs-input>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-1 pull-right">
+                                <modal-form-button type="access"
+                                                   referenceobj="obj"
+                                                   parent="parent">
+                                </modal-form-button>
+                            </div>
+                            <div class="col-md-1 pull-right">
+                                <modal-form-button type="reference"
+                                                   referenceobj="obj"
+                                                   parent="parent">
+                                </modal-form-button>
+                            </div>
+                        </div>
+
+                        <!-- Second Row -->
+                        <div class="row">
+                            <div class="col-md-1 text-center">
+                                &nbsp;
+                            </div>
+                            <div class="col-md-9">
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <gsrs-input type="text"
+                                                    ng-model="obj.test"
+                                                    field="Test"
+                                                    required="false"
+                                                    formname=form>
+                                        </gsrs-input>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <gsrs-input type="dropdown"
+                                                    ng-model="obj.testType"
+                                                    field="Test Type"
+                                                    cv=""
+                                                    max="1"
+                                                    formname=form>
+                                        </gsrs-input>
+                                    </div>
+                                    <div class="col-md-5">
+                                        <gsrs-input type="text"
+                                                    ng-model="obj.testFreeText"
+                                                    field="Test Free Text"
+                                                    required="false"
+                                                    formname=form>
+                                        </gsrs-input>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                    <hr>
+                </ng-form>
+
+        </form>
+    </div>
+</div>

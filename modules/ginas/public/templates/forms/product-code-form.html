@@ -1,0 +1,22 @@
+<div class="row info bordergraylight">
+
+    <div ng-repeat="codeList in product.productCodeList">
+        <div class="row form-row2">
+            <div class="col-md-4">
+                <gsrs-input type="text" ng-model="codeList.productCode" field="productCode" label="Product Code" formname=formProd></gsrs-input>
+            </div>
+            <div class="col-md-4">
+                <gsrs-input type="dropdown" ng-model="codeList.productCodeType" field="productCodeType" label="Product Code Type" cv="PROD_PRODUCT_CODE_TYPE" formname=formProd></gsrs-input>
+            </div>
+            <div class="col-md-3">
+                <gsrs-input type="dropdown"  ng-model="codeList.countryCode" field="countryCode" label="Country Code" cv="PROD_COUNTRY_CODE" formname=formProd></gsrs-input>
+            </div>
+            <div class="col-md-1" ng-if="($index == 0)">
+                <br><br><a href="#" id="addMoreCodeId" ng-click="AddMoreProductCodeList()">Add More</a>
+            </div>
+            <div class="col-md-1" ng-if="($index != 0)">
+                <br><br><a href="#" id="delMoreCodeId" ng-click="DeleteProductCodeList($index)">Delete</a>
+            </div>
+        </div>
+    </div>
+</div>

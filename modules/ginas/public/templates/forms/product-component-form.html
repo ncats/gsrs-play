@@ -1,0 +1,50 @@
+<div class="row info borderorange margintop40px">
+
+        <div class="row">
+            <div class="col-md-2 tabcomp">
+                <b>Component&nbsp;<span class="font15px-white">{{$index + 1}}</span></b>
+            </div>
+            <div class="col-md-10 delcomp" ng-if="($index != 0)">
+                <br><br><a href="#" id="delMoreComponentId" ng-click="DeleteProductComponentList($index)">Delete Component</a>
+            </div>
+        </div>
+
+        <div class="row form-row2">
+            <div class="col-md-4">
+                <gsrs-input type="dropdown" ng-model="componentList.dosageForm" field="dosageForm" label="Dosage Form" cv="DOSAGE_FORM" formname=formProd></gsrs-input>
+            </div>
+            <div class="col-md-4">
+                <gsrs-input type="dropdown" ng-model="componentList.charColor" field="charColor" label="Color Name" cv="PROD_CHARACTER_COLOR" formname=formProd></gsrs-input>
+            </div>
+            <div class="col-md-4">
+                <gsrs-input type="dropdown" ng-model="componentList.charFlavor" field="charFlavor" label="Flavor Name" cv="PROD_CHARACTER_FLAVOR" formname=formProd></gsrs-input>
+            </div>
+        </div>
+
+        <div class="row form-row2">
+            <div class="col-md-4">
+                <gsrs-input type="dropdown" ng-model="componentList.charShape" field="charShape" label="Shape Name" cv="PROD_CHARACTER_SHAPE" formname=formProd></gsrs-input>
+            </div>
+            <div class="col-md-4">
+                <gsrs-input type="dropdown" ng-model="componentList.charNumFragments" field="charNumFragments" label="Number of Fragments" cv="PROD_CHARACTER_FRAGMENTS" formname=formProd></gsrs-input>
+            </div>
+            <div class="col-md-2">
+                <gsrs-input type="text" ng-model="componentList.charSize" field="charSize" label="Size" formname=formProd></gsrs-input>
+            </div>
+            <div class="col-md-2">
+                <gsrs-input type="text" ng-model="componentList.charImprintText" field="charImprintText" label="Imprint Text" formname=formProd></gsrs-input>
+            </div>
+        </div>
+
+        <div ng-repeat="lotList in componentList.productLotList" ng-init="lotIdx = $index">
+            <div class="row padleft70px-top10px">
+                <div class="col-md-8" ng-if="($index == 0)">
+                    <b>Total Lot: <span class="font16px-purple">{{componentList.productLotList.length}}</span></b>&nbsp;&nbsp;&nbsp;&nbsp;
+                    <a href="#" id="addMoreLotId" ng-click="AddMoreProductLotList(compIdx)">Add More Lot</a>
+                </div>
+            </div>
+            <product-lot-form></product-lot-form>
+        </div>
+
+</div>
+

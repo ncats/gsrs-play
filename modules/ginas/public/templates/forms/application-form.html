@@ -1,0 +1,59 @@
+<div class="row info bordergraylight">
+
+    <div class="row form-row2">
+        <div class="col-md-2">
+            <gsrs-input type="dropdown" ng-model="application.center" field="center" label="Center" cv="CENTER" formname=formApp></gsrs-input>
+        </div>
+        <div class="col-md-3">
+            <gsrs-input type="dropdown" ng-model="application.appType" field="appType" label="Application Type" cv="APPLICATION_TYPE" formname=formApp></gsrs-input>
+        </div>
+        <div class="col-md-3">
+            <gsrs-input type="text" ng-model="application.appNumber" field="appNumber" label="Application Number" formname=formApp></gsrs-input>
+        </div>
+        <div class="col-md-4">
+            <gsrs-input type="dropdown" ng-model="application.status" field="status" label="Application Status" cv="APPLICATION_STATUS" formname=formApp></gsrs-input>
+        </div>
+    </div>
+
+    <div class="row form-row2">
+        <div class="col-md-6">
+            <gsrs-input type="text" ng-model="application.sponsorName" field="sponsorName" label="Sponsor Name" formname=formApp></gsrs-input>
+        </div>
+        <div class="col-md-6">
+            <gsrs-input type="text" ng-model="application.nonProprietaryName" field="nonProprietaryName" label="Non Proprietary Name" formname=formApp></gsrs-input>
+        </div>
+    </div>
+
+    <div class="row form-row2">
+        <div class="col-md-12">
+            <gsrs-input type="text" ng-model="application.title" field="title" label="Title" formname=formApp></gsrs-input>
+        </div>
+    </div>
+
+    <div class="row form-row2">
+        <div class="col-md-4">
+            <gsrs-input type="dropdown"  ng-model="application.appSubType" field="appSubType" label="Application Sub Type" cv="APPLICATION_SUB_TYPE" formname=formApp></gsrs-input>
+        </div>
+        <div class="col-md-4">
+            <gsrs-input type="text" ng-model="application.divisionClassDesc" field="divisionClassDesc" label="Division Class Desc" formname=formApp></gsrs-input>
+        </div>
+        <div class="col-md-4">
+            <gsrs-input type="text" ng-model="application.submitDate" field="submitDate" label="Submit Date" formname=formApp></gsrs-input>
+        </div>
+    </div>
+
+    <div ng-repeat="indicationList in application.applicationIndicationList">
+        <div class="row form-row2">
+            <div class="col-md-11">
+                <gsrs-input type="text" ng-model="indicationList.indication" field="indication" label="Indication" formname=formApp></gsrs-input>
+            </div>
+            <div class="col-md-1" ng-if="($index == 0)">
+                <br><br><a href="#" id="addMoreIndicationId" ng-click="AddMoreIndicationList()">Add More</a>
+            </div>
+            <div class="col-md-1" ng-if="($index != 0)">
+                <br><br><a href="#" id="delMoreIndicationId" ng-click="DeleteIndicationList($index)">Delete</a>
+            </div>
+        </div>
+    </div>
+
+</div>

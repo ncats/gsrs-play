@@ -1,0 +1,9 @@
+<div ng-cloak>
+    <div>
+        <label id ="{{field}}-label" class="text-capitalize">{{label || field}}</label>
+        <select class="form-control" title="{{field}}" name="{{field}}" aria-labelledby="{{field}}-label" id="{{field}}" ng-model= obj
+                ng-blur="editing(obj[field]);" ng-options="r.display for r in values track by r.display">
+            <option class= "text-capitalize" value='' selected>{{label || field}}...</option>
+        </select>
+    </div>
+</div>
