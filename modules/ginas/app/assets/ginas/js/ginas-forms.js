@@ -65,7 +65,7 @@
 
     //generic controller that all forms will have. has acces to specific form scopes, and the more specific forms can call these methods
     ginasForms.controller('formController', function ($scope, $http, $anchorScroll, $location) {
-        $scope.iscollapsed = true;
+       // $scope.iscollapsed = true;
 
         //mainform is the form obj
         //location is the string of the array, can be nested
@@ -402,7 +402,8 @@
             replace: true,
             controller: 'formController',
             scope: {
-                parent: '='
+                parent: '=',
+                iscollapsed: '=?'
             },
             templateUrl: baseurl + "assets/templates/forms/agent-modification-form.html"
         };
@@ -430,7 +431,8 @@
             controller: 'formController',
             templateUrl: baseurl + "assets/templates/forms/code-form.html",
             scope: {
-                parent: '='
+                parent: '=',
+                iscollapsed: '=?'
             },
             link: function (scope, element, attrs) {
                 scope.parse = function (code) {
@@ -487,7 +489,8 @@
                 parent: '=',
                 referenceobj: '=',
                 formype: '@',
-                residueregex: '@'
+                residueregex: '@',
+                iscollapsed: '=?'
 
             },
             templateUrl: baseurl + "assets/templates/forms/disulfide-link-form.html",
@@ -598,7 +601,8 @@
             controller:'formController',
             scope: {
                 parent: '=',
-                referenceobj: '='
+                referenceobj: '=',
+                iscollapsed: '=?'
             },
             templateUrl: baseurl + "assets/templates/forms/nucleic-acid-sugar-form.html",
             link: function (scope, attrs, element) {
@@ -867,7 +871,8 @@
             controller: 'formController',
             scope: {
                 referenceobj: '=',
-                parent: '='
+                parent: '=',
+                iscollapsed: '=?'
             },
             templateUrl: baseurl + "assets/templates/forms/nucleic-acid-linkage-form.html",
             link: function (scope, attrs, element) {
@@ -902,7 +907,8 @@
             restrict: 'E',
             replace: true,
             scope: {
-                parent: '='
+                parent: '=',
+                iscollapsed: '=?'
             },
             templateUrl: baseurl + "assets/templates/forms/diverse-organism-form.html"
         };
@@ -913,7 +919,8 @@
             restrict: 'E',
             replace: true,
             scope: {
-                parent: '='
+                parent: '=',
+                iscollapsed: '=?'
             },
             templateUrl: baseurl + "assets/templates/forms/diverse-source-form.html",
             link: function (scope) {
@@ -964,7 +971,8 @@
             controller: 'formController',
             scope: {
                 parent: '=',
-                referenceobj: '='
+                referenceobj: '=',
+                iscollapsed: '=?'
             },
             templateUrl: baseurl + "assets/templates/forms/glycosylation-form.html",
             link: function (scope, element, attrs) {
@@ -989,12 +997,19 @@
                 parent: '='
             },
             link: function (scope, element, attrs) {
+
                 if (scope.parent._name) {
                     scope.formType = 'Editing';
                     scope.name = scope.parent._name;
                 } else {
                     scope.formType = 'Registering new';
-                    scope.name = _.startCase(scope.parent.substanceClass);
+                    
+                    var cDisplay=_.startCase(scope.parent.substanceClass);
+                    if(cDisplay === "Specified Substance 1"){
+                    	cDisplay = "Specified Substance Group 1";
+                    }
+                    
+                    scope.name = cDisplay;
                 }
             },
             templateUrl: baseurl + "assets/templates/forms/header-form.html"
@@ -1007,7 +1022,8 @@
             replace: true,
             controller: 'formController',
             scope: {
-                parent: '='
+                parent: '=',
+                iscollapsed: '=?'
             },
             templateUrl: baseurl + "assets/templates/forms/mixture-component-select-form.html"
         };
@@ -1018,7 +1034,8 @@
             restrict: 'E',
             replace: true,
             scope: {
-                parent: '='
+                parent: '=',
+                iscollapsed: '=?'
             },
             templateUrl: baseurl + "assets/templates/forms/mixture-details-form.html"
         };
@@ -1041,7 +1058,8 @@
             replace: true,
             controller: 'formController',
             scope: {
-                parent: '='
+                parent: '=',
+                iscollapsed: '=?'
             },
             templateUrl: baseurl + "assets/templates/forms/name-form.html",
             link: function (scope) {
@@ -1115,7 +1133,8 @@
             replace: true,
             controller: 'formController',
             scope: {
-                parent: '='
+                parent: '=',
+                iscollapsed: '=?'
             },
             templateUrl: baseurl + "assets/templates/forms/note-form.html"
         };
@@ -1126,7 +1145,8 @@
             restrict: 'E',
             replace: true,
             scope: {
-                parent: '='
+                parent: '=',
+                iscollapsed: '=?'
             },
             templateUrl: baseurl + "assets/templates/forms/nucleic-acid-details-form.html"
         };
@@ -1140,7 +1160,8 @@
             scope: {
                 parent: '=',
                 referenceobj: '=',
-                displayType: '='
+                displayType: '=',
+                iscollapsed: '=?'
             },
             templateUrl: baseurl + "assets/templates/forms/other-links-form.html",
             link: function (scope, element, attrs) {
@@ -1175,7 +1196,7 @@
             controller: 'formController',
             scope: {
                 parent: '=',
-                referenceobj: '=?',
+                referenceobj: '=?'
             },
             templateUrl: baseurl + "assets/templates/forms/parameter-form.html",
             link: function (scope) {
@@ -1189,7 +1210,8 @@
             restrict: 'E',
             replace: true,
             scope: {
-                parent: '='
+                parent: '=',
+                iscollapsed: '=?'
             },
             templateUrl: baseurl + "assets/templates/forms/parent-form.html"
         };
@@ -1200,7 +1222,8 @@
             restrict: 'E',
             replace: true,
             scope: {
-                parent: '='
+                parent: '=',
+                iscollapsed: '=?'
             },
             templateUrl: baseurl + "assets/templates/forms/part-form.html"
         };
@@ -1213,7 +1236,8 @@
             controller: 'formController',
             scope: {
                 parent: '=',
-                referenceobj: '=?'// this is the object from the form that is getting the property added to it
+                referenceobj: '=?',// this is the object from the form that is getting the property added to it
+                iscollapsed: '=?'
             },
             templateUrl: baseurl + "assets/templates/forms/physical-modification-form.html",
             link: function (scope) {
@@ -1240,7 +1264,8 @@
             restrict: 'E',
             replace: true,
             scope: {
-                parent: '='
+                parent: '=',
+                iscollapsed: '=?'
             },
             templateUrl: baseurl + "assets/templates/forms/polymer-classification-form.html"
         };
@@ -1252,7 +1277,8 @@
             replace: true,
             controller: 'formController',
             scope: {
-                parent: '='
+                parent: '=',
+                iscollapsed: '=?'
             },
             templateUrl: baseurl + "assets/templates/forms/polymer-monomer-form.html"
         };
@@ -1264,7 +1290,8 @@
             replace: true,
             controller: 'formController',
             scope: {
-                parent: '='
+                parent: '=',
+                iscollapsed: '=?'
             },
             templateUrl: baseurl + "assets/templates/forms/polymer-sru-form.html",
             link: function (scope) {
@@ -1282,7 +1309,8 @@
             replace: true,
             controller: 'formController',
             scope: {
-                parent: '='
+                parent: '=',
+                iscollapsed: '=?'
             },
             templateUrl: baseurl + "assets/templates/forms/property-form.html"
         };
@@ -1293,7 +1321,8 @@
             restrict: 'E',
             replace: true,
             scope: {
-                parent: '='
+                parent: '=',
+                iscollapsed: '=?'
             },
             link: function (scope) {
                 /* var fields =['sequenceType','proteinType','proteinSubType','sequenceOrigin'];
@@ -1401,7 +1430,8 @@
             replace: true,
             controller: 'formController',
             scope: {
-                parent: '='
+                parent: '=',
+                iscollapsed: '=?'
             },
             templateUrl: baseurl + "assets/templates/forms/relationship-form.html"
         };
@@ -1426,7 +1456,8 @@
             controller: 'formController',
             scope: {
                 referenceobj: '=?',
-                parent: '='
+                parent: '=',
+                iscollapsed: '=?'
             },
             templateUrl: baseurl + "assets/templates/forms/structural-modifications-form.html",
             link: function (scope) {
@@ -1510,7 +1541,8 @@
                 parent: '=',
                 view: '@',
                 selected: '=',
-                initcollapsed: '@iscollapsed'
+                initcollapsed: '@iscollapsed',
+                iscollapsed: '=?'
             },
             templateUrl: baseurl + "assets/templates/forms/subunit-form.html",
             link: function (scope, element, attrs) {
@@ -2027,4 +2059,5 @@
             }
         };
     }]);
+
 })();

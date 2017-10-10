@@ -3,8 +3,6 @@
 
 @(kind: String, json: String, lock: EditLock)
 
-	
-
     @wizardfields(kind: String) = {
 
     }
@@ -24,7 +22,7 @@
                     <span class="warning" id="lockmessage">This record is currently being edited by another user, you may have difficulty saving changes.</span>
                 }
                 <header-form kind = "substance.substanceClass" parent = substance></header-form>
-                <name-form ng-if = "substance.definitionType.value !='ALTERNATIVE'" parent = substance ng-cloak></name-form>
+                <name-form ng-if = "substance.definitionType.value !='ALTERNATIVE'" parent = substance  iscollapsed="true" ng-cloak></name-form>
 
 
                 @kind match {
@@ -33,28 +31,29 @@
                         <moiety-form ng-if="substance.moieties.length>1" parent = substance ng-cloak></moiety-form>
                     }
                     case "mixture" => {
-                        <mixture-details-form parent = substance></mixture-details-form>
-                        <mixture-component-select-form parent = substance></mixture-component-select-form>
+                        <mixture-details-form parent = substance iscollapsed="true"></mixture-details-form>
+                        <mixture-component-select-form parent = substance iscollapsed="true"></mixture-component-select-form>
                     }
                     case "protein" => {
-                        <protein-details-form parent = substance></protein-details-form>
-                        <subunit-form referenceobj ="referenceobj" parent = substance></subunit-form>
+                        <protein-details-form parent = substance iscollapsed="true"></protein-details-form>
+                        <subunit-form referenceobj ="referenceobj" parent = substance iscollapsed="true"></subunit-form>
                         <div ng-if = "substance.protein.subunits.length>0">
-                            <disulfide-link-form referenceobj ="referenceobj" parent = substance></disulfide-link-form>
-                            <other-links-form referenceobj ="referenceobj" parent = substance></other-links-form>
-                            <glycosylation-form referenceobj ="referenceobj" parent = substance></glycosylation-form>
+                            <disulfide-link-form referenceobj ="referenceobj" parent = substance iscollapsed="true"></disulfide-link-form>
+                            <other-links-form referenceobj ="referenceobj" parent = substance iscollapsed="true"></other-links-form>
+                            <glycosylation-form referenceobj ="referenceobj" parent = substance iscollapsed="true"></glycosylation-form>
                         </div>
                     }
                     case "structurallyDiverse" => {
-                        <diverse-source-form  parent = substance></diverse-source-form>
-                        <diverse-type-form parent = substance></diverse-type-form>
+                        <diverse-source-form  parent = substance iscollapsed="true"></diverse-source-form>
+                        <diverse-type-form parent = substance iscollapsed="true"></diverse-type-form>
                         <div ng-if="substance.$$diverseType=='part' || substance.$$diverseType=='whole'">
-                            <diverse-organism-form ng-if="substance.$$diverseType=='whole'" ng-show="substance.structurallyDiverse.sourceMaterialClass.value =='ORGANISM'" parent = substance></diverse-organism-form>
+                            <diverse-organism-form ng-if="substance.$$diverseType=='whole'" ng-show="substance.structurallyDiverse.sourceMaterialClass.value =='ORGANISM'"
+                            parent = substance iscollapsed="true"></diverse-organism-form>
 @*
                             <diverse-plant-form ng-if="substance.structurallyDiverse.sourceMaterialClass.value =='ORGANISM' && substance.structurallyDiverse.sourceMaterialType.value == 'PLANT'" parent = substance></diverse-plant-form>
 *@
-                            <parent-form parent = substance></parent-form>
-                            <part-form ng-if="substance.$$diverseType=='part'" parent = substance></part-form>
+                            <parent-form parent = substance iscollapsed="true"></parent-form>
+                            <part-form ng-if="substance.$$diverseType=='part'" parent = substance iscollapsed="true"></part-form>
                         </div>
 
                     }
@@ -65,17 +64,17 @@
                         </div>
                     }
                     case "polymer" => {
-                        <polymer-classification-form parent=substance></polymer-classification-form>
-                        <polymer-monomer-form parent=substance></polymer-monomer-form>
+                        <polymer-classification-form parent=substance iscollapsed="true"></polymer-classification-form>
+                        <polymer-monomer-form parent=substance iscollapsed="true"></polymer-monomer-form>
                         <structure-form type="idealizedStructure" path ="parent.polymer.idealizedStructure" parent = substance></structure-form>
-                        <polymer-sru-form parent=substance></polymer-sru-form>
+                        <polymer-sru-form parent=substance iscollapsed="true"></polymer-sru-form>
                     }
                     case "nucleicAcid" => {
-                        <nucleic-acid-details-form parent = substance></nucleic-acid-details-form>
-                        <subunit-form referenceobj ="referenceobj" parent = substance></subunit-form>
+                        <nucleic-acid-details-form parent = substance iscollapsed="true"></nucleic-acid-details-form>
+                        <subunit-form referenceobj ="referenceobj" parent = substance iscollapsed="true"></subunit-form>
                         <div ng-if = "substance.nucleicAcid.subunits.length>0">
-                            <nucleic-acid-sugar-form referenceobj ="referenceobj" parent = substance></nucleic-acid-sugar-form>
-                            <nucleic-acid-linkage-form referenceobj ="referenceobj" parent = substance></nucleic-acid-linkage-form>
+                            <nucleic-acid-sugar-form referenceobj ="referenceobj" parent = substance iscollapsed="true"></nucleic-acid-sugar-form>
+                            <nucleic-acid-linkage-form referenceobj ="referenceobj" parent = substance iscollapsed="true"></nucleic-acid-linkage-form>
                         </div>
                     }
                     case "specifiedSubstanceG1" => {
@@ -86,16 +85,16 @@
                     }
                 }
                 <div ng-if="substance.substanceClass !== 'chemical' && substance.substanceClass !== 'concept'">
-                    <agent-modification-form referenceobj ="referenceobj" parent = substance></agent-modification-form>
-                    <structural-modification-form referenceobj ="referenceobj" parent = substance></structural-modification-form>
-                    <physical-modification-form referenceobj ="referenceobj" parent = substance></physical-modification-form>
+                    <agent-modification-form referenceobj ="referenceobj" parent = substance iscollapsed="true"></agent-modification-form>
+                    <structural-modification-form referenceobj ="referenceobj" parent = substance iscollapsed="true"></structural-modification-form>
+                    <physical-modification-form referenceobj ="referenceobj" parent = substance iscollapsed="true"></physical-modification-form>
                 </div>
 
-                <code-form ng-if = "substance.definitionType.value !='ALTERNATIVE'" parent = substance ng-cloak></code-form>
-                <relationship-form parent = substance ng-cloak></relationship-form>
-                <note-form parent = substance ng-cloak></note-form>
-                <property-form parent = substance ng-cloak></property-form>
-                <reference-form parent = "substance"  ng-cloak></reference-form>
+                <code-form ng-if = "substance.definitionType.value !='ALTERNATIVE'" parent = substance iscollapsed="true" ng-cloak></code-form>
+                <relationship-form parent = substance iscollapsed="true" ng-cloak></relationship-form>
+                <note-form parent = substance iscollapsed="true" ng-cloak></note-form>
+                <property-form parent = substance iscollapsed="true" ng-cloak></property-form>
+                <reference-form parent = "substance"  iscollapsed="true" ng-cloak></reference-form>
                 <div class = "row info" ng-if="substance.$$update">
                         <div class="col-md-4">
                             <gsrs-input type="text" name ="changeReason" required="true" label="Change Reason" ng-model="substance.changeReason"/>
@@ -213,6 +212,7 @@
                  }
 
                  function setJson(json){
+
                  var molChanger=angular.element(document.body).injector().get("molChanger");
                  var Substance= angular.element(document.body).injector().get("Substance");
                  var $scope=angular.element(document.body).scope();

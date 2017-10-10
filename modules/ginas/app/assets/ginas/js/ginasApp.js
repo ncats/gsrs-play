@@ -156,15 +156,15 @@
                 default:
                     break;
             }
-            
+
             if (!substance.references) {
                 substance.references = [];
             }
-            
+
             if(!substance.access){
-            	substance.access = [{value: 'protected', display: 'PROTECTED'}];	
+            	substance.access = [{value: 'protected', display: 'PROTECTED'}];
             }
-            
+
             return substance;
         };
 
@@ -175,7 +175,7 @@
         substance.$$changeClass = function (newClass) {
             substance.substanceClass = newClass;
             return substance;
-        }; 
+        };
 
         substance.$$setSubstance = function (sub) {
             _.forEach(sub, function (value, key) {
@@ -184,7 +184,7 @@
             
             substance.$$setClass(substance.$$getClass());
             return $q.when(expandCV(substance));
-            
+
         };
 
         //returns a flattened clone of the substance
@@ -448,7 +448,7 @@
         };
         return suggest;
     });
-    
+
     ginasApp.service('substanceSearch', function ($http, $q) {
         var options = {};
         var url = baseurl + "api/v1/substances/search";
@@ -608,7 +608,7 @@
         $scope.searchLimit = "global";
         $scope.loadingSuggest = false;
         $scope.noResults = false;
-        
+
 
 
         $window.SDFFields = {};
@@ -618,6 +618,7 @@
             var t = $location.path().split('/');
             var r = (_.indexOf(t, path) >= 0) ? 'active' : '';
             return r;
+
         };
 
         $scope.getSuggestions = function(query){
@@ -656,6 +657,17 @@
             $scope.substance=Substance;
             
             Substance.$$setSubstance($window.loadjson).then(function(data){
+            	
+            	if(data.names){
+            		data.names.sort(function(a,b){
+	            		if(a.displayName && !b.displayName)return -1;
+	            		if(!a.displayName && b.displayName)return 1;
+	            		//if(a.preferred && !b.preferred)return 1;
+	            		//if(!a.preferred && b.preferred)return -1;
+	            		return a.name.localeCompare(b.name);	            		
+	            	});
+            	}
+            	
                 _.set(data, '$$update', true);
                 data=data.$$setClass(data.$$getClass());
                 $scope.substance = data;
@@ -712,6 +724,7 @@
         	
         	$scope.structureSearchResolve=[];
             resolver.resolve(name, 'structureSearchSpinner').then(function (response) {
+
                 if (response.data.length > 0) {
                 	$scope.structureSearchResolve=_.union($scope.structureSearchResolve, response.data);
                 }
@@ -761,20 +774,20 @@
 
 		//We can put this here, but it makes it difficult to expand in the future.
 		//The server knows how things can be sorted, we need to either ajax
-		//(which can cause latency problems), or we can have it pre-stored 
+		//(which can cause latency problems), or we can have it pre-stored
 		//server-side, and injected.
         $scope.sortValues = [
-         	{  
+         	{
                "value":  "default",
                "display": "Relevance"
             },
-            {  
+            {
                "value": "^Display Name",
                "display": "Display Name, A-Z"
             },
             {
                 "value": "$Display Name",
-                "display": "Display Name, Z-A" 
+                "display": "Display Name, Z-A"
             },
             {
                 "value": "^Reference Count",
@@ -793,21 +806,21 @@
                 "display": "Newest Change"
             }
             	];
-            
+
         var suppliedOrder = _.find($scope.sortValues, {
         	value : $location.search()["order"]
         });
         $scope.selectedSort = suppliedOrder || {value: "Sort By"};
-        
+
         $scope.showDeprecated = $location.search()["showDeprecated"] || "false";
-        
+
         $scope.showDeprecatedChange = function(model) {
     		$location.search("showDeprecated",$scope.showDeprecated);
             window.location = $location.absUrl();
         };
 
         $scope.sortSubstances = function(model) {
-        	
+
             $location.search("order",$scope.selectedSort.value);
             window.location = $location.absUrl();
         };
@@ -859,7 +872,7 @@
 				}else if(dl.isPresent){ //busy
 					$scope.exportUnavailableWarning();
 				}else{ //unknown result set
-					$scope.exportUnavailableWarning();  
+					$scope.exportUnavailableWarning();
 				}
 			}else{
 				$scope.exportUnavailableWarning();
@@ -890,7 +903,7 @@
 
 
 
-        
+
         $scope.compare = function () {
             //$scope.left = angular.toJson(Substance.$$flattenSubstance(angular.copy($scope.substance)));
             $scope.left = angular.toJson($scope.substance.$$flattenSubstance());
@@ -1032,7 +1045,7 @@
             return errorArr;
         };
 
-        $scope.validateSubstance = function (callback) {
+          $scope.validateSubstance = function (callback) {
 
             //this should cascade to all forms to check and see if validation is ok
             $scope.$broadcast('show-errors-check-validity');
@@ -1040,8 +1053,19 @@
             $scope.checkErrors();
 
 
+			//TODO: Remove later. This just adds uuids to names which don't have UUIDs.
+			//This should not be necessary, but appears to be.
+			//**************************
+			
+			_.chain(angular.element(document.body).scope().substance.names)
+						   .filter(function(n){return !n.uuid;})
+			               .forEach(function(n){n.uuid=angular.element(document.body).injector().get("UUID").newID();})
+			               .value();
+			               
+			//**************************
+
+
             var sub = angular.toJson($scope.substance.$$flattenSubstance());
-            console.log(sub);
             $scope.errorsArray = [];
             $http.post(baseurl + 'api/v1/substances/@validate', sub).then(
 	    function success(response) {
@@ -1354,7 +1378,7 @@
                 toggler.toggle($scope, divid, template);
         };
 
-    });
+    }); //controller
 
     ginasApp.directive('loading', function ($http) {
         return {
@@ -1402,7 +1426,7 @@
                 smiles: '@'
             },
             link: function (scope, element, attrs) {
-                
+
                 scope.$watch('smiles', function (val) {
                     if (val) {
                         scope.relink();
@@ -1463,7 +1487,7 @@
                     }
                     return null;
                     };
-            
+
                 scope.display = function () {
                     if (!_.isUndefined(scope.value) && !_.isNull(scope.value)) {
                         var ret = "";
@@ -1650,13 +1674,13 @@
                     indices = _.sortBy(indices);
                     scope.objreferences = objreferences;
 
-                    
+
                     _.forEach(indices, function (i) {
                         var link = '<a ng-click="showActive(' + i + ')" uib-tooltip="view reference">' + i + '</a>';
                         links.push(link);
                     });
-                    
-                    var templateString = angular.element('<div class ="row reftable"><div class ="col-md-8">' 
+
+                    var templateString = angular.element('<div class ="row reftable"><div class ="col-md-8">'
                     			+ _.join(links,",")
                     			+ ' </div><div class="col-md-4"><span class="btn btn-primary pull-right" type="button" uib-tooltip="Show all references" ng-click="toggle()"><i class="fa fa-long-arrow-down"></i></span><div></div>');
                     element.append(angular.element(templateString));
@@ -1675,7 +1699,7 @@
             }
         };
     });
-    
+
     ginasApp.directive('refCount', function ($compile) {
         return {
             scope: {
@@ -1697,13 +1721,13 @@
                     indices = _.sortBy(indices);
                     scope.objreferences = objreferences;
 
-                    
+
                     _.forEach(indices, function (i) {
                         var link = '<a ng-click="showActive(' + i + ')" uib-tooltip="view reference">' + i + '</a>';
                         links.push(link);
                     });
-                    
-                    var templateString = angular.element('<div class ="row reftable"><div class ="col-md-8">' 
+
+                    var templateString = angular.element('<div class ="row reftable"><div class ="col-md-8">'
                     			+ "(" + links.length + ")"
                     			+ ' </div><div class="col-md-4"><span class="btn btn-primary pull-right" type="button" uib-tooltip="Show all references" ng-click="toggle()"><i class="fa fa-long-arrow-down"></i></span><div></div>');
                     element.append(angular.element(templateString));
@@ -1898,7 +1922,7 @@
             },
             link: function (scope, element, attrs) {
                 scope.bridged = false;
-                
+
                 var aa = scope.acid;
                 var template;
                 if (aa.valid == false) {
@@ -1948,7 +1972,7 @@
                             $compile(element.contents())(scope);
                         });
                     }
-        
+
                 }
 
                 scope.showBridge = function () {
@@ -2047,11 +2071,11 @@
 
                 scope.startEdit = function () {
                     scope.obj.$sequence=scope.preformatSeq(scope.obj.sequence);
-                }
+                };
 
-                scope.isSelected = function (site){                
+                scope.isSelected = function (site){
                         if(!scope.selected)return;
-                        
+
                         var isselected=false;
                         _.forEach(scope.selected, function(selSite){
                                 if(selSite.subunitIndex === site.subunitIndex && selSite.residueIndex === site.residueIndex){
@@ -2217,7 +2241,7 @@
                             }
                             var defChange = scope.merge(scope.parent.structure, data.structure);
 
-                            if (defChange) {  
+                            if (defChange) {
                                 scope.parent.moieties = [];
                                 _.forEach(data.moieties, function (m) {
                                     m["$$new"] = true;
@@ -2308,7 +2332,7 @@
         };
     });
 
-     ginasApp.directive('modalButton', function ($compile, $templateRequest, $http, $uibModal, molChanger, FileReader) {
+    ginasApp.directive('modalButton', function ($compile, $templateRequest, $http, $uibModal, molChanger, FileReader) {
         return {
             scope: {
                 type: '=',
@@ -2466,7 +2490,7 @@
         }
     });
 
-    
+
     ginasApp.directive('switch', function () {
         return {
             restrict: 'AE',
@@ -2497,7 +2521,7 @@
         };
     });
 
-    
+
     ginasApp.directive('errorMessage', function () {
         return {
             restrict: 'E',

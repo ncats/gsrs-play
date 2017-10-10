@@ -1245,7 +1245,6 @@
                 var template;
 
                 scope.obj.$$apply = false;
-                console.log(scope);
 
                 if (_.isUndefined(scope.referenceobj)) {
                     scope.referenceobj = {};
