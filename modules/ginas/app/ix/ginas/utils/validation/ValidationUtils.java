@@ -402,21 +402,21 @@ public class ValidationUtils {
 			strat.processMessage(mes);
 		}
 
-		if (!preferred) {
-			GinasProcessingMessage mes = GinasProcessingMessage
-					.WARNING_MESSAGE(
-							"Substances should have at least one (1) preferred name, Default to using:"
-									+ s.getName()).appliableChange(true);
-			gpm.add(mes);
-			strat.processMessage(mes);
-			if (mes.actionType == GinasProcessingMessage.ACTION_TYPE.APPLY_CHANGE) {
-				if (s.names.size() > 0) {
-					Name.sortNames(s.names);
-					s.names.get(0).preferred = true;
-					mes.appliedChange = true;
-				}
-			}
-		}
+//		if (!preferred) {
+//			GinasProcessingMessage mes = GinasProcessingMessage
+//					.WARNING_MESSAGE(
+//							"Substances should have at least one (1) preferred name, Default to using:"
+//									+ s.getName()).appliableChange(true);
+//			gpm.add(mes);
+//			strat.processMessage(mes);
+//			if (mes.actionType == GinasProcessingMessage.ACTION_TYPE.APPLY_CHANGE) {
+//				if (s.names.size() > 0) {
+//					Name.sortNames(s.names);
+//					s.names.get(0).preferred = true;
+//					mes.appliedChange = true;
+//				}
+//			}
+//		}
 		if (display == 0) {
 			GinasProcessingMessage mes = GinasProcessingMessage
 					.INFO_MESSAGE(
@@ -1095,20 +1095,6 @@ public class ValidationUtils {
 						break;
 					default:
 						break;
-					}
-				}
-				if(su.sequence==null || su.sequence.equals("")){
-					GinasProcessingMessage mes = GinasProcessingMessage
-							.ERROR_MESSAGE(
-									"Protein subunit (at "
-											+ (i + 1)
-											+ " position) has empty sequence. This is not allowed.");
-					
-					gpm.add(mes);
-					strat.processMessage(mes);
-					switch (mes.actionType) {
-						case FAIL:
-							return gpm;		
 					}
 				}
 			}
