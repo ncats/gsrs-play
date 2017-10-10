@@ -1,0 +1,86 @@
+@import ix.core.search.text.TextIndexer._
+@import ix.ncats.controllers.App
+@import ix.ncats.controllers.FacetDecorator
+@import ix.utils.Util
+
+@(divId: String)
+
+<div id="@divId" ng-cloak class="fade-ng-cloak ng-cloak" ng-controller="FiltersController">
+
+    <p ng-if="allFacets.length == 0">
+        <strong>Facets not available for large search results</strong>
+    </p>
+
+    <div ng-repeat="fac in allFacets" ng-controller="FilterController" class="panel panel-default" ng-init="init('', fac, 'CLIENT')">
+        <div class="panel-heading" >
+            <h3 ng-cloak class="panel-title" ng-click="collapsed=!collapsed">
+                <i ng-cloak ="" ng-show="collapsed" class="fa fa-caret-right"></i>
+                <i ng-cloak ="" ng-hide="collapsed" class="fa fa-caret-down"></i>
+                <span ng-bind="facetName"></span>
+            </h3>
+            <button ng-click="fshow=!fshow" class="btn btn-default" type="search" aria-label="Search" style="
+            float: right;
+            margin-top: -24px;
+            padding: 3px;
+            padding-right: 10px;
+            padding-left: 10px;
+        ">
+                <span class="sr-only">Search Filters</span>
+                <span class="fa fa-search"></span>
+            </button>
+        </div>
+        <div ng-cloak ng-show="fshow && !collapsed">
+            <input type="text" class="form-control" aria-label="Search filters" title="Search"
+                   placeholder="Search filters ..."
+                   ng-model="fq"
+                   ng-change="dofilter()"
+                   autocomplete="off" >
+        </div>
+        <div class="panel-body" uib-collapse="collapsed">
+
+            <ul class="list-group">
+                <div ng-hide="filtered">
+                    <div  ng-cloak class="list-group-item row" ng-repeat="facet in ofacets | limitTo:quantity">
+                        <div class="col-md-1 col-sm-1">
+                            <input type="checkbox"
+                                   ng-click="fToggle(facet)"
+                                   ng-model="facet.checked"
+                                    />
+                        </div>
+                        <div class="col-md-8 col-sm-8" >
+                            <label>{{facet.label}}</label>
+                        </div>
+                        <div class="col-md-1  col-sm-1" >
+                            <span class="badge pull-right">{{facet.count}}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div ng-show="filtered">
+                    <div ng-cloak class="list-group-item row" ng-repeat="facet in facets | limitTo:quantity">
+                        <div class="col-md-1 col-sm-1">
+                            <input type="checkbox"
+                                   ng-click="fToggle(facet)"
+                                   ng-model="facet.checked"
+                                    />
+                        </div>
+                        <div class="col-md-8 col-sm-8" >
+                            <label ng-bind-html="facet.labelHighlight"></label>
+                        </div>
+                        <div class="col-md-1  col-sm-1" >
+                            <span class="badge pull-right">{{facet.count}}</span>
+                        </div>
+                    </div>
+                </div>
+                <div style="float: left;" >
+                    <button  ng-show="showShowMore()" ng-click="showMore()" type="button" uib-tooltip="Clear Filters" class="btn btn-link" >More ... </button>
+                    <button  ng-show="showShowLess()" ng-click="showLess()" type="button" uib-tooltip="Show Less" class="btn btn-link" >Show Less</button>
+                </div>
+                <div style="float: right;" >
+                    <button ng-show="selectedFacets.length" ng-click="clear()" type="button" uib-tooltip="Clear Filters" class="btn btn-warning" >Clear</button>
+                    <button ng-show="changed" ng-click="apply()" type="button" uib-tooltip="Apply Filters" class="btn btn-primary" >Apply</button>
+                </div>
+            </ul>
+        </div>
+    </div>
+</div>

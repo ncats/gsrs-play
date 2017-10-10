@@ -1,0 +1,110 @@
+@import ix.core.search.text.TextIndexer._
+@import ix.ncats.controllers.App
+@import ix.ncats.controllers.FacetDecorator
+@import ix.utils.Util
+@import ix.core.util.EntityUtils.EntityWrapper
+
+@(facets: Array[FacetDecorator], searchflag:Boolean, mode:String )
+
+@facet(f: FacetDecorator, c : Boolean) = {
+<div ng-controller="FilterController" class="panel panel-default" ng-init="init('@f.getFacet().getSelfUri()', @EntityWrapper.of(f.facet).toCompactJson(), '@mode');collapsed=@{c};">
+  <div class="panel-heading" >
+    <h3 ng-cloak class="panel-title" ng-click="collapsed=!collapsed">
+        <i ng-cloak ="" ng-show="collapsed" class="fa fa-caret-right"></i>
+        <i ng-cloak ="" ng-hide="collapsed" class="fa fa-caret-down"></i>
+        <span ng-bind=facetDisplay></span>
+    </h3>
+    <button ng-show="!collapsed && mode!=='OFF'" ng-click="fshow=!fshow" class="btn btn-default" type="search" aria-label="Search" style="
+	    float: right;
+	    margin-top: -24px;
+	    padding: 3px;
+	    padding-right: 10px;
+	    padding-left: 10px;
+	">
+	<span class="sr-only">Search Filters</span>
+	<span class="fa fa-search"></span>
+	</button>
+  </div>
+  <div ng-cloak ng-show="fshow && !collapsed">
+    <input type="text" class="form-control" aria-label="Search filters" title="Search" 
+    placeholder="Search filters ..." 
+    ng-model="fq" 
+    ng-change="dofilter()"
+    autocomplete="off" >
+  </div>
+  <div class="panel-body" uib-collapse="collapsed">
+  
+    <ul class="list-group">
+      <div ng-hide="filtered">
+      	<div  ng-cloak class="list-group-item row" ng-repeat="facet in ofacets | limitTo:quantity">
+      		<div class="col-md-1 col-sm-1">
+		       <input type="checkbox"
+			       ng-click="fToggle(facet)" 
+			       ng-model="facet.checked"
+			      />
+			 </div>
+	     <div class="col-md-8 col-sm-8" >
+            <label>{{facet.display}}</label>
+         </div>
+        	 <div class="col-md-1  col-sm-1" >
+             <span class="badge pull-right">{{facet.count}}</span>
+             </div>
+      	</div>
+      </div>
+      
+      <div ng-show="filtered">
+        <div class="facet-loading-bar" ng-if="refreshing">
+        	<div class="spinner-loader-container"><div class="spinner-loader" ></div></div> Loading ... 
+        </div>
+        <div style="width:100%;text-align:center;" ng-if="facets.length===0 && !refreshing">No Results</div>
+      	<div ng-cloak class="list-group-item row" ng-repeat="facet in facets | limitTo:quantity">
+      		<div class="col-md-1 col-sm-1">
+		       <input type="checkbox"
+			       ng-click="fToggle(facet)"
+			       ng-model="facet.checked"
+			      />
+			 </div>
+	     <div class="col-md-8 col-sm-8" >
+            <label ng-bind-html="facet.labelHighlight"></label>
+         </div>
+        	 <div class="col-md-1  col-sm-1" >
+             <span class="badge pull-right">{{facet.count}}</span>
+             </div>
+      	</div>
+      </div>
+      <div style="float: left;" >
+          <button  ng-show="showShowMore()" ng-click="showMore()" type="button" uib-tooltip="Clear Filters" class="btn btn-link" >More ... </button>
+          <button  ng-show="showShowLess()" ng-click="showLess()" type="button" uib-tooltip="Show Less" class="btn btn-link" >Show Less</button>
+      </div>
+      <div style="float: right;" >
+          <button ng-show="selectedFacets.length" ng-click="clear()" type="button" uib-tooltip="Clear Filters" class="btn btn-warning" >Clear</button>
+          <button ng-if="changed" ng-click="apply()" type="button" uib-tooltip="Apply Filters" class="btn btn-primary" >Apply</button>
+          <button ng-if="!changed" style="visibility:hidden;" ng-click="apply()" type="button" uib-tooltip="Apply Filters" class="btn btn-primary" >Apply</button>
+          
+      </div>
+    </ul>
+  </div>
+</div>
+}
+
+
+<div class="panel-group">
+  <div ng-cloak class="fade-ng-cloak ng-cloak" ng-controller="FiltersController">
+  @*<div style="overflow:auto;" >
+  	<button ng-hide="collapsed" style="float: left;"  ng-click="collapse()" type="button" uib-tooltip="Collapse All Filters" class="btn btn-primary" >Collapse Filters</button>
+  	<button ng-show="collapsed" style="float: left;"  ng-click="expand()" type="button" uib-tooltip="Expand All Filters" class="btn btn-primary" >Expand Filters</button>
+  	<button ng-class="getAllSelected().length>0?'':'invisible'" style="float: right;"  ng-click="clear()" type="button" uib-tooltip="Clear All Filters" class="btn btn-warning" >Clear All Filters</button>
+  </div>*@
+
+  @for(f <- facets.slice(0,3)) {
+    @if(!f.hidden) {
+      @facet(f, false)
+    }
+  }
+      @for(f <- facets.drop(3)) {
+          @if(!f.hidden) {
+              @facet(f, true)
+          }
+      }
+  </div>
+</div>
