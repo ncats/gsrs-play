@@ -1,16 +1,32 @@
 package ix.core.plugins;
 
+import java.io.File;
 import java.io.IOException;
+import java.io.PrintStream;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
+import org.apache.lucene.search.Filter;
+import org.apache.lucene.search.Query;
+
+import chemaxon.formats.MolFormatException;
+import chemaxon.formats.MolImporter;
+import chemaxon.struc.MolAtom;
+import chemaxon.struc.MolBond;
+import chemaxon.struc.Molecule;
 import play.Application;
 import play.Logger;
 import play.Plugin;
 import tripod.chem.indexer.StructureIndexer;
+import tripod.chem.indexer.StructureIndexer.Codebook;
+import tripod.chem.indexer.StructureIndexer.ResultEnumeration;
 
 public class StructureIndexerPlugin extends Plugin {
     private final Application app;
     private IxContext ctx;
-    private StructureIndexer indexer;
+    private StandardizedStructureIndexer indexer;
     private boolean closed=false;
 
     public StructureIndexerPlugin (Application app) {
@@ -25,7 +41,7 @@ public class StructureIndexerPlugin extends Plugin {
                 ("IxContext plugin is not loaded!");
         
         try {
-            indexer = StructureIndexer.open(ctx.structure());
+            indexer = new StandardizedStructureIndexer(StructureIndexer.open(ctx.structure()));
             closed=false;
             Logger.info("Plugin "+getClass().getName()+" started!");
         }
@@ -53,6 +69,265 @@ public class StructureIndexerPlugin extends Plugin {
     }
 
     public boolean enabled () { return !closed; }
-    public StructureIndexer getIndexer () { return indexer; }
+    public StandardizedStructureIndexer getIndexer () { return indexer; }
+    
+    
+    
+    
+    
+    /**
+     * Used as a delegate to fix certain structure searches. This class just delegates, to a real {@link StructureIndexer}
+     * but whenever it would pass it a molecule, it makes sure to standardize it first.
+     * 
+     * @author tyler
+     *
+     */
+    public static class StandardizedStructureIndexer{
+
+		StructureIndexer delegate;
+		
+		
+		/**
+		 * This method just finds neighboring atoms which are both charged in opposite
+		 * ways. When that happens, it will change the bond between them to be a double
+		 * bond, and will set the atoms to be 0 charge. This is for sulfoxides and 
+		 * nitro groups.
+		 * 
+		 * @param m
+		 * @return
+		 */
+		public static Molecule standardizeCharges(Molecule m){
+			List<MolAtom> malist=Arrays.stream(m.getAtomArray())
+									   .filter(ma->ma.getCharge()!=0)
+			                            .collect(Collectors.toList());
+			for(MolAtom c: malist){
+				if(c.getCharge()==0)continue;
+				
+				for(int i=0;i<c.getBondCount();i++){
+					MolBond b = c.getBond(i);
+					if(b.getType() == 1){
+						MolAtom otherAtom = b.getOtherAtom(c);
+						if(malist.contains(otherAtom) && otherAtom.getCharge()==-c.getCharge()){
+							b.setType(2);
+							otherAtom.setCharge(0);
+							c.setCharge(0);
+						}
+					}
+				}
+			}
+			return m;
+		}
+		
+		
+		
+		public static Molecule getStandardized(Molecule m){
+			m.aromatize();
+			return standardizeCharges(m);
+			
+		}
+		
+		public static Molecule getMolecule(String str){
+			try {
+				return MolImporter.importMol(str);
+			} catch (MolFormatException e) {
+				e.printStackTrace();
+				return null;
+			}
+		}
+		
+		
+		
+    	public void add(String id, Molecule struc) throws IOException {
+			delegate.add(id, getStandardized(struc));
+		}
+
+		public void add(String source, String id, Molecule struc) throws IOException {
+			delegate.add(source, id, getStandardized(struc));
+		}
+
+		public void add(String arg0, String arg1, String arg2) throws IOException {
+			this.add(arg0, arg1, getMolecule(arg2));
+		}
+
+		public void add(String id, String struc) throws IOException {
+			this.add(id, getMolecule(struc));
+		}
+
+		public boolean equals(Object obj) {
+			return delegate.equals(obj);
+		}
+
+		public File getBasePath() {
+			return delegate.getBasePath();
+		}
+
+		public Codebook[] getCodebooks() {
+			return delegate.getCodebooks();
+		}
+
+		public String[] getFields() {
+			return delegate.getFields();
+		}
+
+		public Map<String, Integer> getSources() throws IOException {
+			return delegate.getSources();
+		}
+
+		public int hashCode() {
+			return delegate.hashCode();
+		}
+
+		public int[] histogram(String field, double[] range) throws IOException {
+			return delegate.histogram(field, range);
+		}
+
+		public int[] histogram(String field, int[] range) throws IOException {
+			return delegate.histogram(field, range);
+		}
+
+		public int[] histogram(String field, long[] range) throws IOException {
+			return delegate.histogram(field, range);
+		}
+
+		public long lastModified() {
+			return delegate.lastModified();
+		}
+
+		public void remove(String source, String id) throws IOException {
+			delegate.remove(source, id);
+		}
+
+		public void remove(String source) throws IOException {
+			delegate.remove(source);
+		}
+
+		public ResultEnumeration search(Filter... filters) throws Exception {
+			return delegate.search(filters);
+		}
+
+		public ResultEnumeration search(Query query, int max, Filter... filters) throws Exception {
+			return delegate.search(query, max, filters);
+		}
+
+		public ResultEnumeration search(Query query) throws Exception {
+			return delegate.search(query);
+		}
+
+		public ResultEnumeration search(String query, int max, Filter... filters) throws Exception {
+			return delegate.search(query, max, filters);
+		}
+
+		public ResultEnumeration search(String query, int max, int nthreads) throws Exception {
+			return delegate.search(query, max, nthreads);
+		}
+
+		public ResultEnumeration search(String query, int max) throws Exception {
+			return delegate.search(query, max);
+		}
+
+		public ResultEnumeration search(String field, String value, int max) throws Exception {
+			return delegate.search(field, value, max);
+		}
+
+		public ResultEnumeration search(String field, String value) throws Exception {
+			return delegate.search(field, value);
+		}
+
+		public ResultEnumeration search(String query) throws Exception {
+			return delegate.search(query);
+		}
+
+		public void shutdown() {
+			delegate.shutdown();
+		}
+
+		public ResultEnumeration similarity(Molecule query, double threshold, Filter... filters) throws Exception {
+			return delegate.similarity(getStandardized(query), threshold, filters);
+		}
+
+		public ResultEnumeration similarity(Molecule query, double threshold, int max, int nthreads, Filter... filters)
+				throws Exception {
+			return delegate.similarity(getStandardized(query), threshold, max, nthreads, filters);
+		}
+
+		public ResultEnumeration similarity(Molecule query, double threshold, int max, int nthreads) throws Exception {
+			return delegate.similarity(getStandardized(query), threshold, max, nthreads);
+		}
+
+		public ResultEnumeration similarity(String query, double threshold, Filter... filters) throws Exception {
+			return this.similarity(getMolecule(query), threshold, filters);
+		}
+
+		public ResultEnumeration similarity(String query, double threshold, int max) throws Exception {
+			return this.similarity(getMolecule(query), threshold, max, 1);
+		}
+
+		public ResultEnumeration similarity(String query, double threshold) throws Exception {
+			return this.similarity(getMolecule(query), threshold);
+		}
+
+		public int size() {
+			return delegate.size();
+		}
+
+		public void stats(PrintStream ps) throws IOException {
+			delegate.stats(ps);
+		}
+
+		public ResultEnumeration substructure(Molecule query, Filter... filters) throws Exception {
+			return delegate.substructure(getStandardized(query), filters);
+		}
+
+		public ResultEnumeration substructure(Molecule query, int max, int nthreads, Filter... filters)
+				throws Exception {
+			return delegate.substructure(getStandardized(query), max, nthreads, filters);
+		}
+
+		public ResultEnumeration substructure(Molecule query, int max, int nthreads) throws Exception {
+			return delegate.substructure(getStandardized(query), max, nthreads);
+		}
+
+		public ResultEnumeration substructure(Molecule query) throws Exception {
+			return delegate.substructure(getStandardized(query));
+		}
+
+		public ResultEnumeration substructure(String query, Filter... filters) throws Exception {
+			return this.substructure(getMolecule(query), filters);
+		}
+
+		public ResultEnumeration substructure(String query, int max, int nthreads, Filter... filters) throws Exception {
+			return this.substructure(getMolecule(query), max, nthreads, filters);
+		}
+
+		/**
+		 * Max not supported at this time
+		 * @param query
+		 * @param max
+		 * @return
+		 * @throws Exception
+		 */
+		public ResultEnumeration substructure(String query, int max) throws Exception {
+			return this.substructure(getMolecule(query));
+		}
+
+		public String toString() {
+			return delegate.toString();
+		}
+
+    	
+    	
+    	public StandardizedStructureIndexer(StructureIndexer d) throws IOException{
+    		this.delegate=d;
+    		
+    	}
+    	
+    	public StructureIndexer getDelegate(){
+
+    		return this.delegate;
+    	}
+		
+		
+    	
+    }
 
 }

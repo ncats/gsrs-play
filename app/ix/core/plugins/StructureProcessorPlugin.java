@@ -51,6 +51,7 @@ import com.avaje.ebean.Transaction;
 import ix.core.plugins.IxContext;
 import ix.core.plugins.PersistenceQueue;
 import ix.core.plugins.StructureIndexerPlugin;
+import ix.core.plugins.StructureIndexerPlugin.StandardizedStructureIndexer;
 import ix.core.models.XRef;
 import ix.core.models.Keyword;
 import ix.core.models.Payload;
@@ -67,7 +68,7 @@ import tripod.chem.indexer.StructureIndexer;
 public class StructureProcessorPlugin extends Plugin {
     private static final int AKKA_TIMEOUT = 60000;
         private final Application app;
-    private StructureIndexer indexer;
+    private StandardizedStructureIndexer indexer;
     private PersistenceQueue PQ;
     private IxContext ctx;
     private ActorSystem system;
@@ -112,7 +113,7 @@ public class StructureProcessorPlugin extends Plugin {
         final StructureReceiver receiver;
         final Molecule mol;
         final String key;
-        final StructureIndexer indexer;
+        final StandardizedStructureIndexer indexer;
 
         Stage stage = Stage.Routing;
         
@@ -123,13 +124,13 @@ public class StructureProcessorPlugin extends Plugin {
 
         public ReceiverProcessor (Molecule mol, 
                                   StructureReceiver receiver,
-                                  StructureIndexer indexer) {
+                                  StandardizedStructureIndexer indexer) {
             this (mol, false, receiver, indexer);
         }
         
         public ReceiverProcessor (Molecule mol, boolean standardize,
                                   StructureReceiver receiver,
-                                  StructureIndexer indexer) {
+                                  StandardizedStructureIndexer indexer) {
             this.mol = mol;
             this.standardize = standardize;
             this.receiver = receiver;
@@ -541,7 +542,7 @@ public class StructureProcessorPlugin extends Plugin {
                     +" initialized; Akka version "+system.Version());
         RouterConfig config = new SmallestMailboxRouter (2);
         processor = system.actorOf
-            (Props.create(Processor.class, indexer).withRouter
+            (Props.create(Processor.class, indexer.getDelegate()).withRouter
              (new FromConfig().withFallback(config)), "processor");
         system.actorOf(Props.create(Reporter.class, PQ), "reporter");
         

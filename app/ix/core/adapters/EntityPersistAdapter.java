@@ -30,6 +30,7 @@ import ix.core.plugins.IxCache;
 import ix.core.plugins.IxContext;
 import ix.core.plugins.SequenceIndexerPlugin;
 import ix.core.plugins.StructureIndexerPlugin;
+import ix.core.plugins.StructureIndexerPlugin.StandardizedStructureIndexer;
 import ix.core.plugins.TextIndexerPlugin;
 import ix.core.processors.BackupProcessor;
 import ix.core.processors.IndexingProcessor;
@@ -299,11 +300,11 @@ public class EntityPersistAdapter extends BeanPersistAdapter implements ProcessL
         return getInstance().sequenceIndexer();
     }
 
-    public static StructureIndexer getStructureIndexer() {
+    public static StandardizedStructureIndexer getStructureIndexer() {
         return getInstance().structureIndexer();
     }
 
-    public StructureIndexer structureIndexer() {
+    public StandardizedStructureIndexer structureIndexer() {
         if (strucProcessPlugin == null || !strucProcessPlugin.enabled()) {
             strucProcessPlugin = application.plugin(StructureIndexerPlugin.class);
         }

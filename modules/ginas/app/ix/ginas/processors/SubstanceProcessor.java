@@ -1,43 +1,27 @@
 package ix.ginas.processors;
 
-import java.io.IOException;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.Callable;
-import java.util.function.Supplier;
-
-import javax.persistence.PrePersist;
 
 import ix.core.EntityProcessor;
 import ix.core.adapters.EntityPersistAdapter;
-import ix.core.chem.Chem;
-import ix.core.plugins.SequenceIndexerPlugin;
 import ix.core.plugins.StructureIndexerPlugin;
+import ix.core.plugins.StructureIndexerPlugin.StandardizedStructureIndexer;
 import ix.ginas.controllers.v1.SubstanceFactory;
 import ix.ginas.datasource.KewControlledPlantDataSet;
-import ix.ginas.models.v1.ChemicalSubstance;
-import ix.ginas.models.v1.Code;
-import ix.ginas.models.v1.Name;
-import ix.ginas.models.v1.Protein;
-import ix.ginas.models.v1.ProteinSubstance;
-import ix.ginas.models.v1.Reference;
 import ix.ginas.models.v1.Relationship;
 import ix.ginas.models.v1.Substance;
 import ix.ginas.models.v1.Substance.SubstanceDefinitionType;
-import ix.seqaln.SequenceIndexer;
 import ix.ginas.models.v1.SubstanceReference;
-import ix.ginas.models.v1.Subunit;
-import ix.ginas.utils.validation.ValidationUtils;
 import play.Logger;
 import play.Play;
-import tripod.chem.indexer.StructureIndexer;
 import play.db.ebean.Model;
 
 public class SubstanceProcessor implements EntityProcessor<Substance>{
-    public static StructureIndexer _strucIndexer =
+    public static StandardizedStructureIndexer _strucIndexer =
             Play.application().plugin(StructureIndexerPlugin.class).getIndexer();
     KewControlledPlantDataSet kewData;
 

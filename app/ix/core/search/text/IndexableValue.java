@@ -92,9 +92,121 @@ public interface IndexableValue {
 		return getPathSepPattern().split(path);
 	}
 	
+	
+	default IndexableValue suggestable(){
+		IndexableValue me = this;
+		return new IndexableValue(){
+
+			public String path() {
+				return me.path();
+			}
+
+			public String name() {
+				return me.name();
+			}
+
+			public Object value() {
+				return me.value();
+			}
+
+			public  boolean useFullPath() {
+				return me.useFullPath();
+			}
+
+			public  boolean isDynamicFacet() {
+				return me.isDynamicFacet();
+			}
+
+			public  boolean isDirectIndexField() {
+				return me.isDirectIndexField();
+			}
+
+			public  IndexableField getDirectIndexableField() {
+				return me.getDirectIndexableField();
+			}
+
+			public  String rawName() {
+				return me.rawName();
+			}
+
+			public  boolean indexed() {
+				return me.indexed();
+			}
+
+			public  boolean sortable() {
+				return me.sortable();
+			}
+
+			public  boolean taxonomy() {
+				return me.taxonomy();
+			}
+
+			public  boolean facet() {
+				return me.facet();
+			}
+
+			public  boolean suggest() {
+				return true;
+			}
+
+			public  boolean sequence() {
+				return me.sequence();
+			}
+
+			public  boolean structure() {
+				return me.structure();
+			}
+
+			public  boolean fullText() {
+				return me.fullText();
+			}
+
+			public  String pathsep() {
+				return me.pathsep();
+			}
+
+			public  long[] ranges() {
+				return me.ranges();
+			}
+
+			public  double[] dranges() {
+				return me.dranges();
+			}
+
+			public  String format() {
+				return me.format();
+			}
+
+			public  boolean recurse() {
+				return me.recurse();
+			}
+
+			public  boolean indexEmpty() {
+				return me.indexEmpty();
+			}
+
+			public  String emptyString() {
+				return me.emptyString();
+			}
+
+			public  Pattern getPathSepPattern() {
+				return me.getPathSepPattern();
+			}
+
+			public  String[] splitPath(String path) {
+				return me.splitPath(path);
+			}
+
+		};
+	}
+	
 	public static IndexableValue simpleFacetStringValue(String name, String value){
 		
 		return new IndexableValueFromRaw(name,value).dynamic();
+	}
+	
+	public static IndexableValue simpleStringValue(String name, String value){
+		return new IndexableValueFromRaw(name,value);
 	}
 	public static IndexableValue simpleFacetLongValue(String name, long value, long[] ranges){
 		

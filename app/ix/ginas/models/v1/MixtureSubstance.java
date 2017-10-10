@@ -18,7 +18,9 @@ public class MixtureSubstance extends Substance implements GinasSubstanceDefinit
 	@OneToOne(cascade=CascadeType.ALL)
     public Mixture mixture;
 	
-    public MixtureSubstance () {}
+    public MixtureSubstance () {
+    	super(SubstanceClass.mixture);
+    }
     
     
     @JsonIgnore
@@ -45,4 +47,5 @@ public class MixtureSubstance extends Substance implements GinasSubstanceDefinit
 	public GinasAccessReferenceControlled getDefinitionElement(){
 		return mixture;
 	}
+	
 }
