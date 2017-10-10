@@ -79,6 +79,7 @@ public class NCATSAuthentication extends Controller {
     
 
     public static Result login(String url) {
+
         Session session = Authentication.getSession();
         if (session != null) {
             return url != null ? redirect(url)
