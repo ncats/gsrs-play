@@ -646,6 +646,7 @@
             $location.search({});
             $location.path(".." + baseurl +"substances");
             $location.search("q",$scope.q);
+            $location.hash("");
             window.location = $location.absUrl();
         };
 
