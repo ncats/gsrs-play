@@ -281,7 +281,8 @@ public class ValidationUtils {
 						.appliableChange(true);
 			}
 
-			strat.processMessage(gpmerr);
+				strat.processMessage(gpmerr);
+
 			if (gpmerr.actionType == GinasProcessingMessage.ACTION_TYPE.APPLY_CHANGE) {
 				gpmerr.appliedChange = true;
 				Reference r = Reference.SYSTEM_ASSUMED();
@@ -342,6 +343,9 @@ public class ValidationUtils {
 		boolean preferred = false;
 		int display = 0;
 		List<Name> remnames = new ArrayList<Name>();
+
+		boolean anyFailed= false;
+
 		for (Name n : s.names) {
 			if (n == null) {
 				GinasProcessingMessage mes = GinasProcessingMessage
@@ -391,9 +395,10 @@ public class ValidationUtils {
                 }
 			}
 			if (!validateReferenced(s, n, gpm, strat, ReferenceAction.FAIL)) {
-				return false;
+				anyFailed = true;
 			}
 		}
+
 		s.names.removeAll(remnames);
 		if (s.names.size() <= 0) {
 			GinasProcessingMessage mes = GinasProcessingMessage
@@ -476,7 +481,7 @@ public class ValidationUtils {
 				e.printStackTrace();
 			}
 		}
-		return true;
+		return anyFailed;
 	}
 
 	private static boolean validateCodes(Substance s,
