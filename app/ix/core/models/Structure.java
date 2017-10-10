@@ -167,7 +167,7 @@ public class Structure extends BaseModel implements ForceUpdatableModel{
     public enum NYU {
         No, Yes, Unknown
     }
-    
+
     @Column(length = 128)
     public String digest; // digest checksum of the original structure
     

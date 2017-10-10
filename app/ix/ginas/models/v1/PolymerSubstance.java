@@ -5,6 +5,8 @@ import ix.core.GinasProcessingMessage;
 import ix.core.models.Group;
 import ix.ginas.models.GinasAccessReferenceControlled;
 import ix.ginas.models.GinasSubstanceDefinitionAccess;
+import ix.ginas.models.v1.Substance.SubstanceClass;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import javax.persistence.*;
@@ -18,7 +20,9 @@ public class PolymerSubstance extends Substance implements GinasSubstanceDefinit
     @OneToOne(cascade=CascadeType.ALL)
     public Polymer polymer;
 
-    public PolymerSubstance () {}
+    public PolymerSubstance () {
+    	super(SubstanceClass.polymer);
+    }
 
     @Override
     protected Chemical getChemicalImpl(List<GinasProcessingMessage> messages) {

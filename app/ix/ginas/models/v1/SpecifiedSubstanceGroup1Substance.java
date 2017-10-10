@@ -2,6 +2,7 @@ package ix.ginas.models.v1;
 
 import ix.ginas.models.GinasAccessReferenceControlled;
 import ix.ginas.models.GinasSubstanceDefinitionAccess;
+import ix.ginas.models.v1.Substance.SubstanceClass;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
@@ -18,6 +19,7 @@ public class SpecifiedSubstanceGroup1Substance extends Substance implements Gina
     public SpecifiedSubstanceGroup1 specifiedSubstance;
 
     public SpecifiedSubstanceGroup1Substance() {
+    	 super (SubstanceClass.specifiedSubstanceG1);
     }
 
     @JsonIgnore

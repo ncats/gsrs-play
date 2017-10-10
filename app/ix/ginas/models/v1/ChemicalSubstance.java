@@ -108,11 +108,12 @@ public class ChemicalSubstance extends Substance implements GinasSubstanceDefini
     
     @Override
     public void delete(){
+    	//this.structure.delete();
+    	//for(Moiety m: this.moieties){
+    	//	m.delete();
+    	//}
     	super.delete();
-    	this.structure.delete();
-    	for(Moiety m: this.moieties){
-    		m.delete();
-    	}
+    	
     }
 
     @Override

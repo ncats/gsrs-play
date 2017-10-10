@@ -235,6 +235,7 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
 
     public Substance() {
         this(SubstanceClass.concept);
+        this.status = "non-approved";
     }
 
     public Substance(SubstanceClass subcls) {

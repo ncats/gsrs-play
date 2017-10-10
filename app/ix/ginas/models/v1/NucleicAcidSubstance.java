@@ -6,6 +6,7 @@ package ix.ginas.models.v1;
 import ix.core.models.Group;
 import ix.ginas.models.GinasAccessReferenceControlled;
 import ix.ginas.models.GinasSubstanceDefinitionAccess;
+import ix.ginas.models.v1.Substance.SubstanceClass;
 
 import javax.persistence.CascadeType;
 import javax.persistence.DiscriminatorValue;
@@ -24,11 +25,19 @@ public class NucleicAcidSubstance extends Substance implements GinasSubstanceDef
 	@OneToOne(cascade= CascadeType.ALL)
 	public NucleicAcid nucleicAcid;
 
+	
+	public NucleicAcidSubstance(){
+    	super(SubstanceClass.nucleicAcid);
+	}
+	
+	
 	@Override
     public Modifications getModifications(){
     	return this.nucleicAcid.getModifications();
     }
     
+	
+	
     
     @Transient
     private boolean _dirtyModifications=false;

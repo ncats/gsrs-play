@@ -3,6 +3,8 @@ package ix.ginas.models.v1;
 import ix.core.models.Group;
 import ix.ginas.models.GinasAccessReferenceControlled;
 import ix.ginas.models.GinasSubstanceDefinitionAccess;
+import ix.ginas.models.v1.Substance.SubstanceClass;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import javax.persistence.*;
 import java.util.Set;
@@ -14,7 +16,10 @@ public class StructurallyDiverseSubstance extends Substance implements GinasSubs
     @OneToOne(cascade=CascadeType.ALL)
     public StructurallyDiverse structurallyDiverse;
 
-    public StructurallyDiverseSubstance () {}
+    public StructurallyDiverseSubstance () {
+    	super(SubstanceClass.structurallyDiverse);
+        
+    }
     
     @Override
     public void delete(){
