@@ -35,7 +35,7 @@ public class ExportMetaData {
     public String displayfilename;
     
     
-    public volatile boolean cancelled=false;
+    public boolean cancelled=false;
     
     
     
@@ -198,7 +198,6 @@ public class ExportMetaData {
      }
     
     public void cancel(){
-        System.out.println("cancelled metadata");
         this.cancelled=true;
     }
 

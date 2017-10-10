@@ -23,6 +23,11 @@ public enum DefaultColumns implements Column {
     NCI_THESAURUS, 
     PROTEIN_SEQUENCE,
     NUCLEIC_ACID_SEQUENCE,
-    RECORD_ACCESS_GROUPS
+    RECORD_ACCESS_GROUPS,
+    RXCUI,
+    PUBCHEM,
+    MPNS,
+    GRIN,
+    INGREDIENT_TYPE
 
 }

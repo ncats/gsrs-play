@@ -1,22 +1,26 @@
 package ix.ginas.exporters;
 
-import gov.nih.ncgc.chemical.Chemical;
-import ix.core.models.Group;
-import ix.core.models.Structure;
-import ix.ginas.models.v1.ChemicalSubstance;
-import ix.ginas.models.v1.Code;
-import ix.ginas.models.v1.NucleicAcidSubstance;
-import ix.ginas.models.v1.PolymerSubstance;
-import ix.ginas.models.v1.ProteinSubstance;
-import ix.ginas.models.v1.Substance;
-import ix.ginas.models.v1.Subunit;
-
 import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.function.Predicate;
+import java.util.function.Function;
+
+import gov.nih.ncgc.chemical.Chemical;
+import ix.core.models.Group;
+import ix.core.models.Structure;
+import ix.ginas.controllers.v1.SubstanceFactory;
+import ix.ginas.models.v1.ChemicalSubstance;
+import ix.ginas.models.v1.Code;
+import ix.ginas.models.v1.NucleicAcidSubstance;
+import ix.ginas.models.v1.PolymerSubstance;
+import ix.ginas.models.v1.ProteinSubstance;
+import ix.ginas.models.v1.StructurallyDiverseSubstance;
+import ix.ginas.models.v1.Substance;
+import ix.ginas.models.v1.SubstanceReference;
+import ix.ginas.models.v1.Subunit;
+import ix.ginas.utils.GinasUtils;
 
 /**
  * Substance Exporter that writes out data to a Spreadsheet.
@@ -81,7 +85,7 @@ public class SubstanceSpreadsheetExporter implements Exporter<Substance> {
         });
         DEFAULT_RECIPE_MAP.put(DefaultColumns.SUBSTANCE_TYPE, (s, cell) -> cell.writeString(s.substanceClass.name()));
 
-        DEFAULT_RECIPE_MAP.put(DefaultColumns.STD_INCHIKEY, new  ChemicalExportRecipe(Chemical.FORMAT_STDINCHIKEY));
+        //DEFAULT_RECIPE_MAP.put(DefaultColumns.STD_INCHIKEY, new  ChemicalExportRecipe(Chemical.FORMAT_STDINCHIKEY));
 
         DEFAULT_RECIPE_MAP.put(DefaultColumns.STD_INCHIKEY_FORMATTED, (s, cell) ->{
             if(s instanceof ChemicalSubstance){
@@ -104,11 +108,21 @@ public class SubstanceSpreadsheetExporter implements Exporter<Substance> {
 
         DEFAULT_RECIPE_MAP.put(DefaultColumns.CAS, new CodeSystemRecipe("CAS"));
         DEFAULT_RECIPE_MAP.put(DefaultColumns.EC, new CodeSystemRecipe("ECHA (EC/EINECS)"));
-        DEFAULT_RECIPE_MAP.put(DefaultColumns.ITIS, new CodeSystemRecipe("ITIS"));
-        DEFAULT_RECIPE_MAP.put(DefaultColumns.NCBI, new CodeSystemRecipe("NCBI TAXONOMY"));
-        DEFAULT_RECIPE_MAP.put(DefaultColumns.USDA_PLANTS, new CodeSystemRecipe("USDA PLANTS"));
+        DEFAULT_RECIPE_MAP.put(DefaultColumns.ITIS, ParentSourceMaterialRecipeWrapper.wrap(new CodeSystemRecipe("ITIS")));
+        DEFAULT_RECIPE_MAP.put(DefaultColumns.NCBI, ParentSourceMaterialRecipeWrapper.wrap(new CodeSystemRecipe("NCBI TAXONOMY")));
+        DEFAULT_RECIPE_MAP.put(DefaultColumns.USDA_PLANTS, ParentSourceMaterialRecipeWrapper.wrap(new CodeSystemRecipe("USDA PLANTS")));
         DEFAULT_RECIPE_MAP.put(DefaultColumns.INN, new CodeSystemRecipe("INN"));
         DEFAULT_RECIPE_MAP.put(DefaultColumns.NCI_THESAURUS, new CodeSystemRecipe("NCI_THESAURUS"));
+        
+        DEFAULT_RECIPE_MAP.put(DefaultColumns.RXCUI, new CodeSystemRecipe("RXCUI"));
+        DEFAULT_RECIPE_MAP.put(DefaultColumns.PUBCHEM, new CodeSystemRecipe("PUBCHEM"));
+        DEFAULT_RECIPE_MAP.put(DefaultColumns.MPNS, ParentSourceMaterialRecipeWrapper.wrap(new CodeSystemRecipe("MPNS")));
+        DEFAULT_RECIPE_MAP.put(DefaultColumns.GRIN, ParentSourceMaterialRecipeWrapper.wrap(new CodeSystemRecipe("GRIN")));
+        
+        
+        DEFAULT_RECIPE_MAP.put(DefaultColumns.INGREDIENT_TYPE, (s, cell) ->{
+            cell.writeString(GinasUtils.getIngredientType(s));
+        });
 
 
         //Lazy place to put new default columns
@@ -155,8 +169,21 @@ public class SubstanceSpreadsheetExporter implements Exporter<Substance> {
 
 
     }
+    
+    private static interface SubstanceColumnValueRecipe extends ColumnValueRecipe<Substance>{
+    	
+    	public default SubstanceFetcherRecipeWrapper wrapped(Function<Substance,Substance> trans){
+    		return new SubstanceFetcherRecipeWrapper(this){
+				@Override
+				public Substance getSubstance(Substance s) {
+					return trans.apply(s);
+				}
+    		};
+    		
+    	}
+    }
 
-    private static class ChemicalExportRecipe implements ColumnValueRecipe<Substance>{
+    private static class ChemicalExportRecipe implements SubstanceColumnValueRecipe{
 
         private final  int chemicalFormat;
 
@@ -176,11 +203,74 @@ public class SubstanceSpreadsheetExporter implements Exporter<Substance> {
             }
         }
     }
+    
+    
+    
+    
+    /**
+     * Wraps a {@link ColumnValueRecipe} to fetch a (possibly) different object before applying 
+     * the recipe.
+     * 
+     * @author tyler
+     *
+     */
+    private static abstract class SubstanceFetcherRecipeWrapper implements SubstanceColumnValueRecipe{
 
-    private static class CodeSystemRecipe implements ColumnValueRecipe<Substance>{
+    	ColumnValueRecipe<Substance> _delegate;
+    	
+    	public SubstanceFetcherRecipeWrapper(ColumnValueRecipe<Substance>  del){
+    		this._delegate=del;
+    		
+    	}
+    	
+    	public abstract Substance getSubstance(Substance s);
+    	
+		@Override
+		public void writeValue(Substance object, SpreadsheetCell cell) {
+			this._delegate.writeValue(getSubstance(object), cell);
+		}
+		
+    }
+    
+    private static class ParentSourceMaterialRecipeWrapper extends SubstanceFetcherRecipeWrapper{
+
+		public ParentSourceMaterialRecipeWrapper(ColumnValueRecipe<Substance> del) {
+			super(del);
+		}
+
+		@Override
+		public Substance getSubstance(Substance s) {
+			
+			if(s instanceof StructurallyDiverseSubstance){
+				StructurallyDiverseSubstance sdiv = (StructurallyDiverseSubstance)s;
+			    SubstanceReference sr=sdiv.structurallyDiverse.parentSubstance;
+			    if(sr!=null){
+			    	Substance full = SubstanceFactory.getFullSubstance(sr);
+			    	if(full!=null){
+			    		return full;
+			    	}
+			    }
+			}
+			return s;
+		}
+		
+		/**
+		 * Fetches the parent substance (if one exists) rather than the given substance
+		 * for use in column recipes.
+		 * @param col
+		 * @return
+		 */
+		public static ParentSourceMaterialRecipeWrapper wrap(ColumnValueRecipe<Substance> col){
+			return new ParentSourceMaterialRecipeWrapper(col);
+		}
+    	
+    }
+    
+    private static class CodeSystemRecipe implements SubstanceColumnValueRecipe{
 
         private final String codeSystemToFind;
         private final boolean publicOnly;
+        
 
         public CodeSystemRecipe(String codeSystemToFind) {
             this(codeSystemToFind, false);
@@ -209,8 +299,11 @@ public class SubstanceSpreadsheetExporter implements Exporter<Substance> {
                     if("PRIMARY".equals(cd.type)){
                         bestCode = cd.code;
                         break;
+                    }else{
+                        if(bestCode==null){
+                            bestCode=cd.code + " [" + cd.type + "]";
+                        }
                     }
-                    bestCode = cd.code;
                 }
             }
 
@@ -218,6 +311,8 @@ public class SubstanceSpreadsheetExporter implements Exporter<Substance> {
                 cell.writeString(bestCode);
             }
         }
+        
+        
     }
 
     /**

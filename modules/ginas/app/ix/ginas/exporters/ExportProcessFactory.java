@@ -28,7 +28,15 @@ public class ExportProcessFactory {
     
     private static ConcurrentHashMap<String,ExportMetaData> inProgress = new ConcurrentHashMap<>();
     
-    
+    private final File rootDir;
+
+    public ExportProcessFactory(){
+        rootDir = new File((String) ConfigHelper.getOrDefault("export.path.root", "exports"));
+    }
+
+    public ExportProcessFactory(File rootDir){
+        this.rootDir = rootDir;
+    }
 
 
     //need to synchronize
@@ -61,7 +69,7 @@ public class ExportProcessFactory {
     }
 
     private File[] getFiles(ExportMetaData metadata, String username) {
-        File exportDir = getExportDirFor(username);
+        File exportDir = new File(rootDir,username);
 
         return createFilesFrom(exportDir, metadata);
     }
@@ -70,7 +78,7 @@ public class ExportProcessFactory {
         return new File((String) ConfigHelper.getOrDefault("export.path.root", "exports"), username);
     }
     
-    private static File getExportMetaDirFor(File parentDir) {
+    private static File getExportMetaDirFor(File parentDir){
         File metaDirectory = new File(parentDir, "meta");
         try {
             IOUtil.createDirectories(metaDirectory);
@@ -80,11 +88,11 @@ public class ExportProcessFactory {
         return metaDirectory;
     }
 
-    private File[] createFilesFrom(File parent, ExportMetaData metadata) {
+    private File[] createFilesFrom(File parent, ExportMetaData metadata){
         return getFiles(parent, metadata.getFilename());
     }
 
-    private static File[] getFiles(File exportDir, String fname) {
+    private static File[] getFiles(File exportDir, String fname){
         
         File metaDirectory = getExportMetaDirFor(exportDir);
         
@@ -102,6 +110,7 @@ public class ExportProcessFactory {
     public static List<ExportMetaData> getExplicitExportMetaData(String username){
         EntityMapper em = EntityFactory.EntityMapper.FULL_ENTITY_MAPPER();
         File metaDirectory = getExportMetaDirFor(getExportDirFor(username));
+
         File[] files = metaDirectory.listFiles();
         //null if directory doesn't exist or there's an IO problem
         if(files ==null){
@@ -155,6 +164,7 @@ public class ExportProcessFactory {
     public static void remove(ExportMetaData meta){
         inProgress.remove(meta.id);
         File[] files = getFiles(getExportDirFor(meta.username), meta.getFilename());
+
         files[0].delete();
         files[1].delete();
         
