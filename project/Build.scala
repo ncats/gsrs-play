@@ -31,8 +31,7 @@ object ApplicationBuild extends Build {
     javaEbean,
     cache,
     filters,
-
-    "org.apache.httpcomponents" % "httpclient" %"4.5.1",
+    "org.apache.httpcomponents" % "httpclient" %"4.5.2",
     "org.apache.httpcomponents" % "httpcore" %"4.4.4",
     "org.apache.httpcomponents" % "httpclient" %"4.3.1", //required for Ivy bug?
     "commons-io" % "commons-io" % "2.4",
