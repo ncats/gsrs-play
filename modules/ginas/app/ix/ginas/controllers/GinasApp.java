@@ -358,6 +358,10 @@ public class GinasApp extends App {
 
     static FacetDecorator[] decorate(Facet... facets) {
         return Arrays.stream(facets).map(GinasFacetDecorator::new).filter(fd -> !fd.isHidden())
+        		.sorted((f1,f2)->{
+        			
+        			return f2.getFacet().getSelectedLabels().size()-f1.getFacet().getSelectedLabels().size();
+        		})
                 .toArray(len -> new FacetDecorator[len]);
     }
 
