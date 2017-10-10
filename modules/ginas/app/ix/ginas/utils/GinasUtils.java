@@ -413,5 +413,54 @@ public class GinasUtils {
 		public abstract Substance transformSubstance(K rec) throws Throwable;
 	}
 
+
+
+
+
+    /**
+     * 
+     *  Has a reflexive type. Looks through the substance to see if it
+     *  has any relationships which points back to itself and contains
+     *  the given string, returns true.
+     * 
+     **/
+    public static boolean hasReflexiveType(Substance s, String typeContains){
+    
+    	boolean isReflexive = s.relationships
+                    .stream()
+    				.filter(r -> r.type.contains(typeContains))
+                    .filter(r -> r.relatedSubstance.refuuid.equals(s.uuid.toString()))
+                    .findAny()
+    				.isPresent();
+    				
+    	return isReflexive;
+    }
+    
+    /**
+     * 
+     *  Returns the ingredient type classification for
+     *  the given substance.
+     * 
+     **/
+    public static String getIngredientType(Substance s){
+    	
+    	if(hasReflexiveType(s,"IONIC MOIETY")){
+    		return "IONIC MOIETY";
+    	}
+    	
+    	if(hasReflexiveType(s,"MOLECULAR FRAGMENT")){
+    		return "MOLECULAR FRAGMENT";
+    	}
+    	
+    	if(hasReflexiveType(s,"UNSPECIFIED INGREDIENT")){
+    		return "UNSPECIFIED INGREDIENT";
+    	}
+    	
+    	if(hasReflexiveType(s,"SPECIFIED SUBSTANCE")){
+    		return "SPECIFIED SUBSTANCE";
+    	}
+    	
+    	return "INGREDIENT SUBSTANCE";
+    }
 	
 }
