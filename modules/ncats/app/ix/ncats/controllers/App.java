@@ -604,11 +604,11 @@ public class App extends Authentication {
 				}
 
 				String dep = query.getOrDefault("showDeprecated", new String[]{"false"})[0];
-			    args.add("dep" + dep);	
+			    args.add("dep" + dep);
 
 
 
-				Collections.sort(args);
+		Collections.sort(args);
 				return Util.sha1(args.toArray(new String[0]));
 	}
 
@@ -979,7 +979,7 @@ public class App extends Authentication {
 					response().setContentType(mime);
 					return ok(result);
 				}
-			}catch (Exception ex) {
+		 	}catch (Exception ex) {
 				Logger.error("Can't generate image for structure "
 						+id+" format="+format+" size="+size, ex);
 				return internalServerError
@@ -1261,7 +1261,7 @@ public class App extends Authentication {
                                 task.search(processor);
                                 SearchResultContext ctx = processor.getContext();
                                 ctx.setKey(key);
-                                
+
                                 return ctx;
                             },SearchResultContext.class));
         }catch (Exception ex) {
@@ -1301,7 +1301,7 @@ public class App extends Authentication {
         return similarity(query, threshold, rows*page, processor);
     }
 
-    static String getKey (String q, double t) {
+    public static String getKey (String q, double t) {
         return Util.sha1(q) + "/"+String.format("%1$d", (int)(1000*t+.5));
     }
     
@@ -1337,6 +1337,7 @@ public class App extends Authentication {
 				result.copyTo(resultList, (page-1)*rows, rows, false);
 			}
 		}
+
 		return renderer.render(src, page, rows, result.getCount(),
 				pages, result.getFacets(), resultList);
 	}
@@ -1546,7 +1547,6 @@ public class App extends Authentication {
 				(IxCache.getStatistics()));
 	}
 
-	
 
 	@Dynamic(value = IxDynamicResourceHandler.IS_ADMIN, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
 	public static Result cacheList (int top, int skip) {
