@@ -276,7 +276,7 @@ public class PojoDiff {
 		return null;
 	}
 	
-	
+
 	private static ObjectNode mappify(ObjectNode m2){
 		Iterator<String> fields=m2.fieldNames();
 		List<String> fieldNames = new ArrayList<String>();
@@ -298,7 +298,8 @@ public class PojoDiff {
 		}
 		return m2;
 	}
-	
+
+	/*
 	private static ObjectNode mappify(ArrayNode o){
 		ObjectMapper om=new ObjectMapper();
 		ArrayNode arr=((ArrayNode)o);
@@ -321,7 +322,30 @@ public class PojoDiff {
 		}
 		return mnew;
 	}
-	
+	*/
+
+	private static ObjectNode mappify(ArrayNode o){
+		ObjectMapper om=new ObjectMapper();
+		ArrayNode arr=((ArrayNode)o);
+
+		ObjectNode mnew=om.createObjectNode();
+		//Map mnew = new HashMap();
+		for(int i=0;i<arr.size();i++){
+			JsonNode o2=arr.get(i);
+			String id=getID(o2);
+			String ind=String.format("%05d", i);
+			String id_ind=String.format("%05d", 0);
+			if(id!=null){
+				mnew.set("$" + id + "_" + id_ind, o2);
+			}else{
+				mnew.set("_" + ind, o2);
+			}
+			if(o2.isObject()){
+				mappify((ObjectNode)o2);
+			}
+		}
+		return mnew;
+	}
 	
 	private static JsonNode mappifyJson(JsonNode js1){
 		try {
@@ -449,9 +473,6 @@ public class PojoDiff {
 		canonicalizeDiff(reorderedDiffs);
 		ArrayNode an=(new ObjectMapper()).createArrayNode();
 		an.addAll(reorderedDiffs);
-		for(JsonNode jsn1: an){
-			System.out.println(jsn1.toString());
-		}
 		return an;
 		//return normalDiff;
 	}
@@ -592,7 +613,7 @@ public class PojoDiff {
         		}
         	}
         	
-        	
+        	try{
         	for(JsonNode change:patchChanges){
         		//System.out.println(new Change(change));
         		String path=change.get("path").asText();
@@ -643,6 +664,14 @@ public class PojoDiff {
 	    			}
         	    }
             	
+        	}
+        	}catch(Exception e){
+        		System.out.println("PojoDiff Error");
+        		System.out.println("=================================");
+        		e.printStackTrace();
+        		System.out.println(patchChanges);        		
+        		throw e;
+        		
         	}
         	
         	//System.out.println("============");
@@ -913,7 +942,7 @@ public class PojoDiff {
 			public boolean isIgnored() {return false;}
 			
 		}
-		
+
 		public static class MethodSetter implements Setter{
 			private Method m;
 			boolean ignore=false;
@@ -1232,6 +1261,7 @@ public class PojoDiff {
 					throw new IllegalStateException("'-'  not yet implemented");
 				}
 				final int c=getCollectionPostion(col,prop);
+				
 				if(col instanceof List){
 					return (instance, set)->((List<Object>)instance).remove(c);
 				}else{
@@ -1255,8 +1285,7 @@ public class PojoDiff {
 				@SuppressWarnings("unchecked")
 				Collection<Object> col = (Collection<Object>)o;
 				
-				int cind=getCollectionPostion(col,prop,true);
-				
+				int cind=getCollectionPostion(col,prop,true);				
 				if(cind>=col.size()){
 					cind=-1;
 				}
