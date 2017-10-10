@@ -1624,6 +1624,13 @@ public class GinasApp extends App {
                 if (values.isEmpty()) {
                     values = finder.where().ieq("codes.code", name).findList();// last
                     // resort..
+                    
+                    //lookup in ad-hoc list
+                    if(values.isEmpty()){
+                    	values=AdHocNameResolver.getAdaptedRecordKey(name)
+                    	                 .map(nk->resolveName(nk))
+                    	                 .orElse(values);
+                    }
                 }
             }
         }
