@@ -43,7 +43,7 @@ public class UserProfile extends IxModel implements Subject {
 	@Lob
 	@JsonIgnore
 	private String rolesJSON = null; // this is a silly, but quick way to
-									 // serialize roles
+	// serialize roles
 
 	// private key to be used in authentication
 	// This is not a public/private key,
@@ -163,8 +163,8 @@ public class UserProfile extends IxModel implements Subject {
 		this.salt = AdminFactory.generateSalt();
 		this.hashp = Util.encrypt(password, this.salt);
 	}
-	
-	
+
+
 
 	public static UserProfile GUEST() {
 		UserProfile up = new UserProfile(new Principal("GUEST"));
@@ -172,4 +172,14 @@ public class UserProfile extends IxModel implements Subject {
 
 		return up;
 	}
+
+	public boolean isRoleQueryOnly(){
+
+		if(this.hasRole(Role.Query) && this.getRoles().size()==1){
+			return true;
+
+		}
+		return false;
+	}
+
 }

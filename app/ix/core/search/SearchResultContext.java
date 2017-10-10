@@ -119,7 +119,7 @@ public class SearchResultContext {
 		}
     }
     
-    SearchResultContext () {
+    public SearchResultContext () {
     	//TODO: This assumption isn't always correct
         try{
             this.setGeneratingUrl(Global.getHost() + Controller.request().uri());
@@ -257,7 +257,7 @@ public class SearchResultContext {
         return (results != null) ? new ArrayList<>(results) : new ArrayList<>();
     }
     
-    protected void add (Object obj) { results.add(obj); }
+    public void add (Object obj) { results.add(obj); }
     
     
     public void addListener(SearchResultContext.StatusChangeListener listener){

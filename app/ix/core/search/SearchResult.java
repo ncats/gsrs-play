@@ -7,6 +7,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.LinkedList;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -600,6 +601,38 @@ public class SearchResult {
 			return this;
 		}
 	}
+
+
+        public static class PrecomputedResultBuilder extends AbstractBuilder<PrecomputedResultBuilder> {
+
+               List<Object> tmpResults = new LinkedList<>();
+
+               protected PrecomputedResultBuilder getThis(){
+                       return this;
+               }
+
+               /**
+                * Add a result to the list.
+                * @param o the object to add may be null.
+                * @return this
+                */
+                public PrecomputedResultBuilder addResult(Object o){
+                        tmpResults.add(o);
+                        return getThis();
+                }
+
+                @Override
+                public SearchResult build() {
+                        if(!tmpResults.isEmpty()){
+                                //defensive copy
+                                this.result(new ArrayList<>(tmpResults));
+                        }
+
+                        stop(TimeUtil.getCurrentTimeMillis());
+                        return super.build();
+                }
+        }
+
 
 	/**
 	 * A Builder for {@link SearchResult}. This builder
