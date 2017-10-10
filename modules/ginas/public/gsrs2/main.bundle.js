@@ -1,6 +1,6 @@
 webpackJsonp([1,4],{
 
-/***/ 113:
+/***/ 114:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -61,9 +61,11 @@ module.exports = __webpack_require__(579);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__reference__ = __webpack_require__(146);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__reference_list_service__ = __webpack_require__(304);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__reference_component__ = __webpack_require__(489);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__angular_material__ = __webpack_require__(110);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7_lodash__ = __webpack_require__(44);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__angular_material__ = __webpack_require__(111);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7_lodash__ = __webpack_require__(39);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_7_lodash___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_7_lodash__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_8__angular_http__ = __webpack_require__(108);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_9__utils_utils_service__ = __webpack_require__(33);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return ReferenceListDialog; });
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -82,16 +84,21 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 
 
 
+
+
 var ReferenceListDialog = (function () {
-    function ReferenceListDialog(referenceService, refDialog) {
+    function ReferenceListDialog(referenceService, refDialog, http, utilService) {
         this.referenceService = referenceService;
         this.refDialog = refDialog;
+        this.http = http;
+        this.utilService = utilService;
         this._referenceViewTab = "all";
         this._filterQuery = "";
         this.closeFunction = function () { }; //the specific function to call on close
         this.allReferences = []; //every reference currently present (master list) [full]
         this.allRefsForData = []; //those currently displayable
         this.allRefsForDataFiltered = []; //those currently displayed
+        this.username = "";
         this.refCtrl = new __WEBPACK_IMPORTED_MODULE_1__angular_forms__["FormControl"]();
         //this.filteredRefs = this.refCtrl.valueChanges
         //  .startWith(null)
@@ -122,13 +129,26 @@ var ReferenceListDialog = (function () {
         enumerable: true,
         configurable: true
     });
+    ReferenceListDialog.prototype.getUsername = function () {
+        var _this = this;
+        var endpoint = this.utilService.browserurl + "/ginas/app/api/v1/whoami";
+        this.http
+            .get(endpoint)
+            .subscribe(function (res) {
+            console.log(res.json());
+            console.log(res.json().identifier);
+            _this.username = res.json().identifier;
+            console.log(_this.username);
+        });
+    };
     ReferenceListDialog.prototype.toggleReferences = function (value) {
         console.log("Clicked:" + value);
         if (value == "all") {
             this.setRefsToAll();
         }
         else if (value == "last5") {
-            this.setRefsFromAPIMatchingUser("admin");
+            console.log(this.username);
+            this.setRefsFromAPIMatchingUser(this.username);
         }
         else if (value == "selected") {
             this.setRefsForData(this.data);
@@ -173,6 +193,7 @@ var ReferenceListDialog = (function () {
     };
     ReferenceListDialog.prototype.ngOnInit = function () {
         this.toggleReferences(this._referenceViewTab);
+        this.getUsername();
     };
     ReferenceListDialog.prototype.isChecked = function (ref) {
         var has = false;
@@ -276,12 +297,12 @@ var ReferenceListDialog = (function () {
         __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__angular_core__["Component"])({
             selector: 'reference-list-dialog',
             template: __webpack_require__(986),
-            providers: [__WEBPACK_IMPORTED_MODULE_4__reference_list_service__["a" /* ReferenceListService */]]
+            providers: [__WEBPACK_IMPORTED_MODULE_4__reference_list_service__["a" /* ReferenceListService */], __WEBPACK_IMPORTED_MODULE_9__utils_utils_service__["a" /* UtilService */]]
         }), 
-        __metadata('design:paramtypes', [(typeof (_a = typeof __WEBPACK_IMPORTED_MODULE_4__reference_list_service__["a" /* ReferenceListService */] !== 'undefined' && __WEBPACK_IMPORTED_MODULE_4__reference_list_service__["a" /* ReferenceListService */]) === 'function' && _a) || Object, (typeof (_b = typeof __WEBPACK_IMPORTED_MODULE_6__angular_material__["d" /* MdDialog */] !== 'undefined' && __WEBPACK_IMPORTED_MODULE_6__angular_material__["d" /* MdDialog */]) === 'function' && _b) || Object])
+        __metadata('design:paramtypes', [(typeof (_a = typeof __WEBPACK_IMPORTED_MODULE_4__reference_list_service__["a" /* ReferenceListService */] !== 'undefined' && __WEBPACK_IMPORTED_MODULE_4__reference_list_service__["a" /* ReferenceListService */]) === 'function' && _a) || Object, (typeof (_b = typeof __WEBPACK_IMPORTED_MODULE_6__angular_material__["d" /* MdDialog */] !== 'undefined' && __WEBPACK_IMPORTED_MODULE_6__angular_material__["d" /* MdDialog */]) === 'function' && _b) || Object, (typeof (_c = typeof __WEBPACK_IMPORTED_MODULE_8__angular_http__["b" /* Http */] !== 'undefined' && __WEBPACK_IMPORTED_MODULE_8__angular_http__["b" /* Http */]) === 'function' && _c) || Object, (typeof (_d = typeof __WEBPACK_IMPORTED_MODULE_9__utils_utils_service__["a" /* UtilService */] !== 'undefined' && __WEBPACK_IMPORTED_MODULE_9__utils_utils_service__["a" /* UtilService */]) === 'function' && _d) || Object])
     ], ReferenceListDialog);
     return ReferenceListDialog;
-    var _a, _b;
+    var _a, _b, _c, _d;
 }());
 //# sourceMappingURL=reference-list-dialog.component.js.map
 
@@ -348,7 +369,7 @@ var Reference = (function (_super) {
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_lodash__ = __webpack_require__(44);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_lodash__ = __webpack_require__(39);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_lodash___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_lodash__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return Data; });
 
@@ -407,7 +428,7 @@ var Data = (function () {
 
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(0);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_lodash__ = __webpack_require__(44);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_lodash__ = __webpack_require__(39);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_lodash___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_lodash__);
 /* unused harmony export CV_DOMAIN_TYPES */
 /* unused harmony export COMMON_TABS */
@@ -532,7 +553,7 @@ var CVService = (function () {
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__references_referencedData__ = __webpack_require__(113);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__references_referencedData__ = __webpack_require__(114);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return Code; });
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
@@ -555,7 +576,7 @@ var Code = (function (_super) {
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__references_referencedData__ = __webpack_require__(113);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__references_referencedData__ = __webpack_require__(114);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return Name; });
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
@@ -583,7 +604,7 @@ var Name = (function (_super) {
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__reference__ = __webpack_require__(146);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__angular_core__ = __webpack_require__(0);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_lodash__ = __webpack_require__(44);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_lodash__ = __webpack_require__(39);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_lodash___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_2_lodash__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return ReferenceListService; });
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
@@ -622,6 +643,8 @@ var ReferenceListService = (function () {
     //gets the last 5 references by username "admin" for now
     //TODO: Needs sort
     ReferenceListService.prototype.getLastFiveReferences = function (username) {
+        console.log("ref list service-last 5 refs");
+        console.log(username);
         return new Promise(function (resolve, reject) {
             window["ReferenceFinder"]
                 .searchByLastEdited(username)
@@ -655,7 +678,7 @@ var ReferenceListService = (function () {
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__references_referencedData__ = __webpack_require__(113);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__references_referencedData__ = __webpack_require__(114);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return Relationship; });
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
@@ -674,12 +697,12 @@ var Relationship = (function (_super) {
 
 /***/ }),
 
-/***/ 34:
+/***/ 33:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(0);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_lodash__ = __webpack_require__(44);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_lodash__ = __webpack_require__(39);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_lodash___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_lodash__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return UtilService; });
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
@@ -698,7 +721,7 @@ var UtilService = (function () {
         this.references = [];
         this.browserurl = window.location.href.split("/ginas/app")[0];
     }
-    //  public browserurl: string ="http://localhost:9000";
+    //public browserurl: string ="http://localhost:9000";
     UtilService.prototype.getBrowserUrl = function () {
         return this.browserurl;
     };
@@ -808,11 +831,11 @@ var Amount = (function () {
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__references_reference_list_service__ = __webpack_require__(304);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__cv_cv_service__ = __webpack_require__(29);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__code__ = __webpack_require__(302);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__utils_utils_service__ = __webpack_require__(34);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__utils_utils_service__ = __webpack_require__(33);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__substanceedit_substanceedit_service__ = __webpack_require__(58);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__references_reference_list_dialog_component__ = __webpack_require__(145);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_8__angular_material__ = __webpack_require__(110);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_9_lodash__ = __webpack_require__(44);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_8__angular_material__ = __webpack_require__(111);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_9_lodash__ = __webpack_require__(39);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_9_lodash___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_9_lodash__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return CodeListComponent; });
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
@@ -845,6 +868,7 @@ var CodeListComponent = (function () {
         this.codes = [];
         this.access = [];
         this.codeSystem = [];
+        this.codeType = [];
         this.references = [];
     }
     CodeListComponent.prototype.ngOnInit = function () {
@@ -852,6 +876,7 @@ var CodeListComponent = (function () {
         this.getAccess();
         this.getCodeSystem();
         this.getCodes();
+        this.getCodeType();
     };
     CodeListComponent.prototype.confirmDeleteCode = function (code) {
         var _this = this;
@@ -870,14 +895,19 @@ var CodeListComponent = (function () {
     CodeListComponent.prototype.deleteCode = function (code) {
         this.codes.splice(this.findSelectedCodeIndex(code), 1);
     };
-    CodeListComponent.prototype.addCode = function () {
+    CodeListComponent.prototype.addCode = function (top) {
         console.log("add");
         this.newCode = true;
         this.nCode = new __WEBPACK_IMPORTED_MODULE_4__code__["a" /* Code */]();
         this.nCode.references = [];
-        this.nCode.access = ['protected'];
+        //this.nCode.access = ['protected'];
         this.nCode.generateNewUuid();
-        this.codes.push(this.nCode);
+        if (top) {
+            this.codes.unshift(this.nCode);
+        }
+        else {
+            this.codes.push(this.nCode);
+        }
     };
     CodeListComponent.prototype.exportRefs = function () {
         console.log("export codes");
@@ -913,6 +943,7 @@ var CodeListComponent = (function () {
             .getCodes()
             .then(function (codes) {
             _this.codes = codes;
+            _this.codes = __WEBPACK_IMPORTED_MODULE_9_lodash__["orderBy"](_this.codes, ['codeSystem'], ['asc']);
         });
     };
     CodeListComponent.prototype.getAccess = function () {
@@ -926,6 +957,12 @@ var CodeListComponent = (function () {
         this.cvService
             .getList("CODE_SYSTEM")
             .then(function (cs) { return _this.codeSystem = cs; });
+    };
+    CodeListComponent.prototype.getCodeType = function () {
+        var _this = this;
+        this.cvService
+            .getList("CODE_TYPE")
+            .then(function (cs) { return _this.codeType = cs; });
     };
     CodeListComponent.prototype.changeAccess = function ($event, code) {
         this.utilService.changeAccess($event, code);
@@ -966,15 +1003,15 @@ var CodeListComponent = (function () {
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__name__ = __webpack_require__(303);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__references_reference_list_service__ = __webpack_require__(304);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__cv_cv_service__ = __webpack_require__(29);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__angular_material__ = __webpack_require__(110);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__angular_material__ = __webpack_require__(111);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__references_reference_list_dialog_component__ = __webpack_require__(145);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_6_primeng_primeng__ = __webpack_require__(100);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_6_primeng_primeng___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_6_primeng_primeng__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__utils_utils_service__ = __webpack_require__(34);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__utils_utils_service__ = __webpack_require__(33);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_8_rxjs_add_operator_switchMap__ = __webpack_require__(156);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_8_rxjs_add_operator_switchMap___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_8_rxjs_add_operator_switchMap__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_9__angular_router__ = __webpack_require__(32);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_10_lodash__ = __webpack_require__(44);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_10_lodash__ = __webpack_require__(39);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_10_lodash___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_10_lodash__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_11__substanceedit_substanceedit_service__ = __webpack_require__(58);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return NameListComponent; });
@@ -1044,7 +1081,13 @@ var NameListComponent = (function () {
             .getNames()
             .then(function (nams) {
             _this.names = nams;
-            //this.nameService.namesList=nams;
+            _this.names.sort(function (a, b) {
+                if (a.displayName)
+                    return -1;
+                if (b.displayName)
+                    return 1;
+                return a.name.localeCompare(b.name);
+            });
         });
     };
     NameListComponent.prototype.getTabs = function () {
@@ -1088,15 +1131,19 @@ var NameListComponent = (function () {
             dialogRef.close();
         };
     };
-    NameListComponent.prototype.addName = function () {
+    NameListComponent.prototype.addName = function (top) {
         console.log("add name");
         this.nName = new __WEBPACK_IMPORTED_MODULE_1__name__["a" /* Name */]();
-        this.nName.type = 'cn';
         this.nName.languages = ['en'];
         this.nName.access = ['protected'];
         this.nName.references = [];
         this.nName.generateNewUuid();
-        this.names.push(this.nName);
+        if (top) {
+            this.names.unshift(this.nName);
+        }
+        else {
+            this.names.push(this.nName);
+        }
     };
     NameListComponent.prototype.validateNames = function (names) {
         for (var _i = 0, names_1 = names; _i < names_1.length; _i++) {
@@ -1156,7 +1203,7 @@ var NameListComponent = (function () {
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__references_referencedData__ = __webpack_require__(113);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__references_referencedData__ = __webpack_require__(114);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return Notes; });
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
@@ -1179,7 +1226,7 @@ var Notes = (function (_super) {
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__references_referencedData__ = __webpack_require__(113);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__references_referencedData__ = __webpack_require__(114);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return Property; });
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
@@ -1266,7 +1313,9 @@ var PropertyService = (function (_super) {
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_primeng_primeng___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_2_primeng_primeng__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__cv_cv_service__ = __webpack_require__(29);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__substanceedit_substanceedit_service__ = __webpack_require__(58);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__utils_utils_service__ = __webpack_require__(34);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__utils_utils_service__ = __webpack_require__(33);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6_lodash__ = __webpack_require__(39);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6_lodash___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_6_lodash__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return ReferenceListComponent; });
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -1277,6 +1326,7 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
+
 
 
 
@@ -1317,15 +1367,22 @@ var ReferenceListComponent = (function () {
     };
     ReferenceListComponent.prototype.deleteReference = function (ref) {
         this.refs.splice(this.findSelectedRefIndex(ref), 1);
+        __WEBPACK_IMPORTED_MODULE_4__substanceedit_substanceedit_service__["a" /* SubstanceEditService */].refs = this.refs;
     };
-    ReferenceListComponent.prototype.addReference = function () {
+    ReferenceListComponent.prototype.addReference = function (top) {
         console.log("add reference");
         this.newRef = true;
         this.nRef = new __WEBPACK_IMPORTED_MODULE_1__reference__["a" /* Reference */]();
         this.nRef.generateNewUuid();
         this.nRef.setFlag("new", true);
         this.nRef.index = this.refs.length + 1;
-        this.refs.push(this.nRef);
+        if (top) {
+            this.refs.unshift(this.nRef);
+        }
+        else {
+            this.refs.push(this.nRef);
+        }
+        __WEBPACK_IMPORTED_MODULE_4__substanceedit_substanceedit_service__["a" /* SubstanceEditService */].refs = this.refs;
     };
     ReferenceListComponent.prototype.exportRefs = function () {
         console.log("export refs");
@@ -1339,6 +1396,7 @@ var ReferenceListComponent = (function () {
             .getReferences()
             .then(function (refs) {
             _this.refs = refs;
+            _this.refs = __WEBPACK_IMPORTED_MODULE_6_lodash__["orderBy"](_this.refs, ['citation'], ['asc']);
         });
     };
     ReferenceListComponent.prototype.getAccess = function () {
@@ -1381,7 +1439,7 @@ var ReferenceListComponent = (function () {
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(0);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__cv_cv_service__ = __webpack_require__(29);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__utils_utils_service__ = __webpack_require__(34);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__utils_utils_service__ = __webpack_require__(33);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return ReferenceEditDialog; });
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -1471,12 +1529,12 @@ var ReferenceEditDialog = (function () {
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(0);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__relationship__ = __webpack_require__(305);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__cv_cv_service__ = __webpack_require__(29);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__angular_material__ = __webpack_require__(110);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__angular_material__ = __webpack_require__(111);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__references_reference_list_dialog_component__ = __webpack_require__(145);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_5_primeng_primeng__ = __webpack_require__(100);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_5_primeng_primeng___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_5_primeng_primeng__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__utils_utils_service__ = __webpack_require__(34);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7_lodash__ = __webpack_require__(44);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__utils_utils_service__ = __webpack_require__(33);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7_lodash__ = __webpack_require__(39);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_7_lodash___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_7_lodash__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_8__substanceedit_substanceedit_service__ = __webpack_require__(58);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return RelationshipListComponent; });
@@ -1563,7 +1621,7 @@ var RelationshipListComponent = (function () {
             dialogRef.close();
         };
     };
-    RelationshipListComponent.prototype.addRelationship = function () {
+    RelationshipListComponent.prototype.addRelationship = function (top) {
         var nRelation = new __WEBPACK_IMPORTED_MODULE_1__relationship__["a" /* Relationship */]();
         nRelation = new __WEBPACK_IMPORTED_MODULE_1__relationship__["a" /* Relationship */]();
         nRelation.access = ['protected'];
@@ -1571,7 +1629,12 @@ var RelationshipListComponent = (function () {
         nRelation.generateNewUuid();
         nRelation.relatedSubstance = null;
         nRelation.type = this.selectedFilterType;
-        this.relations.push(nRelation);
+        if (top) {
+            this.relations.unshift(nRelation);
+        }
+        else {
+            this.relations.push(nRelation);
+        }
         console.log("add new relationship");
     };
     RelationshipListComponent.prototype.findSelectedRelationIndex = function (relation) {
@@ -1604,6 +1667,8 @@ var RelationshipListComponent = (function () {
             _this.relations = rels;
             // this.relationService.relationList=rels;
             _this.loadOptions();
+            //this.utilService.sortLists(this.relations, "relatedSubstance.refPname");
+            _this.relations = __WEBPACK_IMPORTED_MODULE_7_lodash__["orderBy"](_this.relations, ['relatedSubstance.refPname'], ['asc']);
         });
     };
     RelationshipListComponent.prototype.changeAccess = function ($event, relation) {
@@ -1654,10 +1719,10 @@ var RelationshipListComponent = (function () {
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__cv_cv_service__ = __webpack_require__(29);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__substanceedit_service__ = __webpack_require__(58);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__angular_router__ = __webpack_require__(32);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_lodash__ = __webpack_require__(44);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_lodash__ = __webpack_require__(39);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_lodash___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_4_lodash__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__utils_utils_service__ = __webpack_require__(34);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__angular_platform_browser__ = __webpack_require__(42);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__utils_utils_service__ = __webpack_require__(33);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__angular_platform_browser__ = __webpack_require__(43);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return SubstanceeditComponent; });
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -1683,6 +1748,7 @@ var SubstanceeditComponent = (function () {
         this.utilService = utilService;
         this.titleService = titleService;
         this.msgs = [];
+        //msgs: Message[][] = [];
         this.tabs = [];
         this.message = "";
         this.names = [];
@@ -1690,6 +1756,7 @@ var SubstanceeditComponent = (function () {
         this.warningAck = false;
         this.state = "clean";
         this.load = this.substanceEditService.load;
+        this.browserurl = this.utilService.getBrowserUrl();
     }
     SubstanceeditComponent.prototype.getTabs = function () {
         var _this = this;
@@ -1703,7 +1770,7 @@ var SubstanceeditComponent = (function () {
         this.msgs = [];
     };
     SubstanceeditComponent.prototype.ngOnInit = function () {
-        window["GGlob"].GlobalSettings.setBaseURL(this.utilService.getBrowserUrl() + "/ginas/app/api/v1/");
+        window["GGlob"].GlobalSettings.setBaseURL(this.browserurl + "/ginas/app/api/v1/");
         this.uuid = this.route.snapshot.params['id'];
         this.getTabs();
         this.substanceEditService.setUuid(this.uuid);
@@ -1733,12 +1800,16 @@ var SubstanceeditComponent = (function () {
                 .get(function (r) {
                 console.log(r);
                 var detail = "";
+                var messages = __WEBPACK_IMPORTED_MODULE_4_lodash__["chain"](r.validationMessages)
+                    .filter(function (ms) { return ms.messageType != "INFO"; })
+                    .value();
+                r.validationMessages = messages;
                 if (r.isError) {
                     console.log("error");
                     _this.state = "validated-error";
                     detail = "Submission Failed:  ";
                     detail += r.type;
-                    _this.showMessage(r.message, r.message, r.type);
+                    _this.showMessage(r.message, r.message, r.type, r.links);
                 }
                 else if (r.valid === false) {
                     console.log("invalid");
@@ -1747,14 +1818,14 @@ var SubstanceeditComponent = (function () {
                     for (var _i = 0, _a = r.validationMessages; _i < _a.length; _i++) {
                         var m = _a[_i];
                         detail += m.message;
-                        _this.showMessage(m.messageType, m.messageType, m.message);
+                        _this.showMessage(m.messageType, m.messageType, m.message, m.links);
                     }
                 }
                 else if (r.valid === true && r.validationMessages.length > 0) {
                     for (var _b = 0, _c = r.validationMessages; _b < _c.length; _b++) {
                         var m = _c[_b];
-                        detail += m.message;
-                        _this.showMessage(m.messageType, m.messageType, m.message);
+                        detail += m.message + "\n";
+                        _this.showMessage(m.messageType, m.messageType, m.message, m.links);
                     }
                 }
                 else {
@@ -1785,11 +1856,15 @@ var SubstanceeditComponent = (function () {
                 .get(function (r) {
                 console.log(r);
                 var detail = "";
+                var messages = __WEBPACK_IMPORTED_MODULE_4_lodash__["chain"](r.validationMessages)
+                    .filter(function (ms) { return ms.messageType != "INFO"; })
+                    .value();
+                r.validationMessages = messages;
                 if (r.isError) {
                     _this.state = "validated-error";
                     console.log("error");
                     detail = "Submission Failed: " + r.type;
-                    _this.showMessage(r.message, r.message, r.type);
+                    _this.showMessage(r.message, r.message, r.type, r.links);
                 }
                 else if (r.valid === false) {
                     _this.state = "validated-error";
@@ -1798,14 +1873,14 @@ var SubstanceeditComponent = (function () {
                     for (var _i = 0, _a = r.validationMessages; _i < _a.length; _i++) {
                         var m = _a[_i];
                         detail += m.message;
-                        _this.showMessage(m.messageType, m.messageType, m.message);
+                        _this.showMessage(m.messageType, m.messageType, m.message, m.links);
                     }
                 }
                 else if (r.valid === true) {
                     if (r.validationMessages.length > 0) {
                         for (var _b = 0, _c = r.validationMessages; _b < _c.length; _b++) {
                             var m = _c[_b];
-                            _this.showMessage(m.messageType, m.messageType, m.message);
+                            _this.showMessage(m.messageType, m.messageType, m.message, m.links);
                         }
                         _this.state = "validated-warning";
                     }
@@ -1817,14 +1892,20 @@ var SubstanceeditComponent = (function () {
             });
         });
     };
-    SubstanceeditComponent.prototype.showMessage = function (sev, summary, detail) {
+    SubstanceeditComponent.prototype.showMessage = function (sev, summary, detail, links) {
         console.log("show message");
-        this.msgs.push({ severity: 'info', summary: __WEBPACK_IMPORTED_MODULE_4_lodash__["startCase"](__WEBPACK_IMPORTED_MODULE_4_lodash__["toLower"](summary)), detail: detail });
+        this.msgs.push({ links: links, msgs: [{ severity: 'info', summary: __WEBPACK_IMPORTED_MODULE_4_lodash__["startCase"](__WEBPACK_IMPORTED_MODULE_4_lodash__["toLower"](summary)), detail: detail }] });
     };
     SubstanceeditComponent.prototype.msgclose = function (msgs) {
         //if(!this.submitted) {
         this.warningAck = true;
         //}
+    };
+    SubstanceeditComponent.prototype.closemsg = function (msg) {
+        this.warningAck = true;
+        this.msgs = __WEBPACK_IMPORTED_MODULE_4_lodash__["chain"](this.msgs)
+            .filter(function (m) { return m !== msg; })
+            .value();
     };
     SubstanceeditComponent = __decorate([
         __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__angular_core__["Component"])({
@@ -1885,7 +1966,7 @@ var SubstancelistComponent = (function () {
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_rxjs_add_operator_switchMap__ = __webpack_require__(156);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_rxjs_add_operator_switchMap___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_rxjs_add_operator_switchMap__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__angular_router__ = __webpack_require__(32);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__angular_platform_browser__ = __webpack_require__(42);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__angular_platform_browser__ = __webpack_require__(43);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__substanceedit_substanceedit_service__ = __webpack_require__(58);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return SummaryComponent; });
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
@@ -2040,7 +2121,7 @@ __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1__angular_platform_browser_dyna
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__codes_code__ = __webpack_require__(302);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__references_reference__ = __webpack_require__(146);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__names_name__ = __webpack_require__(303);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5_lodash__ = __webpack_require__(44);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5_lodash__ = __webpack_require__(39);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_5_lodash___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_5_lodash__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return SubstanceEditService; });
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
@@ -2431,7 +2512,7 @@ var AppRoutingModule = (function () {
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(0);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_rxjs_add_operator_switchMap__ = __webpack_require__(156);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_rxjs_add_operator_switchMap___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_rxjs_add_operator_switchMap__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__utils_utils_service__ = __webpack_require__(34);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__utils_utils_service__ = __webpack_require__(33);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return AppComponent; });
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -2509,11 +2590,11 @@ export class AppComponent implements OnInit {
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_platform_browser__ = __webpack_require__(42);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_platform_browser__ = __webpack_require__(43);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__angular_core__ = __webpack_require__(0);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__angular_forms__ = __webpack_require__(13);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__angular_http__ = __webpack_require__(139);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__angular_material__ = __webpack_require__(110);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__angular_http__ = __webpack_require__(108);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__angular_material__ = __webpack_require__(111);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__app_routing_module__ = __webpack_require__(735);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__app_component__ = __webpack_require__(736);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_7_hammerjs__ = __webpack_require__(911);
@@ -2611,7 +2692,7 @@ var AppModule = (function () {
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__code__ = __webpack_require__(302);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__cv_cv_service__ = __webpack_require__(29);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__substanceedit_substanceedit_service__ = __webpack_require__(58);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__utils_utils_service__ = __webpack_require__(34);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__utils_utils_service__ = __webpack_require__(33);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return CodeEditComponent; });
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -2700,7 +2781,7 @@ var CodeEditComponent = (function () {
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(0);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__name__ = __webpack_require__(303);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__cv_cv_service__ = __webpack_require__(29);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__utils_utils_service__ = __webpack_require__(34);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__utils_utils_service__ = __webpack_require__(33);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__substanceedit_substanceedit_service__ = __webpack_require__(58);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return NameEditComponent; });
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
@@ -2722,6 +2803,7 @@ var NameEditComponent = (function () {
         this.cvService = cvService;
         this.utilService = utilService;
         this.substanceEditService = substanceEditService;
+        this.names = [];
         this.nameTypes = [];
         this.access = [];
         this.languages = [];
@@ -2775,12 +2857,12 @@ var NameEditComponent = (function () {
         //window["GGlob"].GlobalSettings.setBaseURL(window.location.href.split("/ginas/app")[0]+"/ginas/app/api/v1/");
     };
     NameEditComponent.prototype.changeDisplay = function (name, $event) {
-        console.log("change");
         console.log($event);
-        name.displayName = $event.checked;
-        if ($event.checked) {
-            name.preferred = true;
+        for (var _i = 0, _a = this.names; _i < _a.length; _i++) {
+            var n = _a[_i];
+            n.displayName = false;
         }
+        name.displayName = $event.checked;
         //TODO: iterate over all names and make sure atleast one name has displayName flag set to true
     };
     /*  setService(nameService: NameService){
@@ -2798,6 +2880,10 @@ var NameEditComponent = (function () {
         __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__angular_core__["Input"])(), 
         __metadata('design:type', (typeof (_a = typeof __WEBPACK_IMPORTED_MODULE_1__name__["a" /* Name */] !== 'undefined' && __WEBPACK_IMPORTED_MODULE_1__name__["a" /* Name */]) === 'function' && _a) || Object)
     ], NameEditComponent.prototype, "name", void 0);
+    __decorate([
+        __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__angular_core__["Input"])(), 
+        __metadata('design:type', Array)
+    ], NameEditComponent.prototype, "names", void 0);
     NameEditComponent = __decorate([
         __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__angular_core__["Component"])({
             selector: 'name-edit',
@@ -2944,7 +3030,7 @@ var NotesEditComponent = (function () {
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(0);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__cv_cv_service__ = __webpack_require__(29);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__notes__ = __webpack_require__(485);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__utils_utils_service__ = __webpack_require__(34);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__utils_utils_service__ = __webpack_require__(33);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_primeng_primeng__ = __webpack_require__(100);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_primeng_primeng___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_4_primeng_primeng__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return NotesComponent; });
@@ -3103,7 +3189,7 @@ var ParameterComponent = (function () {
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__references_referencedData__ = __webpack_require__(113);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__references_referencedData__ = __webpack_require__(114);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return Parameter; });
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
@@ -3128,14 +3214,14 @@ var Parameter = (function (_super) {
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(0);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__cv_cv_service__ = __webpack_require__(29);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__utils_utils_service__ = __webpack_require__(34);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__utils_utils_service__ = __webpack_require__(33);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_primeng_primeng__ = __webpack_require__(100);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_primeng_primeng___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_3_primeng_primeng__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__property_model__ = __webpack_require__(486);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__property_service__ = __webpack_require__(487);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__angular_material__ = __webpack_require__(110);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__angular_material__ = __webpack_require__(111);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__references_reference_list_dialog_component__ = __webpack_require__(145);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_8_lodash__ = __webpack_require__(44);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_8_lodash__ = __webpack_require__(39);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_8_lodash___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_8_lodash__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return PropertiesListComponent; });
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
@@ -3282,7 +3368,7 @@ var PropertiesListComponent = (function () {
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__cv_cv_service__ = __webpack_require__(29);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__property_service__ = __webpack_require__(487);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__property_model__ = __webpack_require__(486);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__utils_utils_service__ = __webpack_require__(34);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__utils_utils_service__ = __webpack_require__(33);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return PropertyEditComponent; });
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -3373,11 +3459,11 @@ var PropertyEditComponent = (function () {
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(0);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__reference__ = __webpack_require__(146);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__cv_cv_service__ = __webpack_require__(29);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__angular_http__ = __webpack_require__(139);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__angular_http__ = __webpack_require__(108);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_rxjs_Rx__ = __webpack_require__(994);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_rxjs_Rx___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_4_rxjs_Rx__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__substanceedit_substanceedit_service__ = __webpack_require__(58);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__utils_utils_service__ = __webpack_require__(34);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__utils_utils_service__ = __webpack_require__(33);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return ReferenceEdit; });
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -3503,10 +3589,10 @@ var ReferenceEdit = (function () {
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(0);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__cv_cv_service__ = __webpack_require__(29);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__relationship__ = __webpack_require__(305);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__utils_utils_service__ = __webpack_require__(34);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__utils_utils_service__ = __webpack_require__(33);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__amount_amount_model__ = __webpack_require__(482);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__angular_http__ = __webpack_require__(139);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6_lodash__ = __webpack_require__(44);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__angular_http__ = __webpack_require__(108);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6_lodash__ = __webpack_require__(39);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_6_lodash___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_6_lodash__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__substanceedit_substanceedit_service__ = __webpack_require__(58);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return RelationshipEditComponent; });
@@ -3833,21 +3919,21 @@ module.exports = "<br/>\n<form class=\"code-edit-form\" #codeEditForm=\"ngForm\"
 /***/ 976:
 /***/ (function(module, exports) {
 
-module.exports = "<p-dataTable [value]=\"codes\" expandableRows=\"true\" sizableColumns=\"true\"\n             [responsive]=\"true\" [editable]=\"true\">\n  <p-header>\n    <div class=\"ui-helper-clearfix\" style=\"width:100%\">\n     <button type=\"button\" pButton icon=\"fa-plus\" style=\"float:left\" (click)=\"addCode()\" label=\"Add Code\"></button>\n      <!--   <button type=\"button\" pButton icon=\"fa-file-o\" style=\"float:left\" *ngIf=\"codes.length > 0\" (click)=\"exportCodes()\" label=\"Export Codes\"></button>\n        <button type=\"button\" pButton icon=\"fa-search\" style=\"float:right\" *ngIf=\"codes.length > 0\" (click)=\"search()\" label=\"Search\"></button>-->\n    </div>\n  </p-header>\n\n  <p-column [style]=\"{'width':'38px'}\" expander=\"true\" styleClass=\"col-icon\">\n    <template pTemplate=\"header\">Edit</template>\n  </p-column>\n\n  <p-column [style]=\"{'width':'80px'}\">\n    <template pTemplate=\"header\">Delete</template>\n    <template pTemplate=\"body\" let-code=\"rowData\">\n      <button type=\"button\" pButton icon=\"fa-trash\" (click)=\"confirmDeleteCode(code)\"></button>\n    </template>\n  </p-column>\n\n  <p-column field=\"codeSystem\" header=\"Code System\" [editable]=\"false\" [style]=\"{'overflow':'visible'}\">\n    <template let-col let-code=\"rowData\" pTemplate=\"body\">\n      <p-dropdown [(ngModel)]=\"code[col.field]\" [options]=\"codeSystem\" [autoWidth]=\"false\" [style]=\"{'width':'100%'}\" required=\"true\"></p-dropdown>\n    </template>\n  </p-column>\n\n  <p-column field=\"code\" header=\"Code\"  [style]=\"{'width':'300px'}\" [editable]=\"true\"></p-column>\n  <p-column field=\"url\" header=\"Code URL\"  [style]=\"{'width':'300px'}\">\n    <template let-col let-code=\"rowData\" pTemplate=\"body\">\n      <a href=\"{{code.url}}\" target=\"_blank\">{{code.url}}</a>\n    </template>\n  </p-column>\n\n  <p-column field=\"access\" header=\"Access\" [editable]=\"true\" [style]=\"{'overflow':'visible'}\">\n    <template let-col let-code=\"rowData\" pTemplate=\"editor\">\n      <p-multiSelect [options]=\"access\" name=\"access\" [(ngModel)]=\"code[col.field]\"\n                     defaultLabel=\"Public\" overlayVisible=\"true\" scrollHeight=\"500px\"\n                     (onChange) =\"changeAccess($event, code)\"></p-multiSelect>\n    </template>\n  </p-column>\n\n  <p-column>\n    <template pTemplate=\"header\">References</template>\n    <template let-code=\"rowData\"  pTemplate=\"body\">\n      <div *ngIf=\"!code.references || code.references.length == 0\" (click)=\"openRefListDialog(code)\">Click</div>\n      <div (click)=\"openRefListDialog(code)\" *ngIf=\"code.references\">\n        {{showReferenceIndexes(code)}}\n      </div>\n    </template>\n\n  </p-column>\n\n  <template let-code pTemplate=\"rowexpansion\">\n    <div>\n      <code-edit [code]=\"code\"></code-edit>\n    </div>\n  </template>\n\n</p-dataTable>\n<p-confirmDialog width=\"200px\"></p-confirmDialog>\n"
+module.exports = "<p-dataTable [value]=\"codes\" expandableRows=\"true\" sizableColumns=\"true\"\n             [responsive]=\"true\" [editable]=\"true\">\n  <p-header>\n    <div class=\"ui-helper-clearfix\" style=\"width:100%\">\n     <button type=\"button\" pButton icon=\"fa-plus\" style=\"float:left\" (click)=\"addCode(true)\" label=\"Add Code\"></button>\n      <!--   <button type=\"button\" pButton icon=\"fa-file-o\" style=\"float:left\" *ngIf=\"codes.length > 0\" (click)=\"exportCodes()\" label=\"Export Codes\"></button>\n        <button type=\"button\" pButton icon=\"fa-search\" style=\"float:right\" *ngIf=\"codes.length > 0\" (click)=\"search()\" label=\"Search\"></button>-->\n    </div>\n  </p-header>\n\n  <p-column [style]=\"{'width':'38px'}\" expander=\"true\" styleClass=\"col-icon\">\n    <template pTemplate=\"header\">Edit</template>\n  </p-column>\n\n  <p-column [style]=\"{'width':'80px'}\">\n    <template pTemplate=\"header\">Delete</template>\n    <template pTemplate=\"body\" let-code=\"rowData\">\n      <button type=\"button\" pButton icon=\"fa-trash\" (click)=\"confirmDeleteCode(code)\"></button>\n    </template>\n  </p-column>\n\n  <p-column field=\"codeSystem\" header=\"Code System\" [editable]=\"false\" [style]=\"{'overflow':'visible'}\" [sortable]=\"true\">\n    <template let-col let-code=\"rowData\" pTemplate=\"body\">\n\n      <p-dropdown [(ngModel)]=\"code[col.field]\" [options]=\"codeSystem\" [autoWidth]=\"false\" [style]=\"{'width':'100%'}\"\n                   filter=\"filter\" class=\"dropdown-text\" required=\"true\" placeholder=\"Select Code System\"></p-dropdown>\n    </template>\n  </p-column>\n\n  <p-column field=\"type\" header=\"Code Type\" [editable]=\"false\" [style]=\"{'overflow':'visible'}\">\n    <template let-col let-code=\"rowData\" pTemplate=\"body\">\n      <p-dropdown [(ngModel)]=\"code[col.field]\" [options]=\"codeType\" [autoWidth]=\"false\" [style]=\"{'width':'100%'}\"\n                  class=\"dropdown-text\" required=\"true\" filter=\"filter\" placeholder=\"Select Code Type\"></p-dropdown>\n    </template>\n  </p-column>\n  <p-column field=\"code\" header=\"Code\"  [style]=\"{'width':'200px'}\" [editable]=\"true\"></p-column>\n  <p-column field=\"url\" header=\"Code URL\"  [style]=\"{'width':'300px'}\">\n    <template let-col let-code=\"rowData\" pTemplate=\"body\">\n      <a href=\"{{code.url}}\" target=\"_blank\">{{code.url}}</a>\n    </template>\n  </p-column>\n\n  <p-column field=\"access\" header=\"Access\" [editable]=\"true\" [style]=\"{'overflow':'visible'}\">\n    <template let-col let-code=\"rowData\" pTemplate=\"editor\">\n      <p-multiSelect [options]=\"access\" name=\"access\" [(ngModel)]=\"code[col.field]\"\n                     defaultLabel=\"Public\" overlayVisible=\"true\" scrollHeight=\"500px\"\n                     (onChange) =\"changeAccess($event, code)\"></p-multiSelect>\n    </template>\n  </p-column>\n\n  <p-column>\n    <template pTemplate=\"header\">References</template>\n    <template let-code=\"rowData\"  pTemplate=\"body\">\n      <div *ngIf=\"!code.references || code.references.length == 0\" (click)=\"openRefListDialog(code)\"><h3>Click to Add</h3></div>\n      <div (click)=\"openRefListDialog(code)\" *ngIf=\"code.references\">\n        {{showReferenceIndexes(code)}}\n      </div>\n    </template>\n\n  </p-column>\n\n  <template let-code pTemplate=\"rowexpansion\">\n    <div>\n      <code-edit [code]=\"code\"></code-edit>\n    </div>\n  </template>\n\n  <p-footer *ngIf=\"codes.length > 3\">\n    <div class=\"ui-dialog-buttonpane ui-helper-clearfix\">\n      <button type=\"button\" pButton icon=\"fa-plus\" style=\"float:left\" (click)=\"addCode(false)\" label=\"Add Code\"></button>\n    </div>\n  </p-footer>\n\n</p-dataTable>\n<p-confirmDialog width=\"200px\"></p-confirmDialog>\n"
 
 /***/ }),
 
 /***/ 977:
 /***/ (function(module, exports) {
 
-module.exports = "<br/>\n<form class=\"name-edit-form\" #nameEditForm=\"ngForm\">\n <md-grid-list cols=\"8\" gutterSize=\"2px\" rowHeight=\"70px\" [style.background]=\"'#EBF5FC'\">\n\n    <md-grid-tile [colspan]=1 [rowspan]=1> <b>Name</b></md-grid-tile>\n    <md-grid-tile [colspan]=6 [rowspan]=1>\n      <md-input-container class=\"ref-full-width\">\n        <input mdInput name=\"name\" value=\"{{name.name}}\" [(ngModel)]=\"name.name\" placeholder=\"name ...\" required>\n      </md-input-container>\n    </md-grid-tile>\n    <md-grid-tile [colspan]=1 [rowspan]=1></md-grid-tile>\n\n\n\n    <md-grid-tile [colspan]=2 [rowspan]=1>\n     <md-select placeholder=\"Name Type\" name=\"type\" [(ngModel)]=\"name.type\" [style.width]=\"'80%'\">\n        <md-option *ngFor=\"let type of nameTypes\" [value]=\"type.value\" overlayVisible=\"true\">{{ type.label }}</md-option>\n      </md-select>\n    </md-grid-tile>\n   <md-grid-tile [colspan]=2 [rowspan]=1>\n     <md-checkbox [(ngModel)]=\"name.displayName\" [checked]=\"name.displayName\" name=\"DisplayName\" (onChange)=\"changeDisplay(name, $event)\">\n       Preferred Term\n     </md-checkbox>\n    </md-grid-tile>\n    <md-grid-tile [colspan]=2 [rowspan]=1>\n      <md-checkbox [(ngModel)]=\"name.preferred\" [checked]=\"name.preferred || name.displayName\" name=\"PreferredName\" [disabled]=\"name.displayName\">\n        Listing Term\n      </md-checkbox>\n    </md-grid-tile>\n   <md-grid-tile [colspan]=2 [rowspan]=1></md-grid-tile>\n\n\n\n\n\n   <md-grid-tile [colspan]=2 [rowspan]=1 *ngIf=\"name.type=='of'\" class=\"color-bg\">\n     <p-multiSelect [options]=\"nameJuris\" name=\"nameJurisdiction\" [(ngModel)]=\"name.nameJurisdiction\"\n                    defaultLabel=\"Name Jurisdiction\" overlayVisible=\"true\" scrollHeight=\"500px\" appendTo=\"body\"></p-multiSelect>\n   </md-grid-tile>\n   <md-grid-tile [colspan]=2 [rowspan]=1 *ngIf=\"name.type=='of'\" class=\"color-bg\">\n     <p-multiSelect [options]=\"nameOrgs\" name=\"nameOrgs\" [(ngModel)]=\"name.nameOrgs\"\n                    defaultLabel=\"Name Orgs\" overlayVisible=\"true\" scrollHeight=\"500px\" appendTo=\"body\"></p-multiSelect>\n   </md-grid-tile>\n   <md-grid-tile [colspan]=4 [rowspan]=1 *ngIf=\"name.type=='of'\" class=\"color-bg\"></md-grid-tile>\n              <md-grid-tile [colspan]=3 [rowspan]=1>\n                <p-multiSelect [options]=\"languages\" name=\"languages\" [(ngModel)]=\"name.languages\"\n                               defaultLabel=\"Languages\" overlayVisible=\"true\" scrollHeight=\"500px\" appendTo=\"body\"></p-multiSelect>\n              </md-grid-tile>\n              <md-grid-tile [colspan]=3 [rowspan]=1>\n                <p-multiSelect [options]=\"domains\" name=\"domains\"  [(ngModel)]=\"name.domains\"\n                               defaultLabel=\"Domains\" overlayVisible=\"true\" scrollHeight=\"500px\" appendTo=\"body\"></p-multiSelect>\n              </md-grid-tile>\n             <md-grid-tile [colspan]=2 [rowspan]=1>\n             <p-multiSelect [options]=\"access\" name=\"access\" [(ngModel)]=\"name.access\"\n                       defaultLabel=\"Public\" overlayVisible=\"true\" scrollHeight=\"500px\" appendTo=\"body\" (onChange)=\"changeAccess($event, name)\"></p-multiSelect>\n             </md-grid-tile>\n\n\n    <md-grid-tile [colspan]=8 [rowspan]=1 *ngIf=\"name.uuid\">\n      Created by <code>&nbsp;{{name.createdBy}}&nbsp;</code> on <code>&nbsp; {{name.created | date: 'MM/dd/yyyy'}}&nbsp;</code> , Edited by <code>&nbsp;{{name.lastEditedBy}}&nbsp;</code> on <code>&nbsp;{{name.lastEdited | date: 'MM/dd/yyyy'}}&nbsp;</code>\n    </md-grid-tile>\n\n  <md-grid-tile [colspan]=4 [rowspan]=1></md-grid-tile>\n  <md-grid-tile [colspan]=1 [rowspan]=1>\n    <button type=\"button\" (click)=\"deleteName(name)\" pButton icon=\"fa-trash\" label=\"Delete\"></button>\n  </md-grid-tile>\n<!--  <md-grid-tile [colspan]=1 [rowspan]=1>\n    <button type=\"button\" (click)=\"saveName(name)\" pButton icon=\"fa-check\" label=\"Save\"></button>\n  </md-grid-tile>-->\n  <md-grid-tile [colspan]=3 [rowspan]=1></md-grid-tile>\n  </md-grid-list>\n\n</form><br/>\n\n"
+module.exports = "<br/>\n<form class=\"name-edit-form\" #nameEditForm=\"ngForm\">\n <md-grid-list cols=\"8\" gutterSize=\"2px\" rowHeight=\"70px\" [style.background]=\"'#EBF5FC'\">\n\n    <md-grid-tile [colspan]=1 [rowspan]=1> <b>Name</b></md-grid-tile>\n    <md-grid-tile [colspan]=6 [rowspan]=1>\n      <md-input-container class=\"ref-full-width\">\n        <input mdInput name=\"name\" value=\"{{name.name}}\" [(ngModel)]=\"name.name\" placeholder=\"name ...\" required>\n      </md-input-container>\n    </md-grid-tile>\n    <md-grid-tile [colspan]=1 [rowspan]=1></md-grid-tile>\n\n\n\n    <md-grid-tile [colspan]=2 [rowspan]=1>\n     <md-select placeholder=\"Name Type\" name=\"type\" [(ngModel)]=\"name.type\" [style.width]=\"'80%'\">\n        <md-option *ngFor=\"let type of nameTypes\" [value]=\"type.value\" overlayVisible=\"true\">{{ type.label }}</md-option>\n      </md-select>\n    </md-grid-tile>\n   <md-grid-tile [colspan]=2 [rowspan]=1>\n     <md-checkbox [(ngModel)]=\"name.displayName\" [checked]=\"name.displayName\" name=\"DisplayName\" (change)=\"changeDisplay(name, $event)\">\n       Display Name (Preferred Term)\n     </md-checkbox>\n    </md-grid-tile>\n    <md-grid-tile [colspan]=2 [rowspan]=1>\n      <md-checkbox [(ngModel)]=\"name.preferred\" [checked]=\"name.preferred\" name=\"PreferredName\">\n        Listing Term\n      </md-checkbox>\n    </md-grid-tile>\n   <md-grid-tile [colspan]=2 [rowspan]=1></md-grid-tile>\n\n\n\n\n\n   <md-grid-tile [colspan]=2 [rowspan]=1 *ngIf=\"name.type=='of'\" class=\"color-bg\">\n     <p-multiSelect [options]=\"nameJuris\" name=\"nameJurisdiction\" [(ngModel)]=\"name.nameJurisdiction\"\n                    defaultLabel=\"Name Jurisdiction\" overlayVisible=\"true\" scrollHeight=\"500px\" appendTo=\"body\"></p-multiSelect>\n   </md-grid-tile>\n   <md-grid-tile [colspan]=2 [rowspan]=1 *ngIf=\"name.type=='of'\" class=\"color-bg\">\n     <p-multiSelect [options]=\"nameOrgs\" name=\"nameOrgs\" [(ngModel)]=\"name.nameOrgs\"\n                    defaultLabel=\"Name Orgs\" overlayVisible=\"true\" scrollHeight=\"500px\" appendTo=\"body\"></p-multiSelect>\n   </md-grid-tile>\n   <md-grid-tile [colspan]=4 [rowspan]=1 *ngIf=\"name.type=='of'\" class=\"color-bg\"></md-grid-tile>\n              <md-grid-tile [colspan]=3 [rowspan]=1>\n                <p-multiSelect [options]=\"languages\" name=\"languages\" [(ngModel)]=\"name.languages\"\n                               defaultLabel=\"Languages\" overlayVisible=\"true\" scrollHeight=\"500px\" appendTo=\"body\"></p-multiSelect>\n              </md-grid-tile>\n              <md-grid-tile [colspan]=3 [rowspan]=1>\n                <p-multiSelect [options]=\"domains\" name=\"domains\"  [(ngModel)]=\"name.domains\"\n                               defaultLabel=\"Domains\" overlayVisible=\"true\" scrollHeight=\"500px\" appendTo=\"body\"></p-multiSelect>\n              </md-grid-tile>\n             <md-grid-tile [colspan]=2 [rowspan]=1>\n             <p-multiSelect [options]=\"access\" name=\"access\" [(ngModel)]=\"name.access\"\n                       defaultLabel=\"Public\" overlayVisible=\"true\" scrollHeight=\"500px\" appendTo=\"body\" (onChange)=\"changeAccess($event, name)\"></p-multiSelect>\n             </md-grid-tile>\n\n\n    <md-grid-tile [colspan]=8 [rowspan]=1 *ngIf=\"name.uuid\">\n      Created by <code>&nbsp;{{name.createdBy}}&nbsp;</code> on <code>&nbsp; {{name.created | date: 'MM/dd/yyyy'}}&nbsp;</code> , Edited by <code>&nbsp;{{name.lastEditedBy}}&nbsp;</code> on <code>&nbsp;{{name.lastEdited | date: 'MM/dd/yyyy'}}&nbsp;</code>\n    </md-grid-tile>\n\n  <md-grid-tile [colspan]=4 [rowspan]=1></md-grid-tile>\n  <md-grid-tile [colspan]=1 [rowspan]=1>\n    <button type=\"button\" (click)=\"deleteName(name)\" pButton icon=\"fa-trash\" label=\"Delete\"></button>\n  </md-grid-tile>\n<!--  <md-grid-tile [colspan]=1 [rowspan]=1>\n    <button type=\"button\" (click)=\"saveName(name)\" pButton icon=\"fa-check\" label=\"Save\"></button>\n  </md-grid-tile>-->\n  <md-grid-tile [colspan]=3 [rowspan]=1></md-grid-tile>\n  </md-grid-list>\n\n</form><br/>\n\n"
 
 /***/ }),
 
 /***/ 978:
 /***/ (function(module, exports) {
 
-module.exports = "<p-dataTable [value]=\"names\" expandableRows=\"true\" sizableColumns=\"true\"\n                 [responsive]=\"true\" [editable]=\"true\" id=\"nameListTable\" #datatable>\n  <!--[rows]=\"10\" [paginator]=\"true\" [pageLinks]=\"3\" [rowsPerPageOptions]=\"[5,10,20]\"-->\n      <p-header>\n        <div class=\"ui-helper-clearfix\" style=\"width:100%\">\n        <button type=\"button\" pButton icon=\"fa-plus\" style=\"float:left\" (click)=\"addName()\" label=\"Add Name\"></button>\n    <!--    <button type=\"button\" pButton icon=\"fa-file-o\" style=\"float:left\" *ngIf=\"names.length > 0\" (click)=\"exportNames()\" label=\"Export Names\"></button>\n        <button type=\"button\" pButton icon=\"fa-search\" style=\"float:right\" *ngIf=\"names.length > 0\" (click)=\"search()\" label=\"Search\"></button> -->\n        </div>\n      </p-header>\n\n      <p-column [style]=\"{'width':'38px'}\" expander=\"true\" styleClass=\"col-icon\">\n        <template pTemplate=\"header\">Edit</template>\n      </p-column>\n\n      <p-column [style]=\"{'width':'80px'}\">\n        <template pTemplate=\"header\">Delete</template>\n        <template pTemplate=\"body\" let-name=\"rowData\">\n          <button type=\"button\" pButton icon=\"fa-trash\" (click)=\"confirmDeleteName(name)\"></button>\n        </template>\n      </p-column>\n      <p-column [style]=\"{'width':'38px'}\">\n        <template pTemplate=\"header\">PT</template>\n        <template pTemplate=\"body\" let-name=\"rowData\">\n          <md-radio-button name=\"display\" [value]=\"name.displayName\" [checked]=\"name.displayName\" pTooltip=\"Preferred Term\" (change)=\"changePreferTerm($event, name)\"></md-radio-button>\n        </template>\n      </p-column>\n\n     <p-column [style]=\"{'width':'38px'}\">\n        <template pTemplate=\"header\">LT</template>\n        <template let-name=\"rowData\" pTemplate=\"body\">\n          <md-checkbox [(ngModel)]=\"name.preferred\" [checked]=\"name.displayName || name.preferred\" name=\"listing\"  pTooltip=\"Listing Term\"></md-checkbox>\n        </template>\n      </p-column>\n\n      <p-column field=\"name\" header=\"Name\"  [style]=\"{'width':'500px'}\" [editable]=\"true\" required>\n\n      </p-column>\n      <p-column field=\"type\" header=\"Type\" [editable]=\"false\" [style]=\"{'overflow':'visible'}\">\n        <template let-col let-name=\"rowData\" pTemplate=\"body\">\n          <p-dropdown [(ngModel)]=\"name[col.field]\" [options]=\"nameTypes\" [autoWidth]=\"false\" [style]=\"{'width':'100%'}\" required=\"true\"><i class=\"fa fa-pencil-square-o\" aria-hidden=\"true\"></i></p-dropdown>\n        </template>\n      </p-column>\n\n      <p-column field=\"access\" header=\"Access\" [editable]=\"true\" [style]=\"{'overflow':'visible'}\">\n        <template let-col let-name=\"rowData\" pTemplate=\"editor\">\n          <p-multiSelect [options]=\"access\" name=\"access\" [(ngModel)]=\"name[col.field]\"\n                         defaultLabel=\"Public\" overlayVisible=\"true\" scrollHeight=\"500px\"\n                         (onLoad) =\"changeAccess($event, name)\" (onChange) =\"changeAccess($event, name)\"></p-multiSelect>\n        </template>\n      </p-column>\n      <p-column>\n        <template pTemplate=\"header\">References</template>\n        <template let-name=\"rowData\"  pTemplate=\"body\">\n          <div *ngIf=\"!name.references || name.references.length == 0\" (click)=\"openRefListDialog(name)\">Click to Add Reference</div>\n          <div (click)=\"openRefListDialog(name)\" *ngIf=\"name.references\">\n            {{showReferenceIndexes(name)}}\n          </div>\n        </template>\n\n      </p-column>\n      <template let-name pTemplate=\"rowexpansion\">\n        <div>\n          <name-edit [name]=name></name-edit>\n         </div>\n      </template>\n    </p-dataTable>\n<p-confirmDialog width=\"200px\"></p-confirmDialog>\n\n\n<!--<div>\n  <pre>\n  {{ names | json }}\n    </pre>\n</div>-->\n"
+module.exports = "<p-dataTable [value]=\"names\" expandableRows=\"true\" sizableColumns=\"true\"\n                 [responsive]=\"true\" [editable]=\"true\" id=\"nameListTable\" #datatable>\n  <!--[rows]=\"10\" [paginator]=\"true\" [pageLinks]=\"3\" [rowsPerPageOptions]=\"[5,10,20]\"-->\n      <p-header>\n        <div class=\"ui-helper-clearfix\" style=\"width:100%\">\n        <button type=\"button\" pButton icon=\"fa-plus\" style=\"float:left\" (click)=\"addName(true)\" label=\"Add Name\"></button>\n    <!--    <button type=\"button\" pButton icon=\"fa-file-o\" style=\"float:left\" *ngIf=\"names.length > 0\" (click)=\"exportNames()\" label=\"Export Names\"></button>\n        <button type=\"button\" pButton icon=\"fa-search\" style=\"float:right\" *ngIf=\"names.length > 0\" (click)=\"search()\" label=\"Search\"></button> -->\n        </div>\n      </p-header>\n\n      <p-column [style]=\"{'width':'38px'}\" expander=\"true\" styleClass=\"col-icon\">\n        <template pTemplate=\"header\">Edit</template>\n      </p-column>\n\n      <p-column [style]=\"{'width':'80px'}\">\n        <template pTemplate=\"header\">Delete</template>\n        <template pTemplate=\"body\" let-name=\"rowData\">\n          <button type=\"button\" pButton icon=\"fa-trash\" (click)=\"confirmDeleteName(name)\"></button>\n        </template>\n      </p-column>\n      <p-column [style]=\"{'width':'38px'}\">\n        <template pTemplate=\"header\">PT</template>\n        <template pTemplate=\"body\" let-name=\"rowData\">\n          <md-radio-button name=\"display\" [value]=\"name.displayName\" [checked]=\"name.displayName\" title=\"Display Name (Preferred Term)\" (change)=\"changePreferTerm($event, name)\"></md-radio-button>\n        </template>\n      </p-column>\n\n     <p-column [style]=\"{'width':'38px'}\">\n        <template pTemplate=\"header\">LT</template>\n        <template let-name=\"rowData\" pTemplate=\"body\">\n          <md-checkbox [(ngModel)]=\"name.preferred\" [checked]=\"name.preferred\" name=\"listing\"  title=\"Listing Term\"></md-checkbox>\n        </template>\n      </p-column>\n\n      <p-column field=\"name\" header=\"Name\"  [style]=\"{'width':'500px'}\" [editable]=\"true\" [sortable]=\"true\" required>\n\n      </p-column>\n      <p-column field=\"type\" header=\"Type\" [editable]=\"false\" [style]=\"{'overflow':'visible'}\">\n        <template let-col let-name=\"rowData\" pTemplate=\"body\">\n          <p-dropdown [(ngModel)]=\"name[col.field]\" [options]=\"nameTypes\" [autoWidth]=\"false\"  filter=\"filter\" placeholder=\"Select Type\"\n                      [style]=\"{'width':'100%'}\" required=\"true\"><i class=\"fa fa-pencil-square-o\" aria-hidden=\"true\"></i></p-dropdown>\n        </template>\n      </p-column>\n\n      <p-column field=\"access\" header=\"Access\" [editable]=\"true\" [style]=\"{'overflow':'visible'}\">\n        Click\n        <template let-col let-name=\"rowData\" pTemplate=\"editor\">\n          <p-multiSelect [options]=\"access\" name=\"access\" [(ngModel)]=\"name[col.field]\"\n                         defaultLabel=\"Public\" overlayVisible=\"true\" scrollHeight=\"500px\"\n                         (onLoad) =\"changeAccess($event, name)\" (onChange) =\"changeAccess($event, name)\"></p-multiSelect>\n        </template>\n      </p-column>\n      <p-column>\n        <template pTemplate=\"header\">References</template>\n        <template let-name=\"rowData\"  pTemplate=\"body\">\n          <div *ngIf=\"!name.references || name.references.length == 0\" (click)=\"openRefListDialog(name)\"><h3>Click to Add</h3></div>\n          <div (click)=\"openRefListDialog(name)\" *ngIf=\"name.references\">\n            {{showReferenceIndexes(name)}}\n          </div>\n        </template>\n\n      </p-column>\n      <template let-name pTemplate=\"rowexpansion\">\n        <div>\n          <name-edit [name]=name [names]=\"names\"></name-edit>\n         </div>\n      </template>\n  <p-footer *ngIf=\"names.length > 4\">\n    <div class=\"ui-dialog-buttonpane ui-helper-clearfix\">\n      <button type=\"button\" pButton icon=\"fa-plus\" style=\"float:left\" (click)=\"addName(false)\" label=\"Add Name\"></button>\n    </div>\n  </p-footer>\n    </p-dataTable>\n<p-confirmDialog width=\"200px\"></p-confirmDialog>\n\n\n<!--<div>\n  <pre>\n  {{ names | json }}\n    </pre>\n</div>-->\n"
 
 /***/ }),
 
@@ -3903,14 +3989,14 @@ module.exports = "<br/>\n<form class=\"ref-edit-form\" #refEditForm=\"ngForm\">\
 /***/ 986:
 /***/ (function(module, exports) {
 
-module.exports = "<form>\n  <div md-dialog-title align=\"center\">\n    <span>Select Reference</span> <span><button type=\"button\" md-button md-dialog-close><md-icon>clear</md-icon></button></span>\n    <br/><br/>\n    <div>\n      <md-button-toggle-group #group=\"mdButtonToggleGroup\" name=\"referenceView\" [(ngModel)]=\"referenceViewTab\">\n        <md-button-toggle value=\"all\">All</md-button-toggle>\n        <md-button-toggle value=\"selected\">Selected</md-button-toggle>\n        <md-button-toggle value=\"last5\">Last 5</md-button-toggle>\n      </md-button-toggle-group>\n    </div>\n  </div>\n\n\n  <md-dialog-content>\n    <md-input-container dense>\n      <input mdInput placeholder=\"Filter References\" [formControl]=\"refCtrl\"  [(ngModel)]=\"filterQuery\">\n     </md-input-container>\n    <md-list dense>\n      <md-list-item *ngFor=\"let ref of allRefsForDataFiltered\">\n\n        <p md-line class=\"title-name\" style=\"overflow-y: hidden;max-height: 20px;\">\n            <span><md-checkbox [checked]=isChecked(ref) (change)=\"toggle(ref)\" class=\"no-display\"></md-checkbox></span>\n             <span>{{ref.index}}. {{ref.citation}}</span> </p>\n        <span><b>{{ref.access}}</b></span>\n        <span><md-icon class=\"md-secondary\" (click)=\"openRefEditDialog(ref)\">\n          <i class=\"material-icons\">chevron_right</i>\n        </md-icon></span>\n      </md-list-item>\n    </md-list>\n</md-dialog-content>\n\n  <md-divider></md-divider>\n<md-dialog-actions align=\"center\">\n  <div><button md-button (click)=\"openRefEditDialog()\">Create New Reference</button></div>\n  <!--<div><p><button md-button (click)=\"applySelectedToAllRecords()\" md-dialog-close>Apply Selected to All Records</button></p></div>-->\n  <div>\n    <button md-button [mdMenuTriggerFor]=\"menu\">Select Action</button>\n    <md-menu #menu=\"mdMenu\">\n      <button md-menu-item (click)=\"apply()\" md-dialog-close> Apply </button>\n      <button md-menu-item (click)=\"applySelectedToAllRecords()\" md-dialog-close> Apply Selected to All Records </button>\n    </md-menu>\n  </div>\n</md-dialog-actions>\n</form>\n\n"
+module.exports = "<form>\n  <div md-dialog-title align=\"center\">\n    <span>Select Reference</span> <span><button type=\"button\" md-button md-dialog-close><md-icon>clear</md-icon></button></span>\n    <br/><br/>\n    <div>\n      <md-button-toggle-group #group=\"mdButtonToggleGroup\" name=\"referenceView\" [(ngModel)]=\"referenceViewTab\">\n        <md-button-toggle value=\"all\">All</md-button-toggle>\n        <md-button-toggle value=\"selected\">Selected</md-button-toggle>\n        <md-button-toggle value=\"last5\">Last 5</md-button-toggle>\n      </md-button-toggle-group>\n    </div>\n  </div>\n\n\n  <md-dialog-content>\n    <md-input-container dense>\n      <input mdInput placeholder=\"Filter References\" [formControl]=\"refCtrl\"  [(ngModel)]=\"filterQuery\">\n     </md-input-container>\n    <md-list dense>\n      <md-list-item *ngFor=\"let ref of allRefsForDataFiltered\">\n\n        <p md-line class=\"title-name\" style=\"overflow-y: hidden;max-height: 20px;\">\n            <span><md-checkbox [checked]=isChecked(ref) (change)=\"toggle(ref)\" class=\"no-display\"></md-checkbox></span>\n             <span>{{ref.index}}. {{ref.citation}}</span> </p>\n        <span><b>{{ref.access}}</b></span>\n        <span><md-icon class=\"md-secondary\" (click)=\"openRefEditDialog(ref)\">\n          <i class=\"material-icons\" title=\"click to edit\">chevron_right</i>\n        </md-icon></span>\n      </md-list-item>\n    </md-list>\n</md-dialog-content>\n\n  <md-divider></md-divider>\n<md-dialog-actions align=\"center\">\n  <div><button md-button (click)=\"openRefEditDialog()\">Create New</button></div>\n  <!--<button md-button (click)=\"apply()\" md-dialog-close> Apply Selected </button>-->\n  <button md-button (click)=\"applySelectedToAllRecords()\" md-dialog-close> Apply to All New Names</button>\n  <!--<div><p><button md-button (click)=\"applySelectedToAllRecords()\" md-dialog-close>Apply Selected to All Records</button></p></div>-->\n <!-- <div>\n    <button md-button [mdMenuTriggerFor]=\"menu\">Select Action</button>\n    <md-menu #menu=\"mdMenu\">\n      <button md-menu-item (click)=\"apply()\" md-dialog-close> Apply </button>\n      <button md-menu-item (click)=\"applySelectedToAllRecords()\" md-dialog-close> Apply Selected to All Records </button>\n    </md-menu>\n  </div>-->\n</md-dialog-actions>\n</form>\n\n"
 
 /***/ }),
 
 /***/ 987:
 /***/ (function(module, exports) {
 
-module.exports = "<p-dataTable [value]=\"refs\" expandableRows=\"true\" sizableColumns=\"true\"\n             [responsive]=\"true\" [editable]=\"true\" >\n  <!--[rows]=\"10\" [paginator]=\"true\" [pageLinks]=\"3\" [rowsPerPageOptions]=\"[5,10,20]\"-->\n <p-header>\n    <div class=\"ui-helper-clearfix\" style=\"width:100%\">\n      <button type=\"button\" pButton icon=\"fa-plus\" style=\"float:left\" (click)=\"addReference()\" label=\"Add Reference\"></button>\n    <!--  <button type=\"button\" pButton icon=\"fa-file-o\" style=\"float:left\" *ngIf=\"refs.length > 0\" (click)=\"exportRefs()\" label=\"Export References\"></button>\n      <button type=\"button\" pButton icon=\"fa-search\" style=\"float:right\" *ngIf=\"refs.length > 0\" (click)=\"search()\" label=\"Search\"></button>-->\n    </div>\n  </p-header>\n  <p-column [style]=\"{'width':'38px'}\" expander=\"true\" styleClass=\"col-icon\">\n    <template pTemplate=\"header\">Edit</template>\n  </p-column>\n\n  <p-column [style]=\"{'width':'80px'}\">\n    <template pTemplate=\"header\">Delete</template>\n    <template pTemplate=\"body\" let-ref=\"rowData\">\n      <button type=\"button\" pButton icon=\"fa-trash\" (click)=\"confirmDeleteRef(ref)\"></button>\n    </template>\n  </p-column>\n\n  <p-column [style]=\"{'width':'38px'}\">\n    <template pTemplate=\"header\">PD</template>\n    <template let-ref=\"rowData\" pTemplate=\"body\">\n      <md-checkbox [(ngModel)]=\"ref.publicDomain\" [checked]=\"ref.publicDomain\" name=\"publicDomain\"  pTooltip=\"Public Domain\"></md-checkbox>\n    </template>\n  </p-column>\n\n  <p-column field=\"citation\" header=\"Citation / Source Text\"  [style]=\"{'width':'500px'}\" [editable]=\"true\"></p-column>\n\n  <p-column field=\"docType\" header=\"Source Type\" [editable]=\"false\" [style]=\"{'overflow':'visible'}\">\n    <template let-col let-ref=\"rowData\" pTemplate=\"body\">\n      <p-dropdown [(ngModel)]=\"ref[col.field]\" [options]=\"sourceTypes\" [autoWidth]=\"false\" [style]=\"{'width':'100%'}\" required=\"true\"></p-dropdown>\n    </template>\n  </p-column>\n\n  <p-column field=\"access\" header=\"Access\" [editable]=\"true\" [style]=\"{'overflow':'visible'}\">\n    <template let-col let-ref=\"rowData\" pTemplate=\"editor\">\n      <p-multiSelect [options]=\"access\" name=\"access\" [(ngModel)]=\"ref[col.field]\"\n                     defaultLabel=\"Public\" overlayVisible=\"true\" scrollHeight=\"500px\"\n                     (onChange) =\"changeAccess($event, ref)\"></p-multiSelect>\n    </template>\n  </p-column>\n\n  <p-column field=\"url\" header=\"Reference URL\"  [style]=\"{'width':'500px'}\">\n    <template let-col let-ref=\"rowData\" pTemplate=\"body\">\n      <a href=\"{{ref.url}}\" target=\"_blank\">{{ref.url}}</a>\n    </template>\n  </p-column>\n\n  <template let-ref pTemplate=\"rowexpansion\">\n    <div>\n      <reference-edit [ref]=\"ref\"></reference-edit>\n    </div>\n  </template>\n\n</p-dataTable>\n<p-confirmDialog width=\"200px\"></p-confirmDialog>\n\n<!--<div>\n  <pre>\n  {{refs | json}}\n    </pre>\n</div>-->\n"
+module.exports = "<p-dataTable [value]=\"refs\" expandableRows=\"true\" sizableColumns=\"true\"\n             [responsive]=\"true\" [editable]=\"true\" >\n  <!--[rows]=\"10\" [paginator]=\"true\" [pageLinks]=\"3\" [rowsPerPageOptions]=\"[5,10,20]\"-->\n <p-header>\n    <div class=\"ui-helper-clearfix\" style=\"width:100%\">\n      <button type=\"button\" pButton icon=\"fa-plus\" style=\"float:left\" (click)=\"addReference(true)\" label=\"Add Reference\"></button>\n    <!--  <button type=\"button\" pButton icon=\"fa-file-o\" style=\"float:left\" *ngIf=\"refs.length > 0\" (click)=\"exportRefs()\" label=\"Export References\"></button>\n      <button type=\"button\" pButton icon=\"fa-search\" style=\"float:right\" *ngIf=\"refs.length > 0\" (click)=\"search()\" label=\"Search\"></button>-->\n    </div>\n  </p-header>\n  <p-column [style]=\"{'width':'38px'}\" expander=\"true\" styleClass=\"col-icon\">\n    <template pTemplate=\"header\">Edit</template>\n  </p-column>\n\n  <p-column [style]=\"{'width':'80px'}\">\n    <template pTemplate=\"header\">Delete</template>\n    <template pTemplate=\"body\" let-ref=\"rowData\">\n      <button type=\"button\" pButton icon=\"fa-trash\" (click)=\"confirmDeleteRef(ref)\"></button>\n    </template>\n  </p-column>\n\n  <p-column [style]=\"{'width':'38px'}\">\n    <template pTemplate=\"header\">PD</template>\n    <template let-ref=\"rowData\" pTemplate=\"body\">\n      <md-checkbox [(ngModel)]=\"ref.publicDomain\" [checked]=\"ref.publicDomain\" name=\"publicDomain\"  pTooltip=\"Public Domain\"></md-checkbox>\n    </template>\n  </p-column>\n\n  <p-column field=\"citation\" header=\"Citation / Source Text\"  [style]=\"{'width':'500px'}\" [editable]=\"true\" [sortable]=\"true\"></p-column>\n\n  <p-column field=\"docType\" header=\"Source Type\" [editable]=\"false\" [style]=\"{'overflow':'visible'}\">\n    <template let-col let-ref=\"rowData\" pTemplate=\"body\">\n      <p-dropdown [(ngModel)]=\"ref[col.field]\" [options]=\"sourceTypes\" [autoWidth]=\"false\" filter=\"filter\" [style]=\"{'width':'100%'}\"\n                  class=\"dropdown-text\" required=\"true\" placeholder=\"Select Source Type\"></p-dropdown>\n    </template>\n  </p-column>\n\n  <p-column field=\"access\" header=\"Access\" [editable]=\"true\" [style]=\"{'overflow':'visible'}\">\n    <template let-col let-ref=\"rowData\" pTemplate=\"editor\">\n      <p-multiSelect [options]=\"access\" name=\"access\" [(ngModel)]=\"ref[col.field]\"\n                     defaultLabel=\"Public\" overlayVisible=\"true\" scrollHeight=\"500px\"\n                     (onChange) =\"changeAccess($event, ref)\"></p-multiSelect>\n    </template>\n  </p-column>\n\n  <p-column field=\"url\" header=\"Reference URL\"  [style]=\"{'width':'500px'}\" [editable]=\"true\">\n    <template let-col let-ref=\"rowData\" pTemplate=\"body\">\n      <a href=\"{{ref.url}}\" target=\"_blank\">{{ref.url}}</a>\n    </template>\n  </p-column>\n\n  <template let-ref pTemplate=\"rowexpansion\">\n    <div>\n      <reference-edit [ref]=\"ref\"></reference-edit>\n    </div>\n  </template>\n\n  <p-footer *ngIf=\"refs.length > 3\">\n    <div class=\"ui-dialog-buttonpane ui-helper-clearfix\">\n      <button type=\"button\" pButton icon=\"fa-plus\" style=\"float:left\" (click)=\"addReference(false)\" label=\"Add Reference\"></button>\n    </div>\n  </p-footer>\n\n</p-dataTable>\n<p-confirmDialog width=\"200px\"></p-confirmDialog>\n\n<!--<div>\n  <pre>\n  {{refs | json}}\n    </pre>\n</div>-->\n"
 
 /***/ }),
 
@@ -3924,14 +4010,14 @@ module.exports = "<br/>\n<form class=\"relationship-edit-form\" #relationEditFor
 /***/ 989:
 /***/ (function(module, exports) {
 
-module.exports = "<p-dataTable [value]=\"relations\" expandableRows=\"true\" sizableColumns=\"true\"\n             [responsive]=\"true\" [editable]=\"true\" id=\"relationListTable\" #dt>\n  <p-header>\n    <div class=\"ui-helper-clearfix\" style=\"width:100%\">\n      <button type=\"button\" pButton icon=\"fa-plus\" style=\"float:left\" (click)=\"addRelationship()\" label=\"Add Relationship\"></button>\n<!--      <button type=\"button\" pButton icon=\"fa-file-o\" style=\"float:left\" *ngIf=\"relations.length > 0\" (click)=\"exportRelations()\" label=\"Export Relationships\"></button>\n      <button type=\"button\" pButton icon=\"fa-search\" style=\"float:right\" *ngIf=\"relations.length > 0\" (click)=\"search()\" label=\"Search\"></button>-->\n    </div>\n  </p-header>\n    <p-column [style]=\"{'width':'38px'}\" expander=\"true\" styleClass=\"col-icon\">\n      <template pTemplate=\"header\">Edit</template>\n    </p-column>\n\n    <p-column [style]=\"{'width':'80px'}\">\n      <template pTemplate=\"header\">Delete</template>\n      <template pTemplate=\"body\" let-relation=\"rowData\">\n        <button type=\"button\" pButton icon=\"fa-trash\" (click)=\"confirmDeleteRelation(relation)\"></button>\n      </template>\n    </p-column>\n\n  <p-column field=\"\" [style]=\"{'overflow':'visible'}\">\n    <template pTemplate=\"header\">Related Substance <br/>\n      <md-checkbox [checked]=\"showRSStruct\" name=\"showRSStruct\" (change)=\"this.showRSStruct = !this.showRSStruct;\" *ngIf=\"relations.length > 0\">Show Structure</md-checkbox>\n    </template>\n    <template let-col let-relation=\"rowData\" pTemplate=\"body\">\n      <div *ngIf=\"relation.relatedSubstance == '' || relation.relatedSubstance == null \">Select Substance from Edit View</div>\n      <div *ngIf=\"relation.relatedSubstance != '' && relation.relatedSubstance != null \">\n        {{relation.relatedSubstance.refuuid | slice:0:8}}<br/>\n        <div *ngIf=\"showRSStruct\">\n          <img src=\"{{browserurl}}/ginas/app/img/{{relation.relatedSubstance.refuuid}}.svg?size=150\" alt=\"structure\">\n        </div>\n        <span>{{relation.relatedSubstance.refPname}}</span>\n      </div>\n    </template>\n  </p-column>\n\n  <p-column field=\"type\" header=\"Type\" [filter]=\"true\" [style]=\"{'overflow':'visible'}\" filterMatchMode=\"equals\">\n    <template pTemplate=\"filter\" let-col>\n      <p-dropdown [options]=\"filterRelationTypes\" [style]=\"{'width':'100%'}\" defaultLabel=\"All Types\" class=\"dropdown-text\"\n                  (onChange)=\"dt.filter($event.value,col.field,col.filterMatchMode)\" [(ngModel)]=\"selectedFilterType\" styleClass=\"ui-column-filter\"></p-dropdown>\n    </template>\n    <template let-col let-relation=\"rowData\" pTemplate=\"body\">\n      <p-dropdown [(ngModel)]=\"relation[col.field]\" [options]=\"relationshipTypes\" [autoWidth]=\"false\" [style]=\"{'width':'100%'}\" required=\"true\" placeholder=\"type...\"\n      (onChange)=\"loadOptions()\" [autoWidth]=\"false\" class=\"dropdown-text\"></p-dropdown>\n    </template>\n  </p-column>\n\n\n\n  <p-column field=\"access\" header=\"Access\" [editable]=\"true\" [style]=\"{'overflow':'visible'}\">\n    <template let-col let-relation=\"rowData\" pTemplate=\"editor\">\n      <p-multiSelect [options]=\"access\" name=\"access\" [(ngModel)]=\"relation[col.field]\"\n                     defaultLabel=\"Public\" overlayVisible=\"true\" scrollHeight=\"500px\"\n                     (onChange) =\"changeAccess($event, relation)\"></p-multiSelect>\n    </template>\n  </p-column>\n\n  <p-column field=\"\" [style]=\"{'overflow':'visible'}\">\n    <template pTemplate=\"header\">Amount</template>\n    <template let-col let-relation=\"rowData\" pTemplate=\"body\">\n      <div *ngIf=\"relation.amount\"> {{showAmounts(relation.amount)}}</div>\n    </template>\n  </p-column>\n\n  <p-column field=\"\" [style]=\"{'overflow':'visible'}\">\n    <template pTemplate=\"header\">Qualification / <br/> Interaction Type</template>\n    <template let-col let-relation=\"rowData\" pTemplate=\"body\">\n      {{relation.qualification}}\n      <div *ngIf=\"relation.qualification && relation.interactionType\"> / </div>\n      {{relation.interactionType}}\n    </template>\n  </p-column>\n\n  <p-column>\n    <template pTemplate=\"header\">References</template>\n    <template let-relation=\"rowData\"  pTemplate=\"body\">\n      <div *ngIf=\"!relation.references || relation.references.length == 0\" (click)=\"openRefListDialog(relation)\">Click</div>\n      <div (click)=\"openRefListDialog(relation)\" *ngIf=\"relation.references\">\n        {{showReferenceIndexes(relation)}}\n      </div>\n    </template>\n\n  </p-column>\n  <template let-relation pTemplate=\"rowexpansion\">\n    <div>\n      <relation-edit [relationship]=relation></relation-edit>\n    </div>\n  </template>\n</p-dataTable>\n<p-confirmDialog width=\"200px\"></p-confirmDialog>\n"
+module.exports = "<p-dataTable [value]=\"relations\" expandableRows=\"true\" sizableColumns=\"true\"\n             [responsive]=\"true\" [editable]=\"true\" id=\"relationListTable\" [style]=\"{'width':'100%'}\" #dt>\n  <p-header>\n    <div class=\"ui-helper-clearfix\" style=\"width:100%\">\n      <button type=\"button\" pButton icon=\"fa-plus\" style=\"float:left\" (click)=\"addRelationship(true)\" label=\"Add Relationship\"></button>\n<!--      <button type=\"button\" pButton icon=\"fa-file-o\" style=\"float:left\" *ngIf=\"relations.length > 0\" (click)=\"exportRelations()\" label=\"Export Relationships\"></button>\n      <button type=\"button\" pButton icon=\"fa-search\" style=\"float:right\" *ngIf=\"relations.length > 0\" (click)=\"search()\" label=\"Search\"></button>-->\n    </div>\n  </p-header>\n    <p-column [style]=\"{'width':'38px'}\" expander=\"true\" styleClass=\"col-icon\">\n      <template pTemplate=\"header\">Edit</template>\n    </p-column>\n\n    <p-column [style]=\"{'width':'80px'}\">\n      <template pTemplate=\"header\">Delete</template>\n      <template pTemplate=\"body\" let-relation=\"rowData\">\n        <button type=\"button\" pButton icon=\"fa-trash\" (click)=\"confirmDeleteRelation(relation)\"></button>\n      </template>\n    </p-column>\n\n  <p-column field=\"\" [style]=\"{'overflow':'visible'}\" [style]=\"{'width':'180px'}\">\n    <template pTemplate=\"header\">Related Substance <br/>\n      <md-checkbox [checked]=\"showRSStruct\" name=\"showRSStruct\" (change)=\"this.showRSStruct = !this.showRSStruct;\" *ngIf=\"relations.length > 0\">Show Structure</md-checkbox>\n    </template>\n    <template let-col let-relation=\"rowData\" pTemplate=\"body\">\n      <div *ngIf=\"relation.relatedSubstance == '' || relation.relatedSubstance == null \">Press Edit</div>\n      <div *ngIf=\"relation.relatedSubstance != '' && relation.relatedSubstance != null \">\n        <!--{{relation.relatedSubstance.refuuid | slice:0:8}}--><br/>\n\n        <div *ngIf=\"showRSStruct\">\n          <img src=\"{{browserurl}}/ginas/app/img/{{relation.relatedSubstance.refuuid}}.svg?size=150\" alt=\"structure\"\n          class=\"small-image\">\n        </div>\n        <span>{{relation.relatedSubstance.refPname}}</span>\n      </div>\n    </template>\n  </p-column>\n\n  <p-column field=\"type\" header=\"Type\" [filter]=\"true\" [style]=\"{'overflow':'visible'}\" filterMatchMode=\"equals\">\n    <template pTemplate=\"filter\" let-col>\n      <p-dropdown [options]=\"filterRelationTypes\" [style]=\"{'width':'100%'}\" defaultLabel=\"All Types\" class=\"dropdown-text\"\n                  (onChange)=\"dt.filter($event.value,col.field,col.filterMatchMode)\" [(ngModel)]=\"selectedFilterType\" styleClass=\"ui-column-filter\"></p-dropdown>\n    </template>\n    <template let-col let-relation=\"rowData\" pTemplate=\"body\">\n      <p-dropdown [(ngModel)]=\"relation[col.field]\" [options]=\"relationshipTypes\" [style]=\"{'width':'100%'}\" required=\"true\" placeholder=\"type...\"\n      (onChange)=\"loadOptions()\" [autoWidth]=\"false\" class=\"dropdown-text\" filter=\"filter\"></p-dropdown>\n    </template>\n  </p-column>\n\n\n\n  <p-column field=\"access\" header=\"Access\" [editable]=\"true\" [style]=\"{'overflow':'visible'}\">\n    <template let-col let-relation=\"rowData\" pTemplate=\"editor\">\n      <p-multiSelect [options]=\"access\" name=\"access\" [(ngModel)]=\"relation[col.field]\"\n                     defaultLabel=\"Public\" overlayVisible=\"true\" scrollHeight=\"500px\"\n                     (onChange) =\"changeAccess($event, relation)\"></p-multiSelect>\n    </template>\n  </p-column>\n\n  <p-column field=\"\" [style]=\"{'overflow':'visible'}\">\n    <template pTemplate=\"header\">Amount</template>\n    <template let-col let-relation=\"rowData\" pTemplate=\"body\">\n      <div *ngIf=\"relation.amount\"> {{showAmounts(relation.amount)}}</div>\n    </template>\n  </p-column>\n\n  <p-column field=\"\" [style]=\"{'overflow':'visible'}\">\n    <template pTemplate=\"header\">Qualification / <br/> Interaction Type</template>\n    <template let-col let-relation=\"rowData\" pTemplate=\"body\">\n      {{relation.qualification}}\n      <div *ngIf=\"relation.qualification && relation.interactionType\"> / </div>\n      {{relation.interactionType}}\n    </template>\n  </p-column>\n\n  <p-column>\n    <template pTemplate=\"header\">References</template>\n    <template let-relation=\"rowData\"  pTemplate=\"body\">\n      <div *ngIf=\"!relation.references || relation.references.length == 0\" (click)=\"openRefListDialog(relation)\">Click</div>\n      <div (click)=\"openRefListDialog(relation)\" *ngIf=\"relation.references\">\n        {{showReferenceIndexes(relation)}}\n      </div>\n    </template>\n\n  </p-column>\n  <template let-relation pTemplate=\"rowexpansion\">\n    <div>\n      <relation-edit [relationship]=relation></relation-edit>\n    </div>\n  </template>\n  <p-footer *ngIf=\"relations.length > 2\">\n    <div class=\"ui-dialog-buttonpane ui-helper-clearfix\">\n      <button type=\"button\" pButton icon=\"fa-plus\" style=\"float:left\" (click)=\"addRelationship(false)\" label=\"Add Relationship\"></button>\n    </div>\n  </p-footer>\n</p-dataTable>\n<p-confirmDialog width=\"200px\"></p-confirmDialog>\n"
 
 /***/ }),
 
 /***/ 990:
 /***/ (function(module, exports) {
 
-module.exports = "<head>\n  <title>{{displayName}}</title>\n</head>\n<div class=\"demo-nav-bar\">\n  <nav md-tab-nav-bar aria-label=\"Substance properties\">\n    <a md-tab-link\n       *ngFor=\"let tabLink of tabs; let i = index\"\n       [routerLink]=\"tabLink.content\"\n       [active]=\"activeLinkIndex === i\"\n       (click)=\"activeLinkIndex = i; tabChange()\">\n      {{tabLink.header || tabLink.content | uppercase}} {{length || tabLink.value?.count || ''}}\n    </a>\n  </nav>\n  <!--<p-messages [(value)]=\"msgs\"></p-messages>-->\n  <!--<div>{{message}}</div>-->\n  <div class=\"text-bold\"><br/>{{displayName}}<br/><br/></div>\n  <router-outlet>\n    <div *ngIf=\"load==='loading'\">\n      <md-spinner strokeWidth=\"5px\"></md-spinner>\n      {{load}}\n    </div>\n  </router-outlet>\n  <div id=\"hidden-things\" ></div>\n  <p-messages [(value)]=\"msgs\" (click)=\"msgclose(msgs)\"></p-messages>\n  <div *ngIf=\"(state==='validating' || state==='submitting')\" style=\"text-transform: capitalize\">\n    <md-spinner strokeWidth=\"5px\"></md-spinner>\n    {{state }} ...</div>\n  <div><br/><button [disabled]=\"(state==='validating' || state==='submitting')\" type=\"submit\" pButton [style]=\"{display:block}\" (click)=\"validate(false)\" label=\"Save Changes\"></button>\n    <button *ngIf=\"state==='validated-warning' || state==='validated-error'\"  [disabled]=\"state==='validated-error'\" type=\"submit\" pButton [style]=\"{display:block}\" (click)=\"save()\" label=\"Force Submit\"></button>\n    </div>\n</div>\n"
+module.exports = "<head>\n  <title>{{displayName}}</title>\n</head>\n<div class=\"demo-nav-bar\">\n  <nav md-tab-nav-bar aria-label=\"Substance properties\">\n    <a md-tab-link\n       *ngFor=\"let tabLink of tabs; let i = index\"\n       [routerLink]=\"tabLink.content\"\n       [active]=\"activeLinkIndex === i\"\n       (click)=\"activeLinkIndex = i; tabChange()\">\n      {{tabLink.header || tabLink.content | uppercase}} {{length || tabLink.value?.count || ''}}\n    </a>\n  </nav>\n  <!--<p-messages [(value)]=\"msgs\"></p-messages>-->\n  <!--<div>{{message}}</div>-->\n  <div class=\"text-bold\"><br/>{{displayName}}<br/><br/></div>\n  <router-outlet>\n    <div *ngIf=\"load==='loading'\">\n      <md-spinner strokeWidth=\"5px\"></md-spinner>\n      {{load}}\n    </div>\n  </router-outlet>\n  <div id=\"hidden-things\" ></div>\n\n  <div class=\"footer-controls\">\n  <div *ngFor=\"let mm of msgs\" style=\"padding-right:40px\">\n    <p-messages [(value)]=mm.msgs>\n    </p-messages>\n\n    <div *ngIf=\"mm.msgs.length > 0\">\n    <div *ngFor=\"let link of mm.links\" >\n    <a href=\"{{browserurl}}{{link.href}}\" target=\"_blank\">{{link.text}}</a>\n      </div>\n    </div>\n    </div>\n\n    <div *ngIf=\"(state==='validating' || state==='submitting')\" style=\"text-transform: capitalize\">\n      <md-spinner strokeWidth=\"5px\"></md-spinner>\n      {{state }} ...\n    </div>\n    <div>\n    <br/>\n    <button [disabled]=\"(state==='validating' || state==='submitting')\" type=\"submit\" pButton [style]=\"{display:block}\" (click)=\"validate(false)\" label=\"Save Changes\" class=\"button-down\"></button>\n    <button *ngIf=\"state==='validated-warning' || state==='validated-error'\"  [disabled]=\"state==='validated-error'\"\n            type=\"submit\" pButton [style]=\"{display:block}\" (click)=\"save()\" label=\"Dismiss Warnings & Submit\" class=\"button-down-right\"></button>\n    </div>\n  </div>\n</div>\n"
 
 /***/ }),
 

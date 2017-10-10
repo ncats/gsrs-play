@@ -259,6 +259,8 @@ var GSRSAPI={
                                  .execute();
                 };
 
+
+
                 finder.get = function(uuid){
                     var req = g_api.Request.builder()
                                      .url(g_api.GlobalSettings.getBaseURL() + finder.resource + "(" + uuid + ")");
@@ -311,7 +313,10 @@ var GSRSAPI={
               .resource("references")
               .extend(function(rfinder){
                   rfinder.searchByLastEdited = function(q) {
-                       return rfinder.search("root_lastEditedBy:\"^" + q + "$\"");
+                      return rfinder.searcher()
+                                    .query("root_lastEditedBy:\"^" + q + "$\" AND NOT root_docType:VALIDATION_MESSAGE AND NOT root_docType:BATCH_IMPORT AND NOT root_docType:SRS_LOCATOR AND NOT root_docType:SYSTEM")
+                                    .order("$root_lastEdited")
+                                    .execute();
                     };
               });
 
@@ -329,7 +334,8 @@ var GSRSAPI={
                        _limit:10,
                        _skip:0,
                        _resource:"resource",
-                       _query:""
+                       _query:"",
+                       _order:null
                     };
                 request.limit = function(limit){
                     request._limit=limit;
@@ -350,14 +356,27 @@ var GSRSAPI={
                     request._query=q;
                     return request;
                 };
+
+                request.order = function(order){
+                    request._order=order;
+                  return request;
+                };
+
                 request.asRequest = function(){
+                    var qdat={
+                      q: request._query,
+                      top: request._limit,
+                      skip: request._skip
+                    };
+
+                    if(request._order){
+                      qdat.order=request._order;
+                    }
+
+
                     return g_api.Request.builder()
                            .url(g_api.GlobalSettings.getBaseURL() + request._resource + "/search")
-                           .queryStringData({
-                                q: request._query,
-                                top: request._limit,
-                                skip: request._skip
-                           });
+                           .queryStringData(qdat);
                 };
                 request.execute = function(){
                     return request.asRequest().execute();
