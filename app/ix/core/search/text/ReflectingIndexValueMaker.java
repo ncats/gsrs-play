@@ -15,6 +15,7 @@ import ix.core.search.text.PathStack;
 import ix.core.search.text.TextIndexer;
 import ix.core.util.EntityUtils;
 import ix.core.util.EntityUtils.EntityWrapper;
+import play.Logger;
 
 public class ReflectingIndexValueMaker<T> implements IndexValueMaker<T>{
 
@@ -24,15 +25,15 @@ public class ReflectingIndexValueMaker<T> implements IndexValueMaker<T>{
 		
 		public IndexingFieldCreator(Consumer<IndexableValue> toAdd) {
 			Objects.requireNonNull(toAdd);
-			this.toAdd = toAdd; 						//where to put the fields 
+			this.toAdd = toAdd;  //where to put the fields
 		}
 	
 		public void acceptWithGeneric(PathStack path, EntityUtils.EntityWrapper<Object> ew) {
-				toAdd.accept(new IndexableValueDirect(new FacetField(TextIndexer.DIM_CLASS, ew.getKind())));
-				
+			toAdd.accept(new IndexableValueDirect(new FacetField(TextIndexer.DIM_CLASS, ew.getKind())));
+
 				ew.getId().ifPresent(o -> {
 					if (o instanceof Long) {
-						toAdd.accept(new IndexableValueDirect(new LongField(ew.getInternalIdField(), (Long) o, YES)));  
+						toAdd.accept(new IndexableValueDirect(new LongField(ew.getInternalIdField(), (Long) o, YES)));
 					} else {
 						toAdd.accept(new IndexableValueDirect(new StringField(ew.getInternalIdField(), o.toString(), YES)));  //Only Special case
 					}
@@ -49,13 +50,13 @@ public class ReflectingIndexValueMaker<T> implements IndexValueMaker<T>{
 	
 				ew.getDynamicFacet().ifPresent(fv -> {
 					path.pushAndPopWith(fv.k(), () -> {
-						toAdd.accept(new IndexableValueFromRaw(fv.k(), fv.v(), path.toPath()).dynamic());
+						toAdd.accept(new IndexableValueFromRaw(fv.k(), fv.v(), path.toPath()).dynamic().suggestable());
 					});
 				}); //Dynamic Facets
 				
 				ew.streamMethodKeywordFacets().forEach(kw -> {
 					path.pushAndPopWith(kw.label, () -> {
-						toAdd.accept(new IndexableValueFromRaw(kw.label, kw.getValue(), path.toPath()).dynamic());
+						toAdd.accept(new IndexableValueFromRaw(kw.label, kw.getValue(), path.toPath()).dynamic().suggestable());
 					});
 				}); //Method keywords
 	
@@ -72,7 +73,7 @@ public class ReflectingIndexValueMaker<T> implements IndexValueMaker<T>{
 	
 				ew.streamMethodsAndValues(m -> !m.isArrayOrCollection()).forEach(t -> {
 					path.pushAndPopWith(t.k().getName(), () -> {
-						toAdd.accept(IndexableValueFromIndexable.of( path.getFirst(), t.v(), path.toPath(),
+						toAdd.accept(IndexableValueFromIndexable.of(path.getFirst(), t.v(), path.toPath(),
 								t.k().getIndexable()));
 					});
 				});// each non-array
@@ -97,7 +98,6 @@ public class ReflectingIndexValueMaker<T> implements IndexValueMaker<T>{
 		// TODO: clean up
 		@Override
 		public void accept(PathStack t, EntityUtils.EntityWrapper u) {
-
 			if(firstValue ==null){
 				firstValue = u;
 			}

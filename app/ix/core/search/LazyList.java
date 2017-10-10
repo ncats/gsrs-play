@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.NoSuchElementException;
 import java.util.concurrent.Callable;
+import play.Logger;
 
 /**
  * This is a List where objects are stored using {@link ix.core.search.NamedCallable} to 
