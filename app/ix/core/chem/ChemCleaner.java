@@ -25,7 +25,6 @@ public class ChemCleaner {
 			mfile = mfile.replaceAll("M  SPA[^\n]*\n", "");
 		}
 		
-		
 		mfile = mfile.replaceAll("M  END\n", "");
 		
 		Matcher m = Pattern.compile("M  STY  2 (...) GEN (...) DAT").matcher(mfile);

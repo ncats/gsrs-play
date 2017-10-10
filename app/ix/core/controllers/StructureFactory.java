@@ -77,7 +77,8 @@ public class StructureFactory extends EntityFactory {
                 "unknown",
                 "structure search:" + s.id,
                 s.molfile.trim().replace("\n", "\\n").replace("\r", ""));
-        IxCache.setTemp(s.id.toString(), EntityWrapper.of(s).toFullJson());
+        //IxCache.setTemp(s.id.toString(), EntityWrapper.of(s).toFullJson());
+        IxCache.setTemp(s.id.toString(), EntityWrapper.of(s).toInternalJson());
     }
     
     public static Structure getTempStructure(String uuid){
@@ -111,6 +112,7 @@ public class StructureFactory extends EntityFactory {
             try{
                 struc = taskBuilder.build().instrument();
             }catch(Exception e){
+                Logger.error("Structure Exception", e);
                 struc = taskBuilder.mol(ChemCleaner.removeSGroups(str))
                                    .build()
                                    .instrument();
@@ -121,7 +123,8 @@ public class StructureFactory extends EntityFactory {
             }
             return struc;
         } catch (Exception e) {
-            throw new IllegalStateException("Can not parse structure from:" + str);
+            throw new IllegalStateException("Can not parse structure from:" + str, e);
+            //throw new IllegalStateException("Can not parse structure from:" + str);
         }
     }
 }
