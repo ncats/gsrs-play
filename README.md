@@ -1,13 +1,29 @@
-NCATS InXight Platform
-======================
+#G-SRS
 
-Please consult the wiki for additional details. The InXight plaform
-consists of two core components ```core``` and ```ncats```. The ```core```
-component comprises of only models and core logic controllers. The
-```ncats``` component provides a common layer for controllers and views
-to build an app. All existing apps developed within the InXight platform
-are available in the ```modules``` directory.
+Global Substance Registration System assists agencies in 
+registering and documenting information about substances 
+found in medicines. It provides a 
+common identifier for all of the substances 
+used in medicinal products, utilizing a 
+consistent definition of substances globally, 
+including active substances under clinical 
+investigation, consistent with the **ISO 11238** standard.
 
+##Check out the code
+
+The code can be checked out of this git repository.  There are several important branches:
+* GSRS_DEV - this is the main bleeding edge development branch.
+* additionaldata - This is an experimental branch that is being used to incorporate additional data sources to provide even more information on the status of each substance.
+
+## Config File
+Configuration is controlled by a Play ConfigFile.  
+The default G-SRS conf file is located in 
+`modules/ginas/conf/ginas.conf` 
+This file can be extended to provide custom configuration.
+
+For more information on how Play ConfigFiles work see [The Playframework Documentation](https://www.playframework.com/documentation/2.5.x/ConfigFile)
+
+##How To Build and Run
 To build a particular app, simply use ```sbt``` or the provided
 ```activator``` script. Here is an example of running a local instance
 of the GInAS app:
@@ -19,6 +35,9 @@ sbt -Dconfig.file=modules/ginas/conf/ginas.conf ginas/run
 (Instead of ```sbt```, you can also use ```./activator``` instead.)
 Now simply point your browser to [http://localhost:9000/ginas](http://localhost:9000/ginas).
 
+
+
+### Build a Self-Contained Distribution
 To build a self-contained distribution for production use, simply run
 the following command:
 
@@ -44,6 +63,7 @@ cd ginas-alpha_v0-0f75de1-20150618-002011
 ./bin/ginas -Dconfig.resource=ginas.conf -Dhttp.port=9000 -Djava.awt.headless=true
 ```
 
+### How To Clean The Code
 To clean up, simply issue:
 
 ```
@@ -51,4 +71,5 @@ sbt clean
 sbt ginas/clean
 ```
 
-
+##Authors
+The software tools created by the this project are developed, maintained, and distributed to ginas and other interested parties by the National Center for Advancing Translational Sciences (NCATS) at the National Institutes of Health (NIH), in close collaboration with the Food and Drug Administration (FDA). 
