@@ -1,4 +1,4 @@
-#G-SRS
+# G-SRS
 
 Global Substance Registration System assists agencies in 
 registering and documenting information about substances 
@@ -9,7 +9,7 @@ consistent definition of substances globally,
 including active substances under clinical 
 investigation, consistent with the **ISO 11238** standard.
 
-##Check out the code
+## Check out the code
 
 The code can be checked out of this git repository.  There are several important branches:
 * GSRS_DEV - this is the main bleeding edge development branch.
@@ -23,7 +23,7 @@ This file can be extended to provide custom configuration.
 
 For more information on how Play ConfigFiles work see [The Playframework Documentation](https://www.playframework.com/documentation/2.5.x/ConfigFile)
 
-##How To Build and Run
+## How To Build and Run
 To build a particular app, simply use ```sbt``` or the provided
 ```activator``` script. Here is an example of running a local instance
 of the GInAS app:
@@ -71,5 +71,5 @@ sbt clean
 sbt ginas/clean
 ```
 
-##Authors
+## Authors
 The software tools created by the this project are developed, maintained, and distributed to ginas and other interested parties by the National Center for Advancing Translational Sciences (NCATS) at the National Institutes of Health (NIH), in close collaboration with the Food and Drug Administration (FDA). 
