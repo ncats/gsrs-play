@@ -943,7 +943,10 @@ var CodeListComponent = (function () {
             .getCodes()
             .then(function (codes) {
             _this.codes = codes;
-            _this.codes = __WEBPACK_IMPORTED_MODULE_9_lodash__["orderBy"](_this.codes, ['codeSystem'], ['asc']);
+            // this.codes = _.orderBy(this.codes, ['codeSystem'],['asc']);
+            _this.codes.sort(function (a, b) {
+                return a.codeSystem.localeCompare(b.codeSystem);
+            });
         });
     };
     CodeListComponent.prototype.getAccess = function () {
@@ -1397,6 +1400,9 @@ var ReferenceListComponent = (function () {
             .then(function (refs) {
             _this.refs = refs;
             _this.refs = __WEBPACK_IMPORTED_MODULE_6_lodash__["orderBy"](_this.refs, ['citation'], ['asc']);
+            _this.refs.sort(function (a, b) {
+                return a.citation.localeCompare(b.citation);
+            });
         });
     };
     ReferenceListComponent.prototype.getAccess = function () {
@@ -1665,10 +1671,11 @@ var RelationshipListComponent = (function () {
             .getRelationships()
             .then(function (rels) {
             _this.relations = rels;
-            // this.relationService.relationList=rels;
             _this.loadOptions();
-            //this.utilService.sortLists(this.relations, "relatedSubstance.refPname");
-            _this.relations = __WEBPACK_IMPORTED_MODULE_7_lodash__["orderBy"](_this.relations, ['relatedSubstance.refPname'], ['asc']);
+            //  this.relations = _.orderBy(this.relations, ['relatedSubstance.refPname'],['asc']);
+            _this.relations.sort(function (a, b) {
+                return a.relatedSubstance.refPname.localeCompare(b.relatedSubstance.refPname);
+            });
         });
     };
     RelationshipListComponent.prototype.changeAccess = function ($event, relation) {
@@ -2165,7 +2172,7 @@ var SubstanceEditService = (function () {
             return Promise.resolve(SubstanceEditService.refs);
         return new Promise(function (resolve, reject) {
             window["SubstanceFinder"].get(SubstanceEditService.uuid)
-                .andThen(function (s) { return s.fetch("references!sort(created)"); })
+                .andThen(function (s) { return s.fetch("references!sort(lastEdited)"); })
                 .andThen(function (refs) { return _this.storeReferences(refs); })
                 .get(function (refs) { return resolve(refs); });
         });
@@ -3989,7 +3996,7 @@ module.exports = "<br/>\n<form class=\"ref-edit-form\" #refEditForm=\"ngForm\">\
 /***/ 986:
 /***/ (function(module, exports) {
 
-module.exports = "<form>\n  <div md-dialog-title align=\"center\">\n    <span>Select Reference</span> <span><button type=\"button\" md-button md-dialog-close><md-icon>clear</md-icon></button></span>\n    <br/><br/>\n    <div>\n      <md-button-toggle-group #group=\"mdButtonToggleGroup\" name=\"referenceView\" [(ngModel)]=\"referenceViewTab\">\n        <md-button-toggle value=\"all\">All</md-button-toggle>\n        <md-button-toggle value=\"selected\">Selected</md-button-toggle>\n        <md-button-toggle value=\"last5\">Last 5</md-button-toggle>\n      </md-button-toggle-group>\n    </div>\n  </div>\n\n\n  <md-dialog-content>\n    <md-input-container dense>\n      <input mdInput placeholder=\"Filter References\" [formControl]=\"refCtrl\"  [(ngModel)]=\"filterQuery\">\n     </md-input-container>\n    <md-list dense>\n      <md-list-item *ngFor=\"let ref of allRefsForDataFiltered\">\n\n        <p md-line class=\"title-name\" style=\"overflow-y: hidden;max-height: 20px;\">\n            <span><md-checkbox [checked]=isChecked(ref) (change)=\"toggle(ref)\" class=\"no-display\"></md-checkbox></span>\n             <span>{{ref.index}}. {{ref.citation}}</span> </p>\n        <span><b>{{ref.access}}</b></span>\n        <span><md-icon class=\"md-secondary\" (click)=\"openRefEditDialog(ref)\">\n          <i class=\"material-icons\" title=\"click to edit\">chevron_right</i>\n        </md-icon></span>\n      </md-list-item>\n    </md-list>\n</md-dialog-content>\n\n  <md-divider></md-divider>\n<md-dialog-actions align=\"center\">\n  <div><button md-button (click)=\"openRefEditDialog()\">Create New</button></div>\n  <!--<button md-button (click)=\"apply()\" md-dialog-close> Apply Selected </button>-->\n  <button md-button (click)=\"applySelectedToAllRecords()\" md-dialog-close> Apply to All New Names</button>\n  <!--<div><p><button md-button (click)=\"applySelectedToAllRecords()\" md-dialog-close>Apply Selected to All Records</button></p></div>-->\n <!-- <div>\n    <button md-button [mdMenuTriggerFor]=\"menu\">Select Action</button>\n    <md-menu #menu=\"mdMenu\">\n      <button md-menu-item (click)=\"apply()\" md-dialog-close> Apply </button>\n      <button md-menu-item (click)=\"applySelectedToAllRecords()\" md-dialog-close> Apply Selected to All Records </button>\n    </md-menu>\n  </div>-->\n</md-dialog-actions>\n</form>\n\n"
+module.exports = "<form>\n  <div md-dialog-title align=\"center\">\n    <span>Select Reference</span> <span><button type=\"button\" md-button md-dialog-close><md-icon>clear</md-icon></button></span>\n    <br/><br/>\n    <div>\n      <md-button-toggle-group #group=\"mdButtonToggleGroup\" name=\"referenceView\" [(ngModel)]=\"referenceViewTab\">\n        <md-button-toggle value=\"all\">All</md-button-toggle>\n        <md-button-toggle value=\"selected\">Selected</md-button-toggle>\n        <md-button-toggle value=\"last5\">Last 5 Saved</md-button-toggle>\n      </md-button-toggle-group>\n    </div>\n  </div>\n\n\n  <md-dialog-content>\n    <md-input-container dense>\n      <input mdInput placeholder=\"Filter References\" [formControl]=\"refCtrl\"  [(ngModel)]=\"filterQuery\">\n     </md-input-container>\n    <md-list dense>\n      <md-list-item *ngFor=\"let ref of allRefsForDataFiltered\">\n\n        <p md-line class=\"title-name\" style=\"overflow-y: hidden;max-height: 20px;\">\n            <span><md-checkbox [checked]=isChecked(ref) (change)=\"toggle(ref)\" class=\"no-display\"></md-checkbox></span>\n             <span>{{ref.index}}. {{ref.citation}}</span> </p>\n        <span><b>{{ref.access}}</b></span>\n        <span><md-icon class=\"md-secondary\" (click)=\"openRefEditDialog(ref)\">\n          <i class=\"material-icons\" title=\"click to edit\">chevron_right</i>\n        </md-icon></span>\n      </md-list-item>\n    </md-list>\n</md-dialog-content>\n\n  <md-divider></md-divider>\n<md-dialog-actions align=\"center\">\n  <div><button md-button (click)=\"openRefEditDialog()\">Create New</button></div>\n  <!--<button md-button (click)=\"apply()\" md-dialog-close> Apply Selected </button>-->\n  <button md-button (click)=\"applySelectedToAllRecords()\" md-dialog-close> Apply to All New Names</button>\n  <!--<div><p><button md-button (click)=\"applySelectedToAllRecords()\" md-dialog-close>Apply Selected to All Records</button></p></div>-->\n <!-- <div>\n    <button md-button [mdMenuTriggerFor]=\"menu\">Select Action</button>\n    <md-menu #menu=\"mdMenu\">\n      <button md-menu-item (click)=\"apply()\" md-dialog-close> Apply </button>\n      <button md-menu-item (click)=\"applySelectedToAllRecords()\" md-dialog-close> Apply Selected to All Records </button>\n    </md-menu>\n  </div>-->\n</md-dialog-actions>\n</form>\n\n"
 
 /***/ }),
 
