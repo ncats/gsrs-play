@@ -51,7 +51,7 @@ public final class TestFacetUtil {
     private static Map<String,Map<String,Integer>> filterVisibleFacets(Map<String, Map<String, Integer>> expectedFacets) {
 
         Map<String,Map<String,Integer>> filtered = new HashMap<>();
-        for(String name : GinasApp.getDefaultFacets()){
+        for(String name : GinasApp.getSubstanceFacetsForActiveUser()){
             String translatedName = GinasApp.translateFacetName(name);
             filtered.put(translatedName, expectedFacets.get(translatedName));
         }

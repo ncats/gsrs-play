@@ -5,6 +5,7 @@ import static org.junit.Assert.assertEquals;
 import java.util.Optional;
 import java.util.stream.Stream;
 
+import ix.core.plugins.StructureIndexerPlugin;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -21,7 +22,7 @@ import tripod.chem.indexer.StructureIndexer.ResultEnumeration;
 
 public class StructureIndexerTest extends AbstractGinasServerTest{
 	
-	StructureIndexer structureIndexer;
+	StructureIndexerPlugin.StandardizedStructureIndexer structureIndexer;
 	
 	@Before
 	public void getIndexer(){
