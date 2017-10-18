@@ -59,8 +59,8 @@ public class SequenceSearchAPI extends AbstractGinasTest{
 
             HtmlPage page = session.submit(request);
 
-            List<HtmlAnchor> results =  (List<HtmlAnchor>) page.getByXPath("//div[@class='row']/div/h3/a");
-            List<HtmlPreformattedText> identities = (List<HtmlPreformattedText>) page.getByXPath("//div[@class='row']/div/pre");
+            List<HtmlAnchor> results =  page.getByXPath("//div[@class='row']/div/h3/a");
+            List<HtmlPreformattedText> identities = page.getByXPath("//div[@class='row']/div/pre");
 
             Iterator<HtmlAnchor> anchorIter = results.iterator();
             Iterator<HtmlPreformattedText> identitiesIter = identities.iterator();

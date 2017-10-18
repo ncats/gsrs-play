@@ -36,7 +36,7 @@ object ApplicationBuild extends Build {
     "org.apache.httpcomponents" % "httpclient" %"4.3.1", //required for Ivy bug?
     "commons-io" % "commons-io" % "2.4",
 
-    "net.sourceforge.htmlunit" % "htmlunit" % "2.20" % Test,
+    "net.sourceforge.htmlunit" % "htmlunit" % "2.27" % Test,
     "com.zaxxer" % "HikariCP" % "2.4.6"
       ,"com.edulify" %% "play-hikaricp" % "2.1.0"
       ,"mysql" % "mysql-connector-java" % "5.1.31"
