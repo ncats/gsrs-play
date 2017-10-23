@@ -459,11 +459,11 @@
             replace: true,
             templateUrl: baseurl + "assets/templates/forms/concept-upgrade-form.html",
             scope: {
-                parent: '='
+                parent: '=',
+                iscollapsed: '=?'
             },
             link: function (scope, element, attrs) {
 
-                scope.iscollapsed = false;
                 if (scope.parent.uuid) {
                     scope.editid = scope.parent.uuid.split('-')[0];
                 }
@@ -934,7 +934,8 @@
             restrict: 'E',
             replace: true,
             scope: {
-                parent: '='
+                parent: '=',
+                iscollapsed: '=?'
             },
             templateUrl: baseurl + "assets/templates/forms/diverse-type-form.html",
             link: function (scope, element, attrs) {

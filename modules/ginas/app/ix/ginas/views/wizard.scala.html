@@ -60,7 +60,7 @@
                     case "concept" => {
                         <div>Concepts have no defining information, but are collections of terms, codes and related information. They can be promoted to a defined substance at a later time, when appropriate.</div>
                         <div ng-if="substance.uuid">
-                            <concept-upgrade-form parent = substance></concept-upgrade-form>
+                            <concept-upgrade-form parent = substance iscollapsed="true"></concept-upgrade-form>
                         </div>
                     }
                     case "polymer" => {
