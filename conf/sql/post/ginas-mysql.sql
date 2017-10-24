@@ -21,3 +21,8 @@ ALTER TABLE ix_ginas_relationship
 ADD INDEX interaction_index (interaction_type ASC),
 ADD INDEX qualification_index (qualification ASC),
 ADD INDEX type_index (type ASC);
+
+
+ALTER TABLE ix_core_edit
+ADD INDEX refid_core_edit_index (refid ASC),
+ADD INDEX kind_core_edit_index (kind ASC);

@@ -13,3 +13,5 @@ CREATE INDEX qualification_index on ix_ginas_relationship (qualification);
 CREATE INDEX type_index on ix_ginas_relationship (type);
 CREATE INDEX sub_ref_index on ix_ginas_substanceref (refuuid);
 CREATE INDEX relate_originate_index on ix_ginas_relationship (originator_uuid);
+CREATE INDEX refid_core_edit_index on ix_core_edit (refid);
+CREATE INDEX kind_core_edit_index on ix_core_edit (kind);
