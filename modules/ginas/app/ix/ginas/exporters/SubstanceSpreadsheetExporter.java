@@ -1,10 +1,7 @@
 package ix.ginas.exporters;
 
 import java.io.IOException;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.function.Function;
 
 import gov.nih.ncgc.chemical.Chemical;
@@ -32,26 +29,25 @@ public class SubstanceSpreadsheetExporter implements Exporter<Substance> {
 
     private int row=1;
 
-    private final Map<String, ColumnValueRecipe<Substance>> recipeMap;
+    private final List<ColumnValueRecipe<Substance>> recipeMap;
 
 
     private SubstanceSpreadsheetExporter(Builder builder){
         this.spreadsheet = builder.spreadsheet;
         this.recipeMap = builder.columns;
         int j=0;
-        Spreadsheet.Row header = spreadsheet.getRow(0);
-        for(String col : recipeMap.keySet()){
-            header.getCell(j++).writeString(col);
+        Spreadsheet.SpreadsheetRow header = spreadsheet.getRow(0);
+        for(ColumnValueRecipe<Substance> col : recipeMap){
+            j+= col.writeHeaderValues(header, j);
         }
     }
     @Override
     public void export(Substance s) throws IOException {
-        Spreadsheet.Row header = spreadsheet.getRow( row++);
+        Spreadsheet.SpreadsheetRow row = spreadsheet.getRow( this.row++);
 
         int j=0;
-        for(ColumnValueRecipe<Substance> recipe : recipeMap.values()){
-            SpreadsheetCell cell = header.getCell(j++);
-            recipe.writeValue(s, cell);
+        for(ColumnValueRecipe<Substance> recipe : recipeMap){
+            j+= recipe.writeValuesFor(row, j, s);
         }
     }
 
@@ -65,29 +61,29 @@ public class SubstanceSpreadsheetExporter implements Exporter<Substance> {
     static{
         DEFAULT_RECIPE_MAP = new LinkedHashMap<>();
 
-        DEFAULT_RECIPE_MAP.put(DefaultColumns.UUID, (s, cell) -> cell.write(s.getOrGenerateUUID()));
+        DEFAULT_RECIPE_MAP.put(DefaultColumns.UUID,  SingleColumnValueRecipe.create( DefaultColumns.UUID ,(s, cell) -> cell.write(s.getOrGenerateUUID())));
         //TODO preferred TERM ?
-        DEFAULT_RECIPE_MAP.put(DefaultColumns.NAME, (s, cell) -> cell.writeString(s.getName()));
-        DEFAULT_RECIPE_MAP.put(DefaultColumns.APPROVAL_ID, (s, cell) -> cell.writeString(s.getApprovalID()));
+        DEFAULT_RECIPE_MAP.put(DefaultColumns.NAME, SingleColumnValueRecipe.create( DefaultColumns.NAME ,(s, cell) -> cell.writeString(s.getName())));
+        DEFAULT_RECIPE_MAP.put(DefaultColumns.APPROVAL_ID, SingleColumnValueRecipe.create(DefaultColumns.APPROVAL_ID  ,(s, cell) -> cell.writeString(s.getApprovalID())));
 
-        DEFAULT_RECIPE_MAP.put(DefaultColumns.SMILES, (s, cell) -> {
+        DEFAULT_RECIPE_MAP.put(DefaultColumns.SMILES, SingleColumnValueRecipe.create( DefaultColumns.SMILES ,(s, cell) -> {
             if(s instanceof ChemicalSubstance){
                 cell.writeString(((ChemicalSubstance)s).structure.smiles);
             }
-        });
+        }));
 
-        DEFAULT_RECIPE_MAP.put(DefaultColumns.FORMULA, (s, cell) -> {
+        DEFAULT_RECIPE_MAP.put(DefaultColumns.FORMULA, SingleColumnValueRecipe.create(DefaultColumns.FORMULA  ,(s, cell) -> {
             if(s instanceof ChemicalSubstance){
                 cell.writeString(((ChemicalSubstance)s).structure.formula);
             }else if(s instanceof PolymerSubstance){
                 cell.writeString("Polymer substance not supported");
             }
-        });
-        DEFAULT_RECIPE_MAP.put(DefaultColumns.SUBSTANCE_TYPE, (s, cell) -> cell.writeString(s.substanceClass.name()));
+        }));
+        DEFAULT_RECIPE_MAP.put(DefaultColumns.SUBSTANCE_TYPE, SingleColumnValueRecipe.create( DefaultColumns.SUBSTANCE_TYPE ,(s, cell) -> cell.writeString(s.substanceClass.name())));
 
-        //DEFAULT_RECIPE_MAP.put(DefaultColumns.STD_INCHIKEY, new  ChemicalExportRecipe(Chemical.FORMAT_STDINCHIKEY));
+        DEFAULT_RECIPE_MAP.put(DefaultColumns.STD_INCHIKEY, new  ChemicalExportRecipe(DefaultColumns.STD_INCHIKEY, Chemical.FORMAT_STDINCHIKEY));
 
-        DEFAULT_RECIPE_MAP.put(DefaultColumns.STD_INCHIKEY_FORMATTED, (s, cell) ->{
+        DEFAULT_RECIPE_MAP.put(DefaultColumns.STD_INCHIKEY_FORMATTED, SingleColumnValueRecipe.create(DefaultColumns.STD_INCHIKEY_FORMATTED  ,(s, cell) ->{
             if(s instanceof ChemicalSubstance){
                 Structure.Stereo ster=((ChemicalSubstance)s).getStereochemistry();
                 if(!ster.equals(Structure.Stereo.ABSOLUTE) && !ster.equals(Structure.Stereo.ACHIRAL)){
@@ -101,32 +97,32 @@ public class SubstanceSpreadsheetExporter implements Exporter<Substance> {
 
                 }
             }
-        });
+        }));
 
         // DEFAULT_RECIPE_MAP.put(DefaultColumns.STD_INCHI, new  ChemicalExportRecipe(Chemical.FORMAT_STDINCHI));
 
 
-        DEFAULT_RECIPE_MAP.put(DefaultColumns.CAS, new CodeSystemRecipe("CAS"));
-        DEFAULT_RECIPE_MAP.put(DefaultColumns.EC, new CodeSystemRecipe("ECHA (EC/EINECS)"));
-        DEFAULT_RECIPE_MAP.put(DefaultColumns.ITIS, ParentSourceMaterialRecipeWrapper.wrap(new CodeSystemRecipe("ITIS")));
-        DEFAULT_RECIPE_MAP.put(DefaultColumns.NCBI, ParentSourceMaterialRecipeWrapper.wrap(new CodeSystemRecipe("NCBI TAXONOMY")));
-        DEFAULT_RECIPE_MAP.put(DefaultColumns.USDA_PLANTS, ParentSourceMaterialRecipeWrapper.wrap(new CodeSystemRecipe("USDA PLANTS")));
-        DEFAULT_RECIPE_MAP.put(DefaultColumns.INN, new CodeSystemRecipe("INN"));
-        DEFAULT_RECIPE_MAP.put(DefaultColumns.NCI_THESAURUS, new CodeSystemRecipe("NCI_THESAURUS"));
-        
-        DEFAULT_RECIPE_MAP.put(DefaultColumns.RXCUI, new CodeSystemRecipe("RXCUI"));
-        DEFAULT_RECIPE_MAP.put(DefaultColumns.PUBCHEM, new CodeSystemRecipe("PUBCHEM"));
-        DEFAULT_RECIPE_MAP.put(DefaultColumns.MPNS, ParentSourceMaterialRecipeWrapper.wrap(new CodeSystemRecipe("MPNS")));
-        DEFAULT_RECIPE_MAP.put(DefaultColumns.GRIN, ParentSourceMaterialRecipeWrapper.wrap(new CodeSystemRecipe("GRIN")));
-        
-        
-        DEFAULT_RECIPE_MAP.put(DefaultColumns.INGREDIENT_TYPE, (s, cell) ->{
+        DEFAULT_RECIPE_MAP.put(DefaultColumns.CAS, new CodeSystemRecipe(DefaultColumns.CAS, "CAS"));
+        DEFAULT_RECIPE_MAP.put(DefaultColumns.EC, new CodeSystemRecipe(DefaultColumns.EC, "ECHA (EC/EINECS)"));
+        DEFAULT_RECIPE_MAP.put(DefaultColumns.ITIS, ParentSourceMaterialRecipeWrapper.wrap( new CodeSystemRecipe(DefaultColumns.ITIS, "ITIS")));
+        DEFAULT_RECIPE_MAP.put(DefaultColumns.NCBI, ParentSourceMaterialRecipeWrapper.wrap(new CodeSystemRecipe(DefaultColumns.NCBI, "NCBI TAXONOMY")));
+        DEFAULT_RECIPE_MAP.put(DefaultColumns.USDA_PLANTS, ParentSourceMaterialRecipeWrapper.wrap(new CodeSystemRecipe(DefaultColumns.USDA_PLANTS, "USDA PLANTS")));
+        DEFAULT_RECIPE_MAP.put(DefaultColumns.INN, new CodeSystemRecipe(DefaultColumns.INN, "INN"));
+        DEFAULT_RECIPE_MAP.put(DefaultColumns.NCI_THESAURUS, new CodeSystemRecipe(DefaultColumns.NCI_THESAURUS, "NCI_THESAURUS"));
+
+        DEFAULT_RECIPE_MAP.put(DefaultColumns.RXCUI, new CodeSystemRecipe(DefaultColumns.RXCUI, "RXCUI"));
+        DEFAULT_RECIPE_MAP.put(DefaultColumns.PUBCHEM, new CodeSystemRecipe(DefaultColumns.PUBCHEM, "PUBCHEM"));
+        DEFAULT_RECIPE_MAP.put(DefaultColumns.MPNS, ParentSourceMaterialRecipeWrapper.wrap(new CodeSystemRecipe(DefaultColumns.MPNS, "MPNS")));
+        DEFAULT_RECIPE_MAP.put(DefaultColumns.GRIN, ParentSourceMaterialRecipeWrapper.wrap(new CodeSystemRecipe(DefaultColumns.GRIN, "GRIN")));
+
+
+        DEFAULT_RECIPE_MAP.put(DefaultColumns.INGREDIENT_TYPE, SingleColumnValueRecipe.create(DefaultColumns.INGREDIENT_TYPE, (s, cell) ->{
             cell.writeString(GinasUtils.getIngredientType(s));
-        });
+        }));
 
 
         //Lazy place to put new default columns
-        DEFAULT_RECIPE_MAP.put(DefaultColumns.PROTEIN_SEQUENCE, (s, cell) ->{
+        DEFAULT_RECIPE_MAP.put(DefaultColumns.PROTEIN_SEQUENCE,SingleColumnValueRecipe.create(DefaultColumns.PROTEIN_SEQUENCE  , (s, cell) ->{
             if(s instanceof ProteinSubstance){
                 List<Subunit> subunits=((ProteinSubstance)s).protein.getSubunits();
                 StringBuilder sb = new StringBuilder();
@@ -138,9 +134,9 @@ public class SubstanceSpreadsheetExporter implements Exporter<Substance> {
                 }
                 cell.writeString(sb.toString());
             }
-        });
+        }));
 
-        DEFAULT_RECIPE_MAP.put(DefaultColumns.NUCLEIC_ACID_SEQUENCE, (s, cell) ->{
+        DEFAULT_RECIPE_MAP.put(DefaultColumns.NUCLEIC_ACID_SEQUENCE, SingleColumnValueRecipe.create( DefaultColumns.NUCLEIC_ACID_SEQUENCE ,(s, cell) ->{
             if(s instanceof NucleicAcidSubstance){
                 List<Subunit> subunits=((NucleicAcidSubstance)s).nucleicAcid.getSubunits();
 
@@ -154,8 +150,8 @@ public class SubstanceSpreadsheetExporter implements Exporter<Substance> {
                 }
                 cell.writeString(sb.toString());
             }
-        });
-        DEFAULT_RECIPE_MAP.put(DefaultColumns.RECORD_ACCESS_GROUPS, (s, cell) ->{
+        }));
+        DEFAULT_RECIPE_MAP.put(DefaultColumns.RECORD_ACCESS_GROUPS, SingleColumnValueRecipe.create( DefaultColumns.RECORD_ACCESS_GROUPS ,(s, cell) ->{
             StringBuilder sb = new StringBuilder();
             for(Group g:s.getAccess()){
                 if(sb.length()!=0){
@@ -164,14 +160,14 @@ public class SubstanceSpreadsheetExporter implements Exporter<Substance> {
                 sb.append(g.name);
             }
             cell.writeString(sb.toString());
-        });
+        }));
 
 
 
     }
     
-    private static interface SubstanceColumnValueRecipe extends ColumnValueRecipe<Substance>{
-    	
+    private static interface SubstanceColumnValueRecipe extends SingleColumnValueRecipe<Substance>{
+
     	public default SubstanceFetcherRecipeWrapper wrapped(Function<Substance,Substance> trans){
     		return new SubstanceFetcherRecipeWrapper(this){
 				@Override
@@ -179,7 +175,7 @@ public class SubstanceSpreadsheetExporter implements Exporter<Substance> {
 					return trans.apply(s);
 				}
     		};
-    		
+
     	}
     }
 
@@ -187,8 +183,21 @@ public class SubstanceSpreadsheetExporter implements Exporter<Substance> {
 
         private final  int chemicalFormat;
 
-        public ChemicalExportRecipe(int chemicalFormat) {
+        private final String columnHeder;
+
+        public ChemicalExportRecipe(Enum<?> columnValue, int chemicalFormat) {
+            this(columnValue.name(), chemicalFormat);
+        }
+
+        public ChemicalExportRecipe(String columnValue, int chemicalFormat) {
             this.chemicalFormat = chemicalFormat;
+            this.columnHeder = columnValue;
+        }
+
+        @Override
+        public int writeHeaderValues(Spreadsheet.SpreadsheetRow row, int currentOffset) {
+            row.getCell(currentOffset).writeString(columnHeder);
+            return 1;
         }
 
         @Override
@@ -202,90 +211,142 @@ public class SubstanceSpreadsheetExporter implements Exporter<Substance> {
                 }
             }
         }
+        @Override
+        public boolean containsColumnName(String name) {
+            return Objects.equals(columnHeder, name);
+        }
+
+        @Override
+        public ColumnValueRecipe<Substance> replaceColumnName(String oldName, String newName) {
+            if(containsColumnName(oldName)){
+                return new ChemicalExportRecipe(newName, chemicalFormat);
+            }
+            return this;
+        }
     }
-    
-    
-    
-    
+
+
+
+    private static class ParentSourceMaterialRecipeWrapper extends SubstanceFetcherRecipeWrapper {
+
+        public ParentSourceMaterialRecipeWrapper(ColumnValueRecipe<Substance> del) {
+            super(del);
+        }
+
+        @Override
+        public Substance getSubstance(Substance s) {
+
+            if(s instanceof StructurallyDiverseSubstance){
+                StructurallyDiverseSubstance sdiv = (StructurallyDiverseSubstance)s;
+                SubstanceReference sr=sdiv.structurallyDiverse.parentSubstance;
+                if(sr!=null){
+                    Substance full = SubstanceFactory.getFullSubstance(sr);
+                    if(full!=null){
+                        return full;
+                    }
+                }
+            }
+            return s;
+        }
+
+        /**
+         * Fetches the parent substance (if one exists) rather than the given substance
+         * for use in column recipes.
+         * @param col
+         * @return
+         */
+        public static ParentSourceMaterialRecipeWrapper wrap(ColumnValueRecipe<Substance> col){
+            return new ParentSourceMaterialRecipeWrapper(col);
+        }
+
+    }
     /**
-     * Wraps a {@link ColumnValueRecipe} to fetch a (possibly) different object before applying 
+     * Wraps a {@link ColumnValueRecipe} to fetch a (possibly) different object before applying
      * the recipe.
-     * 
+     *
      * @author tyler
      *
      */
-    private static abstract class SubstanceFetcherRecipeWrapper implements SubstanceColumnValueRecipe{
+    private static abstract class SubstanceFetcherRecipeWrapper implements ColumnValueRecipe<Substance>{
 
-    	ColumnValueRecipe<Substance> _delegate;
-    	
-    	public SubstanceFetcherRecipeWrapper(ColumnValueRecipe<Substance>  del){
-    		this._delegate=del;
-    		
-    	}
-    	
-    	public abstract Substance getSubstance(Substance s);
-    	
-		@Override
-		public void writeValue(Substance object, SpreadsheetCell cell) {
-			this._delegate.writeValue(getSubstance(object), cell);
-		}
-		
+        ColumnValueRecipe<Substance> _delegate;
+
+        public SubstanceFetcherRecipeWrapper(ColumnValueRecipe<Substance>  del){
+            this._delegate=del;
+
+        }
+
+        public abstract Substance getSubstance(Substance s);
+
+        @Override
+        public int writeValuesFor(Spreadsheet.SpreadsheetRow row, int currentOffset, Substance obj) {
+            return _delegate.writeValuesFor(row, currentOffset, obj);
+        }
+
+        @Override
+        public int writeHeaderValues(Spreadsheet.SpreadsheetRow row, int currentOffset) {
+            return _delegate.writeHeaderValues(row, currentOffset);
+        }
+
+        @Override
+        public boolean containsColumnName(String name) {
+            return _delegate.containsColumnName(name);
+        }
+
+        @Override
+        public ColumnValueRecipe<Substance> replaceColumnName(String oldName, String newName) {
+            _delegate = _delegate.replaceColumnName(oldName, newName);
+            return this;
+        }
     }
-    
-    private static class ParentSourceMaterialRecipeWrapper extends SubstanceFetcherRecipeWrapper{
 
-		public ParentSourceMaterialRecipeWrapper(ColumnValueRecipe<Substance> del) {
-			super(del);
-		}
 
-		@Override
-		public Substance getSubstance(Substance s) {
-			
-			if(s instanceof StructurallyDiverseSubstance){
-				StructurallyDiverseSubstance sdiv = (StructurallyDiverseSubstance)s;
-			    SubstanceReference sr=sdiv.structurallyDiverse.parentSubstance;
-			    if(sr!=null){
-			    	Substance full = SubstanceFactory.getFullSubstance(sr);
-			    	if(full!=null){
-			    		return full;
-			    	}
-			    }
-			}
-			return s;
-		}
-		
-		/**
-		 * Fetches the parent substance (if one exists) rather than the given substance
-		 * for use in column recipes.
-		 * @param col
-		 * @return
-		 */
-		public static ParentSourceMaterialRecipeWrapper wrap(ColumnValueRecipe<Substance> col){
-			return new ParentSourceMaterialRecipeWrapper(col);
-		}
+
+    private static class CodeSystemRecipe implements SingleColumnValueRecipe<Substance> {
     	
-    }
-    
-    private static class CodeSystemRecipe implements SubstanceColumnValueRecipe{
+        private final String columnName;
 
         private final String codeSystemToFind;
         private final boolean publicOnly;
         
-
-        public CodeSystemRecipe(String codeSystemToFind) {
-            this(codeSystemToFind, false);
+        public CodeSystemRecipe(Enum<?> columnName, String codeSystemToFind) {
+            this(columnName, codeSystemToFind, false);
         }
 
 
 
-        public CodeSystemRecipe(String codeSystemToFind, boolean publicOnly) {
+        public CodeSystemRecipe(Enum<?> columnName, String codeSystemToFind, boolean publicOnly) {
             this.codeSystemToFind = codeSystemToFind;
             this.publicOnly = publicOnly;
+            this.columnName = columnName.name();
+        }
+        private CodeSystemRecipe(String columnName, String codeSystemToFind, boolean publicOnly) {
+            this.codeSystemToFind = codeSystemToFind;
+            this.publicOnly = publicOnly;
+            this.columnName = columnName;
         }
 
+        @Override
+        public int writeHeaderValues(Spreadsheet.SpreadsheetRow row, int currentOffset) {
+            row.getCell(currentOffset).writeString(columnName);
+            return 1;
+        }
 
         public CodeSystemRecipe asPublicOnly(){
-            return new CodeSystemRecipe(codeSystemToFind, true);
+            return new CodeSystemRecipe(columnName, codeSystemToFind, true);
+        }
+
+        @Override
+        public boolean containsColumnName(String name) {
+            return Objects.equals(name, columnName);
+        }
+
+        @Override
+        public ColumnValueRecipe<Substance> replaceColumnName(String oldName, String newName) {
+           if(containsColumnName(oldName)){
+               return new CodeSystemRecipe(newName, codeSystemToFind, true);
+           }
+           return this;
         }
 
         @Override
@@ -321,7 +382,7 @@ public class SubstanceSpreadsheetExporter implements Exporter<Substance> {
      *
      */
     public static class Builder{
-        private final Map<String, ColumnValueRecipe<Substance>> columns = new LinkedHashMap<>();
+        private final List<ColumnValueRecipe<Substance>> columns = new ArrayList<>();
         private final Spreadsheet spreadsheet;
 
         private boolean publicOnly = false;
@@ -337,7 +398,7 @@ public class SubstanceSpreadsheetExporter implements Exporter<Substance> {
             this.spreadsheet = spreadSheet;
 
             for(Map.Entry<Column, ColumnValueRecipe<Substance>> entry : DEFAULT_RECIPE_MAP.entrySet()){
-                columns.put(entry.getKey().name(), entry.getValue());
+                columns.add(entry.getValue());
             }
         }
 
@@ -347,29 +408,42 @@ public class SubstanceSpreadsheetExporter implements Exporter<Substance> {
         public Builder addColumn(String columnName, ColumnValueRecipe<Substance> recipe){
             Objects.requireNonNull(columnName);
             Objects.requireNonNull(recipe);
-            columns.put(columnName, recipe);
+            columns.add(recipe);
 
             return this;
         }
 
-        public Builder removeColumn(Column column){
-            return removeColumn(column.name());
-        }
 
-        public Builder removeColumn(String columnName){
-            columns.remove(columnName);
+        public Builder renameColumn(Column oldColumn, String newName){
+            return renameColumn(oldColumn.name(), newName);
+        }
+        public Builder renameColumn(String oldName, String newName){
+            //use iterator to preserve order
+            ListIterator<ColumnValueRecipe<Substance>> iter = columns.listIterator();
+            while(iter.hasNext()){
+
+                ColumnValueRecipe<Substance> oldValue = iter.next();
+                ColumnValueRecipe<Substance> newValue = oldValue.replaceColumnName(oldName, newName);
+                if(oldValue != newValue){
+                   iter.set(newValue);
+                }
+            }
             return this;
         }
 
         public SubstanceSpreadsheetExporter build(){
 
             if(publicOnly){
-                for(Map.Entry<String, ColumnValueRecipe<Substance>> entry : columns.entrySet()){
-                    ColumnValueRecipe<Substance> value = entry.getValue();
+                ListIterator<ColumnValueRecipe<Substance>> iter = columns.listIterator();
+                while(iter.hasNext()){
+
+                    ColumnValueRecipe<Substance> value = iter.next();
                     if(value instanceof CodeSystemRecipe){
-                        entry.setValue(((CodeSystemRecipe) value).asPublicOnly());
+                        iter.set(((CodeSystemRecipe) value).asPublicOnly());
                     }
+
                 }
+
             }
 
             return new SubstanceSpreadsheetExporter(this);

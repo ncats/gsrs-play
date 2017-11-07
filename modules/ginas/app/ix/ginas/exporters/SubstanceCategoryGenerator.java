@@ -8,9 +8,14 @@ import java.util.TreeSet;
 import ix.ginas.models.v1.Relationship;
 import ix.ginas.models.v1.Substance;
 
-public class SubstanceCategoryGenerator implements ColumnValueRecipe<Substance>{
+public class SubstanceCategoryGenerator implements SingleColumnValueRecipe<Substance> {
 	static Set<String> ingredientCategoryTypes =  new HashSet<String>();
 	
+	@Override
+	public int writeHeaderValues(Spreadsheet.SpreadsheetRow row, int currentOffset) {
+		return 0;
+	}
+
 	static{
 		ingredientCategoryTypes.add("IONIC MOIETY");
 		ingredientCategoryTypes.add("MOLECULAR FRAGMENT");
@@ -18,6 +23,16 @@ public class SubstanceCategoryGenerator implements ColumnValueRecipe<Substance>{
 		ingredientCategoryTypes.add("SPECIFIED SUBSTANCE");
 	}
 	
+	@Override
+	public boolean containsColumnName(String name) {
+		return false;
+	}
+
+	@Override
+	public ColumnValueRecipe<Substance> replaceColumnName(String oldName, String newName) {
+		return null;
+	}
+
 	/**
 	 * This returns a list of the "reflexive" relationship types,
 	 * which are sometimes used for categorizing ingredient types.

@@ -28,7 +28,7 @@ public abstract class CsvSpreadSheet implements Spreadsheet {
     }
 
     @Override
-    public Row getRow(int i) {
+    public SpreadsheetRow getRow(int i) {
         ensureNotClosed();
 
         if(i < 0){
@@ -37,7 +37,7 @@ public abstract class CsvSpreadSheet implements Spreadsheet {
         return getRowImpl(i);
     }
 
-    protected abstract Row getRowImpl(int absoluteOffset);
+    protected abstract SpreadsheetRow getRowImpl(int absoluteOffset);
 
     protected CsvRow createNewRow(){
         return new CsvRow(dateFormat);
@@ -85,7 +85,7 @@ public abstract class CsvSpreadSheet implements Spreadsheet {
 
 
 
-    protected static final class CsvRow implements Row{
+    protected static final class CsvRow implements SpreadsheetRow {
         CsvCell[] values = new CsvCell[0];
         private final DateFormat dateFormat;
 

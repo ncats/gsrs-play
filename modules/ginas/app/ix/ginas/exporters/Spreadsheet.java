@@ -11,16 +11,16 @@ public interface Spreadsheet extends Closeable {
     /**
      * Get the ith row in this Spreadsheet.
      * @param i the row (0-based offset).
-     * @return a Row.  If this row does not yet exist, it will be created.
+     * @return a SpreadsheetRow.  If this row does not yet exist, it will be created.
      *          WARNING: THIS METHOD MAY RETURN NULL in some implementations that can't
      *          keep the entire spreadsheet in memory.
      */
-    Row getRow(int i);
+    SpreadsheetRow getRow(int i);
 
     /**
-     * interface that represents a Row in a Spreadsheet.
+     * interface that represents a SpreadsheetRow in a Spreadsheet.
      */
-    interface Row{
+    interface SpreadsheetRow {
         /**
          * Get the jth cell in this row.
          * @param j the cell to get (0-based offset).
