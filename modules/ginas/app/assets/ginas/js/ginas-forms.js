@@ -1211,10 +1211,10 @@
             restrict: 'E',
             replace: true,
             scope: {
-                parent: '=',
-                iscollapsed: '=?'
+                parent: '='
+              //  iscollapsed: '=?'
             },
-            templateUrl: baseurl + "assets/templates/forms/parent-form.html"
+            templateUrl: baseurl + "assets/templates/forms/parent-form.html",
         };
     });
 
