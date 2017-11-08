@@ -57,6 +57,7 @@ GET         /downloads/:downloadID              ix.ginas.controllers.GinasApp.ge
 GET         /downloads/:downloadID/@cancel      ix.ginas.controllers.GinasApp.cancelExport(downloadID: String)
 GET         /downloads/:downloadID/@remove      ix.ginas.controllers.GinasApp.removeExport(downloadID: String)
 
+GET         /api/v1/substances/approvalId/:unii       ix.ginas.controllers.v1.SubstanceFactory.getSubstanceByApprovalIDForApi(unii : String)
 
 ->      /   ix.ncats.Routes	
 GET     /:any   ix.ginas.controllers.GinasApp.lastUnicorn(any: String)

@@ -10,6 +10,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import com.avaje.ebean.Ebean;
@@ -89,8 +90,30 @@ public class GinasUtils {
 		return JsonSubstanceFactory.makeSubstance(tree, null);
 	}
 
+    private static char[] UNII_ALPHABET = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ".toCharArray();
+	private static Pattern UNII_PATTERN = Pattern.compile("^[0-9A-Z]{10}$");
 
-	
+	private static int[] UNII_CHECKSUM = new int[91];
+	static{
+	    for(int i=0; i<UNII_ALPHABET.length; i++){
+	        UNII_CHECKSUM[ UNII_ALPHABET[i]] = i;
+        }
+    }
+	public static boolean isUnii(String unii){
+	    String trimmed = unii.trim();
+        Matcher m = UNII_PATTERN.matcher(trimmed);
+        if(m.matches()){
+            //check digit
+            char[] chars = trimmed.toCharArray();
+            int sum=0;
+            for(int i=0; i<9; i++){
+                sum += UNII_CHECKSUM[chars[i]];
+            }
+            int checkDigit = sum % UNII_ALPHABET.length;
+            return UNII_ALPHABET[checkDigit] == chars[9];
+        }
+        return false;
+	}
 
 	
 	public static boolean persistSubstances(Collection<Substance> subs){
