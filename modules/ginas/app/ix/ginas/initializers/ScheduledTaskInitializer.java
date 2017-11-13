@@ -14,6 +14,7 @@ import play.Application;
 import ix.core.initializers.Initializer;
 import ix.core.plugins.CronExpressionBuilder;
 import ix.core.plugins.SchedulerPlugin;
+import ix.core.plugins.SchedulerPlugin.ScheduledTask;
 import ix.core.plugins.SchedulerPlugin.TaskListener;
 import ix.core.util.TimeUtil;
 import ix.utils.Util;
@@ -32,9 +33,18 @@ public abstract class ScheduledTaskInitializer implements Initializer {
     	return cron;
     }
     
+    public void setCron(String cron){
+    	this.cron=cron;
+    }
+    
     public boolean getEnabled(){
     	return enabled;
     }
+    
+    public void setEnabled(boolean en){
+    	this.enabled=en;
+    }
+    
     
     @Override
     public Initializer initializeWith(Map<String, ?> m) {
@@ -58,10 +68,15 @@ public abstract class ScheduledTaskInitializer implements Initializer {
     
     @Override
     public void onStart(Application app) {
-        SchedulerPlugin.ScheduledTask.of(getRunner())
-        .atCronTab(cron)
-        .description(getDescription())
+    	createTask()
         ._to(st -> enabled? st.enable() : st.disable())
         .submit();
     }
+    
+    public ScheduledTask createTask(){
+    	return SchedulerPlugin.ScheduledTask.of(getRunner())
+    	        .atCronTab(cron)
+    	        .description(getDescription());
+    }
+    
 }

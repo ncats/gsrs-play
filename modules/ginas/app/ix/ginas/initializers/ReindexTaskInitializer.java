@@ -1,10 +1,13 @@
 package ix.ginas.initializers;
 
+import java.util.function.Consumer;
+
 import ix.core.adapters.EntityPersistAdapter;
 import ix.core.initializers.Initializer;
 import ix.core.models.UserProfile;
 import ix.core.plugins.CronExpressionBuilder;
 import ix.core.plugins.SchedulerPlugin.ScheduledTask;
+import ix.core.plugins.SchedulerPlugin.TaskListener;
 import ix.core.plugins.TextIndexerPlugin;
 import ix.core.utils.executor.ProcessExecutionService;
 import ix.core.utils.executor.ProcessExecutionService.CommonConsumers;
@@ -17,11 +20,13 @@ import ix.ncats.controllers.auth.Authentication;
 import play.Application;
 import play.Play;
 
-public class ReindexTaskInitializer implements Initializer{
+public class ReindexTaskInitializer extends ScheduledTaskInitializer{
 
-    @Override
-    public void onStart(Application app) {
-        ScheduledTask.of((l) -> {
+
+	@Override
+	public Consumer<TaskListener> getRunner() {
+		
+		return (l) -> {
             try {
                 l.message("Initializing reindexing");
                 ProcessListener listen = ProcessListener.onCountChange((sofar,total)->{
@@ -48,22 +53,23 @@ public class ReindexTaskInitializer implements Initializer{
             } catch (Exception e) {
                 e.printStackTrace();
             }
-        })
-        .wrap((r)->{
-            GinasGlobal.runWithIntercept(r, (req)->{
-                UserProfile p = Authentication.getUserProfile();
-                return !GinasAppAdmin.isAdminRequest(req, p);
-            });
-        })
-        .at(CronExpressionBuilder.builder()
-                .on()
-                .first()
-                .saturdayOfEveryMonth()
-                .atHourAndMinute(2, 15))
-        .description("Reindex All Entities") //Brief description of the task
-        .disable()                           //do not activate the schedule by default
-        .submit();                           //submit to scheduler
-        
-    }
+        };
+	}
+
+	@Override
+	public String getDescription() {		
+		return "Reindex All Entities";
+	}
+	
+	@Override
+	public ScheduledTask createTask(){
+		return super.createTask()
+			.wrap((r)->{
+	            GinasGlobal.runWithIntercept(r, (req)->{
+	                UserProfile p = Authentication.getUserProfile();
+	                return !GinasAppAdmin.isAdminRequest(req, p);
+	            });
+	        });
+	}
 
 }
