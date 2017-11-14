@@ -600,7 +600,7 @@
     ginasApp.controller("GinasController", function ($rootScope, $scope, $resource, $location, $compile, $uibModal, $http, $window, $anchorScroll, $timeout, polymerUtils,
                                                      localStorageService, Substance, UUID, substanceSearch, substanceIDRetriever, CVFields, molChanger, toggler, resolver,
                                                      substanceFactory,
-                                                     spinnerService, typeaheadService) {
+                                                     spinnerService, typeaheadService, subunitParser) {
         $scope.substance = $window.loadjson;
         $scope.updateNav = false;
         $scope.validating = false;
@@ -608,6 +608,15 @@
         $scope.searchLimit = "global";
         $scope.loadingSuggest = false;
         $scope.noResults = false;
+        $scope.sequence = "";
+        $scope.cleanSequence = function (seqType){
+            $scope.sequence = subunitParser.cleanSequence($scope.sequence, _.lowerCase(seqType));
+        }
+
+        $scope.preload = function(seqType){
+            $scope.seqType = _.capitalize(seqType);
+            subunitParser.getResidues(seqType);
+        }
 
 
 
@@ -2102,6 +2111,7 @@
                 };
 
                 scope.cleanSequence = function () {
+                    console.log("clean sequence");
                     scope.obj.sequence = subunitParser.cleanSequence(scope.obj.sequence);
                     scope.obj.$sequence = scope.preformatSeq(subunitParser.cleanSequence(scope.obj.$sequence));
                     scope.parseSubunit();

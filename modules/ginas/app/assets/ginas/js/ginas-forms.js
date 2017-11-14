@@ -176,7 +176,10 @@
             });
         };
 
-        factory.cleanSequence = function (sequence) {
+        factory.cleanSequence = function (sequence, sequenceType) {
+            if(sequenceType){
+                subclass = sequenceType;
+            }
             if(_.isUndefined(factoryResidues)) {
                 factory.getResidues(subclass);
             }
