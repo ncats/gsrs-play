@@ -44,9 +44,8 @@ public class ScheduledExportTaskInitializer extends ScheduledTaskInitializer{
     }
 
 	@Override
-	public Consumer<TaskListener> getRunner() {
+	public void run(TaskListener l) {
 		
-		return (l)->{
 		System.out.println("Running export");
         try {
             
@@ -94,7 +93,6 @@ public class ScheduledExportTaskInitializer extends ScheduledTaskInitializer{
         } catch (Exception e) {
             e.printStackTrace();
         }
-		};
 	}
 
 	@Override

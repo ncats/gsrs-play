@@ -58,9 +58,8 @@ public class ChronicStackDumper extends ScheduledTaskInitializer{
 
 
 	@Override
-	public Consumer<TaskListener> getRunner() {
-		return (l) -> {
-            lock.lock();
+	public void run(TaskListener l) {
+		    lock.lock();
             try {
                 try (PrintStream out = new PrintStream(new BufferedOutputStream(new FileOutputStream(logFile, true)))) {
                     out.println(" ==========================================");
@@ -75,7 +74,6 @@ public class ChronicStackDumper extends ScheduledTaskInitializer{
             }finally{
                 lock.unlock();
             }
-        };
 	}
 
 	@Override

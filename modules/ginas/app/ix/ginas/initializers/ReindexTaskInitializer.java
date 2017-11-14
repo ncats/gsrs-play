@@ -24,9 +24,8 @@ public class ReindexTaskInitializer extends ScheduledTaskInitializer{
 
 
 	@Override
-	public Consumer<TaskListener> getRunner() {
+	public void run(TaskListener l){
 		
-		return (l) -> {
             try {
                 l.message("Initializing reindexing");
                 ProcessListener listen = ProcessListener.onCountChange((sofar,total)->{
@@ -53,7 +52,6 @@ public class ReindexTaskInitializer extends ScheduledTaskInitializer{
             } catch (Exception e) {
                 e.printStackTrace();
             }
-        };
 	}
 
 	@Override

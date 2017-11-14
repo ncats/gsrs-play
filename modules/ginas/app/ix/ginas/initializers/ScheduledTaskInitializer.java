@@ -62,7 +62,11 @@ public abstract class ScheduledTaskInitializer implements Initializer {
         return this;
     }
     
-    public abstract Consumer<TaskListener> getRunner();
+    public Consumer<TaskListener> getRunner(){
+    	return this::run;
+    }
+    
+    public abstract void run(TaskListener l);
     
     public abstract String getDescription();
     
