@@ -878,14 +878,16 @@ public class TextIndexer implements Closeable, ProcessListener {
 		}
 
 		long build() throws IOException {
-			IndexReader reader = DirectoryReader.open(indexWriter, true);
-			// now weight field
-			long start = System.currentTimeMillis();
-			lookup.build(new DocumentDictionary(reader, name, null));
-			long count = lookup.getCount();
-			Logger.debug(lookup.getClass().getName() + " builds " + count + " entries in "
-					+ String.format("%1$.2fs", 1e-3 * (System.currentTimeMillis() - start)));
-			return count;
+			try(IndexReader reader = DirectoryReader.open(indexWriter, true)){
+				
+				// now weight field
+				long start = System.currentTimeMillis();
+				lookup.build(new DocumentDictionary(reader, name, null));
+				long count = lookup.getCount();
+				Logger.debug(lookup.getClass().getName() + " builds " + count + " entries in "
+						+ String.format("%1$.2fs", 1e-3 * (System.currentTimeMillis() - start)));
+				return count;
+			}
 		}
 
 		List<SuggestResult> suggest(CharSequence key, int max) throws IOException {
