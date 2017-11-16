@@ -1784,17 +1784,36 @@ public class TextIndexer implements Closeable, ProcessListener {
 			lsp = new BasicLuceneSearchProvider(sorter, filter, options.max());
 		} else {
 			DrillDownQuery ddq = new DrillDownQuery(facetsConfig, query);
+			List<Filter> nonStandardFacets = new ArrayList<Filter>();
 			
 			options.getDrillDownsMap()
 			    .entrySet()
 			    .stream()
 			    .flatMap(e->e.getValue().stream())
+			    .filter(dp->{
+			    	if(dp.getDrill().startsWith("^")){
+			    		nonStandardFacets.add(new TermsFilter(new Term(TextIndexer.TERM_VEC_PREFIX + dp.getDrill().substring(1), dp.getPaths()[0])));
+			    		return false;
+			    	}else if(dp.getDrill().startsWith("!")){
+			    		BooleanFilter f = new BooleanFilter();
+			    		TermsFilter tf = new TermsFilter(new Term(TextIndexer.TERM_VEC_PREFIX + dp.getDrill().substring(1), dp.getPaths()[0]));
+			    		f.add(new FilterClause(tf, BooleanClause.Occur.MUST_NOT));
+			    		nonStandardFacets.add(f);
+			    		return false;
+			    	}
+			    	return true;
+			    })
 			    .forEach((dp)->{
 			        ddq.add(dp.getDrill(), dp.getPaths());
 			    });
 			
+			
+			if(!nonStandardFacets.isEmpty()){
+				nonStandardFacets.add(filter);
+				filter = new ChainedFilter(nonStandardFacets.toArray(new Filter[0])
+						                  ,ChainedFilter.AND);
+			}
 			qactual=ddq;
-
 			// sideways
 			if (options.isSideway()) {
 				lsp = new DrillSidewaysLuceneSearchProvider(sorter, filter, options);
