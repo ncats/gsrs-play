@@ -9,7 +9,7 @@ import ix.core.controllers.StructureFactory;
 import ix.core.models.Structure;
 import ix.core.plugins.IxCache;
 import ix.ginas.models.v1.GinasChemicalStructure;
-import ix.test.builder.SubstanceBuilder;
+import ix.ginas.modelBuilders.SubstanceBuilder;
 
 public class StructureCacheTest extends AbstractGinasClassServerTest{
 

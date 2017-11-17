@@ -17,7 +17,7 @@ import ix.AbstractGinasServerTest;
 import ix.ginas.controllers.GinasApp;
 import ix.ginas.models.v1.Code;
 import ix.ginas.models.v1.Substance;
-import ix.test.builder.SubstanceBuilder;
+import ix.ginas.modelBuilders.SubstanceBuilder;
 import ix.test.server.GinasTestServer;
 import ix.test.server.RestSession;
 import ix.test.server.SubstanceAPI;

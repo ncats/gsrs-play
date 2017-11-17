@@ -11,14 +11,10 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import ix.core.controllers.EntityFactory;
-import ix.core.util.RunOnly;
 import ix.ginas.controllers.GinasApp;
 import ix.ginas.models.v1.Code;
-import ix.test.SubstanceJsonUtil;
 import ix.test.server.*;
 import org.junit.After;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -29,7 +25,7 @@ import ix.core.models.Role;
 import ix.core.util.TimeTraveller;
 import ix.core.util.TimeUtil;
 import ix.ginas.models.v1.Substance;
-import ix.test.builder.SubstanceBuilder;
+import ix.ginas.modelBuilders.SubstanceBuilder;
 import ix.test.load.AbstractLoadDataSetTest;
 import org.junit.rules.TemporaryFolder;
 
@@ -55,6 +51,10 @@ public class LastEditedFacetTest extends AbstractLoadDataSetTest {
     @Rule
     public TimeTraveller timeTraveller = new TimeTraveller();
 
+    private Substance setLastEditedByAndBuild(SubstanceBuilder builder, GinasTestServer.User user){
+        return builder.setLastEditedBy(user.asPrincipal())
+                        .build();
+    }
 
     @Test
     public void loadWithoutPreserveAuditFlagWillSetLastEditedToUserDoingTheLoading() throws IOException, InterruptedException {
@@ -63,8 +63,8 @@ public class LastEditedFacetTest extends AbstractLoadDataSetTest {
 
         File loadFile = tmpDir.newFile();
         try (JsonSubstanceWriter writer = new JsonSubstanceWriter(loadFile)) {
-            writer.write(new SubstanceBuilder().addName("nameA").setLastEditedBy(otherUser).build());
-            writer.write(new SubstanceBuilder().addName("nameB").setLastEditedBy(otherUser).build());
+            writer.write(setLastEditedByAndBuild(new SubstanceBuilder().addName("nameA"), otherUser));
+            writer.write(setLastEditedByAndBuild(new SubstanceBuilder().addName("nameB"), otherUser));
         }
 
 
@@ -100,8 +100,8 @@ public class LastEditedFacetTest extends AbstractLoadDataSetTest {
 
         File loadFile = tmpDir.newFile();
         try (JsonSubstanceWriter writer = new JsonSubstanceWriter(loadFile)) {
-            writer.write(new SubstanceBuilder().addName("nameA").setLastEditedBy(otherUser).build());
-            writer.write(new SubstanceBuilder().addName("nameB").setLastEditedBy(otherUser).build());
+            writer.write(setLastEditedByAndBuild(new SubstanceBuilder().addName("nameA"),otherUser));
+            writer.write(setLastEditedByAndBuild(new SubstanceBuilder().addName("nameB"),otherUser));
         }
 
 
@@ -148,16 +148,13 @@ public class LastEditedFacetTest extends AbstractLoadDataSetTest {
             codeA.setLastEditedBy(user3.asPrincipal());
 
 
-            writer.write(new SubstanceBuilder().addName("nameA").setLastEditedBy(otherUser)
-                        .addCode(codeA)
-                    .build());
+            writer.write(setLastEditedByAndBuild(new SubstanceBuilder().addName("nameA").addCode(codeA), otherUser));
 
             Code codeB = new Code("codeB", "codesystem");
             //codeB does not set last Edited by so the loader will set it to whoever is loading the record (admin)
 
-            writer.write(new SubstanceBuilder().addName("nameB").setLastEditedBy(otherUser)
-                    .addCode(codeB)
-                    .build());
+            writer.write(setLastEditedByAndBuild( new SubstanceBuilder().addName("nameB").addCode(codeB), otherUser));
+
         }
 
 

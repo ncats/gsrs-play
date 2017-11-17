@@ -5,7 +5,7 @@ import org.junit.Test;
 import ix.ginas.indexers.ExampleValueMaker;
 import ix.ginas.models.v1.Relationship;
 import ix.ginas.models.v1.Substance;
-import ix.test.builder.SubstanceBuilder;
+import ix.ginas.modelBuilders.SubstanceBuilder;
 
 /**
  * Test for ExampleValueMaker. The purpose of this test is to ensure

@@ -1,20 +1,12 @@
 package ix.test.search;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import ix.AbstractGinasServerTest;
-import ix.core.controllers.search.SearchFactory;
-import ix.core.plugins.TextIndexerPlugin;
-import ix.core.util.RunOnly;
 import ix.test.SubstanceJsonUtil;
-import ix.test.builder.SubstanceBuilder;
+import ix.ginas.modelBuilders.SubstanceBuilder;
 import ix.test.load.AbstractLoadDataSetTest;
-import ix.test.server.BrowserSession;
 import ix.test.server.RestSession;
 import ix.test.server.SubstanceAPI;
-import ix.test.server.SubstanceLoader;
 import org.junit.After;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import play.libs.ws.WSResponse;

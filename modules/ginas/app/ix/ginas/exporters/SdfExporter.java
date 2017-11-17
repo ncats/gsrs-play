@@ -18,12 +18,27 @@ import ix.ginas.utils.GinasUtils;
 import gov.nih.ncgc.chemical.Chemical;
 
 public class SdfExporter implements Exporter<Substance> {
+    @FunctionalInterface
+    public interface ChemicalModifier {
+        void modify(Chemical c, Substance parentSubstance, List<GinasProcessingMessage> messages);
+    }
 
+
+    private static final ChemicalModifier NO_OP_MODIFIER = (c, s, messages) ->{};
     private final BufferedWriter out;
 
-    public SdfExporter(OutputStream out){
+    private final ChemicalModifier modifier;
+
+    public SdfExporter(OutputStream out, ChemicalModifier modifier){
         Objects.requireNonNull(out);
+        Objects.requireNonNull(modifier);
+
         this.out = new BufferedWriter(new OutputStreamWriter(out));
+        this.modifier  = modifier;
+
+    }
+    public SdfExporter(OutputStream out){
+       this(out, NO_OP_MODIFIER);
     }
 
     public SdfExporter(File outputFile) throws IOException{
@@ -32,8 +47,16 @@ public class SdfExporter implements Exporter<Substance> {
 
     @Override
     public void export(Substance s) throws IOException {
-        Chemical chem = s.toChemical();
+
+        List<GinasProcessingMessage> warnings = new ArrayList<>();
+
+        Chemical chem = s.toChemical( warnings::add);
+
+
+
+        modifier.modify(chem, s, warnings);
         try {
+
             String content = GinasApp.formatMolfile(chem,Chemical.FORMAT_SDF);
             out.write(content);
             out.newLine();
@@ -47,5 +70,6 @@ public class SdfExporter implements Exporter<Substance> {
     public void close() throws IOException {
         out.close();
     }
+
 
 }

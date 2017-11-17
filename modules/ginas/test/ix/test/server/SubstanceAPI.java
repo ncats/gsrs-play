@@ -25,7 +25,7 @@ import ix.core.util.EntityUtils;
 import ix.ginas.models.v1.Substance;
 import ix.seqaln.SequenceIndexer.CutoffType;
 import ix.test.SubstanceJsonUtil;
-import ix.test.builder.SubstanceBuilder;
+import ix.ginas.modelBuilders.SubstanceBuilder;
 import play.libs.ws.WSRequestHolder;
 import play.libs.ws.WSResponse;
 

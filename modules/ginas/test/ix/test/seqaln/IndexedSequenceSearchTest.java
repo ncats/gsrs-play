@@ -2,17 +2,12 @@ package ix.test.seqaln;
 
 import ix.AbstractGinasServerTest;
 import ix.ginas.models.v1.*;
-import ix.ncats.controllers.App;
-import ix.seqaln.SequenceIndexer;
-import ix.test.builder.SubstanceBuilder;
+import ix.ginas.modelBuilders.SubstanceBuilder;
 import ix.test.server.BrowserSession;
 import ix.test.server.RestSession;
 import ix.test.server.SubstanceAPI;
-import org.junit.Before;
 import org.junit.Test;
 
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import static org.junit.Assert.*;
 /**

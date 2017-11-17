@@ -17,6 +17,7 @@ import ix.core.util.Java8Util;
 import ix.ginas.models.v1.ChemicalSubstance;
 import ix.ginas.models.v1.Substance;
 import ix.core.GinasProcessingMessage;
+import ix.ginas.utils.DefaultSdfLoader;
 import ix.ginas.utils.GinasProcessingStrategy;
 import ix.ginas.utils.GinasSDFUtils;
 import ix.ginas.utils.GinasSDFUtils.GinasSDFExtractor;
@@ -150,8 +151,11 @@ public class GinasLoad extends App {
 										persister).key;
 						return redirect(ix.ginas.controllers.routes.GinasLoad
 								.monitorProcess(id));
-					
-				case "SD":
+				case "SD-default":
+					Logger.info("SD-default =" + type);
+					payload.save();
+					return ix.ginas.controllers.GinasLoad.loadSDFWithDefaultMappings(payload.id.toString());
+				case "SD": //this is the full custom version
 					Logger.info("SD =" + type);
 	
 					payload.save();
@@ -194,7 +198,21 @@ public class GinasLoad extends App {
 			return _internalServerError(ex);
 		}
 	}
+	@Dynamic(value = IxDynamicResourceHandler.IS_ADMIN, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
+	public static Result loadSDFWithDefaultMappings(String payloadUUID) {
+		Payload sdpayload = PayloadFactory.getPayload(UUID
+				.fromString(payloadUUID));
+		DynamicForm requestData = Form.form().bindFromRequest();
 
+//		GinasSDFUtils.setPathMappers(payloadUUID, GinasSDFUtils.getDefaultPathMap());
+
+		String id = ginasRecordProcessorPlugin.get().submit(sdpayload,
+				DefaultSdfLoader.class,
+				ix.ginas.utils.GinasUtils.GinasSubstancePersister.class).key;
+		return redirect(ix.ginas.controllers.routes.GinasLoad
+				.monitorProcess(id));
+
+	}
 	@Dynamic(value = IxDynamicResourceHandler.IS_ADMIN, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
 	public static Result loadSDF(String payloadUUID) {
 		Payload sdpayload = PayloadFactory.getPayload(UUID

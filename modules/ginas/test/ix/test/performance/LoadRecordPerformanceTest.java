@@ -9,7 +9,7 @@ import org.junit.Test;
 
 import ix.AbstractGinasServerTest;
 import ix.core.util.StopWatch;
-import ix.test.builder.SubstanceBuilder;
+import ix.ginas.modelBuilders.SubstanceBuilder;
 import ix.test.server.RestSession;
 import ix.test.server.SubstanceAPI;
 

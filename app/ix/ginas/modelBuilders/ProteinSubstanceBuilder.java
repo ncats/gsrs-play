@@ -1,4 +1,4 @@
-package ix.test.builder;
+package ix.ginas.modelBuilders;
 
 import java.util.function.Supplier;
 
