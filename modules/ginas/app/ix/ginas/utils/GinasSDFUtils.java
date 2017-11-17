@@ -500,7 +500,7 @@ public class GinasSDFUtils {
 				String path) {
 			Name n = new Name();
 			n.name = name;
-			n.type = "SN";
+			n.type = "sys";
 			sub.names.add(n);
 			n.addReference(makePathReference(sub, path));
 		}

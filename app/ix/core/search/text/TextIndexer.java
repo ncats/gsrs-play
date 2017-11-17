@@ -75,7 +75,9 @@ import org.apache.lucene.index.IndexableField;
 import org.apache.lucene.index.IndexableFieldType;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.Terms;
+import org.apache.lucene.queries.BooleanFilter;
 import org.apache.lucene.queries.ChainedFilter;
+import org.apache.lucene.queries.FilterClause;
 import org.apache.lucene.queries.TermsFilter;
 import org.apache.lucene.queryparser.classic.CharStream;
 import org.apache.lucene.queryparser.classic.ParseException;
@@ -878,14 +880,16 @@ public class TextIndexer implements Closeable, ProcessListener {
 		}
 
 		long build() throws IOException {
-			IndexReader reader = DirectoryReader.open(indexWriter, true);
-			// now weight field
-			long start = System.currentTimeMillis();
-			lookup.build(new DocumentDictionary(reader, name, null));
-			long count = lookup.getCount();
-			Logger.debug(lookup.getClass().getName() + " builds " + count + " entries in "
-					+ String.format("%1$.2fs", 1e-3 * (System.currentTimeMillis() - start)));
-			return count;
+			try(IndexReader reader = DirectoryReader.open(indexWriter, true)){
+				
+				// now weight field
+				long start = System.currentTimeMillis();
+				lookup.build(new DocumentDictionary(reader, name, null));
+				long count = lookup.getCount();
+				Logger.debug(lookup.getClass().getName() + " builds " + count + " entries in "
+						+ String.format("%1$.2fs", 1e-3 * (System.currentTimeMillis() - start)));
+				return count;
+			}
 		}
 
 		List<SuggestResult> suggest(CharSequence key, int max) throws IOException {
@@ -1782,17 +1786,36 @@ public class TextIndexer implements Closeable, ProcessListener {
 			lsp = new BasicLuceneSearchProvider(sorter, filter, options.max());
 		} else {
 			DrillDownQuery ddq = new DrillDownQuery(facetsConfig, query);
+			List<Filter> nonStandardFacets = new ArrayList<Filter>();
 			
 			options.getDrillDownsMap()
 			    .entrySet()
 			    .stream()
 			    .flatMap(e->e.getValue().stream())
+			    .filter(dp->{
+			    	if(dp.getDrill().startsWith("^")){
+			    		nonStandardFacets.add(new TermsFilter(new Term(TextIndexer.TERM_VEC_PREFIX + dp.getDrill().substring(1), dp.getPaths()[0])));
+			    		return false;
+			    	}else if(dp.getDrill().startsWith("!")){
+			    		BooleanFilter f = new BooleanFilter();
+			    		TermsFilter tf = new TermsFilter(new Term(TextIndexer.TERM_VEC_PREFIX + dp.getDrill().substring(1), dp.getPaths()[0]));
+			    		f.add(new FilterClause(tf, BooleanClause.Occur.MUST_NOT));
+			    		nonStandardFacets.add(f);
+			    		return false;
+			    	}
+			    	return true;
+			    })
 			    .forEach((dp)->{
 			        ddq.add(dp.getDrill(), dp.getPaths());
 			    });
 			
+			
+			if(!nonStandardFacets.isEmpty()){
+				nonStandardFacets.add(filter);
+				filter = new ChainedFilter(nonStandardFacets.toArray(new Filter[0])
+						                  ,ChainedFilter.AND);
+			}
 			qactual=ddq;
-
 			// sideways
 			if (options.isSideway()) {
 				lsp = new DrillSidewaysLuceneSearchProvider(sorter, filter, options);
