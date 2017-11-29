@@ -117,10 +117,22 @@ public class GinasGlobal extends Global {
 			}
 
 			String username = (p ==null) ? "GUEST" : p.user.username;
+			StringBuilder messageBuilder = new StringBuilder(200);
 
-			AccessLogger.info("{} {} {} {} \"{}\"", username, req.remoteAddress(),
-					real != null ? real : "", req.method(), req.uri());
-			return this.delegate.call(ctx);
+			messageBuilder.append(username).append(' ')
+							.append(req.remoteAddress()).append(' ');
+			if(real !=null){
+				messageBuilder.append(real);
+			}
+
+			String messagePrefix = messageBuilder.append(' ').append(req.method())
+									.toString();
+
+
+			AccessLogger.info(messagePrefix + " FETCH \""+ req.uri() +"\"");
+			Promise<Result> result= this.delegate.call(ctx);
+			AccessLogger.info(messagePrefix + " RETURNED \""+ req.uri() +"\"");
+			return result;
 		}
 	}
 

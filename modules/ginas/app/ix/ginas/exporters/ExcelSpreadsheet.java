@@ -40,7 +40,7 @@ public class ExcelSpreadsheet implements Spreadsheet {
 
 
     @Override
-    public Row getRow(int i) {
+    public SpreadsheetRow getRow(int i) {
         org.apache.poi.ss.usermodel.Row r = sheet.getRow(i);
         if (r == null) {
             r = sheet.createRow(i);
@@ -58,7 +58,7 @@ public class ExcelSpreadsheet implements Spreadsheet {
 
     }
 
-    private static class RowWrapper implements Row{
+    private static class RowWrapper implements SpreadsheetRow {
         private final org.apache.poi.ss.usermodel.Row row;
 
         public RowWrapper(org.apache.poi.ss.usermodel.Row r) {

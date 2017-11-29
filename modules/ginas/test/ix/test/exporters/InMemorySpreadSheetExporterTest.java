@@ -55,7 +55,7 @@ public class InMemorySpreadSheetExporterTest  extends AbstractGinasTest {
         Spreadsheet sheet = createSpreadsheet(new CsvSpreadsheetBuilder(outputFile));
 
 
-        Spreadsheet.Row row = sheet.getRow(0);
+        Spreadsheet.SpreadsheetRow row = sheet.getRow(0);
 
         row.getCell(0).writeString("foo");
         row.getCell(1).writeString("bar");
@@ -73,7 +73,7 @@ public class InMemorySpreadSheetExporterTest  extends AbstractGinasTest {
         Spreadsheet sheet = createSpreadsheet(new CsvSpreadsheetBuilder(outputFile));
 
 
-        Spreadsheet.Row row = sheet.getRow(0);
+        Spreadsheet.SpreadsheetRow row = sheet.getRow(0);
 
         row.getCell(0).writeString("foo");
         row.getCell(1).writeString("bar");
@@ -93,7 +93,7 @@ public class InMemorySpreadSheetExporterTest  extends AbstractGinasTest {
         Spreadsheet sheet = createSpreadsheet(new CsvSpreadsheetBuilder(outputFile));
 
 
-        Spreadsheet.Row row = sheet.getRow(0);
+        Spreadsheet.SpreadsheetRow row = sheet.getRow(0);
 
         row.getCell(0).writeString("foo");
         row.getCell(2).writeString("bar");
@@ -113,7 +113,7 @@ public class InMemorySpreadSheetExporterTest  extends AbstractGinasTest {
                 .build();
 
 
-        Spreadsheet.Row row = sheet.getRow(0);
+        Spreadsheet.SpreadsheetRow row = sheet.getRow(0);
 
         row.getCell(0).writeString("foo");
         row.getCell(1).writeString("bar");
@@ -133,7 +133,7 @@ public class InMemorySpreadSheetExporterTest  extends AbstractGinasTest {
                                             );
 
 
-        Spreadsheet.Row row = sheet.getRow(0);
+        Spreadsheet.SpreadsheetRow row = sheet.getRow(0);
 
         row.getCell(0).writeString("foo");
         row.getCell(1).writeString("bar");
@@ -151,12 +151,12 @@ public class InMemorySpreadSheetExporterTest  extends AbstractGinasTest {
         Spreadsheet sheet = createSpreadsheet(new CsvSpreadsheetBuilder(outputFile));
 
 
-        Spreadsheet.Row row = sheet.getRow(0);
+        Spreadsheet.SpreadsheetRow row = sheet.getRow(0);
 
         row.getCell(0).writeString("foo");
         row.getCell(1).writeString("bar");
 
-        Spreadsheet.Row row2 = sheet.getRow(1);
+        Spreadsheet.SpreadsheetRow row2 = sheet.getRow(1);
 
         row2.getCell(0).writeString("doe");
         row2.getCell(1).writeString("ray");
@@ -175,18 +175,18 @@ public class InMemorySpreadSheetExporterTest  extends AbstractGinasTest {
         Spreadsheet sheet = createSpreadsheet(new CsvSpreadsheetBuilder(outputFile));
 
 
-        Spreadsheet.Row row = sheet.getRow(0);
+        Spreadsheet.SpreadsheetRow row = sheet.getRow(0);
 
         row.getCell(0).writeString("foo");
         row.getCell(1).writeString("bar");
 
-        Spreadsheet.Row row2 = sheet.getRow(1);
+        Spreadsheet.SpreadsheetRow row2 = sheet.getRow(1);
 
         row2.getCell(0).writeString("doe");
         row2.getCell(1).writeString("ray");
         row2.getCell(2).writeString("me");
 
-        Spreadsheet.Row row1Again = sheet.getRow(0);
+        Spreadsheet.SpreadsheetRow row1Again = sheet.getRow(0);
         row1Again.getCell(1).writeString("XXX");
 
 
@@ -203,12 +203,12 @@ public class InMemorySpreadSheetExporterTest  extends AbstractGinasTest {
         Spreadsheet sheet = createSpreadsheet(new CsvSpreadsheetBuilder(outputFile));
 
 
-        Spreadsheet.Row row = sheet.getRow(0);
+        Spreadsheet.SpreadsheetRow row = sheet.getRow(0);
 
         row.getCell(0).writeString("foo");
         row.getCell(1).writeString("bar");
 
-        Spreadsheet.Row row2 = sheet.getRow(2);
+        Spreadsheet.SpreadsheetRow row2 = sheet.getRow(2);
 
         row2.getCell(0).writeString("doe");
         row2.getCell(1).writeString("ray");
@@ -227,13 +227,13 @@ public class InMemorySpreadSheetExporterTest  extends AbstractGinasTest {
         Spreadsheet sheet = createSpreadsheet(new CsvSpreadsheetBuilder(outputFile));
 
 
-        Spreadsheet.Row row = sheet.getRow(0);
+        Spreadsheet.SpreadsheetRow row = sheet.getRow(0);
 
         row.getCell(0).writeString("foo");
         row.getCell(1).writeString("bar");
 
         int rowsToSkip = 10000;
-        Spreadsheet.Row row2 = sheet.getRow(rowsToSkip+1);
+        Spreadsheet.SpreadsheetRow row2 = sheet.getRow(rowsToSkip+1);
 
         row2.getCell(0).writeString("doe");
         row2.getCell(1).writeString("ray");
@@ -261,7 +261,7 @@ public class InMemorySpreadSheetExporterTest  extends AbstractGinasTest {
 
         StringBuilder expected = new StringBuilder(5000);
         for(int i=0; i< 1000; i++){
-            Spreadsheet.Row row = sheet.getRow(i);
+            Spreadsheet.SpreadsheetRow row = sheet.getRow(i);
 
             row.getCell(0).writeString("foo"+i);
             row.getCell(1).writeString("bar"+i);

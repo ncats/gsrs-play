@@ -176,7 +176,10 @@
             });
         };
 
-        factory.cleanSequence = function (sequence) {
+        factory.cleanSequence = function (sequence, sequenceType) {
+            if(sequenceType){
+                subclass = sequenceType;
+            }
             if(_.isUndefined(factoryResidues)) {
                 factory.getResidues(subclass);
             }
@@ -1211,10 +1214,10 @@
             restrict: 'E',
             replace: true,
             scope: {
-                parent: '=',
-                iscollapsed: '=?'
+                parent: '='
+              //  iscollapsed: '=?'
             },
-            templateUrl: baseurl + "assets/templates/forms/parent-form.html"
+            templateUrl: baseurl + "assets/templates/forms/parent-form.html",
         };
     });
 

@@ -1,4 +1,4 @@
-package ix.test.builder;
+package ix.ginas.modelBuilders;
 
 import java.util.*;
 import java.util.function.Consumer;
@@ -19,7 +19,6 @@ import ix.ginas.models.v1.Property;
 import ix.ginas.models.v1.Reference;
 import ix.ginas.models.v1.Relationship;
 import ix.ginas.models.v1.Substance;
-import ix.test.server.GinasTestServer;
 
 public abstract class AbstractSubstanceBuilder<S extends Substance, T extends AbstractSubstanceBuilder<S,T>>{
 	
@@ -130,9 +129,6 @@ public abstract class AbstractSubstanceBuilder<S extends Substance, T extends Ab
         return andThen( s->{s.setCreatedBy(p);});
     }
 
-    public T setLastEditedBy(GinasTestServer.User user){
-        return setLastEditedBy(user.asPrincipal());
-    }
     public T setLastEditedBy(Principal p){
         return andThen( s->{s.setLastEditedBy(p);});
     }

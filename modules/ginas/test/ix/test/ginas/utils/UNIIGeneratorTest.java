@@ -1,6 +1,7 @@
 package ix.test.ginas.utils;
 
 import ix.AbstractGinasServerTest;
+import ix.ginas.utils.GinasUtils;
 import ix.ginas.utils.UNIIGenerator;
 import org.junit.Test;
 
@@ -24,7 +25,15 @@ public class UNIIGeneratorTest extends AbstractGinasServerTest{
 
     @Test
     public void validUnii(){
-        assertTrue(sut.allowID("7LN1X0A80V")); //that's a one not an L
+        assertTrue(sut.isValidId("7LN1X0A80V")); //that's a one not an L
+        assertTrue(GinasUtils.isUnii("7LN1X0A80V"));
+    }
+
+    @Test
+    public void invalidUniiWrongCheckDigit(){
+        assertFalse(GinasUtils.isUnii("7LN1X0A80Q"));
+        assertFalse(sut.isValidId("7LN1X0A80Q")); //that's a one not an L
+
     }
 
     @Test

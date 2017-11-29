@@ -14,7 +14,7 @@ import ix.ginas.models.v1.Protein;
 import ix.ginas.models.v1.Substance.SubstanceDefinitionLevel;
 import ix.ginas.models.v1.Substance.SubstanceDefinitionType;
 import ix.test.SubstanceJsonUtil;
-import ix.test.builder.SubstanceBuilder;
+import ix.ginas.modelBuilders.SubstanceBuilder;
 import ix.test.server.RestSession;
 import ix.test.server.SubstanceAPI;
 import ix.test.server.SubstanceAPI.ValidationResponse;

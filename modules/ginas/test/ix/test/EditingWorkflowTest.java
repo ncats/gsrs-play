@@ -1,6 +1,5 @@
 package ix.test;
 
-import ix.core.util.RunOnly;
 import static ix.test.SubstanceJsonUtil.ensureFailure;
 import static ix.test.SubstanceJsonUtil.ensurePass;
 import static org.junit.Assert.assertEquals;
@@ -8,17 +7,14 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
-import java.io.FileWriter;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import ix.ginas.models.v1.*;
-import ix.test.builder.ChemicalSubstanceBuilder;
+import ix.ginas.modelBuilders.ChemicalSubstanceBuilder;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Rule;
 import org.junit.Test;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -28,12 +24,11 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import ix.AbstractGinasServerTest;
 import ix.core.models.Role;
 import ix.core.plugins.ConsoleFilterPlugin;
-import ix.test.builder.SubstanceBuilder;
+import ix.ginas.modelBuilders.SubstanceBuilder;
 import ix.test.server.GinasTestServer;
 import ix.test.server.JsonHistoryResult;
 import ix.test.server.RestSession;
 import ix.test.server.SubstanceAPI;
-import ix.test.util.TestNamePrinter;
 import ix.test.util.TestUtil;
 import util.json.*;
 

@@ -23,7 +23,7 @@ public class StreamingCsvSpreadsheet extends CsvSpreadSheet {
 
 
     @Override
-    protected Row getRowImpl(int absoluteOffset) {
+    protected SpreadsheetRow getRowImpl(int absoluteOffset) {
         if(absoluteOffset < rowsWrittenSoFar ){
             return null;
         }

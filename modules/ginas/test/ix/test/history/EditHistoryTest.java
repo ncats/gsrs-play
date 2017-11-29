@@ -10,7 +10,6 @@ import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 import ix.test.server.JsonHistoryResult;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -19,7 +18,7 @@ import ix.AbstractGinasServerTest;
 import ix.core.models.Role;
 import ix.ginas.controllers.v1.SubstanceFactory;
 import ix.ginas.models.v1.Substance;
-import ix.test.builder.SubstanceBuilder;
+import ix.ginas.modelBuilders.SubstanceBuilder;
 import ix.test.server.RestSession;
 import ix.test.server.SubstanceAPI;
 

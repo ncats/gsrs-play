@@ -1,28 +1,23 @@
 package ix.test;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import ix.AbstractGinasServerTest;
 import ix.core.ValidationMessage;
-import ix.core.controllers.EntityFactory;
 import ix.core.models.Role;
 import ix.ginas.models.v1.ChemicalSubstance;
-import ix.test.SubstanceJsonUtil;
-import ix.test.builder.ChemicalSubstanceBuilder;
-import ix.test.builder.SubstanceBuilder;
+import ix.ginas.modelBuilders.ChemicalSubstanceBuilder;
+import ix.ginas.modelBuilders.SubstanceBuilder;
 import ix.test.server.GinasTestServer;
 import ix.test.server.RestSession;
 import ix.test.server.SubstanceAPI;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import util.json.JsonUtil;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.*;
 
 import static org.junit.Assert.*;

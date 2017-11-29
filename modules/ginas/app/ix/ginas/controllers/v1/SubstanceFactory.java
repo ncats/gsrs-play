@@ -16,6 +16,7 @@ import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import ix.core.NamedResource;
 import ix.core.UserFetcher;
 import ix.core.adapters.EntityPersistAdapter;
@@ -177,7 +178,14 @@ public class SubstanceFactory extends EntityFactory {
 		return null;
 		// return finder.where().eq("approvalID", approvalID).findUnique();
 	}
-
+	public static Result getSubstanceByApprovalIDForApi(String approvalID) {
+		Substance s = getSubstanceByApprovalID(approvalID);
+		if(s==null){
+			return notFound();
+		}
+		ObjectMapper mapper = getEntityMapper();
+		return ok((JsonNode)mapper.valueToTree(s));
+	}
 	public static Substance getSubstanceByApprovalID(String approvalID) {
 		List<Substance> list = finder.get().where().ieq("approvalID", approvalID).findList();
 		if (list != null && list.size() > 0) {

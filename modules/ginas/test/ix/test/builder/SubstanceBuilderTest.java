@@ -8,6 +8,8 @@ import java.io.FileInputStream;
 import java.io.InputStream;
 import java.util.UUID;
 
+import ix.ginas.modelBuilders.ChemicalSubstanceBuilder;
+import ix.ginas.modelBuilders.SubstanceBuilder;
 import org.junit.Test;
 
 import ix.AbstractGinasServerTest;

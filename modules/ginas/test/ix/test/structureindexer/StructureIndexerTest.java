@@ -2,9 +2,6 @@ package ix.test.structureindexer;
 
 import static org.junit.Assert.assertEquals;
 
-import java.util.Optional;
-import java.util.stream.Stream;
-
 import ix.core.plugins.StructureIndexerPlugin;
 import org.junit.Before;
 import org.junit.Test;
@@ -15,10 +12,7 @@ import ix.core.java8Util.Java8ForOldEbeanHelper;
 import ix.core.util.StreamUtil;
 import ix.core.util.EntityUtils.EntityWrapper;
 import ix.ginas.models.v1.ChemicalSubstance;
-import ix.test.builder.SubstanceBuilder;
-import tripod.chem.indexer.StructureIndexer;
-import tripod.chem.indexer.StructureIndexer.Result;
-import tripod.chem.indexer.StructureIndexer.ResultEnumeration;
+import ix.ginas.modelBuilders.SubstanceBuilder;
 
 public class StructureIndexerTest extends AbstractGinasServerTest{
 	

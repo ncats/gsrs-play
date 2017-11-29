@@ -13,7 +13,7 @@ public class InMemoryCsvSpreadSheet extends CsvSpreadSheet {
         super(builder);
     }
 
-    protected Row getRowImpl(int absoluteOffset) {
+    protected SpreadsheetRow getRowImpl(int absoluteOffset) {
         ensureCapacity(absoluteOffset);
         CsvRow r= rows[absoluteOffset];
         if(r ==null){

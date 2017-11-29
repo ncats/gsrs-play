@@ -1,6 +1,9 @@
 package ix.ginas.models.v1;
 
 import java.util.*;
+import java.util.function.BiFunction;
+import java.util.function.Consumer;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import javax.persistence.CascadeType;
@@ -46,6 +49,7 @@ import ix.core.models.ProcessingJob;
 import ix.core.plugins.GinasRecordProcessorPlugin;
 import ix.core.util.EntityUtils.EntityWrapper;
 import ix.core.util.TimeUtil;
+import ix.ginas.modelBuilders.SubstanceBuilder;
 import ix.ginas.models.GinasAccessReferenceControlled;
 import ix.ginas.models.GinasCommonData;
 import ix.ginas.models.ValidationMessageHolder;
@@ -233,9 +237,16 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
     @Transient
     protected transient ObjectMapper mapper = new ObjectMapper();
 
+    public static SubstanceBuilder builder(){
+        return new SubstanceBuilder();
+    }
+
+    @Transient
+    public SubstanceBuilder toBuilder(){
+        return new SubstanceBuilder(this);
+    }
     public Substance() {
         this(SubstanceClass.concept);
-        this.status = "non-approved";
     }
 
     public Substance(SubstanceClass subcls) {
@@ -1027,7 +1038,27 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
 
 
 
+    /**
+     * Create a new {@link Chemical} object for this Substance WITHOUT ANY PROPERTIES.
+     *
+     * @param warningsAndErrorsConsumer a Consumer for all warning and error messages.
+     *
+     * @return a new {@link Chemical} object, should never be null.
+     *
+     */
+    @JsonIgnore
+    @Transient
+    public Chemical toChemical(Consumer<GinasProcessingMessage> warningsAndErrorsConsumer){
+        Objects.requireNonNull(warningsAndErrorsConsumer);
+        List<GinasProcessingMessage> list = new ArrayList<>();
+        Chemical c = getChemicalImpl(list);
+        if (c.getDim() < 2) {
+            c.clean2D();
+        }
 
+        list.forEach(warningsAndErrorsConsumer);
+        return c;
+    }
     /**
      * Create a new {@link Chemical} object for this Substance and ignore
      * any errors or warnings.

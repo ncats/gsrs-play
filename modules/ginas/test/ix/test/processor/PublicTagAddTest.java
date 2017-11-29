@@ -3,9 +3,7 @@ package ix.test.processor;
 import static org.junit.Assert.assertEquals;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
@@ -20,12 +18,10 @@ import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 
 import ix.AbstractGinasServerTest;
-import ix.ginas.exporters.Exporter;
-import ix.ginas.exporters.JsonExporterFactory;
 import ix.ginas.models.v1.Reference;
 import ix.ginas.models.v1.Substance;
 import ix.ginas.processors.PublicTagFlagger;
-import ix.test.builder.SubstanceBuilder;
+import ix.ginas.modelBuilders.SubstanceBuilder;
 import ix.test.server.GinasTestServer.User;
 import org.junit.rules.TemporaryFolder;
 import play.Configuration;

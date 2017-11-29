@@ -15,45 +15,16 @@ import java.util.Set;
  */
 public class DefaultSubstanceSpreadsheetExporterFactory implements SubstanceExporterFactory {
 
-    private static final OutputFormat CSV = new SpreadsheetFormat("csv", "CSV (csv) File"){
 
-        @Override
-        Spreadsheet createSpeadsheet(OutputStream out) {
-            return  new CsvSpreadsheetBuilder(out)
-                    .quoteCells(true)
-                    .maxRowsInMemory(100)
-                    .build();
-        }
-    };
-
-    private static final OutputFormat TSV = new SpreadsheetFormat("txt", "TSV (tab) File"){
-        Spreadsheet createSpeadsheet(OutputStream out) {
-            return  new CsvSpreadsheetBuilder(out)
-                    .delimiter('\t')
-                    .quoteCells(false)
-                    .maxRowsInMemory(100)
-                    .build();
-        }
-    };
-
-    private static final OutputFormat XLSX = new SpreadsheetFormat("xlsx", "Excel (xlsx) File"){
-        Spreadsheet createSpeadsheet(OutputStream out) {
-
-            return new ExcelSpreadsheet.Builder(out)
-                    .maxRowsInMemory(100)
-                    .build();
-
-        }
-    };
 
 
     private static final Set<OutputFormat> FORMATS;
 
     static{
         Set<OutputFormat> set = new LinkedHashSet<>();
-        set.add(TSV);
-        set.add(CSV);
-        set.add(XLSX);
+        set.add(SpreadsheetFormat.TSV);
+        set.add(SpreadsheetFormat.CSV);
+        set.add(SpreadsheetFormat.XLSX);
 
         FORMATS = Collections.unmodifiableSet(set);
     }
@@ -85,12 +56,4 @@ public class DefaultSubstanceSpreadsheetExporterFactory implements SubstanceExpo
         builder.includePublicDataOnly(params.publicOnly());
     }
 
-    private static abstract class SpreadsheetFormat extends OutputFormat{
-
-        public SpreadsheetFormat(String extension, String displayname) {
-            super(extension, displayname);
-        }
-
-        abstract Spreadsheet createSpeadsheet(OutputStream out);
-    }
 }

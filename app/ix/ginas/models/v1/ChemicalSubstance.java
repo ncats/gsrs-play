@@ -27,6 +27,7 @@ import ix.core.models.BeanViews;
 import ix.core.models.Group;
 import ix.core.models.Indexable;
 import ix.core.models.Structure;
+import ix.ginas.modelBuilders.ChemicalSubstanceBuilder;
 import ix.ginas.models.GinasAccessReferenceControlled;
 import ix.ginas.models.GinasSubstanceDefinitionAccess;
 import ix.ginas.models.utils.JSONEntity;
@@ -66,6 +67,13 @@ public class ChemicalSubstance extends Substance implements GinasSubstanceDefini
         super (SubstanceClass.chemical);
     }
 
+    public static ChemicalSubstanceBuilder chemicalBuilder(){
+        return new ChemicalSubstanceBuilder();
+    }
+
+    public ChemicalSubstanceBuilder toChemicalBuilder() {
+        return super.toBuilder().asChemical();
+    }
 
     @JsonView(BeanViews.Compact.class)
     @JsonProperty("_moieties")
