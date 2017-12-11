@@ -1,13 +1,21 @@
 package ix.ginas.processors;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Stream;
 
 import ix.core.EntityProcessor;
 import ix.core.adapters.EntityPersistAdapter;
+import ix.core.controllers.PayloadFactory;
+import ix.core.models.Payload;
+import ix.core.plugins.SequenceIndexerPlugin;
 import ix.core.plugins.StructureIndexerPlugin;
 import ix.core.plugins.StructureIndexerPlugin.StandardizedStructureIndexer;
 import ix.ginas.controllers.v1.SubstanceFactory;
@@ -16,11 +24,16 @@ import ix.ginas.models.v1.Relationship;
 import ix.ginas.models.v1.Substance;
 import ix.ginas.models.v1.Substance.SubstanceDefinitionType;
 import ix.ginas.models.v1.SubstanceReference;
+import ix.seqaln.SequenceIndexer;
+import org.jcvi.jillion.fasta.*;
 import play.Logger;
 import play.Play;
 import play.db.ebean.Model;
 
 public class SubstanceProcessor implements EntityProcessor<Substance>{
+
+    private static Pattern PAYLOAD_UUID_PATTERN = Pattern.compile("payload\\((.+?)\\)");
+
     public static StandardizedStructureIndexer _strucIndexer =
             Play.application().plugin(StructureIndexerPlugin.class).getIndexer();
     KewControlledPlantDataSet kewData;
@@ -42,11 +55,7 @@ public class SubstanceProcessor implements EntityProcessor<Substance>{
 
     @Override
     public void postPersist(Substance obj) {
-        //System.out.print(System.currentTimeMillis() + "\t");
-
-        //		if(changed){
-        //			obj.save();
-        //		}
+        System.out.println("Substance processor post persist for class " + obj.getClass());
     }
 
     public void addWaitingRelationships(Substance obj){

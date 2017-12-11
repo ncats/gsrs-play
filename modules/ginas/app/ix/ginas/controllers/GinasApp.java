@@ -9,6 +9,7 @@ import java.time.LocalTime;
 import java.util.*;
 import java.util.concurrent.ForkJoinPool;
 import java.util.function.*;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -1860,6 +1861,7 @@ public class GinasApp extends App {
 		}
 	}
 
+	private static Pattern FASTA_FILE_PATTERN = Pattern.compile(">(.+)\\|.+");
     public static class GinasSequenceResultProcessor
             extends SearchResultProcessor<SequenceIndexer.Result, ProteinSubstance> {
         public GinasSequenceResultProcessor() {
@@ -1868,9 +1870,25 @@ public class GinasApp extends App {
         @Override
         protected ProteinSubstance instrument(SequenceIndexer.Result r) throws Exception {
 
-            List<ProteinSubstance> proteins = SubstanceFactory.protfinder.get().where()
-                    .eq("protein.subunits.uuid", r.id).findList(); // also slow
-            ProteinSubstance protein = proteins.isEmpty() ? null : proteins.get(0);
+            System.out.println("result id = " + r.id);
+            ProteinSubstance protein=null;
+
+            if(r.id.startsWith(">")){
+                Matcher m = FASTA_FILE_PATTERN.matcher(r.id);
+                if(m.find()){
+                    String parentId = m.group(1);
+                    System.out.println("matched id = "+parentId);
+                    ProteinSubstance sub = SubstanceFactory.protfinder.get().byId(UUID.fromString(parentId));
+                    System.out.println("sub = " + sub);
+                    return sub;
+
+                }
+            }else {
+
+                List<ProteinSubstance> proteins = SubstanceFactory.protfinder.get().where()
+                        .eq("protein.subunits.uuid", r.id).findList(); // also slow
+                protein = proteins.isEmpty() ? null : proteins.get(0);
+            }
             if (protein != null) {
                 Key key=EntityWrapper.of(protein).getKey();
                 Map<String,Object> added = IxCache.getMatchingContext(this.getContext(), key);
@@ -2653,10 +2671,23 @@ public class GinasApp extends App {
 
         @Override
         protected NucleicAcidSubstance instrument(SequenceIndexer.Result r) throws Exception {
+            System.out.println("result id = " + r.id);
+            NucleicAcidSubstance nuc= null;
+            if(r.id.startsWith(">")){
+                Matcher m = FASTA_FILE_PATTERN.matcher(r.id);
+                if(m.find()){
+                    String parentId = m.group(1);
+                    System.out.println("matched id = "+parentId);
+                    NucleicAcidSubstance sub = SubstanceFactory.nucfinder.get().byId(UUID.fromString(parentId));
+                    System.out.println("sub = " + sub);
+                    nuc= sub;
 
-            List<NucleicAcidSubstance> nucSubstances = SubstanceFactory.nucfinder.get().where()
-                    .eq("nucleicAcid.subunits.uuid", r.id).findList(); // also slow
-            NucleicAcidSubstance nuc = nucSubstances.isEmpty() ? null : nucSubstances.get(0);
+                }
+            }else {
+                List<NucleicAcidSubstance> nucSubstances = SubstanceFactory.nucfinder.get().where()
+                        .eq("nucleicAcid.subunits.uuid", r.id).findList(); // also slow
+                nuc = nucSubstances.isEmpty() ? null : nucSubstances.get(0);
+            }
             if (nuc != null) {
                 Key key=EntityWrapper.of(nuc).getKey();
                 Map<String,Object> added = IxCache.getMatchingContext(this.getContext(), key);
