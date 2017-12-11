@@ -16,6 +16,7 @@ import java.util.stream.Collectors;
  */
 public class SdfExporterFactory implements SubstanceExporterFactory {
 
+    private static final char NAME_PROP_SEPARATOR = '|';
     private static final Set<OutputFormat> formats = Collections.singleton( new OutputFormat("sdf", "SD (sdf) File"));
     @Override
     public boolean supports(Parameters params) {
@@ -43,10 +44,21 @@ public class SdfExporterFactory implements SubstanceExporterFactory {
         private void addNames(List<Name> srcNames, Substance parentSubstance, Set<String> destNames) {
             for (Name n : srcNames) {
                 String name = n.name;
-                destNames.add(n.name);
+
+
+                StringBuilder propertyBuilder = new StringBuilder();
+               String properties =  propertyBuilder.append(NAME_PROP_SEPARATOR)
+                                .append(n.languages.stream().map(kw-> kw.getValue()).collect(Collectors.joining(",")))
+                                .append(NAME_PROP_SEPARATOR)
+//                                .append(n.displayName)
+                                .toString();
+
+
+                destNames.add(n.name + properties + n.displayName); // only include display name 1st time
 
                 for (String loc : n.getLocators(parentSubstance)) {
-                    destNames.add(name + " [" + loc + "]");
+                    //don't include display name for each locator because then we could have more than 1
+                    destNames.add(name + " [" + loc + "]" + properties);
                 }
 
             }
@@ -58,12 +70,18 @@ public class SdfExporterFactory implements SubstanceExporterFactory {
             if (parentSubstance.approvalID != null) {
                 c.setProperty("APPROVAL_ID", parentSubstance.approvalID);
             }
+
+            //TODO change names/name to have several name properties?
+            //each Name is a separate field with lots of tabs
+            //the new line separate properties
+            //fields include language, and is display name
+
             c.setProperty("NAME", parentSubstance.getName());
             c.setName(parentSubstance.getName());
             StringBuilder sb = new StringBuilder();
 
             Set<String> names = new LinkedHashSet<>();
-            names.add(parentSubstance.getName());
+//            names.add(parentSubstance.getName());
 
             addNames(parentSubstance.getOfficialNames(), parentSubstance, names);
             addNames(parentSubstance.getNonOfficialNames(), parentSubstance, names);
