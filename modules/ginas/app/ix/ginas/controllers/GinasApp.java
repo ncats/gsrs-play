@@ -2671,16 +2671,12 @@ public class GinasApp extends App {
 
         @Override
         protected NucleicAcidSubstance instrument(SequenceIndexer.Result r) throws Exception {
-            System.out.println("result id = " + r.id);
             NucleicAcidSubstance nuc= null;
             if(r.id.startsWith(">")){
                 Matcher m = FASTA_FILE_PATTERN.matcher(r.id);
                 if(m.find()){
                     String parentId = m.group(1);
-                    System.out.println("matched id = "+parentId);
-                    NucleicAcidSubstance sub = SubstanceFactory.nucfinder.get().byId(UUID.fromString(parentId));
-                    System.out.println("sub = " + sub);
-                    nuc= sub;
+                    nuc = SubstanceFactory.nucfinder.get().byId(UUID.fromString(parentId));
 
                 }
             }else {

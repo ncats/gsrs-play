@@ -1,6 +1,7 @@
 package ix.core.util;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.invoke.MethodHandle;
@@ -29,6 +30,7 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -46,7 +48,15 @@ import javax.persistence.PreRemove;
 import javax.persistence.PreUpdate;
 import javax.persistence.Table;
 
+import ix.core.adapters.EntityPersistAdapter;
+import ix.core.controllers.PayloadFactory;
+import ix.core.models.*;
+import ix.core.plugins.SequenceIndexerPlugin;
+import ix.ginas.models.v1.NucleicAcidSubstance;
+import ix.ginas.models.v1.Substance;
+import ix.seqaln.SequenceIndexer;
 import org.apache.lucene.document.Document;
+import org.jcvi.jillion.fasta.*;
 import org.reflections.Reflections;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -74,15 +84,6 @@ import ix.core.controllers.EntityFactory.EntityMapper;
 import ix.core.factories.ApiFunctionFactory;
 import ix.core.factories.FieldNameDecoratorFactory;
 import ix.core.factories.SpecialFieldFactory;
-import ix.core.models.Backup;
-import ix.core.models.ChangeReason;
-import ix.core.models.DataValidated;
-import ix.core.models.DataVersion;
-import ix.core.models.DynamicFacet;
-import ix.core.models.Edit;
-import ix.core.models.ForceUpdatableModel;
-import ix.core.models.Indexable;
-import ix.core.models.Keyword;
 import ix.core.search.EntityFetcher;
 import ix.core.search.EntityFetcher.CacheType;
 import ix.core.search.text.PathStack;
@@ -334,11 +335,163 @@ public class EntityUtils {
 		public Optional<MethodOrFieldMeta> getIdFieldInfo() {
 			return ei.getIDFieldInfo();
 		}
-
+		private static Pattern PAYLOAD_UUID_PATTERN = Pattern.compile("payload\\((.+?)\\)");
 		public Stream<Tuple<MethodOrFieldMeta, Object>> streamSequenceFieldAndValues(Predicate<MethodOrFieldMeta> p) {
-			return (ei).getSequenceFieldInfo().stream().filter(p).map(m -> new Tuple<>(m, m.getValue(this.getValue())))
+			Stream<Tuple<MethodOrFieldMeta, Object>> fieldInfoStream = ei.getSequenceFieldInfo().stream().filter(p).map(m -> new Tuple<>(m, m.getValue(this.getValue())))
 					.filter(t -> t.v().isPresent()).map(t -> new Tuple<>(t.k(), t.v().get()));
+
+			if (NucleicAcidSubstance.class.isAssignableFrom(ei.getEntityClass())) {
+				Substance obj = ((Substance) this.getValue());
+				SequenceIndexer sequenceIndexer = EntityPersistAdapter.getSequenceIndexer();
+				obj.references.stream()
+						.peek(r -> System.out.println("uploaded file = " + r.uploadedFile))
+						.filter(r -> r.uploadedFile != null)
+
+						.flatMap(r -> {
+									if (r.tags.stream()
+											.peek(k -> System.out.println(k))
+											.filter(k -> k.term.equalsIgnoreCase("fasta"))
+											.findAny()
+											.isPresent()) {
+										Matcher m = PAYLOAD_UUID_PATTERN.matcher(r.uploadedFile);
+										if (m.find()) {
+											String uuid = m.group(1);
+											System.out.println("found payload " + uuid);
+											Payload payload = PayloadFactory.getPayload(UUID.fromString(uuid));
+											return Stream.of(payload);
+										}
+									}
+									return Stream.empty();
+								}
+						).forEach(payload -> {
+					File f = PayloadFactory.getFile(payload);
+
+
+					try {
+						FastaFileParser.create(f).parse(new FastaVisitor() {
+							@Override
+							public FastaRecordVisitor visitDefline(FastaVisitorCallback fastaVisitorCallback, String id, String comment) {
+								//TODO process comments
+								return new AbstractFastaRecordVisitor(id, comment) {
+									@Override
+									protected void visitRecord(String id, String comment, String seq) {
+
+										System.out.println("adding seq:" + seq);
+										try {
+											sequenceIndexer.add(">"+obj.uuid +"|"+id, seq);
+										} catch (IOException e) {
+											e.printStackTrace();
+										}
+
+
+									}
+								};
+							}
+
+							@Override
+							public void visitEnd() {
+
+							}
+
+							@Override
+							public void halted() {
+
+							}
+						});
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+				});
+
+			}
+
+				return fieldInfoStream;
+
 		}
+
+			private static class FastaMeta implements MethodOrFieldMeta{
+
+				private final String sequence;
+
+				public FastaMeta(String sequence) {
+					this.sequence = sequence;
+				}
+
+				@Override
+				public Optional<Object> getValue(Object entity) {
+					return Optional.of(sequence);
+				}
+
+				@Override
+				public boolean isGenerated() {
+					return true;
+				}
+
+				@Override
+				public boolean isNumeric() {
+					return false;
+				}
+
+				@Override
+				public Class<?> getType() {
+					return String.class;
+				}
+
+				@Override
+				public String getName() {
+					return null;
+				}
+
+				@Override
+				public boolean isJsonSerialized() {
+					return false;
+				}
+
+				@Override
+				public String getJsonFieldName() {
+					return null;
+				}
+
+				@Override
+				public boolean isArray() {
+					return false;
+				}
+
+				@Override
+				public boolean isCollection() {
+					return false;
+				}
+
+				@Override
+				public boolean isTextEnabled() {
+					return false;
+				}
+
+				@Override
+				public boolean isSequence() {
+					return true;
+				}
+
+				@Override
+				public boolean isStructure() {
+					return false;
+				}
+
+				@Override
+				public Class<?> deserializeAs() {
+					return null;
+				}
+
+				@Override
+				public <T> JsonSerializer<T> getSerializer() {
+					return null;
+				}
+
+				@Override
+				public int getJsonModifiers() {
+					return 0;
+				}
+			}
 
 		public Stream<Tuple<MethodOrFieldMeta, Object>> streamStructureFieldAndValues(Predicate<MethodOrFieldMeta> p) {
 			return ei.getStructureFieldInfo().stream().filter(p)
