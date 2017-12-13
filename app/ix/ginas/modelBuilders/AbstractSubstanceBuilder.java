@@ -1,6 +1,7 @@
 package ix.ginas.modelBuilders;
 
 import java.util.*;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -193,7 +194,12 @@ public abstract class AbstractSubstanceBuilder<S extends Substance, T extends Ab
     }
 
     private <T> List<T> addToNewList(List<T> oldList, T newElement){
-        List<T> newList = new ArrayList<>(oldList);
+        List<T> newList;
+        if(oldList ==null){
+            newList = new ArrayList<>();
+        }else {
+            newList = new ArrayList<>(oldList);
+        }
         newList.add(newElement);
         return newList;
     }
@@ -237,23 +243,31 @@ public abstract class AbstractSubstanceBuilder<S extends Substance, T extends Ab
 
     private Name createName(Substance s, String name){
         Name n=new Name(name);
-        n.addLanguage("en");
+//        n.addLanguage("en");
         n.addReference(getOrAddFirstReference(s));
         return n;
     }
     private T createAndAddBasicName(String name){
-        return createAndAddBasicName(name, null);
+        return createAndAddBasicName(name, (BiConsumer<S, Name>)null);
     }
-    private T createAndAddBasicName(String name, Consumer<Name> additionalNameOpperations){
+    private T createAndAddBasicName(String name, BiConsumer<S, Name> additionalNameOpperations) {
         return andThen(s->{
 
 
             Name n = createName(s, name);
             if(additionalNameOpperations !=null){
-                additionalNameOpperations.accept(n);
+                additionalNameOpperations.accept(s, n);
             }
             s.names =  addToNewList(s.names, n);
         });
+    }
+
+    private T createAndAddBasicName(String name, Consumer<Name> additionalNameOpperations){
+       return createAndAddBasicName(name, (s,n)-> additionalNameOpperations.accept(n));
+    }
+
+    public T addName(String name, Consumer<Name> additionalNameOpperations){
+        return createAndAddBasicName(name, additionalNameOpperations);
     }
 	public T addName(String name){
         return createAndAddBasicName(name);
@@ -300,10 +314,7 @@ public abstract class AbstractSubstanceBuilder<S extends Substance, T extends Ab
        return andThen(s -> {s.uuid=uuid;});
     }
 
-    public T setName(String name) {
-       return andThen(s -> {s.names = new ArrayList<>();}).addName(name);
 
-    }
 
     public T removeUUID(){
         return andThen( s-> {s.uuid =null;});
@@ -313,5 +324,16 @@ public abstract class AbstractSubstanceBuilder<S extends Substance, T extends Ab
         return andThen( s-> {
             s.uuid =null;
             s.getOrGenerateUUID();});
+    }
+
+    public T setDisplayName(String displayName) {
+        return createAndAddBasicName(displayName, (substance, name) -> {
+
+            for(Name n : substance.names){
+                n.displayName=false;
+            }
+            name.displayName = true;
+        });
+
     }
 }
