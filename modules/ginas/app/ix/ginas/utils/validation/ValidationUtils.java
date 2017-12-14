@@ -86,6 +86,18 @@ public class ValidationUtils {
 		List<GinasProcessingMessage> gpm = new ArrayList<GinasProcessingMessage>();
 
 		try {
+			
+			if(s.status == null){
+				GinasProcessingMessage mes = GinasProcessingMessage
+						.WARNING_MESSAGE(
+								"No status specified for substance, defaulting to 'pending'")
+						.appliableChange(true);
+				gpm.add(mes);
+				strat.processMessage(mes);
+				if (mes.actionType == GinasProcessingMessage.ACTION_TYPE.APPLY_CHANGE) {
+					s.status=Substance.STATUS_PENDING;
+				}
+			}
 
 			if (s == null) {
 				gpm.add(GinasProcessingMessage
