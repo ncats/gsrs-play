@@ -604,6 +604,21 @@ public class ValidationUtils {
 				return false;
 			}
 		}
+		
+		long parentList=s.relationships.stream()
+		               .filter(r->"SUBSTANCE->SUB_CONCEPT".equals(r.type))
+		               .count();
+		
+		if(parentList>1){
+			GinasProcessingMessage mes = GinasProcessingMessage
+					.ERROR_MESSAGE(
+							"Variant concepts may not specify more than one parent record");
+			gpm.add(mes);
+			strat.processMessage(mes);
+		}
+		
+		
+		
 		s.relationships.removeAll(remnames);
 		return true;
 	}
