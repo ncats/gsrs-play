@@ -3,6 +3,8 @@ package ix.core.controllers;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -28,8 +30,14 @@ public class SchedulerFactory extends EntityFactory {
 
     static final Logger.ALogger ScheduleLogger = Logger.of("scheduledjobs");
     
-    static final CachedSupplier<SchedulerPlugin> splug = CachedSupplier.of(()->{
-        return Play.application().plugin(SchedulerPlugin.class);
+    static final CachedSupplier<SchedulerPlugin> splug = CachedSupplier.of(new Supplier<SchedulerPlugin>(){
+
+		@Override
+		public SchedulerPlugin get() {
+			 return Play.application().plugin(SchedulerPlugin.class);
+		}
+    	
+    	
     });
     
 
@@ -45,82 +53,37 @@ public class SchedulerFactory extends EntityFactory {
         return null;
     }
     public static Result page (int top, int skip, String filter) {
-        return page(top,skip,filter, (l)->l);
+        return page(top,skip,filter, new Function<List<ScheduledTask>,Object>(){
+
+			@Override
+			public Object apply(List<ScheduledTask> t) {
+				return t;
+			}
+        	
+        });
     }
     
     public static Result page (int top, int skip, String filter, Function<List<ScheduledTask>,Object> map) {
-      //if (select != null) finder.select(select);
-        final FetchOptions options = new FetchOptions (top, skip, filter);
-        List<ScheduledTask> results = splug.get()
-                            .getTasks()
-                            .stream()
-                            .sorted((t1,t2)->(int)(t1.id-t2.id))
-                            .collect(Collectors.toList());
-        
-        
-        final ETag etag = new ETag.Builder()
-                .fromRequest(request())
-                .options(options)
-                .count(results.size())
-                .sha1OfRequest("filter")
-                .build();
-        
-
-        if (options.filter == null){
-            etag.total = getCount ();
-        }else if(etag.count<etag.top){ //if count returned is less than top,
-                                       //it's done
-            etag.total = etag.skip + etag.count;
-        }else{
-            EntityWrapper.of(etag)
-            .getFinder()
-            .where()
-            .eq("sha1", etag.sha1)
-            .orderBy("modified desc")
-            .setMaxRows(1)
-            .findList()
-            .stream().findFirst()
-            .ifPresent(e->{
-                Logger.debug(">> cached "+etag.sha1+" from ETag "+e.etag);
-                etag.total = e.total;
-            });
-            
-            
-        }
-        
-        try{
-            etag.save();
-        }catch (Exception e) {
-            Logger.error
-                ("Error saving etag. This sometimes happens on empty DB");
-        }
-
-        etag.setContent(map.apply(results));
-        
-        ObjectMapper mapper = getEntityMapper ();
-        ObjectNode obj = (ObjectNode)mapper.valueToTree(etag);
-
-        return ok (obj);
+      return CoreJava8FactoryHelper.SchedulerFactoryPage(top, skip, filter, map);
+    		  
     }
 
     public static Result get (Long id, String select) {
-        ObjectMapper mapper = getEntityMapper ();
-        try{
-        return Optional.ofNullable(get(id))
-                    .map(t->(ObjectNode)mapper.valueToTree(t))
-                    .map(t->ok(t))
-                    .orElse(notFound ("Bad request: "+request().uri()));
-        }catch(Exception e){
-            e.printStackTrace();
-            throw e;
-        }
+       return CoreJava8FactoryHelper.SchedulerFactoryGet(id, select);
         
     }
     
     public static ScheduledTask get(long id){
         return splug.get().getTasks()
                 .stream()
-                .filter(t->t.id.equals(id))
+                .filter(new Predicate<ScheduledTask>(){
+
+					@Override
+					public boolean test(ScheduledTask t) {
+						return t.id.equals(id);
+					}
+                	
+                })
                 .findAny()
                 .orElse(null);
     }
@@ -132,10 +95,20 @@ public class SchedulerFactory extends EntityFactory {
     
     public static Result stream(String field, int top, int skip){
         PojoPointer pojoPoint = PojoPointer.fromURIPath(field);
-        return page(top, skip, null, (l)->EntityWrapper.of(l)
-                .at(pojoPoint)
-                .get()
-                .getValue());
+        return page(top, skip, null, new Function<List<SchedulerPlugin.ScheduledTask>,Object>(){
+
+			@Override
+			public Object apply(List<ScheduledTask> t) {
+				
+				return EntityWrapper.of(t)
+						.at(pojoPoint)
+		                .get()
+		                .getValue();
+			}
+        
+        });
+        
+                
     }
 
 }
