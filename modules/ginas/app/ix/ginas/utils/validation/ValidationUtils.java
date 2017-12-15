@@ -511,7 +511,7 @@ public class ValidationUtils {
 					mes.appliedChange = true;
 				}
 			} else {
-				if (cd.code == null || cd.code.equals("")) {
+				if (isEffectivelyNull(cd.code)) {
 					GinasProcessingMessage mes = GinasProcessingMessage
 							.ERROR_MESSAGE(
 									"'Code' should not be null in code objects")
@@ -525,7 +525,7 @@ public class ValidationUtils {
 					
 				}
 				
-				if (cd.codeSystem == null || cd.codeSystem.equals("")) {
+				if (isEffectivelyNull(cd.codeSystem)) {
                     GinasProcessingMessage mes = GinasProcessingMessage
                             .ERROR_MESSAGE(
                                     "'Code System' should not be null in code objects")
@@ -570,11 +570,26 @@ public class ValidationUtils {
 		return true;
 	}
 
+       
+       
+       /**
+        * Check if the object is effectively null. That is,
+        * is it literally null, or is the string representation
+        * of the object an empty string.
+        * @param o
+        * @return
+        */
+       private static boolean isEffectivelyNull(Object o){
+               if(o==null) return true;
+               if(o.toString().equals(""))return true;
+               return false;
+       }
+
 	private static boolean validateRelationships(Substance s,
 			List<GinasProcessingMessage> gpm, GinasProcessingStrategy strat) {
 		List<Relationship> remnames = new ArrayList<Relationship>();
 		for (Relationship n : s.relationships) {
-			if (n == null) {
+			if (isEffectivelyNull(n)) {
 				GinasProcessingMessage mes = GinasProcessingMessage
 						.WARNING_MESSAGE(
 								"Null relationship objects are not allowed")
@@ -586,14 +601,14 @@ public class ValidationUtils {
 					mes.appliedChange = true;
 				}
 			}
-			if (n.relatedSubstance == null) {
+			if (isEffectivelyNull(n.relatedSubstance)) {
 				GinasProcessingMessage mes = GinasProcessingMessage
 						.ERROR_MESSAGE(
 								"Relationships must specify a related substance");
 				gpm.add(mes);
 				strat.processMessage(mes);
 			}
-			if(n.type == null){
+			if(isEffectivelyNull(n.type)){
 				GinasProcessingMessage mes = GinasProcessingMessage
 						.ERROR_MESSAGE(
 								"Relationships must specify a type");
