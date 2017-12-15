@@ -350,6 +350,46 @@ public class ValidationUtils {
 		}
 	}
 
+       public static CachedSupplier<List<Replacer>> replacers = CachedSupplier.of(()->{
+               List<Replacer> repList = new ArrayList<>();
+               repList.add(new Replacer("[\\t\\n\\r]", " ")
+                               .message("Name \"$0\" has non-space whitespace, replacing with spaces"));
+               repList.add(new Replacer("\\s\\s\\s*", " ")
+                       .message("Name \"$0\" has consecutive whitespace characters, replacing with single spaces."));
+               
+               return repList;
+               
+       });
+       
+       public static class Replacer{
+               Pattern p;
+               String replace;
+               String message = "String \"$0\" matches forbidden pattern";
+               
+               public Replacer(String regex, String replace){
+                       this.p=Pattern.compile(regex);
+                       this.replace=replace;
+               }
+               
+               public boolean matches(String test){
+                       return this.p.matcher(test).find();
+               }
+              public String fix(String test){
+                       return test.replaceAll(p.pattern(), replace);
+               }
+               
+               public Replacer message(String msg){
+                       this.message=msg;
+                       return this;
+               }
+              
+               public String getMessage(String test){
+                       return message.replace("$0", test);
+               }
+               
+       }
+
+
 	private static boolean validateNames(Substance s,
 			List<GinasProcessingMessage> gpm, GinasProcessingStrategy strat) {
 		boolean preferred = false;
@@ -405,6 +445,21 @@ public class ValidationUtils {
                         n.type="cn";
                     }
                 }
+
+			for(Replacer r: replacers.get()){
+                                       if(r.matches(n.getName())){
+                                               GinasProcessingMessage mes = GinasProcessingMessage
+                                   .WARNING_MESSAGE(
+                                           r.getMessage(n.getName()))
+                                   .appliableChange(true);
+                           gpm.add(mes);
+                           strat.processMessage(mes);
+                           if (mes.actionType == GinasProcessingMessage.ACTION_TYPE.APPLY_CHANGE) {
+                               n.setName(r.fix(n.getName()));
+                           }   
+                                       }
+                               }
+
 			}
 			if (!validateReferenced(s, n, gpm, strat, ReferenceAction.FAIL)) {
 				anyFailed = true;
