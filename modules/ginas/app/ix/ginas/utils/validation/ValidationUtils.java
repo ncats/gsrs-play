@@ -526,18 +526,31 @@ public class ValidationUtils {
 				}
 				
 				if (isEffectivelyNull(cd.codeSystem)) {
-                    GinasProcessingMessage mes = GinasProcessingMessage
-                            .ERROR_MESSAGE(
-                                    "'Code System' should not be null in code objects")
-                            .appliableChange(true);
-                    strat.processMessage(mes);
-                    if (mes.actionType == GinasProcessingMessage.ACTION_TYPE.APPLY_CHANGE) {
-                        cd.codeSystem="<no system>";
-                        mes.appliedChange = true;
-                    }
-                    gpm.add(mes);
-                    
-                }
+				    GinasProcessingMessage mes = GinasProcessingMessage
+				            .ERROR_MESSAGE(
+				                    "'Code System' should not be null in code objects")
+				            .appliableChange(true);
+				    strat.processMessage(mes);
+				    if (mes.actionType == GinasProcessingMessage.ACTION_TYPE.APPLY_CHANGE) {
+				        cd.codeSystem="<no system>";
+				        mes.appliedChange = true;
+				    }
+				    gpm.add(mes);
+				    
+				}
+
+				if (isEffectivelyNull(cd.type)) {
+				    GinasProcessingMessage mes = GinasProcessingMessage
+				            .WARNING_MESSAGE(
+				                    "Must specify a code type for each name. Defaults to \"PRIMARY\" (PRIMARY)")
+				            .appliableChange(true);
+				    gpm.add(mes);
+				    strat.processMessage(mes);
+				    if (mes.actionType == GinasProcessingMessage.ACTION_TYPE.APPLY_CHANGE) {
+				        cd.type="PRIMARY";
+				    }
+				}
+
 			}
 			if (!validateReferenced(s, cd, gpm, strat, ReferenceAction.ALLOW)) {
 				return false;
