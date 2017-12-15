@@ -518,7 +518,7 @@ public class ValidationUtils {
 		for (Name n : s.names) {
 		    if(nameSet.contains(n.getName().toUpperCase())){
 		        GinasProcessingMessage mes = GinasProcessingMessage
-                        .WARNING_MESSAGE(
+                        .ERROR_MESSAGE(
                                 "Name '"
                                         + n.getName()
                                         + "' is a duplicate name in the record.")
@@ -535,7 +535,7 @@ public class ValidationUtils {
 					Substance s2 = sr.iterator().next();
 					if (!s2.getUuid().toString().equals(s.getUuid().toString())) {
 						GinasProcessingMessage mes = GinasProcessingMessage
-								.WARNING_MESSAGE(
+								.ERROR_MESSAGE(
 										"Name '"
 												+ n.name
 												+ "' collides (possible duplicate) with existing name for substance:")
