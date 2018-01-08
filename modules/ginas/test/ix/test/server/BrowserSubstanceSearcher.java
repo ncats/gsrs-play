@@ -4,15 +4,7 @@ package ix.test.server;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Comparator;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -305,7 +297,12 @@ public class BrowserSubstanceSearcher implements SubstanceSearcher {
     private void parseFacets(SearchResult results, HtmlPage html) throws IOException{
     	Map<String, Map<String,Integer>> map = new LinkedHashMap<>();
 
-    	html.querySelectorAll("div.panel-default")
+//    	System.out.println("==================================");
+//
+//    	System.out.println("html =\n" + html.asXml());
+//        System.out.println("==================================");
+
+        /*html.querySelectorAll("div.panel-default")
     		.stream()
     		.filter(n->n.asXml().contains("toggleFacet"))
     		.forEach(c->{
@@ -319,7 +316,39 @@ public class BrowserSubstanceSearcher implements SubstanceSearcher {
     					})
     				.collect(Collectors.toMap(s->s[0], s->Integer.parseInt(s[1])));
     			map.put(facetName, counts);
-    		});        
+    		});     */
+
+        html.querySelectorAll("div[ng-controller=FilterController]")
+                .stream()
+                .filter(n->n.asXml().contains("facetDisplay"))
+                .forEach(c->{
+                    String facetName = c.querySelector("div>h3>span[ng-bind=facetDisplay]").asText().trim();
+//                    System.out.println("FOUND FACET NAME " + facetName);
+                    Map<String,Integer> counts= new HashMap<>();
+                            c.querySelectorAll("ul.list-group div[ng-hide]") //Each facet value
+                                    .stream()
+                                    .map(d->new List[]{
+                                            d.querySelectorAll("div label.ng-binding").stream().map(n-> n.asText().trim()).collect(Collectors.toList()),
+                                            d.querySelectorAll("div span.pull-right.ng-binding").stream().map(n-> n.asText().trim()).collect(Collectors.toList())
+                                    })
+                                    .filter(s-> s[0] !=null && !s[0].isEmpty())
+//                                    .peek(a-> System.out.println(Arrays.toString(a)))
+                                    .forEach( s->{
+                                        Iterator<String> keyIter = (Iterator<String>) s[0].iterator();
+                                        Iterator<String> valueIter = (Iterator<String>) s[1].iterator();
+                                        while(keyIter.hasNext() && valueIter.hasNext()){
+                                            String k = keyIter.next();
+                                            String v = valueIter.next();
+                                            if(k !=null && !k.isEmpty() && v !=null && !v.isEmpty()){
+                                                counts.put(k, Integer.parseInt(v));
+                                            }
+
+                                        }
+                                    });
+
+//                    System.out.println("counts = " + counts);
+                    map.put(facetName, counts);
+                });
 
         for(Map.Entry<String, Map<String, Integer>> next : map.entrySet()){
             if(!next.getValue().isEmpty()){
