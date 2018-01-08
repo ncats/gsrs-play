@@ -55,7 +55,7 @@ public class SubstanceProcessor implements EntityProcessor<Substance>{
 
     @Override
     public void postPersist(Substance obj) {
-        System.out.println("Substance processor post persist for class " + obj.getClass());
+//        System.out.println("Substance processor post persist for class " + obj.getClass());
     }
 
     public void addWaitingRelationships(Substance obj){
