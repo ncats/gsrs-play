@@ -86,6 +86,18 @@ public class ValidationUtils {
 		List<GinasProcessingMessage> gpm = new ArrayList<GinasProcessingMessage>();
 
 		try {
+			
+			if(s.status == null){
+				GinasProcessingMessage mes = GinasProcessingMessage
+						.WARNING_MESSAGE(
+								"No status specified for substance, defaulting to 'pending'")
+						.appliableChange(true);
+				gpm.add(mes);
+				strat.processMessage(mes);
+				if (mes.actionType == GinasProcessingMessage.ACTION_TYPE.APPLY_CHANGE) {
+					s.status=Substance.STATUS_PENDING;
+				}
+			}
 
 			if (s == null) {
 				gpm.add(GinasProcessingMessage
@@ -338,6 +350,46 @@ public class ValidationUtils {
 		}
 	}
 
+       public static CachedSupplier<List<Replacer>> replacers = CachedSupplier.of(()->{
+               List<Replacer> repList = new ArrayList<>();
+               repList.add(new Replacer("[\\t\\n\\r]", " ")
+                               .message("Name \"$0\" has non-space whitespace, replacing with spaces"));
+               repList.add(new Replacer("\\s\\s\\s*", " ")
+                       .message("Name \"$0\" has consecutive whitespace characters, replacing with single spaces."));
+               
+               return repList;
+               
+       });
+       
+       public static class Replacer{
+               Pattern p;
+               String replace;
+               String message = "String \"$0\" matches forbidden pattern";
+               
+               public Replacer(String regex, String replace){
+                       this.p=Pattern.compile(regex);
+                       this.replace=replace;
+               }
+               
+               public boolean matches(String test){
+                       return this.p.matcher(test).find();
+               }
+              public String fix(String test){
+                       return test.replaceAll(p.pattern(), replace);
+               }
+               
+               public Replacer message(String msg){
+                       this.message=msg;
+                       return this;
+               }
+              
+               public String getMessage(String test){
+                       return message.replace("$0", test);
+               }
+               
+       }
+
+
 	private static boolean validateNames(Substance s,
 			List<GinasProcessingMessage> gpm, GinasProcessingStrategy strat) {
 		boolean preferred = false;
@@ -393,6 +445,21 @@ public class ValidationUtils {
                         n.type="cn";
                     }
                 }
+
+			for(Replacer r: replacers.get()){
+                                       if(r.matches(n.getName())){
+                                               GinasProcessingMessage mes = GinasProcessingMessage
+                                   .WARNING_MESSAGE(
+                                           r.getMessage(n.getName()))
+                                   .appliableChange(true);
+                           gpm.add(mes);
+                           strat.processMessage(mes);
+                           if (mes.actionType == GinasProcessingMessage.ACTION_TYPE.APPLY_CHANGE) {
+                               n.setName(r.fix(n.getName()));
+                           }   
+                                       }
+                               }
+
 			}
 			if (!validateReferenced(s, n, gpm, strat, ReferenceAction.FAIL)) {
 				anyFailed = true;
@@ -451,7 +518,7 @@ public class ValidationUtils {
 		for (Name n : s.names) {
 		    if(nameSet.contains(n.getName().toUpperCase())){
 		        GinasProcessingMessage mes = GinasProcessingMessage
-                        .WARNING_MESSAGE(
+                        .ERROR_MESSAGE(
                                 "Name '"
                                         + n.getName()
                                         + "' is a duplicate name in the record.")
@@ -468,7 +535,7 @@ public class ValidationUtils {
 					Substance s2 = sr.iterator().next();
 					if (!s2.getUuid().toString().equals(s.getUuid().toString())) {
 						GinasProcessingMessage mes = GinasProcessingMessage
-								.WARNING_MESSAGE(
+								.ERROR_MESSAGE(
 										"Name '"
 												+ n.name
 												+ "' collides (possible duplicate) with existing name for substance:")
@@ -499,7 +566,7 @@ public class ValidationUtils {
 					mes.appliedChange = true;
 				}
 			} else {
-				if (cd.code == null || cd.code.equals("")) {
+				if (isEffectivelyNull(cd.code)) {
 					GinasProcessingMessage mes = GinasProcessingMessage
 							.ERROR_MESSAGE(
 									"'Code' should not be null in code objects")
@@ -513,19 +580,32 @@ public class ValidationUtils {
 					
 				}
 				
-				if (cd.codeSystem == null || cd.codeSystem.equals("")) {
-                    GinasProcessingMessage mes = GinasProcessingMessage
-                            .ERROR_MESSAGE(
-                                    "'Code System' should not be null in code objects")
-                            .appliableChange(true);
-                    strat.processMessage(mes);
-                    if (mes.actionType == GinasProcessingMessage.ACTION_TYPE.APPLY_CHANGE) {
-                        cd.codeSystem="<no system>";
-                        mes.appliedChange = true;
-                    }
-                    gpm.add(mes);
-                    
-                }
+				if (isEffectivelyNull(cd.codeSystem)) {
+				    GinasProcessingMessage mes = GinasProcessingMessage
+				            .ERROR_MESSAGE(
+				                    "'Code System' should not be null in code objects")
+				            .appliableChange(true);
+				    strat.processMessage(mes);
+				    if (mes.actionType == GinasProcessingMessage.ACTION_TYPE.APPLY_CHANGE) {
+				        cd.codeSystem="<no system>";
+				        mes.appliedChange = true;
+				    }
+				    gpm.add(mes);
+				    
+				}
+
+				if (isEffectivelyNull(cd.type)) {
+				    GinasProcessingMessage mes = GinasProcessingMessage
+				            .WARNING_MESSAGE(
+				                    "Must specify a code type for each name. Defaults to \"PRIMARY\" (PRIMARY)")
+				            .appliableChange(true);
+				    gpm.add(mes);
+				    strat.processMessage(mes);
+				    if (mes.actionType == GinasProcessingMessage.ACTION_TYPE.APPLY_CHANGE) {
+				        cd.type="PRIMARY";
+				    }
+				}
+
 			}
 			if (!validateReferenced(s, cd, gpm, strat, ReferenceAction.ALLOW)) {
 				return false;
@@ -558,11 +638,26 @@ public class ValidationUtils {
 		return true;
 	}
 
+       
+       
+       /**
+        * Check if the object is effectively null. That is,
+        * is it literally null, or is the string representation
+        * of the object an empty string.
+        * @param o
+        * @return
+        */
+       private static boolean isEffectivelyNull(Object o){
+               if(o==null) return true;
+               if(o.toString().equals(""))return true;
+               return false;
+       }
+
 	private static boolean validateRelationships(Substance s,
 			List<GinasProcessingMessage> gpm, GinasProcessingStrategy strat) {
 		List<Relationship> remnames = new ArrayList<Relationship>();
 		for (Relationship n : s.relationships) {
-			if (n == null) {
+			if (isEffectivelyNull(n)) {
 				GinasProcessingMessage mes = GinasProcessingMessage
 						.WARNING_MESSAGE(
 								"Null relationship objects are not allowed")
@@ -574,14 +669,14 @@ public class ValidationUtils {
 					mes.appliedChange = true;
 				}
 			}
-			if (n.relatedSubstance == null) {
+			if (isEffectivelyNull(n.relatedSubstance)) {
 				GinasProcessingMessage mes = GinasProcessingMessage
 						.ERROR_MESSAGE(
 								"Relationships must specify a related substance");
 				gpm.add(mes);
 				strat.processMessage(mes);
 			}
-			if(n.type == null){
+			if(isEffectivelyNull(n.type)){
 				GinasProcessingMessage mes = GinasProcessingMessage
 						.ERROR_MESSAGE(
 								"Relationships must specify a type");
@@ -592,6 +687,21 @@ public class ValidationUtils {
 				return false;
 			}
 		}
+		
+		long parentList=s.relationships.stream()
+		               .filter(r->"SUBSTANCE->SUB_CONCEPT".equals(r.type))
+		               .count();
+		
+		if(parentList>1){
+			GinasProcessingMessage mes = GinasProcessingMessage
+					.ERROR_MESSAGE(
+							"Variant concepts may not specify more than one parent record");
+			gpm.add(mes);
+			strat.processMessage(mes);
+		}
+		
+		
+		
 		s.relationships.removeAll(remnames);
 		return true;
 	}

@@ -5,6 +5,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 import java.io.*;
+import java.util.function.Function;
 
 import play.libs.Json;
 import play.*;
@@ -76,11 +77,20 @@ public class CodeFactory extends EntityFactory {
     				finder.where()
     				.and(com.avaje.ebean.Expr.like("code","%" + suffix), com.avaje.ebean.Expr.eq("codeSystem",codeSystem))
     				.findIterate())){
-    	
-	    
+
 	    	Optional<Tuple<Long,Code>> max=codes
-	    		.map(cd-> Tuple.of(new Long(Long.parseLong(cd.code.replace(suffix, ""))),cd))
-	    		.max((l1,l2)->(int)(l1.k()-l2.k()));
+	    		.map(new Function<Code,Tuple<Long,Code>>(){
+                    public Tuple<Long,Code> apply(Code cd){
+                        return Tuple.of(new Long(Long.parseLong(cd.code.replace(suffix, ""))),cd);
+                    }
+                })
+	    		.max(new Comparator<Tuple<Long,Code>>(){
+
+                    public int compare(Tuple<Long,Code> l1, Tuple<Long,Code> l2){
+                        return (int)(l1.k()-l2.k());
+                    }
+
+                });
 	    	
 	    	if(max.isPresent()){
 	    		Logger.info("################# FOUND CODE:" + max.get().v().code);

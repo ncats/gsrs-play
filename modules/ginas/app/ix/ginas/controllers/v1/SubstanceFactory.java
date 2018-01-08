@@ -1,14 +1,10 @@
 package ix.ginas.controllers.v1;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 import java.util.*;
@@ -20,6 +16,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import ix.core.NamedResource;
 import ix.core.UserFetcher;
 import ix.core.adapters.EntityPersistAdapter;
+import ix.core.adapters.EntityPersistAdapter.ChangeOperation;
 import ix.core.chem.StructureProcessor;
 import ix.core.controllers.EntityFactory;
 import ix.core.controllers.search.SearchFactory;
@@ -100,16 +97,27 @@ public class SubstanceFactory extends EntityFactory {
 		return EntityWrapper.of(s)
 				.getEdits()
 				.stream()
-				.filter(e->(version.equals(e.version))) //version -1 is the right thing
-				.findFirst()
-				.map(e->{
-					try{
-						return (Substance) EntityUtils
-							.getEntityInfoFor(e.kind)
-							.fromJsonNode(e.getOldValue().rawJson());
-					}catch(Exception ex){
-						throw new IllegalArgumentException(ex);
+				.filter(new Predicate<Edit>(){
+					@Override
+					public boolean test(Edit e) {
+						return version.equals(e.version);
 					}
+				}) //version -1 is the right thing
+				.findFirst()
+				.map(new Function<Edit,Substance>(){
+
+					@Override
+					public Substance apply(Edit e) {
+						
+							try{
+								return (Substance) EntityUtils
+									.getEntityInfoFor(e.kind)
+									.fromJsonNode(e.getOldValue().rawJson());
+							}catch(Exception ex){
+								throw new IllegalArgumentException(ex);
+							}
+					}
+					
 				}).orElse(null);
 	}
 
@@ -434,10 +442,17 @@ public class SubstanceFactory extends EntityFactory {
 	}
 
 	public static Substance approve(Substance s){
-		EntityUtils.EntityWrapper<Substance> changed= EntityPersistAdapter.performChangeOn(s, csub->{
-			SubstanceFactory.approveSubstance(csub);
-			csub.save();
-			return Optional.of(csub);
+		EntityUtils.EntityWrapper<Substance> changed= EntityPersistAdapter.performChangeOn(s, new ChangeOperation<Substance>(){
+
+			@Override
+			public Optional<?> apply(Substance csub) throws Exception {
+				SubstanceFactory.approveSubstance(csub);
+				csub.save();
+				return Optional.of(csub);
+			}
+			
+		
+			
 		});
 		if(changed==null){
 			throw new IllegalStateException("Approval encountered an error");
@@ -627,34 +642,7 @@ public class SubstanceFactory extends EntityFactory {
     }
     
     private static Result detailedSearch(SearchResultContext context) throws InterruptedException, ExecutionException{
-        context.setAdapter((srequest, ctx) -> {
-            try {
-                SearchResult sr = App.getResultFor(ctx, srequest);
-                
-                List<Substance> rlist = new ArrayList<Substance>();
-                
-                sr.copyTo(rlist, srequest.getOptions().getSkip(), srequest.getOptions().getTop(), true); // synchronous
-                for (Substance s : rlist) {
-                    s.setMatchContextFromID(ctx.getId());
-                }
-                return sr;
-            } catch (Exception e) {
-                e.printStackTrace();
-                throw new IllegalStateException("Error fetching search result", e);
-            }
-        });
-
-        String s = play.mvc.Controller.request().getQueryString("sync");
-
-        if ("true".equals(s) || "".equals(s)) {
-            try {
-                context.getDeterminedFuture().get(1, TimeUnit.MINUTES);
-                return redirect(context.getResultCall());
-            } catch (TimeoutException e) {
-                Logger.warn("Structure search timed out!", e);
-            }
-        }
-        return Java8Util.ok(EntityFactory.getEntityMapper().valueToTree(context));
+    	return Java8FactoryHelper.substanceFactoryDetailedSearch(context);
     }
 
     private static class TextSearchTask implements SearcherTask{
@@ -699,8 +687,13 @@ public class SubstanceFactory extends EntityFactory {
         private CachedSupplier<SearchResultContext> result;
         
         public SearchResultWrappingResultProcessor(SearchRequest request){
-            result=CachedSupplier.ofCallable(()->{
-                return new SearchResultContext(SearchFactory.search(request)); 
+            result=CachedSupplier.ofCallable(new Callable<SearchResultContext>(){
+
+				@Override
+				public SearchResultContext call() throws Exception {
+					return new SearchResultContext(SearchFactory.search(request));		            
+				}
+            	
             });
         }
         @Override
