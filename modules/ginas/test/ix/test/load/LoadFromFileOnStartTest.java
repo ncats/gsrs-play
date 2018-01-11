@@ -20,11 +20,7 @@ public class LoadFromFileOnStartTest extends AbstractGinasServerTest{
 	 
 	 @Override
 	 public GinasTestServer createGinasTestServer(){
-		 return new GinasTestServer(new HashMap<String,Object>(){
-			 	 {
-				 	put("ix.ginas.load.file",LoadDataSetTest.TEST_TESTDUMPS_REP90_GINAS);
-				 }
-			 });
+		 return new GinasTestServer("ix.ginas.load.file = "+ LoadDataSetTest.TEST_TESTDUMPS_REP90_GINAS);
 	 }
 	 
 	 

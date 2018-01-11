@@ -22,6 +22,8 @@ import java.util.function.Supplier;
 
 import javax.sql.DataSource;
 
+import com.typesafe.config.ConfigFactory;
+import com.typesafe.config.ConfigValueFactory;
 import ix.core.adapters.EntityPersistAdapter;
 import ix.core.factories.EntityProcessorFactory;
 import org.apache.commons.io.FileUtils;
@@ -48,6 +50,8 @@ import ix.seqaln.SequenceIndexer.CachedSup;
 import ix.test.util.TestUtil;
 import ix.utils.Util;
 import net.sf.ehcache.CacheManager;
+import play.Configuration;
+import play.GlobalSettings;
 import play.api.Application;
 import play.db.ebean.Model;
 import play.libs.ws.WSCookie;
@@ -138,9 +142,9 @@ public class GinasTestServer extends ExternalResource{
 
     private TemporaryFolder exportDir = new TemporaryFolder();
 
-    private Map<String, Object> originalAdditionalConfiguration = new HashMap<>();
-    private Map<String, Object> additionalConfiguration = new HashMap<>();
-    private Map<String, Object> testSpecificAdditionalConfiguration = new HashMap<>();
+
+
+    private Config defaultConfig,originalAdditionalConfig, additionalConfig, testSpecificConfig;
     private File storage;
     private CacheManager cacheManager;
 
@@ -209,22 +213,40 @@ public class GinasTestServer extends ExternalResource{
      * @param port the port number to use.
      */
     public GinasTestServer(int port) {
-        this(port, null);
+        this(port, (String) null);
+    }
+    /**
+     * Create a new GinasTestServer instance using the given port, with the given additional
+     * default configuration.
+     * @param additionalConf additional config String in HOCON format that will overwrite
+     *                       the normal conf as if the first line was "include $config.File "
+     *                       (but don't actually type that to put that).
+     */
+    public GinasTestServer(String additionalConf) {
+        this(DEFAULT_PORT, additionalConf);
     }
     /**
      * Create a new GinasTestServer instance using the given port, with the given additional
      * default configuration.
      * @param port the port number to use.
-     * @param additionalConfiguration additional config key-value pairs to add
-     *                                to the application config before the server is started.
-     *                                This can be further modified using the modifyConfig methods.
+     * @param additionalConf additional config String in HOCON format that will overwrite
+     *                       the normal conf as if the first line was "include $config.File "
+     *                       (but don't actually type that to put that).
      */
-    public GinasTestServer(int port, Map<String, Object> additionalConfiguration){
+    private GinasTestServer(int port,Config additionalConf){
         this.port = port;
-        if(additionalConfiguration !=null) {
-            this.originalAdditionalConfiguration.putAll(additionalConfiguration);
-            this.additionalConfiguration.putAll(additionalConfiguration);
+        defaultConfig = ConfigFactory.load();
+        testSpecificConfig = ConfigFactory.empty();
+
+        if(additionalConf ==null) {
+            originalAdditionalConfig = ConfigFactory.empty();
+
+        }else {
+            originalAdditionalConfig = additionalConf;
         }
+        //Config object is immutable so this should be OK
+        additionalConfig = originalAdditionalConfig;
+
 
         defaultBrowserSession = new BrowserSession(port){
             @Override
@@ -286,7 +308,7 @@ public class GinasTestServer extends ExternalResource{
                         }
                     }
 
-                        @Override
+                    @Override
                     public InputStream getBodyAsStream() {
                         return null;
                     }
@@ -320,6 +342,30 @@ public class GinasTestServer extends ExternalResource{
                 return true;
             }
         };
+
+    }
+        /**
+         * Create a new GinasTestServer instance using the given port, with the given additional
+         * default configuration.
+         * @param port the port number to use.
+         * @param additionalConf additional config String in HOCON format that will overwrite
+         *                       the normal conf as if the first line was "include $config.File "
+         *                       (but don't actually type that to put that).
+         */
+    public GinasTestServer(int port,String additionalConf){
+        this(port, additionalConf ==null? ConfigFactory.empty() : ConfigFactory.parseString(additionalConf));
+
+    }
+    /**
+     * Create a new GinasTestServer instance using the given port, with the given additional
+     * default configuration.
+     * @param port the port number to use.
+     * @param additionalConfiguration additional config key-value pairs to add
+     *                                to the application config before the server is started.
+     *                                This can be further modified using the modifyConfig methods.
+     */
+    public GinasTestServer(int port, Map<String, Object> additionalConfiguration){
+        this(port, ConfigFactory.parseMap(additionalConfiguration));
     }
 
     public GinasTestServer(Supplier<Map<String,Object>> sup) {
@@ -484,11 +530,11 @@ public class GinasTestServer extends ExternalResource{
 
     @Override
     protected void before() throws Throwable {
-        testSpecificAdditionalConfiguration.clear();
+        testSpecificConfig = ConfigFactory.empty();
 
         exportDir.create();
         File actualExportDir = exportDir.getRoot();
-        testSpecificAdditionalConfiguration.put("export.path.root", actualExportDir.getAbsolutePath());
+        testSpecificConfig = testSpecificConfig.withValue("export.path.root", ConfigValueFactory.fromAnyRef(actualExportDir.getAbsolutePath()));
 
        if(isOracleDB()){
            //System.out.println("in the Oracle db loop");
@@ -505,13 +551,20 @@ public class GinasTestServer extends ExternalResource{
         cacheManager.shutdown();
 
         EntityProcessorFactory.clearInstance();
-
+//TODO change extendedBefore to be a Supplier<Config> so we only resolve if needed
         extendedBefore(ConfigUtil.getDefault().getConfig());
 
-        testSpecificAdditionalConfiguration.put("ix.cache.clearpersist",true);
-        start();
-        testSpecificAdditionalConfiguration.remove("ix.cache.clearpersist");
-        
+        //old map technique set clearpersist to true then removed it so future
+        //calls to start didn't affect anything
+        Config configToUse = testSpecificConfig.withValue("ix.cache.clearpersist",ConfigValueFactory.fromAnyRef(true))
+                            .withFallback(additionalConfig)
+                            .withFallback(this.defaultConfig)
+                            .resolve();
+        start(configToUse);
+//        testSpecificAdditionalConfiguration.put("ix.cache.clearpersist",true);
+//        start();
+//        testSpecificAdditionalConfiguration.remove("ix.cache.clearpersist");
+//
         
    }
 
@@ -640,7 +693,8 @@ public class GinasTestServer extends ExternalResource{
     @Override
     protected void after() {
         stop();
-        additionalConfiguration = new HashMap<>(originalAdditionalConfiguration);
+        testSpecificConfig = ConfigFactory.empty();
+        additionalConfig = originalAdditionalConfig;
         System.out.println("export dir is " + exportDir.getRoot().getAbsolutePath());
         exportDir.delete();
     }
@@ -668,18 +722,38 @@ public class GinasTestServer extends ExternalResource{
     public Application getApplication(){
         return ts.application();
     }
-    
-        
+
     public void start() {
+        if(running){
+            return;
+        }
+        start(
+//                defaultConfig
+                testSpecificConfig
+                .withFallback(additionalConfig)
+                .withFallback(defaultConfig)
+                .resolve());
+    }
+    private void start(Config config) {
         if(running){
             return;
         }
         running = true;
 
+        System.out.println("Config = " + new Configuration(config).asMap());
+//        System.out.println("before");
+//
+//        new Configuration(config).asMap().entrySet()
+//                .forEach( e-> {
+//                    System.out.println(e.getKey() + "\n\t" + e.getValue());
+//
+//                    fakeApplication(new Configuration(config.withOnlyPath(e.getKey())).asMap());
+//                });
+//        System.out.println("after");
         try {
-            Map<String, Object> map = new HashMap<>(additionalConfiguration);
-            map.putAll(testSpecificAdditionalConfiguration);
-            ts = new TestServer(port, fakeApplication(unflatten(map)));
+
+
+            ts = new TestServer(port, fakeApplication(new Configuration(config.withoutPath("akka")).asMap()));
             ts.start();
 
             principleFinder =
@@ -726,15 +800,7 @@ public class GinasTestServer extends ExternalResource{
     	}
     }
     
-    
-    private Map<String, Object> unflatten(Map<String,Object> settings){
-    	ExpandedMap em = new ExpandedMap();
-    	
-    	settings.entrySet()
-    			 .stream()
-    			 .forEach(es-> em.put(es.getKey(), es.getValue()));
-    	return em.build();
-    }
+
 
     /**
      * Remove the given configuration property from the application
@@ -745,8 +811,7 @@ public class GinasTestServer extends ExternalResource{
      * @return this
      */
     public GinasTestServer removeConfigProperty(String key){
-        testSpecificAdditionalConfiguration.remove(key);
-        additionalConfiguration.remove(key);
+        testSpecificConfig.withoutPath(key);
         return this;
     }
 
@@ -761,7 +826,44 @@ public class GinasTestServer extends ExternalResource{
      * @return this
      */
     public GinasTestServer modifyConfig(String key, Object value){
-        testSpecificAdditionalConfiguration.put(key, value);
+        testSpecificConfig = testSpecificConfig.withValue(key, ConfigValueFactory.fromAnyRef(value));
+        return this;
+    }
+
+
+    /**
+     * Add the multiple key value pairs to the application config.
+     * This change will take affect the next time
+     * the app is Started.   Any changes performed to the config
+     * are restored before the next test is run.
+     *
+     * This is the same as calling {@link #modifyConfig(String, Object)}
+     * multiple times, once for each entry in the map.
+     *
+     * @param newConf A string of HOCON config overrides can have multiple lines
+     * @return this
+     */
+    public GinasTestServer modifyConfig(String newConf){
+        testSpecificConfig = ConfigFactory.parseString(newConf)
+                                        .withFallback(testSpecificConfig);
+        return this;
+    }
+
+    /**
+     * Add the multiple key value pairs to the application config.
+     * This change will take affect the next time
+     * the app is Started.   Any changes performed to the config
+     * are restored before the next test is run.
+     *
+     * This is the same as calling {@link #modifyConfig(String, Object)}
+     * multiple times, once for each entry in the map.
+     *
+     * @param newConf A string of HOCON config overrides can have multiple lines
+     * @return this
+     */
+    public GinasTestServer modifyConfig(Config newConf){
+        testSpecificConfig = newConf
+                                    .withFallback(testSpecificConfig);
         return this;
     }
     /**
@@ -776,8 +878,9 @@ public class GinasTestServer extends ExternalResource{
      * @param confData a map of key-value pairs to add to the config.
      * @return this
      */
-    public GinasTestServer modifyConfig(Map<String, Object> confData){
-        testSpecificAdditionalConfiguration.putAll(confData);
+    public GinasTestServer modifyConfig(Map<String, Object> confData) {
+        testSpecificConfig = ConfigFactory.parseMap(confData)
+                                    .withFallback(testSpecificConfig);
         return this;
     }
 
@@ -811,6 +914,8 @@ public class GinasTestServer extends ExternalResource{
             if (preserveDatabase) {
                 TextIndexerPlugin.prepareTestRestart();
             }
+
+
         }
     }
 

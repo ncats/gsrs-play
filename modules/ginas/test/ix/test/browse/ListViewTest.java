@@ -33,11 +33,7 @@ public class ListViewTest  extends AbstractGinasServerTest {
 	
 	@Override
 	public GinasTestServer createGinasTestServer(){
-		return new GinasTestServer(new HashMap<String,Object>(){
-			{
-				this.put("ix.ginas.codes.order", codeOrder);
-			}
-		});
+		return new GinasTestServer("ix.ginas.codes.order = "+ codeOrder);
 	}
 
 	@Test

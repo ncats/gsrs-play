@@ -11,6 +11,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import ix.core.util.RunOnly;
 import ix.ginas.controllers.GinasApp;
 import ix.ginas.models.v1.Code;
 import ix.test.server.*;
@@ -48,6 +49,14 @@ public class LastEditedFacetTest extends AbstractLoadDataSetTest {
         }
 
     }
+
+    @Override
+    public GinasTestServer createGinasTestServer() {
+      //  ts.modifyConfig("ix.ginas.facets.substance.default =                         [\"root_lastEditedBy\", \"root_codes_lastEditedBy\"]");
+
+        return new GinasTestServer("ix.ginas.facets.substance.default = [\"root_lastEditedBy\", \"root_codes_lastEditedBy\", \"root_lastEdited\"]");
+    }
+
     @Rule
     public TimeTraveller timeTraveller = new TimeTraveller();
 
@@ -57,6 +66,7 @@ public class LastEditedFacetTest extends AbstractLoadDataSetTest {
     }
 
     @Test
+//    @RunOnly
     public void loadWithoutPreserveAuditFlagWillSetLastEditedToUserDoingTheLoading() throws IOException, InterruptedException {
 
         GinasTestServer.User otherUser = ts.getFakeUser2();
@@ -135,7 +145,7 @@ public class LastEditedFacetTest extends AbstractLoadDataSetTest {
 
 
         ts.stop(true);
-        ts.modifyConfig("ix.ginas.facets.substance.default", Arrays.asList("root_lastEditedBy", "root_codes_lastEditedBy"));
+        ts.modifyConfig("ix.ginas.facets.substance.default = [\"root_lastEditedBy\", \"root_codes_lastEditedBy\"]");
 
         ts.start();
 
@@ -171,7 +181,6 @@ public class LastEditedFacetTest extends AbstractLoadDataSetTest {
         SearchResult results = searcher.all();
 
 
-        Map<String, Map<String, Integer>> actual = results.getAllFacets();
 
         Map<String, Map<String, Integer>> expected = new HashMap<>();
         //ginas will rename this
@@ -181,6 +190,16 @@ public class LastEditedFacetTest extends AbstractLoadDataSetTest {
 
         expected.put(GinasApp.translateFacetName("root_codes_lastEditedBy"), asMap(    keys(admin.getUserName(), user3.getUserName()),
                                                             values(1,1)));
+
+        Map<String, Map<String, Integer>> actual = new HashMap<>(results.getAllFacets());
+
+        //only care about the keys we expect ignore everything else
+
+
+        System.out.println("expected before " + expected.keySet());
+        System.out.println("actual before " + actual.keySet());
+
+        actual.keySet().retainAll(expected.keySet());
 
         assertEquals(expected, actual);
     }
@@ -205,6 +224,7 @@ public class LastEditedFacetTest extends AbstractLoadDataSetTest {
 
 
     @Test
+//    @RunOnly
     public void lastEditedFacetChangeWithDates() throws IOException {
 
         session = ts.newBrowserSession(admin);
@@ -222,7 +242,7 @@ public class LastEditedFacetTest extends AbstractLoadDataSetTest {
         assertTrue(results.numberOfResults() > 0);
         assertTrue(!results.getAllFacets().isEmpty());
 
-
+        System.out.println("result facets = " + results.getAllFacets());
         lastEditMap = results.getFacet("Last Edited");
 
         int beforeCount = lastEditMap.get("Today");
@@ -299,7 +319,13 @@ public class LastEditedFacetTest extends AbstractLoadDataSetTest {
     }
 
     @Test
+//    @RunOnly
     public void LastEditedFacetChangeAfterSubstanceEdit() throws IOException {
+
+        ts.stop(true);
+        ts.modifyConfig("ix.ginas.facets.substance.default = [\"root_lastEditedBy\", \"root_codes_lastEditedBy\", \"root_lastEdited\"]");
+
+        ts.start();
 
         TimeUtil.setCurrentTime(TimeUtil.toMillis(TimeUtil.getCurrentLocalDateTime().plusYears(5)));
 
@@ -319,6 +345,7 @@ public class LastEditedFacetTest extends AbstractLoadDataSetTest {
         assertTrue(results.numberOfResults() > 0);
         assertTrue(!results.getAllFacets().isEmpty());
 
+        System.out.println("found facets = " + results.getAllFacets());
         lastEditMap = results.getFacet("Last Edited");
 
         int beforeCount = lastEditMap.get("Today");
