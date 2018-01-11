@@ -51,12 +51,16 @@ public class ChangeConfigTest extends AbstractGinasServerTest {
     public void addManyNewItemsToConfigMap(){
         ts.stop(true);
 
-        ts.modifyConfig(new HashMap<String, Object>() {
+      /*  ts.modifyConfig(new HashMap<String, Object>() {
                             {
                                 put("new.field", "true");
                                 put("new.field2", "true");
                             }
                         });
+      */
+        ts.modifyConfig("new.field", true);
+        ts.modifyConfig("new.field2", true);
+
 
         ts.start();
         Configuration config = ts.getApplication().configuration();

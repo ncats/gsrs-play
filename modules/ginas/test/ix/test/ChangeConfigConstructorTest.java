@@ -16,12 +16,15 @@ public class ChangeConfigConstructorTest extends AbstractGinasServerTest {
     
     @Override
     public GinasTestServer createGinasTestServer(){
-    	return new GinasTestServer(new HashMap<String, Object>() {
+    	/*return new GinasTestServer(new HashMap<String, Object>() {
             {
                 put("new.field", "true");
                 put("new.field2", "true");
             }
-        });
+        });*/
+
+    	return new GinasTestServer("new.field = true \n" +
+                                    "new.field2 = true");
     }
 
     @Test

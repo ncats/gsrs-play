@@ -11,6 +11,8 @@ import java.util.Random;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+import com.typesafe.config.Config;
+import com.typesafe.config.ConfigFactory;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -126,15 +128,16 @@ public class TrustHeaderAuthenticatorTest extends AbstractGinasClassServerTest{
 		}
 		
 		
-		public Map<String, Object> getServerConfigMap(){
-			return Util.MapBuilder
-			.putNew("ix.authentication.trustheader", (Object) trustHeaders)
-			.put("ix.authentication.usernameheader", HEADER_NAME)
-			.put("ix.authentication.useremailheader", HEADER_EMAIL)
-			.put("ix.authentication.allownonauthenticated", allownonauthenticated)
-			.put("ix.authentication.autoregister", autoregister)
-			.put("ix.authentication.autoregisteractive", this.autoregisteractive)
-			.build();
+		public Config getServerConfigMap(){
+			return ConfigFactory.parseMap(
+							 Util.MapBuilder
+							.putNew("ix.authentication.trustheader", (Object) trustHeaders)
+							.put("ix.authentication.usernameheader", HEADER_NAME)
+							.put("ix.authentication.useremailheader", HEADER_EMAIL)
+							.put("ix.authentication.allownonauthenticated", allownonauthenticated)
+							.put("ix.authentication.autoregister", autoregister)
+							.put("ix.authentication.autoregisteractive", this.autoregisteractive)
+							.build());
 		}
 		int getExpectedStatusWithHeaderAndCreated() {
 			return expectedStatusWithHeaderAndCreated;
