@@ -855,7 +855,12 @@ public class PojoDiff {
 			if(jp!=null){
 				return jp.value();
 			}
-			String name=m.getName().substring("get".length());
+			String name;
+			if(isBooleanAltMethod(m)){
+				name = m.getName().substring(2); // is
+			}else {
+				name = m.getName().substring(3);  // get
+			}
 			return Character.toLowerCase(name.charAt(0))+name.substring(1);
 		}
 		public static String getFieldProperty(Field m){
