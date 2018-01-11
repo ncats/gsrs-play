@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
 
 import javax.sql.DataSource;
@@ -133,7 +134,9 @@ public class GinasTestServer extends ExternalResource{
     private static final List<Role> adminUserRoles = Role.roles(Role.values() );
     private static final List<Role> approverUserRoles = Role.roles(Role.DataEntry,Role.Updater, Role.Approver);
 
-    
+
+    CompletableFuture<Config> testSpecificConfigOperations;
+
     private int userCount=0;
 
     private boolean running=false;
@@ -144,7 +147,7 @@ public class GinasTestServer extends ExternalResource{
 
 
 
-    private Config defaultConfig,originalAdditionalConfig, additionalConfig, testSpecificConfig;
+    private Config defaultConfig, additionalConfig, testSpecificConfig;
     private File storage;
     private CacheManager cacheManager;
 
@@ -239,13 +242,11 @@ public class GinasTestServer extends ExternalResource{
         testSpecificConfig = ConfigFactory.empty();
 
         if(additionalConf ==null) {
-            originalAdditionalConfig = ConfigFactory.empty();
+            additionalConfig = ConfigFactory.empty();
 
         }else {
-            originalAdditionalConfig = additionalConf;
+            additionalConfig = additionalConf;
         }
-        //Config object is immutable so this should be OK
-        additionalConfig = originalAdditionalConfig;
 
 
         defaultBrowserSession = new BrowserSession(port){
@@ -534,7 +535,10 @@ public class GinasTestServer extends ExternalResource{
 
         exportDir.create();
         File actualExportDir = exportDir.getRoot();
-        testSpecificConfig = testSpecificConfig.withValue("export.path.root", ConfigValueFactory.fromAnyRef(actualExportDir.getAbsolutePath()));
+        testSpecificConfig = testSpecificConfig.withValue("export.path.root", ConfigValueFactory.fromAnyRef(actualExportDir.getAbsolutePath()))
+                                                .withFallback(additionalConfig)
+                                                .withFallback(defaultConfig)
+                                                .resolve();
 
        if(isOracleDB()){
            //System.out.println("in the Oracle db loop");
@@ -543,6 +547,8 @@ public class GinasTestServer extends ExternalResource{
            //System.out.println("in the h2 db loop");
            deleteH2Db();
        }
+
+        testSpecificConfigOperations = CompletableFuture.completedFuture(testSpecificConfig);
 
         //This cleans out the old eh-cache
         //and forces us to use a new one with each test
@@ -557,8 +563,7 @@ public class GinasTestServer extends ExternalResource{
         //old map technique set clearpersist to true then removed it so future
         //calls to start didn't affect anything
         Config configToUse = testSpecificConfig.withValue("ix.cache.clearpersist",ConfigValueFactory.fromAnyRef(true))
-                            .withFallback(additionalConfig)
-                            .withFallback(this.defaultConfig)
+
                             .resolve();
         start(configToUse);
 //        testSpecificAdditionalConfiguration.put("ix.cache.clearpersist",true);
@@ -694,7 +699,6 @@ public class GinasTestServer extends ExternalResource{
     protected void after() {
         stop();
         testSpecificConfig = ConfigFactory.empty();
-        additionalConfig = originalAdditionalConfig;
         System.out.println("export dir is " + exportDir.getRoot().getAbsolutePath());
         exportDir.delete();
     }
@@ -729,9 +733,8 @@ public class GinasTestServer extends ExternalResource{
         }
         start(
 //                defaultConfig
-                testSpecificConfig
-                .withFallback(additionalConfig)
-                .withFallback(defaultConfig)
+                testSpecificConfigOperations.join()
+
                 .resolve());
     }
     private void start(Config config) {
@@ -740,7 +743,6 @@ public class GinasTestServer extends ExternalResource{
         }
         running = true;
 
-        System.out.println("Config = " + new Configuration(config).asMap());
 //        System.out.println("before");
 //
 //        new Configuration(config).asMap().entrySet()
@@ -811,7 +813,9 @@ public class GinasTestServer extends ExternalResource{
      * @return this
      */
     public GinasTestServer removeConfigProperty(String key){
-        testSpecificConfig.withoutPath(key);
+
+        testSpecificConfigOperations = testSpecificConfigOperations.thenApply(c-> c.withoutPath(key));
+
         return this;
     }
 
@@ -826,7 +830,9 @@ public class GinasTestServer extends ExternalResource{
      * @return this
      */
     public GinasTestServer modifyConfig(String key, Object value){
-        testSpecificConfig = testSpecificConfig.withValue(key, ConfigValueFactory.fromAnyRef(value));
+
+        testSpecificConfigOperations = testSpecificConfigOperations.thenApply(c-> c.withValue(key, ConfigValueFactory.fromAnyRef(value)));
+
         return this;
     }
 
@@ -844,8 +850,10 @@ public class GinasTestServer extends ExternalResource{
      * @return this
      */
     public GinasTestServer modifyConfig(String newConf){
-        testSpecificConfig = ConfigFactory.parseString(newConf)
-                                        .withFallback(testSpecificConfig);
+
+        testSpecificConfigOperations = testSpecificConfigOperations.thenApply(c->ConfigFactory.parseString(newConf)
+                                                                                                 .withFallback(c));
+
         return this;
     }
 
@@ -862,8 +870,8 @@ public class GinasTestServer extends ExternalResource{
      * @return this
      */
     public GinasTestServer modifyConfig(Config newConf){
-        testSpecificConfig = newConf
-                                    .withFallback(testSpecificConfig);
+        testSpecificConfigOperations = testSpecificConfigOperations.thenApply(c-> newConf.withFallback(c));
+
         return this;
     }
     /**
@@ -879,8 +887,9 @@ public class GinasTestServer extends ExternalResource{
      * @return this
      */
     public GinasTestServer modifyConfig(Map<String, Object> confData) {
-        testSpecificConfig = ConfigFactory.parseMap(confData)
-                                    .withFallback(testSpecificConfig);
+        testSpecificConfigOperations = testSpecificConfigOperations.thenApply(c->ConfigFactory.parseMap(confData)
+                                                                            .withFallback(c));
+
         return this;
     }
 
