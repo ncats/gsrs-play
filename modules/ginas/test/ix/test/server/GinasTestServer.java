@@ -557,8 +557,8 @@ public class GinasTestServer extends ExternalResource{
         cacheManager.shutdown();
 
         EntityProcessorFactory.clearInstance();
-//TODO change extendedBefore to be a Supplier<Config> so we only resolve if needed
-        extendedBefore(ConfigUtil.getDefault().getConfig());
+
+        extendedBefore(() -> testSpecificConfig.resolve());
 
         //old map technique set clearpersist to true then removed it so future
         //calls to start didn't affect anything
@@ -577,10 +577,11 @@ public class GinasTestServer extends ExternalResource{
      * Override this method to add any additional setup as part
      * of the Before phase for example to add additional tables
      * to the database.
-     * @param defaultConfig the default config being used can be used
-     *                      to get the config properties.  This doesn't include any additional config overrides
+     * @param confSupplier A supplier that will create a Config containing
+     *                     all the current conf values INCLUDING any modifications made
+     *                     by the test server at construction time.
      */
-    protected void extendedBefore(Config defaultConfig){
+    protected void extendedBefore(Supplier<Config> confSupplier){
 
     }
 
