@@ -12,6 +12,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.function.Supplier;
 
+import ix.core.util.RunOnly;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -740,5 +741,7 @@ public class PojoDiffTest extends AbstractGinasTest{
     	assertEquals(mylist2,mylist1);
     		
     }
+
+
 
 }

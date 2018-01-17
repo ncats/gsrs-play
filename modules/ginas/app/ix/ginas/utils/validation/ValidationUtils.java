@@ -512,21 +512,40 @@ public class ValidationUtils {
 			strat.processMessage(mes);
 		}
 
-		Set<String> nameSet = new HashSet<String>();
+		Map<String, Set<String>> nameSetByLanguage = new HashMap<>();
 		
 		
 		for (Name n : s.names) {
-		    if(nameSet.contains(n.getName().toUpperCase())){
-		        GinasProcessingMessage mes = GinasProcessingMessage
-                        .ERROR_MESSAGE(
-                                "Name '"
-                                        + n.getName()
-                                        + "' is a duplicate name in the record.")
-                        .markPossibleDuplicate();
-                gpm.add(mes);
-                strat.processMessage(mes);
-		    }
-		    nameSet.add(n.getName().toUpperCase());
+			Iterator<Keyword> iter = n.languages.iterator();
+			String uppercasedName = n.getName().toUpperCase();
+
+			while(iter.hasNext()){
+				String language = iter.next().getValue();
+				System.out.println("language for " + n + "  = " + language);
+				Set<String> names = nameSetByLanguage.computeIfAbsent(language, k->new HashSet<>());
+				if(!names.add(uppercasedName)){
+					GinasProcessingMessage mes = GinasProcessingMessage
+							.ERROR_MESSAGE(
+									"Name '"
+											+ n.getName()
+											+ "' is a duplicate name in the record.")
+							.markPossibleDuplicate();
+					gpm.add(mes);
+					strat.processMessage(mes);
+				}
+
+			}
+//		    if(nameSet.contains(n.getName().toUpperCase())){
+//		        GinasProcessingMessage mes = GinasProcessingMessage
+//                        .ERROR_MESSAGE(
+//                                "Name '"
+//                                        + n.getName()
+//                                        + "' is a duplicate name in the record.")
+//                        .markPossibleDuplicate();
+//                gpm.add(mes);
+//                strat.processMessage(mes);
+//		    }
+//		    nameSet.add(n.getName().toUpperCase());
 		    //nameSet.add(n.getName());
 			try {
 				List<Substance> sr = ix.ginas.controllers.v1.SubstanceFactory
