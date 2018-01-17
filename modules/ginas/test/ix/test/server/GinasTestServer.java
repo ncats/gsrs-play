@@ -6,6 +6,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
+import java.lang.reflect.Field;
 import java.net.URI;
 import java.net.URL;
 import java.sql.*;
@@ -19,7 +20,9 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 import javax.sql.DataSource;
 
@@ -30,6 +33,7 @@ import ix.core.factories.EntityProcessorFactory;
 import org.apache.commons.io.FileUtils;
 import org.junit.rules.ExternalResource;
 import org.junit.rules.TemporaryFolder;
+import org.omg.SendingContext.RunTime;
 import org.w3c.dom.Document;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -100,6 +104,30 @@ import play.test.TestServer;
  */
 public class GinasTestServer extends ExternalResource{
 
+    public enum ConfigOptions{
+        THIS_TEST_ONLY("testSpecificConfigOperations"),
+        ALL_TESTS("testSpecificConfigOperations")
+        ;
+
+        private Field f;
+
+        ConfigOptions(String fieldName){
+            try {
+                f = GinasTestServer.class.getDeclaredField(fieldName);
+                f.setAccessible(true);
+            }catch(Exception e){
+                    f=null;
+                }
+        }
+        protected void thenApply(GinasTestServer instance, Function<Config, Config> function){
+
+            try {
+                f.set(instance, ((CompletableFuture<Config>) f.get(instance)).thenApply( c-> function.apply(c)));
+            }catch(Exception e){
+                throw new RuntimeException(e);
+            }
+        }
+    }
 
     public static int DEFAULT_PORT = 9005;
 
@@ -136,6 +164,7 @@ public class GinasTestServer extends ExternalResource{
 
 
     CompletableFuture<Config> testSpecificConfigOperations;
+    CompletableFuture<Config> acrossTestConfigOperations;
 
     private int userCount=0;
 
@@ -248,6 +277,7 @@ public class GinasTestServer extends ExternalResource{
             additionalConfig = additionalConf;
         }
 
+        acrossTestConfigOperations = CompletableFuture.completedFuture(additionalConf);
 
         defaultBrowserSession = new BrowserSession(port){
             @Override
@@ -585,7 +615,14 @@ public class GinasTestServer extends ExternalResource{
 
     }
 
-    
+    public void addEntityProcessor(Class<?> substanceClass, Class<?> myProcessorClass) {
+
+        this.modifyConfig("ix.core.entityprocessors +=  { "+
+                    "               \"class\":\""+substanceClass.getName()+"\",\n" +
+                    "               \"processor\":\""+myProcessorClass.getName() +"\",\n" +
+                    "        }");
+
+    }
 
     private void initializeControllers() {
     	CachedSupplier.resetAllCaches();
@@ -832,7 +869,22 @@ public class GinasTestServer extends ExternalResource{
      */
     public GinasTestServer modifyConfig(String key, Object value){
 
-        testSpecificConfigOperations = testSpecificConfigOperations.thenApply(c-> c.withValue(key, ConfigValueFactory.fromAnyRef(value)));
+       return modifyConfig(key, value, ConfigOptions.THIS_TEST_ONLY);
+    }
+
+    /**
+     * Add the given key value pair to the application config.
+     * This change will take affect the next time
+     * the app is Started.  Any changes performed to the config
+     * are restored before the next test is run.
+     *
+     * @param key the key to add
+     * @param value the value for this key.
+     * @return this
+     */
+    public GinasTestServer modifyConfig(String key, Object value, ConfigOptions configOptions){
+
+        configOptions.thenApply(this, c-> c.withValue(key, ConfigValueFactory.fromAnyRef(value)));
 
         return this;
     }
@@ -852,10 +904,41 @@ public class GinasTestServer extends ExternalResource{
      */
     public GinasTestServer modifyConfig(String newConf){
 
-        testSpecificConfigOperations = testSpecificConfigOperations.thenApply(c->ConfigFactory.parseString(newConf)
-                                                                                                 .withFallback(c));
+       return modifyConfig(newConf, ConfigOptions.THIS_TEST_ONLY);
+    }
+    /**
+     * Add the multiple key value pairs to the application config.
+     * This change will take affect the next time
+     * the app is Started.   Any changes performed to the config
+     * are restored before the next test is run.
+     *
+     * This is the same as calling {@link #modifyConfig(String, Object)}
+     * multiple times, once for each entry in the map.
+     *
+     * @param newConf A string of HOCON config overrides can have multiple lines
+     * @return this
+     */
+    public GinasTestServer modifyConfig(String newConf, ConfigOptions option){
+        option.thenApply(this, c->ConfigFactory.parseString(newConf)
+                                                        .withFallback(c));
 
         return this;
+    }
+    /**
+     * Add the multiple key value pairs to the application config.
+     * This change will take affect the next time
+     * the app is Started.   Any changes performed to the config
+     * are restored before the next test is run.
+     *
+     * This is the same as calling {@link #modifyConfig(String, Object)}
+     * multiple times, once for each entry in the map.
+     *
+     * @param newConf A string of HOCON config overrides can have multiple lines
+     * @return this
+     */
+    public GinasTestServer modifyConfig(Config newConf){
+
+        return modifyConfig(newConf, ConfigOptions.THIS_TEST_ONLY);
     }
 
     /**
@@ -870,8 +953,9 @@ public class GinasTestServer extends ExternalResource{
      * @param newConf A string of HOCON config overrides can have multiple lines
      * @return this
      */
-    public GinasTestServer modifyConfig(Config newConf){
-        testSpecificConfigOperations = testSpecificConfigOperations.thenApply(c-> newConf.withFallback(c));
+    public GinasTestServer modifyConfig(Config newConf, ConfigOptions option){
+
+         option.thenApply(this, c-> newConf.withFallback(c));
 
         return this;
     }
@@ -888,8 +972,28 @@ public class GinasTestServer extends ExternalResource{
      * @return this
      */
     public GinasTestServer modifyConfig(Map<String, Object> confData) {
-        testSpecificConfigOperations = testSpecificConfigOperations.thenApply(c->ConfigFactory.parseMap(confData)
-                                                                            .withFallback(c));
+
+        return modifyConfig(confData, ConfigOptions.THIS_TEST_ONLY);
+    }
+
+    /**
+     * Add the multiple key value pairs to the application config.
+     * This change will take affect the next time
+     * the app is Started.   Any changes performed to the config
+     * are restored before the next test is run.
+     *
+     * This is the same as calling {@link #modifyConfig(String, Object)}
+     * multiple times, once for each entry in the map.
+     *
+     * @param confData a map of key-value pairs to add to the config.
+     *
+     * @param confOption The {@link ConfigOptions} to use to specify how
+     *                   persistent the conf change should be.
+     * @return this
+     */
+    public GinasTestServer modifyConfig(Map<String, Object> confData, ConfigOptions confOption) {
+        confOption.thenApply(this, c->ConfigFactory.parseMap(confData)
+                                                            .withFallback(c));
 
         return this;
     }
