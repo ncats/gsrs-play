@@ -7,6 +7,9 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import ix.core.util.RunOnly;
+import ix.ginas.models.v1.Substance;
+import ix.ginas.processors.UniqueCodeGenerator;
 import org.junit.Test;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -25,28 +28,38 @@ public class CodeGeneratorTest extends AbstractGinasServerTest{
 
 	@Override
 	public GinasTestServer createGinasTestServer(){
-		return new GinasTestServer(()->{
-			String addconf="include \"ginas.conf\"\n" + 
-					"\n" + 
-					"ix.core.entityprocessors +={\n" + 
-					"               \"class\":\"ix.ginas.models.v1.Substance\",\n" + 
-					"               \"processor\":\"ix.ginas.processors.UniqueCodeGenerator\",\n" + 
-					"               \"with\":{\n" + 
-					"               \"codesystem\":\"BDNUM\",\n" + 
-					"                       \"suffix\":\"AB\",\n" + 
-					"                       \"length\":10,\n" + 
-					"                       \"padding\":true\n" + 
-					"               }\n" + 
-					"        }";
-			Config additionalConfig = ConfigFactory.parseString(addconf)
-					.resolve()
-					.withOnlyPath("ix.core.entityprocessors");
-			Map hm = new Configuration(additionalConfig).asMap();
-			System.out.println(hm.toString());
-			
-			
-			return hm;
-		});
+
+		GinasTestServer ts = super.createGinasTestServer();
+		ts.addEntityProcessor(GinasTestServer.ConfigOptions.ALL_TESTS, Substance.class, UniqueCodeGenerator.class, "{\n" +
+				"               \"codesystem\":\"BDNUM\",\n" +
+						"                       \"suffix\":\"AB\",\n" +
+						"                       \"length\":10,\n" +
+						"                       \"padding\":true\n" +
+						"               }");
+//		return new GinasTestServer(()->{
+//			String addconf="include \"ginas.conf\"\n" +
+//					"\n" +
+//					"ix.core.entityprocessors +={\n" +
+//					"               \"class\":\"ix.ginas.models.v1.Substance\",\n" +
+//					"               \"processor\":\"ix.ginas.processors.UniqueCodeGenerator\",\n" +
+//					"               \"with\":{\n" +
+//					"               \"codesystem\":\"BDNUM\",\n" +
+//					"                       \"suffix\":\"AB\",\n" +
+//					"                       \"length\":10,\n" +
+//					"                       \"padding\":true\n" +
+//					"               }\n" +
+//					"        }";
+//			Config additionalConfig = ConfigFactory.parseString(addconf)
+//					.resolve()
+//					.withOnlyPath("ix.core.entityprocessors");
+//			Map hm = new Configuration(additionalConfig).asMap();
+//			System.out.println(hm.toString());
+//
+//
+//			return hm;
+//		});
+
+		return ts;
 	}
 
 
@@ -60,7 +73,7 @@ public class CodeGeneratorTest extends AbstractGinasServerTest{
 				String theName = "Simple Named Concept";
 
 				SubstanceAPI api = new SubstanceAPI(session);
-				long time1 = StopWatch.timeElapsed(()->{
+
 					for(int i=0;i<200;i++){
 						JsonNode jsn = new SubstanceBuilder()
 								.addName(theName + i + Math.random())
@@ -70,12 +83,13 @@ public class CodeGeneratorTest extends AbstractGinasServerTest{
 						ensurePass(api.submitSubstance(jsn));
 						String code=api.fetchSubstanceJsonByUuid(jsn.at("/uuid").asText())
 								.at("/codes/0/code").asText();
-						//System.out.println("AND ..." + code);
+						System.out.println("AND ..." + code);
 						assertTrue(!codes.contains(code));
 						codes.add(code);
 					}
-				});
 			}catch(Throwable t){
+				System.out.println("seen codes are " + codes);
+				//System.out.println(ts.getApplication().configuration());
 				t.printStackTrace();
 				throw t;
 			}

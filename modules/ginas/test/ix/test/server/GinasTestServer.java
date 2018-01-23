@@ -106,7 +106,7 @@ public class GinasTestServer extends ExternalResource{
 
     public enum ConfigOptions{
         THIS_TEST_ONLY("testSpecificConfigOperations"),
-        ALL_TESTS("testSpecificConfigOperations")
+        ALL_TESTS("acrossTestConfigOperations")
         ;
 
         private Field f;
@@ -566,7 +566,7 @@ public class GinasTestServer extends ExternalResource{
         exportDir.create();
         File actualExportDir = exportDir.getRoot();
         testSpecificConfig = testSpecificConfig.withValue("export.path.root", ConfigValueFactory.fromAnyRef(actualExportDir.getAbsolutePath()))
-                                                .withFallback(additionalConfig)
+                                                .withFallback(acrossTestConfigOperations.join())
                                                 .withFallback(defaultConfig)
                                                 .resolve();
 
@@ -614,14 +614,25 @@ public class GinasTestServer extends ExternalResource{
     protected void extendedBefore(Supplier<Config> confSupplier){
 
     }
-
     public void addEntityProcessor(Class<?> substanceClass, Class<?> myProcessorClass) {
+        this.addEntityProcessor(ConfigOptions.THIS_TEST_ONLY, substanceClass, myProcessorClass);
+
+    }
+    public void addEntityProcessor(ConfigOptions options, Class<?> substanceClass, Class<?> myProcessorClass) {
 
         this.modifyConfig("ix.core.entityprocessors +=  { "+
                     "               \"class\":\""+substanceClass.getName()+"\",\n" +
                     "               \"processor\":\""+myProcessorClass.getName() +"\",\n" +
-                    "        }");
+                    "        }", options);
 
+    }
+
+    public void addEntityProcessor(ConfigOptions options, Class<?> substanceClass, Class<?> myProcessorClass, String with) {
+        this.modifyConfig("ix.core.entityprocessors +=  { "+
+                "               \"class\":\""+substanceClass.getName()+"\",\n" +
+                "               \"processor\":\""+myProcessorClass.getName() +"\",\n" +
+                        "\"with\":" + with +
+                "        }", options);
     }
 
     private void initializeControllers() {
@@ -772,6 +783,7 @@ public class GinasTestServer extends ExternalResource{
         start(
 //                defaultConfig
                 testSpecificConfigOperations.join()
+//                        .withFallback(acrossTestConfigOperations.join())
 
                 .resolve());
     }

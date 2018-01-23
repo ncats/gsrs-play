@@ -10,8 +10,7 @@ import ix.ginas.models.v1.Substance;
 import ix.utils.Tuple;
 
 public class CodeSequentialGenerator extends SequentialNumericIDGenerator{
-
-	private long lastNum= 1L;
+	private AtomicLong lastNum= new AtomicLong(0); // initialized to 0 so when  we first get we return 1.
 	private boolean fetched=false;
 	private String codeSystem;
 	
@@ -30,15 +29,15 @@ public class CodeSequentialGenerator extends SequentialNumericIDGenerator{
 
 	
 	@Override
-	public synchronized long getNextNumber() {
+	public long getNextNumber() {
 		if(!fetched){
 			Optional<Tuple<Long,Code>> code=CodeFactory.getHighestValueCode(codeSystem, suffix);
 			if(code.isPresent()){
-				lastNum = code.get().k();
+				lastNum.set(code.get().k());
 			}
 			fetched=true;
 		}
-		return lastNum++;
+		return lastNum.incrementAndGet();
 	}
 	
 	public Code getCode(){
