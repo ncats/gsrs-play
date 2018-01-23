@@ -83,7 +83,7 @@ public class CodeGeneratorTest extends AbstractGinasServerTest{
 						ensurePass(api.submitSubstance(jsn));
 						String code=api.fetchSubstanceJsonByUuid(jsn.at("/uuid").asText())
 								.at("/codes/0/code").asText();
-						System.out.println("AND ..." + code);
+//						System.out.println("AND ..." + code);
 						assertTrue(!codes.contains(code));
 						codes.add(code);
 					}
