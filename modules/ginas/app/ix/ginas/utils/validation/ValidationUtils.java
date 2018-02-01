@@ -521,7 +521,7 @@ public class ValidationUtils {
 
 			while(iter.hasNext()){
 				String language = iter.next().getValue();
-				System.out.println("language for " + n + "  = " + language);
+//				System.out.println("language for " + n + "  = " + language);
 				Set<String> names = nameSetByLanguage.computeIfAbsent(language, k->new HashSet<>());
 				if(!names.add(uppercasedName)){
 					GinasProcessingMessage mes = GinasProcessingMessage

@@ -53,6 +53,26 @@ public class SearchOptions implements RequestOptions {
 		public void add(String title, long[] range) {
 			this.range.put(title, range);
 		}
+
+		@Override
+		public String toString() {
+
+			StringBuilder builderMap = new StringBuilder(100);
+			builderMap.append("{");
+			for(Iterator<Map.Entry<String, long[]>> iter = range.entrySet().iterator(); iter.hasNext();){
+				Map.Entry<String, long[]> entry = iter.next();
+				builderMap.append(entry.getKey()).append(" : ").append(Arrays.toString(entry.getValue()));
+				if(iter.hasNext()){
+					builderMap.append(",");
+				}
+			}
+			builderMap.append("}");
+
+			return "FacetLongRange{" +
+					"field='" + field + '\'' +
+					", range=" + builderMap.toString() +
+					'}';
+		}
 	}
 
 	public static final int DEFAULT_TOP = 10;
@@ -272,7 +292,15 @@ public class SearchOptions implements RequestOptions {
 		                    .collect(Collectors.groupingBy(d->d.getDrill()));
 		return providedDrills;
 	}
-
+	public Map<String, List<DrillAndPath>> getDrillDownsMapExcludingRanges() {
+		Map<String, List<DrillAndPath>> providedDrills = StreamUtil.with(this.facets.stream())
+				//.and(this.lfacets.stream())
+				.stream()
+				.map(dd -> parseDrillAndPath(dd))
+				.filter(Objects::nonNull)
+				.collect(Collectors.groupingBy(d->d.getDrill()));
+		return providedDrills;
+	}
 	public class DrillAndPath {
 		private String drill;
 		private String[] paths;

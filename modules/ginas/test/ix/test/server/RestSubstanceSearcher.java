@@ -344,10 +344,18 @@ public class RestSubstanceSearcher implements SubstanceSearcher{
         
         public static APIFacetResult fromSearchResult(SubstanceAPI api, JsonNode result, String facet){
             JsonNode jsn = StreamUtil.forIterable(result.at("/facets"))
+                    .peek(System.out::println)
                                 .filter(f->f.at("/name").asText().equals(facet))
                                 .findFirst()
                                 .map(f->f.at("/_self").asText())
-                                .map(u->api.getSession().getAsJson(u))
+                                .map(u -> { int pos = u.indexOf("/@facets?=&");
+                                            if(pos ==-1){
+                                                return u;
+                                            }
+
+                                            return u.substring(0, pos+9) + u.substring(pos+11);
+                                })
+                                .map(u->{ System.out.println("url is \""+u+"\""); return api.getSession().getAsJson(u);})
                                 .get();
             return new APIFacetResult(api, jsn);      
         }
@@ -435,7 +443,8 @@ public class RestSubstanceSearcher implements SubstanceSearcher{
             if(q!=null){
                 req=req.setQueryParameter("q", q);
             }
-            
+            System.out.println("req query paras = " + req.getQueryParameters());
+
             JsonNode jsn = req.get()
                     .get(REST_TIMEOUT)
                     .asJson();

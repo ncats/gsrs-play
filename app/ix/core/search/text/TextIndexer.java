@@ -1628,6 +1628,7 @@ public class TextIndexer implements Closeable, ProcessListener {
 			 * 
 			 */
 			if (!options.getLongRangeFacets().isEmpty()){
+			    System.out.println("doing long range facets collector search for " + options.getLongRangeFacets());
 				FacetsCollector.search(searcher, ddq, filter, options.max(), facetCollector);
 			}
 
@@ -1737,7 +1738,6 @@ public class TextIndexer implements Closeable, ProcessListener {
 		SearchOptions options = searchResult.getOptions();
 		FacetsCollector facetCollector = new FacetsCollector();
 		LuceneSearchProvider lsp;
-		
 		Filter filter = ifilter;
 		
 		// You may wonder why some of these options parsing 
@@ -1774,11 +1774,9 @@ public class TextIndexer implements Closeable, ProcessListener {
 		//to be joined by an "OR", while each group is joined
 		//by "AND" to the other groups
 		if(!filtersFromOptions.isEmpty()){
-			filtersFromOptions.add(ifilter);
-			filter = new ChainedFilter(filtersFromOptions.stream()
-										.collect(Collectors.toList())
-										.toArray(new Filter[0]), ChainedFilter.AND);
-			filtersFromOptions.remove(filtersFromOptions.size()-1);
+			filter = new ChainedFilter(Stream.concat(filtersFromOptions.stream(), Stream.of(ifilter))
+                                            .toArray(size -> new Filter[size]),
+                                        ChainedFilter.AND);
 		}
 		
 		//no specified facets (normal search)
@@ -1788,7 +1786,7 @@ public class TextIndexer implements Closeable, ProcessListener {
 			DrillDownQuery ddq = new DrillDownQuery(facetsConfig, query);
 			List<Filter> nonStandardFacets = new ArrayList<Filter>();
 			
-			options.getDrillDownsMap()
+			options.getDrillDownsMapExcludingRanges()
 			    .entrySet()
 			    .stream()
 			    .flatMap(e->e.getValue().stream())

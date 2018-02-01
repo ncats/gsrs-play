@@ -10,6 +10,7 @@ import javax.persistence.Table;
 import javax.persistence.Transient;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import ix.core.controllers.RequestOptions;
@@ -300,23 +301,23 @@ public class ETag extends IxModel {
 		this.sideway=sideway;
 	}
 
-
+	@JsonProperty("content")
 	// Maybe make this a link unless full bean view?
 	public Object getContent() {
 		return this.content;
 	}
-
+	@JsonProperty("facets")
 	// Maybe make this a link unless full bean view?
 	public List<Facet> getFacets() {
 		return this.facets;
 	}
-
+	@JsonProperty("sideway")
 	// Maybe make this a link unless full bean view?
 	public List<String> getSideway() {
 		if(!sideway)return null;
 		return this.selected;
 	}
-	
+	@JsonProperty("drilldown")
 	public List<String> getDrilldown() {
 		if(sideway)return null;
 		return this.selected;

@@ -8,6 +8,7 @@ import java.util.*;
 import java.util.function.Supplier;
 
 import ix.core.util.RunOnly;
+import ix.test.SubstanceJsonUtil;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -180,7 +181,7 @@ public class PojoDiffTest extends AbstractGinasTest{
     	JsonNode js2=mapper.valueToTree(actual);
 
     	try{
-    	    js1.equals(Comparator.comparing(Objects::toString),js2);
+            SubstanceJsonUtil.assertEquals(js1, js2, Comparator.comparing(Objects::toString));
     		//assertEquals(js1,js2);
     	}catch(Throwable e){
     	    System.out.println("js1 class = " + js1.getClass());
@@ -238,7 +239,6 @@ public class PojoDiffTest extends AbstractGinasTest{
 
     }
     @Test
-    @RunOnly
     public void add3ToList() throws Exception {
 
         List<Parameter> originalParams = new ArrayList<>();

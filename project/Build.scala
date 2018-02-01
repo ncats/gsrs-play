@@ -31,9 +31,9 @@ object ApplicationBuild extends Build {
     javaEbean,
     cache,
     filters,
-    "com.fasterxml.jackson.core" % "jackson-core" % "2.9.1",
-    "com.fasterxml.jackson.core" % "jackson-databind" % "2.9.1",
-    "com.fasterxml.jackson.core" % "jackson-annotations" % "2.9.1",
+//    "com.fasterxml.jackson.core" % "jackson-core" % "2.9.1",
+//    "com.fasterxml.jackson.core" % "jackson-databind" % "2.9.1",
+//    "com.fasterxml.jackson.core" % "jackson-annotations" % "2.9.1",
 
     "org.apache.httpcomponents" % "httpclient" %"4.5.2",
     "org.apache.httpcomponents" % "httpcore" %"4.4.4",

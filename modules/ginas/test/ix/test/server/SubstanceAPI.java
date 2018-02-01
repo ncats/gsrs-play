@@ -278,7 +278,10 @@ public class SubstanceAPI {
                 .get().get(timeout);
     }
 
-
+    public JsonNode fetchSubstancesSearchFacetsJSON() {
+        WSResponse response= session.createRequestHolder(API_URL_SUBSTANCES_SEARCH + "/@facets").get().get(timeout);
+        return session.extractJSON(response);
+    }
     public JsonNode fetchSubstancesSearchJSON() {
         return session.extractJSON(fetchSubstancesSearch());
     }

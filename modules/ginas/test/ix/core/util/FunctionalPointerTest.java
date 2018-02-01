@@ -9,6 +9,7 @@ import java.util.stream.Collectors;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 
+import ix.test.SubstanceJsonUtil;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -251,7 +252,7 @@ public class FunctionalPointerTest extends AbstractGinasClassServerTest{
 		}else{
 			result = FunctionalPointerTest.missingJson;
 		}
-		expected.equals(Comparator.comparing(Objects::toString), result);
+		SubstanceJsonUtil.assertEquals(expected, result, Comparator.comparing(Objects::toString));
 //		assertEquals(expected,result);
 	}
 

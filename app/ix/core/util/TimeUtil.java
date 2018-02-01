@@ -56,7 +56,12 @@ public final class TimeUtil {
     public static void setCurrentTime(Date date){
         setCurrentTime(date.getTime());
     }
-
+    public static void setCurrentTime(LocalDate date){
+        setCurrentTime(LocalDateTime.of(date, LocalTime.MIDNIGHT));
+    }
+    public static void setCurrentTime(LocalDateTime datetime){
+        setCurrentTime(toMillis(datetime));
+    }
     public static void useSystemTime(){
         FIXED_TIME.set(null);
     }
