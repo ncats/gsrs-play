@@ -160,9 +160,9 @@ public class APIFacetSearchTest extends AbstractGinasClassServerTest{
     @Test
     public void topFacetsShowOnSearchAll(){
         JsonNode jsn = api.fetchSubstancesSearchJSON();
-        System.out.println("jsn = " + jsn);
+//        System.out.println("jsn = " + jsn);
         JsonNode facets= jsn.at("/facets");
-        System.out.println("facets = " + facets);
+//        System.out.println("facets = " + facets);
         
         //This gobbledygook is just finding the facet which matches
         //the codesystem provided, and then converting the values
@@ -358,7 +358,6 @@ public class APIFacetSearchTest extends AbstractGinasClassServerTest{
     }
     
     @Test
-    @RunOnly
     public void facetCountsUpdatedOnSidewaysStructureAndTextSearch() throws IOException{
         RestSubstanceSearcher rsearch= new RestSubstanceSearcher(session);
         

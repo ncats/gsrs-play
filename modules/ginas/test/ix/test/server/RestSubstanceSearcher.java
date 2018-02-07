@@ -15,6 +15,8 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import ix.core.util.CachedSupplier;
 import ix.core.util.StreamUtil;
 import ix.ginas.models.v1.Substance;
@@ -188,6 +190,10 @@ public class RestSubstanceSearcher implements SubstanceSearcher{
             subUUIDs.add(s.get("uuid").asText());
         });
 
+//
+//        System.out.println("facets = " + facets);
+//        System.out.println("facetCounts = " + facetCounts);
+//        System.out.println("subUUIDs = " + subUUIDs);
 
         SearchResult sr= new SearchResult.Builder()
                 .searchKey(key)
@@ -269,7 +275,10 @@ public class RestSubstanceSearcher implements SubstanceSearcher{
 
         //TODO: move to new interface as well
         public Integer getTotal() {
-            return firstPage.at("/total").asInt();
+            Integer totalInt =  firstPage.at("/total").asInt();
+//            System.out.println("totalInt = " + totalInt);
+//            System.out.println("uuids count = "+ getUuids().size());
+            return totalInt;
         }
         
         //TODO: move to new interface also
@@ -296,6 +305,7 @@ public class RestSubstanceSearcher implements SubstanceSearcher{
         public FacetResult getFilteredFacet(String filter);
         
         default Integer getFacetCountForValue(String value){
+//            System.out.println("facet map = " + getFacetMap());
             return this.getFacetMap().get(value);
         }
         
@@ -314,17 +324,22 @@ public class RestSubstanceSearcher implements SubstanceSearcher{
         
         private final CachedSupplier<Set<Tuple<String,Integer>>> allValues = CachedSupplier.of(()->{
 
-            JsonNode facetWrap=facetResponse;
-            Set<Tuple<String,Integer>> values = new HashSet<>();
-            while(true){
-                values.addAll(extractValues(facetWrap.at("/content")));
-                JsonNode nextPage = facetWrap.at("/nextPageUri");
-                if(nextPage==null || nextPage.isMissingNode()){
-                    break;
+            if(facetResponse.at("/content").isMissingNode()){
+//                System.out.println("FACET RESPONSE IS " + facetResponse);
+                return extractValues(facetResponse.at("/values"));
+            }else {
+                JsonNode facetWrap = facetResponse;
+                Set<Tuple<String, Integer>> values = new HashSet<>();
+                while (true) {
+                    values.addAll(extractValues(facetWrap.at("/content")));
+                    JsonNode nextPage = facetWrap.at("/nextPageUri");
+                    if (nextPage == null || nextPage.isMissingNode()) {
+                        break;
+                    }
+                    facetWrap = APIFacetResult.this.api.getSession().getAsJson(nextPage.asText());
                 }
-                facetWrap=APIFacetResult.this.api.getSession().getAsJson(nextPage.asText());
+                return values;
             }
-            return values;
         });
         
         private APIFacetResult(SubstanceAPI api, JsonNode response){
@@ -344,24 +359,63 @@ public class RestSubstanceSearcher implements SubstanceSearcher{
         
         public static APIFacetResult fromSearchResult(SubstanceAPI api, JsonNode result, String facet){
             JsonNode jsn = StreamUtil.forIterable(result.at("/facets"))
-                    .peek(System.out::println)
+//                    .peek(f-> System.out.println(" facet = " +f))
+
                                 .filter(f->f.at("/name").asText().equals(facet))
                                 .findFirst()
-                                .map(f->f.at("/_self").asText())
-                                .map(u -> { int pos = u.indexOf("/@facets?=&");
-                                            if(pos ==-1){
-                                                return u;
-                                            }
-
-                                            return u.substring(0, pos+9) + u.substring(pos+11);
-                                })
-                                .map(u->{ System.out.println("url is \""+u+"\""); return api.getSession().getAsJson(u);})
-                                .get();
+                    .map( f-> {
+                        JsonNode selfUrl = f.at("/_self");
+                        if(selfUrl.isMissingNode()){
+//                            System.out.println("no self returning " +f);
+                            return f;
+                        }else{
+                            String url = selfUrl.asText();
+                            int pos = url.indexOf("/@facets?=&");
+                            if(pos > -1){
+                                url =  url.substring(0, pos+9) + url.substring(pos+11);
+                            }
+                            return api.getSession().getAsJson(url);
+                        }
+                    })
+                    .get();
+//                                .map(f->f.at("/_self").asText())
+//                                .map(u -> { int pos = u.indexOf("/@facets?=&");
+//                                            if(pos ==-1){
+//                                                return u;
+//                                            }
+//
+//                                            return u.substring(0, pos+9) + u.substring(pos+11);
+//                                })
+//                                .map(u->{ System.out.println("url is \""+u+"\"");  return api.getSession().getAsJson(u);})
+//                                .get();
             return new APIFacetResult(api, jsn);      
         }
 
         @Override
         public APIFacetResult getFilteredFacet(String filter) {
+//            System.out.println("filtering facet : " +filter);
+            if(facetResponse.at("/uri").isMissingNode()){
+                //could just be raw json
+                JsonNode values = facetResponse.at("/values");
+                ObjectMapper mapper = new ObjectMapper();
+                ArrayNode filtered = mapper.createArrayNode();
+                if(values.isArray()){
+
+                    for(JsonNode v :values){
+                        JsonNode at = v.at("/label");
+//                        System.out.println("\t found name " + at);
+                        if(filter.equals(at.asText())){
+                            filtered.add(v);
+//                            System.out.println("ADDED!!");
+                        }
+                    }
+                }
+
+                ObjectNode response = mapper.createObjectNode();
+                response.set("values", filtered);
+//                System.out.println("FILTERED RESPONSE IS " + response);
+                return new APIFacetResult(api,response);
+            }
            WSRequestHolder wsr = api.getSession().getRequest(facetResponse.at("/uri").asText())
                            .setQueryParameter("ffilter", filter);
            JsonNode jsn = api.getSession().getAsJson(wsr);
@@ -443,11 +497,12 @@ public class RestSubstanceSearcher implements SubstanceSearcher{
             if(q!=null){
                 req=req.setQueryParameter("q", q);
             }
-            System.out.println("req query paras = " + req.getQueryParameters());
+//            System.out.println("req query paras = " + req.getQueryParameters());
 
             JsonNode jsn = req.get()
                     .get(REST_TIMEOUT)
                     .asJson();
+//            System.out.println("returned json = "+ jsn);
             return searcher.resultsFromFirstResultNode(jsn, ""); //No search result key for text from rest
         }
 
