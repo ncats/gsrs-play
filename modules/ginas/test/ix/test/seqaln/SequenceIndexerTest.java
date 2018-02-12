@@ -9,6 +9,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import ix.core.util.RunOnly;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -202,6 +203,34 @@ public class SequenceIndexerTest extends AbstractGinasTest{
     }
 
     @Test
+    public void longerLocalSequnce100Identity() throws IOException{
+        String seq = "CCTCCGGTTCTGAAGGTGTTC";
+
+        //CCTCCGGTTCTGAAGGTGTTC
+        //           XXXXXXXTTC
+        //           XXXXXXGTTCT
+
+        indexer.add("bar", "GGGGGGGGGGGGG");
+        indexer.add("foo", seq);
+
+        SequenceIndexer.ResultEnumeration results = indexer.search(seq,1, CutoffType.LOCAL);
+        assertTrue(results.hasMoreElements());
+        SequenceIndexer.Result result = results.nextElement();
+
+        assertEquals("foo", result.id);
+        assertEquals(seq, result.query);
+        assertEquals(seq, result.target);
+        List<SequenceIndexer.Alignment> alignments = result.alignments;
+
+        System.out.println("alignments = " + alignments);
+        assertEquals(3, alignments.size());
+
+        assert100PercentIdentity(alignments.get(0), seq);
+
+        assertFalse(results.hasMoreElements());
+    }
+
+    @Test
     public void twoRecords100Identity() throws IOException{
         String seq = "ACGTTTGC";
 
@@ -256,9 +285,9 @@ public class SequenceIndexerTest extends AbstractGinasTest{
 
         Set<SequenceIndexer.SEG> expected = new HashSet<>();
 
-        expected.add(new SequenceIndexer.SEG(5, 8, 1, 4));
+        expected.add(new SequenceIndexer.SEG(4, 8, 0, 4));
         expected.add(new SequenceIndexer.SEG(4, 8, 0, 8));
-        expected.add(new SequenceIndexer.SEG(0, 7, 0, 7));
+        expected.add(new SequenceIndexer.SEG(0, 8, 0, 8));
 
        assertEquals(expected,actual);
 

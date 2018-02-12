@@ -7,16 +7,7 @@ import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.BitSet;
-import java.util.Collections;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.NoSuchElementException;
-import java.util.Objects;
-import java.util.TreeMap;
+import java.util.*;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
@@ -679,6 +670,7 @@ public class SequenceIndexer {
             }
         }
 
+        System.out.println(hsp);
         // process in the background and return immediately
         String qs = query;
         for (Map.Entry<String, List<HSP>> me : hsp.entrySet()) {
@@ -710,7 +702,7 @@ public class SequenceIndexer {
                                     && (h.j - (end.j+K)) > gap)
                             || h.gap() - end.gap() > gap
                             ) {
-                        //System.err.println(" ** start: "+bgn+" end: "+end);
+                        System.err.println(" ** start: "+bgn+" end: "+end);
                         // now do global alignment of the subsequence
                         segments.add(new SEG (bgn.i, end.i+K, bgn.j, end.j+K));
                         bgn = h;
@@ -730,20 +722,33 @@ public class SequenceIndexer {
             }
              */
 
-            List<SEG> remove = new ArrayList<SEG>();
-            for (int i = 0; i < segments.size(); ++i) {
+//            System.out.println("before merge segments = " + segments);
+//            List<SEG> remove = new ArrayList<SEG>();
+            for (int i = 0; i < segments.size(); i++) {
                 SEG seg = segments.get(i);
-                for (int j = i+1; j < segments.size(); ++j) {
-                    SEG s = segments.get(j);
+                for(Iterator<SEG> iter = segments.listIterator(i+1); iter.hasNext();){
+                    SEG s = iter.next();
                     if (null != seg.merge(s, gap)) {
-                        //System.err.println("merging "+seg+" and "+s);
-                        remove.add(s);
+                        System.err.println("merging "+seg+" and "+s);
+                        iter.remove();
                     }
                 }
+//                for (int j = i+1; j < segments.size(); ++j) {
+//                    SEG s = segments.get(j);
+//                    if (null != seg.merge(s, gap)) {
+//                        System.err.println("merging "+seg+" and "+s);
+//                        remove.add(s);
+//                    }
+//                }
             }
 
-            for (SEG s : remove)
-                segments.remove(s);
+//            for (SEG s : remove) {
+//                segments.remove(s);
+//            }
+//            System.out.println("before extending segments = " + segments);
+            segments = extendsSegments(segments, qs, seq);
+//            System.out.println("after extending segments = " + segments);
+
 
             //System.err.println("** ALIGNMENTS for "+me.getKey()+" **");
             int max = 0;
@@ -778,6 +783,69 @@ public class SequenceIndexer {
                 }
             }
         }
+    }
+
+    /**
+     * There might be additional bases that can be aligned
+     * beyond the Segments that weren't included because they were at the edges
+     * of the sequence and did not fit into a kmer.  Or the edges of the next kmer
+     * might have a few bases match but not enough to merge.
+     *
+     * @param segments the old segment list
+     * @param query the query sequence as a String.
+     * @param target the target sequence as a String.
+     *
+     * @return a new List of segments which might have some old SEG
+     * objects and might have some new extended SEGs.
+     */
+    private List<SEG> extendsSegments(List<SEG> segments, String query, String target) {
+        char[] queryArray = query.toUpperCase().toCharArray();
+        char[] targetArray = target.toUpperCase().toCharArray();
+
+        List<SEG> extended = new ArrayList<>(segments.size());
+        for(SEG seg : segments) {
+
+
+            int qi = seg.qi-1;
+            int ti = seg.ti-1;
+
+            while(qi >=0 && ti >=0){
+                if(queryArray[qi] != targetArray[ti]) {
+                    break;
+                }
+                qi--;
+                ti--;
+            }
+            qi++;
+            ti++;
+            int qj = seg.qj;
+            int tj = seg.tj;
+//            System.out.println("qj = " + qj + " queryLength = " + queryArray.length);
+//            System.out.println("tj = " + tj + " targetLength = " + targetArray.length);
+            while(qj < queryArray.length && tj < targetArray.length){
+//                System.out.println("looking to extend " + qj + "  " +queryArray[qj] +" vs " + tj + " " + targetArray[tj]);
+                if(queryArray[qj] != targetArray[tj]) {
+                    break;
+                }
+                qj++;
+                tj++;
+            }
+            //j coords is EXCLUSIVE so it's +1 past actual alignment
+            qj = Math.min(qj, queryArray.length);
+            tj  = Math.min(tj, targetArray.length);
+
+            int leftExtension = seg.qi - qi;
+            int rightExtension = qj - seg.qj;
+            if(leftExtension >0 || rightExtension >0){
+                //new Seg
+                extended.add( new SEG(qi, qj, ti, tj));
+            }else{
+                //keep old
+                extended.add(seg);
+            }
+        }
+        return extended;
+
     }
 
     public String getSeq (final String id) {
@@ -816,24 +884,24 @@ public class SequenceIndexer {
      */
     static Alignment align (SEG seg, String query, String target, 
             int match, int gap) {
-        String q = query.substring(seg.qi, seg.qj);
-        String s = target.substring(seg.ti, seg.tj);
+        char[] q = query.substring(seg.qi, seg.qj).toUpperCase().toCharArray();
+        char[] s = target.substring(seg.ti, seg.tj).toUpperCase().toCharArray();
 
-        /*
-        System.err.println("** aligning subsequences...");
-        System.err.println(q);
-        System.err.println(s);
-         */
 
-        int[][] M = new int[q.length()+1][s.length()+1];
-        for (int i = 0; i <= q.length(); ++i)
+//        System.err.println("** aligning subsequences...");
+//        System.err.println(q);
+//        System.err.println(s);
+
+
+        int[][] M = new int[q.length+1][s.length+1];
+        for (int i = 0; i <= q.length; ++i)
             M[i][0] = gap*i;
-        for (int i = 0; i <= s.length(); ++i)
+        for (int i = 0; i <= s.length; ++i)
             M[0][i] = gap*i;
-        for (int i = 1; i <= q.length(); ++i) {
-            char a = Character.toUpperCase(q.charAt(i-1));
-            for (int j = 1; j <= s.length(); ++j) {
-                char b = Character.toUpperCase(s.charAt(j-1));
+        for (int i = 1; i <= q.length; ++i) {
+            char a = q[i-1];
+            for (int j = 1; j <= s.length; ++j) {
+                char b = s[j-1];
                 int mat = M[i-1][j-1] + (a == b ? match : 0);
                 int del = M[i-1][j] + gap;
                 int ins = M[i][j-1] + gap;
@@ -843,14 +911,14 @@ public class SequenceIndexer {
         StringBuilder qa = new StringBuilder ();
         StringBuilder qs = new StringBuilder ();
         StringBuilder qq = new StringBuilder ();
-        int i = q.length();
-        int j = s.length();
+        int i = q.length;
+        int j = s.length;
         BitSet qsites = new BitSet();
         BitSet tsites = new BitSet();
 
         while (i > 0 && j > 0) {
-            char a = q.charAt(i-1);
-            char b = s.charAt(j-1);
+            char a = q[i-1];
+            char b = s[j-1];
             boolean matched =
                     Character.toUpperCase(a) == Character.toUpperCase(b);
 
@@ -885,11 +953,11 @@ public class SequenceIndexer {
         System.err.println(qs);
          */
 
-        int score = M[q.length()][s.length()];
+        int score = M[q.length][s.length];
 
         //Local alignment score 
         // (fraction of aligned residues in the longest local sequence)
-        double iden=(double)score/Math.max(q.length(),s.length());
+        double iden=(double)score/Math.max(q.length,s.length);
 
         //Global alignment score
         // (fraction of aligned residues in the longest global sequence)
