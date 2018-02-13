@@ -670,7 +670,7 @@ public class SequenceIndexer {
             }
         }
 
-        System.out.println(hsp);
+//        System.out.println(hsp);
         // process in the background and return immediately
         String qs = query;
         for (Map.Entry<String, List<HSP>> me : hsp.entrySet()) {
@@ -679,7 +679,7 @@ public class SequenceIndexer {
             }
             String seq = getSeq(me.getKey());
             if(seq ==null){
-                System.err.println("error sequence indexer cache invalid for key " + me.getKey());
+//                System.err.println("error sequence indexer cache invalid for key " + me.getKey());
                 TermQuery tq = new TermQuery (new Term (FIELD_ID, me.getKey()));
                 TopDocs docs = kmerSearcher.search(tq, ndocs);
                 for(ScoreDoc scoreDoc :docs.scoreDocs){
@@ -702,7 +702,7 @@ public class SequenceIndexer {
                                     && (h.j - (end.j+K)) > gap)
                             || h.gap() - end.gap() > gap
                             ) {
-                        System.err.println(" ** start: "+bgn+" end: "+end);
+//                        System.err.println(" ** start: "+bgn+" end: "+end);
                         // now do global alignment of the subsequence
                         segments.add(new SEG (bgn.i, end.i+K, bgn.j, end.j+K));
                         bgn = h;
@@ -729,7 +729,7 @@ public class SequenceIndexer {
                 for(Iterator<SEG> iter = segments.listIterator(i+1); iter.hasNext();){
                     SEG s = iter.next();
                     if (null != seg.merge(s, gap)) {
-                        System.err.println("merging "+seg+" and "+s);
+//                        System.err.println("merging "+seg+" and "+s);
                         iter.remove();
                     }
                 }
