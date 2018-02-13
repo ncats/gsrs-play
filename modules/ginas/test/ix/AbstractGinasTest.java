@@ -1,6 +1,7 @@
 package ix;
 
 import ix.core.util.ExpectFailureChecker;
+import ix.core.util.RepeatTestRule;
 import ix.core.util.RunOnlyTestRunner;
 import ix.test.util.BrowserErrorPrinter;
 import org.junit.Rule;
@@ -30,5 +31,8 @@ public abstract class AbstractGinasTest {
 
 	@Rule
 	public ExpectedException expectedException = ExpectedException.none();
+
+	@Rule
+	public RepeatTestRule repeatTestRule = new RepeatTestRule();
 
 }
