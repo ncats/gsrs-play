@@ -53,9 +53,6 @@ public class RunOnlyTestRunner extends BlockJUnit4ClassRunner{
         if(runOnlyMethods.isEmpty()){
             return super.computeTestMethods();
         }
-        if(runOnlyMethods.size() > 1){
-            throw new IllegalStateException("only 1 method is allowed to be annotated with @RunOnly but got " + runOnlyMethods);
-        }
         isRunOnly=!runOnlyMethods.isEmpty();
         return super.computeTestMethods();
     }
