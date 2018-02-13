@@ -11,6 +11,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import ix.core.util.RunOnly;
 import org.junit.Test;
 
 import ix.AbstractGinasServerTest;
@@ -62,12 +63,13 @@ public class ListViewTest  extends AbstractGinasServerTest {
 
 			System.out.println("=====================");
 			String html = api.getTextSearchHTML(theName);
+//			System.out.println(html);
 			
-			assertTrue(html.contains("A_AA1"));
-			assertTrue(html.contains("A_AA2"));
-			assertTrue(html.contains("A_AA3"));
-			assertTrue(html.contains("A_AA4"));
-			assertFalse(html.contains("A_AB2"));
+			assertTrue(html.contains("A_AA1:"));
+			assertTrue(html.contains("A_AA2:"));
+			assertTrue(html.contains("A_AA3:"));
+			assertTrue(html.contains("A_AA4:"));
+			assertFalse(html.contains("A_AB2:"));
 			
 		}
 	}
@@ -97,8 +99,8 @@ public class ListViewTest  extends AbstractGinasServerTest {
 
 			String html = api.getTextSearchHTML(theName);
 			
-			assertTrue(html.contains("ZZZZ"));
-			assertFalse(html.contains("A_AB2"));
+			assertTrue(html.contains("ZZZZ:"));
+			assertFalse(html.contains("A_AB2:"));
 			
 		}catch(Throwable t){
 			t.printStackTrace();
@@ -130,7 +132,7 @@ public class ListViewTest  extends AbstractGinasServerTest {
 
 			String html = api.getTextSearchHTML(theName);
 			
-			assertFalse(html.contains("ZZZZZ"));
+			assertFalse(html.contains("ZZZZZ:"));
 			
 		}catch(Throwable t){
 			t.printStackTrace();
