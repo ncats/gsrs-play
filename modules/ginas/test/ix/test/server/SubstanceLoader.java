@@ -36,6 +36,8 @@ public class SubstanceLoader {
 
         private File tempDir=null;
 
+        private Integer sleepAmount;
+
         public LoadOptions preserveAuditInfo(boolean preserveAuditInfo){
             this.preserveAuditInfo = preserveAuditInfo;
             return this;
@@ -50,6 +52,14 @@ public class SubstanceLoader {
                 throw new IllegalArgumentException("can not skip negative records : " + skip);
             }
             this.numRecordsToSkip = skip;
+            return this;
+        }
+
+        public LoadOptions sleepAmount(int ms){
+            if(ms < 0){
+                throw new IllegalArgumentException("can notsleep for negative time : " + ms);
+            }
+            this.sleepAmount = ms;
             return this;
         }
 
@@ -133,6 +143,14 @@ public class SubstanceLoader {
         String url = submitFileForLoading(json, options);
 
         waitUntilComplete(url);
+        if(options.sleepAmount !=null){
+
+            try {
+                Thread.sleep(options.sleepAmount);
+            } catch (InterruptedException e) {
+                throw new IOException(e);
+            }
+        }
     }
 
 

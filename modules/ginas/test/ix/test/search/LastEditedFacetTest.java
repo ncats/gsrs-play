@@ -11,6 +11,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import ix.core.util.RepeatTest;
 import ix.core.util.RunOnly;
 import ix.ginas.controllers.GinasApp;
 import ix.ginas.models.v1.Code;
@@ -52,7 +53,9 @@ public class LastEditedFacetTest extends AbstractLoadDataSetTest {
 
     @Override
     public GinasTestServer createGinasTestServer() {
-      //  ts.modifyConfig("ix.ginas.facets.substance.default =                         [\"root_lastEditedBy\", \"root_codes_lastEditedBy\"]");
+        // ts.modifyConfig("ix.ginas.facets.substance.default = [\"root_lastEditedBy\", \"root_codes_lastEditedBy\", \"root_lastEdited\"]");
+
+        //  ts.modifyConfig("ix.ginas.facets.substance.default =                         [\"root_lastEditedBy\", \"root_codes_lastEditedBy\"]");
 
         return new GinasTestServer("ix.ginas.facets.substance.default = [\"root_lastEditedBy\", \"root_codes_lastEditedBy\", \"root_lastEdited\"]");
     }
@@ -143,11 +146,6 @@ public class LastEditedFacetTest extends AbstractLoadDataSetTest {
     @Test
     public void LastEditedFacetOnlyShowsEditForRootSubstanceNotAllSubelements() throws IOException, InterruptedException {
 
-
-        ts.stop(true);
-        ts.modifyConfig("ix.ginas.facets.substance.default = [\"root_lastEditedBy\", \"root_codes_lastEditedBy\"]");
-
-        ts.start();
 
 
         GinasTestServer.User otherUser = ts.getFakeUser2();
@@ -266,6 +264,7 @@ public class LastEditedFacetTest extends AbstractLoadDataSetTest {
     }
 
     @Test
+//    @RunOnly
     public void directReindex() throws IOException {
         session = ts.newBrowserSession(admin);
 
@@ -320,12 +319,10 @@ public class LastEditedFacetTest extends AbstractLoadDataSetTest {
 
     @Test
 //    @RunOnly
+//    @RepeatTest(times = 5)
     public void LastEditedFacetChangeAfterSubstanceEdit() throws IOException {
 
-        ts.stop(true);
-        ts.modifyConfig("ix.ginas.facets.substance.default = [\"root_lastEditedBy\", \"root_codes_lastEditedBy\", \"root_lastEdited\"]");
 
-        ts.start();
 
         TimeUtil.setCurrentTime(TimeUtil.toMillis(TimeUtil.getCurrentLocalDateTime().plusYears(5)));
 
@@ -347,7 +344,7 @@ public class LastEditedFacetTest extends AbstractLoadDataSetTest {
 
         System.out.println("found facets = " + results.getAllFacets());
         lastEditMap = results.getFacet("Last Edited");
-
+//        lastEditMap = results.getFacet("Last Validated");
         int beforeCount = lastEditMap.get("Today");
 
         assertEquals(20,  beforeCount);
@@ -399,7 +396,8 @@ public class LastEditedFacetTest extends AbstractLoadDataSetTest {
         loader = new SubstanceLoader(session);
         File f = new File(TEST_TESTDUMPS_REP90_PART1_GINAS);
         loader.loadJson(f, new SubstanceLoader.LoadOptions()
-                                             .numRecordsToLoad(20));
+                                             .numRecordsToLoad(20)
+        .sleepAmount(5_000));
 
         searcher = new BrowserSubstanceSearcher(session);
 
