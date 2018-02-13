@@ -18,7 +18,6 @@ import ix.core.chem.StructureProcessor;
 import ix.core.controllers.StructureFactory;
 import ix.core.models.Session;
 import ix.core.models.Structure;
-import ix.core.util.RunOnly;
 import ix.ncats.controllers.App;
 import ix.test.server.BrowserSession;
 import ix.test.server.RestSession;

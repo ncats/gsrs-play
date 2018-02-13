@@ -1,7 +1,6 @@
 package ix.test;
 
 import ix.AbstractGinasServerTest;
-import ix.core.util.RunOnly;
 import ix.test.server.GinasTestServer;
 import ix.test.util.TestNamePrinter;
 import org.junit.Rule;

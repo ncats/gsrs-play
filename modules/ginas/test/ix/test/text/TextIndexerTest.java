@@ -2,11 +2,7 @@ package ix.test.text;
 
 import static org.junit.Assert.assertEquals;
 
-import java.io.File;
 import java.io.IOException;
-import java.util.UUID;
-
-import ix.core.util.RunOnly;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -16,9 +12,6 @@ import ix.core.models.Indexable;
 import ix.core.search.SearchResult;
 import ix.core.search.text.TextIndexer;
 import ix.core.util.EntityUtils.EntityWrapper;
-import ix.core.util.IOUtil;
-import ix.test.server.GinasTestServer;
-import ix.test.server.RestSession;
 import org.junit.rules.TemporaryFolder;
 
 import javax.persistence.Id;

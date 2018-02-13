@@ -1,6 +1,5 @@
 package app.ix.utils.pojopatch;
 
-import ix.core.util.RunOnly;
 import ix.ginas.models.utils.JSONEntity;
 import ix.utils.pojopatch.PojoDiff;
 import ix.utils.pojopatch.PojoPatch;
@@ -8,7 +7,6 @@ import org.junit.Test;
 import static org.junit.Assert.*;
 public class PojoDiffReflectionTests {
     @Test
-    @RunOnly
     public void getterFindsPrivateBooleanFieldCorrectly() throws Exception{
         BooleanFieldBug a = new BooleanFieldBug();
 
