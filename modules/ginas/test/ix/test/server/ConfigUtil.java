@@ -3,10 +3,12 @@ package ix.test.server;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigException;
 import com.typesafe.config.ConfigFactory;
+import com.typesafe.config.ConfigObject;
 
 import java.io.File;
 import java.util.Arrays;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -128,4 +130,18 @@ public final class ConfigUtil {
             return defaultValue;
         }
     }
+
+    /**
+     * Get the value for the given key as a String.
+     * @param key the key to get can not be null.
+     * @return the value of the key as an object list.
+     *
+     */
+    public List<? extends ConfigObject> getObjectList(String key){
+        Objects.requireNonNull(key);
+        return config.getObjectList(key);
+
+    }
+
+
 }

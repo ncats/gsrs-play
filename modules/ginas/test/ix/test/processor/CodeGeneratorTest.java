@@ -29,12 +29,24 @@ public class CodeGeneratorTest extends AbstractGinasServerTest{
 	public GinasTestServer createGinasTestServer(){
 
 		GinasTestServer ts = super.createGinasTestServer();
-		ts.addEntityProcessor(GinasTestServer.ConfigOptions.ALL_TESTS, Substance.class, UniqueCodeGenerator.class, "{\n" +
+
+		ts.addEntityProcessor(GinasTestServer.ConfigOptions.ALL_TESTS,
+		new GinasTestServer.EntityProcessorConfig.Builder(Substance.class, UniqueCodeGenerator.class)
+				.with("codesystem", "BDNUM")
+				.with("suffix", "AB")
+				.with("length", 10)
+				.with("padding", true)
+				.build());
+
+				/*ts.addEntityProcessor(GinasTestServer.ConfigOptions.ALL_TESTS,
+				Substance.class, UniqueCodeGenerator.class, "{\n" +
 				"               \"codesystem\":\"BDNUM\",\n" +
 						"                       \"suffix\":\"AB\",\n" +
 						"                       \"length\":10,\n" +
 						"                       \"padding\":true\n" +
-						"               }");
+						"               }");*/
+
+
 //		return new GinasTestServer(()->{
 //			String addconf="include \"ginas.conf\"\n" +
 //					"\n" +

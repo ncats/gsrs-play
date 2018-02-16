@@ -13,6 +13,7 @@ import java.util.stream.Collectors;
 
 import ix.ginas.controllers.GinasApp;
 import ix.ginas.models.v1.Code;
+import ix.ginas.processors.UniqueCodeGenerator;
 import ix.test.server.*;
 import org.junit.After;
 import org.junit.Rule;
@@ -55,11 +56,21 @@ public class LastEditedFacetTest extends AbstractLoadDataSetTest {
 
         //  ts.modifyConfig("ix.ginas.facets.substance.default =                         [\"root_lastEditedBy\", \"root_codes_lastEditedBy\"]");
 
-        return new GinasTestServer("ix.ginas.facets.substance.default = [\"root_lastEditedBy\", \"root_codes_lastEditedBy\", \"root_lastEdited\"]");
+        GinasTestServer ts= new GinasTestServer("ix.ginas.facets.substance.default = [\"root_lastEditedBy\", \"root_codes_lastEditedBy\", \"root_lastEdited\"]");
+
+        //Remove BDNum processor since that makes additional edits that messes up our facet counts!
+        ts.removeEntityProcessors(processor ->
+            UniqueCodeGenerator.class.equals(processor.getProcessorClass()) &&
+                    "BDNUM".equals(processor.getWith().get("codesystem")));
+
+        return ts;
     }
 
     @Rule
     public TimeTraveller timeTraveller = new TimeTraveller();
+
+
+
 
     private Substance setLastEditedByAndBuild(SubstanceBuilder builder, GinasTestServer.User user){
         return builder.setLastEditedBy(user.asPrincipal())
@@ -67,7 +78,6 @@ public class LastEditedFacetTest extends AbstractLoadDataSetTest {
     }
 
     @Test
-//    @RunOnly
     public void loadWithoutPreserveAuditFlagWillSetLastEditedToUserDoingTheLoading() throws IOException, InterruptedException {
 
         GinasTestServer.User otherUser = ts.getFakeUser2();
@@ -220,7 +230,6 @@ public class LastEditedFacetTest extends AbstractLoadDataSetTest {
 
 
     @Test
-//    @RunOnly
     public void lastEditedFacetChangeWithDates() throws IOException {
 
         session = ts.newBrowserSession(admin);

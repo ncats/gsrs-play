@@ -541,7 +541,86 @@ public class PojoDiffTest extends AbstractGinasTest{
 	        prop=getChanged(prop, update);
 	        assertTrue(prop.getParameters().size()==3);
 	        assertEquals(update,prop);
-	        
+
+    }
+    @Test
+    public void addNewToFrontOfListWithoutIDSimple() throws Exception {
+        List<Parameter> originalParams = new ArrayList<>();
+        Parameter p1 = new Parameter();
+        p1.setName("foo");
+        p1.getOrGenerateUUID();
+
+        Parameter p2 = new Parameter();
+        p2.setName("bar");
+        p2.getOrGenerateUUID();
+
+        originalParams.add(p1);
+        originalParams.add(p2);
+
+        Property prop = new Property();
+
+        prop.setParameters(originalParams);
+
+
+        Property update = new Property();
+
+        List<Parameter> newParams=new ArrayList<Parameter>();
+        Parameter p3 = new Parameter();
+        p3.setName("foobar");
+        newParams.add(p3);
+        newParams.add(p1);
+        newParams.add(p2);
+
+        update.setParameters(newParams);
+        prop=getChanged(prop, update);
+        assertTrue(prop.getParameters().size()==3);
+        assertEquals(update,prop);
+
+    }
+
+    @Test
+    public void addMultipleNewToFrontOfListWithoutIDSimple() throws Exception {
+        List<Parameter> originalParams = new ArrayList<>();
+        Parameter p1 = new Parameter();
+        p1.setName("foo");
+        p1.getOrGenerateUUID();
+
+        Parameter p2 = new Parameter();
+        p2.setName("bar");
+        p2.getOrGenerateUUID();
+
+        originalParams.add(p1);
+        originalParams.add(p2);
+
+        Property prop = new Property();
+
+        prop.setParameters(originalParams);
+
+
+        Property update = new Property();
+
+        List<Parameter> newParams=new ArrayList<Parameter>();
+        Parameter p3 = new Parameter();
+        p3.setName("foobar");
+
+        Parameter p4 = new Parameter();
+        p4.setName("asdf");
+        Parameter p5 = new Parameter();
+        p5.setName("p5");
+
+
+        newParams.add(p3);
+        newParams.add(p4);
+        newParams.add(p5);
+
+        newParams.add(p1);
+        newParams.add(p2);
+
+        update.setParameters(newParams);
+        prop=getChanged(prop, update);
+        assertEquals(5, prop.getParameters().size());
+        assertEquals(update,prop);
+
     }
 
     @Test

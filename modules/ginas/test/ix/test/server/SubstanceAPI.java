@@ -5,10 +5,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.Objects;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -162,6 +159,10 @@ public class SubstanceAPI {
     public String fetchSubstanceLychiv4ByUuid(String uuid){
     	return session.extractJSON(session.createRequestHolder(API_URL_FETCH_BASIC.replace("$UUID$", uuid)+"/structure/properties(label:LyChI_L4)!(term)($0)").get().get(timeout)).asText();
     }
+    public JsonNode fetchSubstanceJsonByUuid(UUID uuid) {
+        return fetchSubstanceJsonByUuid(uuid.toString());
+    }
+
     public JsonNode fetchSubstanceJsonByUuid(String uuid){
         return session.extractJSON(fetchSubstanceByUuid(uuid));
     }
