@@ -7,71 +7,86 @@
 @(facets: Array[FacetDecorator], searchflag:Boolean, mode:String )
 
 @facet(f: FacetDecorator, c : Boolean) = {
-<div ng-controller="FilterController" class="panel panel-default" ng-init="init('@f.getFacet().getSelfUri()', @EntityWrapper.of(f.facet).toCompactJson(), '@mode');collapsed=@{c};">
-  <div class="panel-heading" >
+<div ng-controller="FilterController" class="panel panel-default facet-wrapper" ng-init="init('@f.getFacet().getSelfUri()', @EntityWrapper.of(f.facet).toCompactJson(), '@mode');collapsed=@{c};">
+  <div class="panel-heading facet-heading" >
     <h3 ng-cloak class="panel-title" ng-click="collapsed=!collapsed">
         <i ng-cloak ="" ng-show="collapsed" class="fa fa-caret-right"></i>
         <i ng-cloak ="" ng-hide="collapsed" class="fa fa-caret-down"></i>
-        <span ng-bind=facetDisplay></span>
+        <span ng-bind="facetDisplay"></span>
     </h3>
-    <button ng-show="!collapsed && mode!=='OFF'" ng-click="fshow=!fshow" class="btn btn-default" type="search" aria-label="Search" style="
-	    float: right;
-	    margin-top: -24px;
-	    padding: 3px;
-	    padding-right: 10px;
-	    padding-left: 10px;
-	">
-	<span class="sr-only">Search Filters</span>
-	<span class="fa fa-search"></span>
-	</button>
   </div>
-  <div ng-cloak ng-show="fshow && !collapsed">
-    <input type="text" class="form-control" aria-label="Search filters" title="Search" 
-    placeholder="Search filters ..." 
-    ng-model="fq" 
-    ng-change="dofilter()"
-    autocomplete="off" >
-  </div>
-  <div class="panel-body" uib-collapse="collapsed">
+  
+  <div ng-cloak ng-show="showFacetSearch()">
+		<input type="text" id="facet-search" class="form-control" aria-label="Search filters" title="Search" 
+		placeholder="Search {{facetName}}..."
+		ng-model="fq" 
+		ng-change="dofilter()"
+		autocomplete="off" >
+	</div>
+	
+  <div class="panel-body facet-body" uib-collapse="collapsed">
   
     <ul class="list-group">
-      <div ng-hide="filtered">
-      	<div  ng-cloak class="list-group-item row" ng-repeat="facet in ofacets | limitTo:quantity">
-      		<div class="col-md-1 col-sm-1">
-		       <input type="checkbox"
-			       ng-click="fToggle(facet)" 
-			       ng-model="facet.checked"
-			      />
-			 </div>
-	     <div class="col-md-8 col-sm-8" >
-            <label>{{facet.display}}</label>
-         </div>
-        	 <div class="col-md-1  col-sm-1" >
-             <span class="badge pull-right">{{facet.count}}</span>
-             </div>
-      	</div>
-      </div>
+			<div ng-hide="filtered">
+				<div  ng-cloak class="list-group-item row" ng-repeat="facet in ofacets | limitTo:quantity">
+					<div ng-if="facet.display">
+						<div class="col-md-1 col-sm-1" id="filter-checkbox-wrapper">
+							<input 
+							id="{{facet.mid}}"
+							type="checkbox"
+							ng-click="fToggle(facet)" 
+							ng-model="facet.checked"
+							/>
+						</div>
+						<div class="col-md-8 col-sm-8" >
+							<label for="{{facet.mid}}">{{facet.display}}</label>
+						</div>
+						<div class="col-md-1  col-sm-1" >
+							<span class="badge pull-right">{{facet.count}}</span>
+						</div>
+					</div>
+				</div>
+			</div>
       
-      <div ng-show="filtered">
-        <div class="facet-loading-bar" ng-if="refreshing">
-        	<div class="spinner-loader-container"><div class="spinner-loader" ></div></div> Loading ... 
-        </div>
-        <div style="width:100%;text-align:center;" ng-if="facets.length===0 && !refreshing">No Results</div>
-      	<div ng-cloak class="list-group-item row" ng-repeat="facet in facets | limitTo:quantity">
-      		<div class="col-md-1 col-sm-1">
-		       <input type="checkbox"
-			       ng-click="fToggle(facet)"
-			       ng-model="facet.checked"
-			      />
-			 </div>
-	     <div class="col-md-8 col-sm-8" >
-            <label ng-bind-html="facet.labelHighlight"></label>
-         </div>
-        	 <div class="col-md-1  col-sm-1" >
-             <span class="badge pull-right">{{facet.count}}</span>
-             </div>
-      	</div>
-      </div>
+			<div ng-show="filtered">
+				<div ng-cloak class="list-group-item row" ng-repeat="facet in facets | limitTo:quantity">
+					<div class="col-md-1 col-sm-1">
+						<input type="checkbox"
+						   id="{{facet.mid}}"
+						   ng-click="fToggle(facet)"
+						   ng-model="facet.checked"
+						  />
+					</div>
+					<div class="col-md-8 col-sm-8" >
+						<label for="{{facet.mid}}" ng-bind-html="facet.labelHighlight"></label>
+					</div>
+					<div class="col-md-1  col-sm-1" >
+						<span class="badge pull-right">{{facet.count}}</span>
+					</div>
+				</div>
+			</div>
+			<div class="row" ng-show="isEnhanced">
+				<form>
+					<div class="col-md-6" ng-show="selectedFacets.length>1">
+						<input ng-click="typeChange()" type="radio" ng-model="facetType" id="{{facetName}}allof" name="facettype" value="all">
+						<label class="subtle-label" for="{{facetName}}allof">All Match</label>
+					</div>
+					<div class="col-md-6" ng-show="selectedFacets.length>1">
+						<input ng-click="typeChange()" type="radio" ng-model="facetType" id="{{facetName}}anyof" name="facettype" value="any">
+						<label class="subtle-label" for="{{facetName}}anyof">Any Match</label>
+					</div>
+					<div class="col-md-12" ng-show="selectedFacets.length>1">
+						<input ng-click="typeChange(true)" type="radio" ng-model="facetType" id="{{facetName}}notof1" name="facettype" value="not">
+						<label class="subtle-label" for="{{facetName}}notof1">Exclude Selected</label>
+					</div>
+					<div class="col-md-12" ng-show="selectedFacets.length==1">
+						<input ng-click="typeChange(isnegated)" type="checkbox" ng-model="isnegated" id="{{facetName}}notof2" name="facettype" value="not">
+						<label class="subtle-label" for="{{facetName}}notof2">Exclude Selected</label>
+					</div>
+				</form>
+			</div>
+		  
+			
       <div style="float: left;" >
           <button  ng-show="showShowMore()" ng-click="showMore()" type="button" uib-tooltip="Clear Filters" class="btn btn-link" >More ... </button>
           <button  ng-show="showShowLess()" ng-click="showLess()" type="button" uib-tooltip="Show Less" class="btn btn-link" >Show Less</button>
@@ -90,11 +105,6 @@
 
 <div class="panel-group">
   <div ng-cloak class="fade-ng-cloak ng-cloak" ng-controller="FiltersController">
-  @*<div style="overflow:auto;" >
-  	<button ng-hide="collapsed" style="float: left;"  ng-click="collapse()" type="button" uib-tooltip="Collapse All Filters" class="btn btn-primary" >Collapse Filters</button>
-  	<button ng-show="collapsed" style="float: left;"  ng-click="expand()" type="button" uib-tooltip="Expand All Filters" class="btn btn-primary" >Expand Filters</button>
-  	<button ng-class="getAllSelected().length>0?'':'invisible'" style="float: right;"  ng-click="clear()" type="button" uib-tooltip="Clear All Filters" class="btn btn-warning" >Clear All Filters</button>
-  </div>*@
 
   @for(f <- facets.slice(0,3)) {
     @if(!f.hidden) {

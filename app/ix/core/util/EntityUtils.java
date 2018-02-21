@@ -344,7 +344,6 @@ public class EntityUtils {
 				Substance obj = ((Substance) this.getValue());
 				SequenceIndexer sequenceIndexer = EntityPersistAdapter.getSequenceIndexer();
 				obj.references.stream()
-						.peek(r -> System.out.println("uploaded file = " + r.uploadedFile))
 						.filter(r -> r.uploadedFile != null)
 
 						.flatMap(r -> {

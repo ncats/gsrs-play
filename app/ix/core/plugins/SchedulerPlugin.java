@@ -304,7 +304,6 @@ public class SchedulerPlugin extends Plugin {
                 currentTask = new FutureTask<>(callable);
                 currentTask.run();
             }finally{
-                System.out.println("in runNow finally block");
                 lastFinished=TimeUtil.getCurrentDate();
                 isRunning.set(false);
                 this.listener.complete();
