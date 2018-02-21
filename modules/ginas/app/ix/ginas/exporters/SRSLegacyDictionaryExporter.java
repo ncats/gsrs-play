@@ -61,13 +61,13 @@ public class SRSLegacyDictionaryExporter implements Exporter<Substance> {
 		}
 		
 		List<String> casNums=obj.codes.stream()
-		         					  .filter(c->c.codeSystem.equals("CAS"))
+		         					  .filter(c->"CAS".equals(c.codeSystem))
 		         					  .map(c->c.code)
 		         					  .collect(Collectors.toList());
 		
 		String bdnum = obj.codes.stream()
-								.filter(cd->cd.type.equals("PRIMARY"))
-				                .filter(cd->cd.codeSystem.equals("BDNUM"))
+								.filter(cd->"BDNUM".equals(cd.codeSystem))				
+								.filter(cd->"PRIMARY".equals(cd.type))
 				                .findFirst()
 				                .map(cd->cd.code)
 				                .orElse("FAKEBDNUM:" + subid);
