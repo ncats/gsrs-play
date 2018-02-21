@@ -6,6 +6,7 @@ import ix.core.util.EntityUtils;
 import play.Logger;
 
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -13,6 +14,7 @@ import java.util.concurrent.locks.ReentrantLock;
  * Created by katzelda on 4/18/17.
  */
 public class EditLock {
+
 
     private static class Counter{
         private int count=0;
@@ -62,6 +64,10 @@ public class EditLock {
 
     public boolean hasEdit() {
         return this.edit != null;
+    }
+
+    public Optional<Edit> getEdit() {
+        return Optional.of(edit);
     }
 
     public EditLock addEdit(Edit e) {
