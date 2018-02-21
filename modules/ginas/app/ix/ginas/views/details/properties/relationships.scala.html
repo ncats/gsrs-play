@@ -10,11 +10,13 @@
     <i ng-show="@title.replace(' ', '.')" class="fa fa-caret-right"></i>
     <i ng-hide="@title.replace(' ', '.')" class="fa fa-caret-down"></i>
     @title&nbsp;<span class="badge"> @relationships.length</span></button>
+<br/>
 <div class="col-md-12 table-responsive" uib-collapse = "@title.replace(' ', '.')">
-    <table class="table">
+    <table class="table ref-datatable">
         <thead>
             <tr>
                 <th>Related Record</th>
+                <th>Mediator Record</th>
                 <th>Type</th>
                 @if(full){
                 <th>Details</th>
@@ -33,64 +35,76 @@
                     	@subref(r.relatedSubstance)
                 	}
                 </td>
-                <td>@GinasApp.getCV.getDisplay("RELATIONSHIP_TYPE", r.`type`)</td>
-                @if(full){
-                
+
                 <td>
-                 @if(r.hasComments()) {
-                	<div class="row">
-	                 	<div class="md-col-m6">
-	                		<label>Comments:</label>
-	                	</div>
-	                	<div class="md-col-m6">
-	                		<span class="key-value">@r.comments</span>
-	                	</div>
-                	</div>
-                }
-                @if(r.interactionType != null) {
-                	<div class="row">
-	                 	<div class="md-col-m6">
-	                		<label>Interaction Type:</label>
-	                	</div>
-	                	<div class="md-col-m6">
-	                		<span class="key-value">@r.interactionType</span>
-	                	</div>
-                	</div>
-                }
-                @if(r.qualification != null) {
-                	<div class="row">
-	                 	<div class="md-col-m6">
-	                		<label>Qualification:</label>
-	                	</div>
-	                	<div class="md-col-m6">
-	                		<span class="key-value">@r.qualification</span>
-	                	</div>
-                	</div>
-                }
-                @if(r.amount != null) {
-                	<div class="row">
-	                 	<div class="md-col-m6">
-	                		<label>Amount:</label>
-	                	</div>
-	                	<div class="md-col-m6">
-	                		 <amount value="@GinasApp.getAsJson(r.amount)"></amount>
-	                	</div>
-                	</div>
-                }
+                    @if(r.mediatorSubstance != null){
+                        @subref(r.mediatorSubstance)
+                    }
                 </td>
-                @if(r.getReferences().size > 0){
-                        <td>       
-                            <referencesmanager ref-count substance ="'@id'" divid ="'@r.getUuid'" references = "@GinasApp.getAsJson(r.getReferences())"></referencesmanager>
-                        </td>
-                        </tr>
-                        <tr><td class = "'@r.getUuid'" colspan = "8"></td>
-                }else{
-                        <td>none</td>
+
+                <td>@GinasApp.getCV.getDisplay("RELATIONSHIP_TYPE", r.`type`)</td>
+                @if(full) {
+
+                    <td>
+                        @if(r.hasComments()) {
+                            <div class="row">
+                                <div class="md-col-m6">
+                                    <label>Comments:</label>
+                                </div>
+                                <div class="md-col-m6">
+                                    <span class="key-value">@r.comments</span>
+                                </div>
+                            </div>
+                        }
+                        @if(r.interactionType != null) {
+                            <div class="row">
+                                <div class="md-col-m6">
+                                    <label>Interaction Type:</label>
+                                </div>
+                                <div class="md-col-m6">
+                                    <span class="key-value">@r.interactionType</span>
+                                </div>
+                            </div>
+                        }
+                        @if(r.qualification != null) {
+                            <div class="row">
+                                <div class="md-col-m6">
+                                    <label>Qualification:</label>
+                                </div>
+                                <div class="md-col-m6">
+                                    <span class="key-value">@r.qualification</span>
+                                </div>
+                            </div>
+                        }
+                        @if(r.amount != null) {
+                            <div class="row">
+                                <div class="md-col-m6">
+                                    <label>Amount:</label>
+                                </div>
+                                <div class="md-col-m6">
+                                    <amount value="@GinasApp.getAsJson(r.amount)"></amount>
+                                </div>
+                            </div>
+                        }
+                    </td>
+
+                    <td>
+                        @if(r.getReferences().size > 0){
+                           <referencesmanager ref-count substance ="'@id'" divid ="'@r.getUuid()'" references = "@GinasApp.getAsJson(r.getReferences())"></referencesmanager>
+                        }else{
+                            none
+                        }
+                    </td>
                 }
             </tr>
-                }
+
+            <tr><td class ="'@r.getUuid()'" colspan = "8"></td></tr>
+
             <tr ng-if="audit==true"><td colspan = "8">Created by <code>@r.createdBy</code> on <code>@r.created</code> , Edited by <code>@r.lastEditedBy</code> on <code>@r.lastEdited</code></td></tr>
         }
 
     </table>
-        </div>
+
+ </div>
+
+
