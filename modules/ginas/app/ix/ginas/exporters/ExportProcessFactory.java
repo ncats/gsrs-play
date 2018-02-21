@@ -13,6 +13,7 @@ import ix.core.plugins.IxCache;
 import ix.core.util.CachedSupplier;
 import ix.core.util.ConfigHelper;
 import ix.core.util.IOUtil;
+import ix.core.util.Unchecked;
 import ix.ginas.controllers.plugins.GinasSubstanceExporterFactoryPlugin;
 import ix.ginas.models.v1.Substance;
 import ix.utils.CallableUtil;
@@ -45,13 +46,17 @@ public class ExportProcessFactory {
     }
 
     
-    public static InputStream download(String username, String fname) throws FileNotFoundException{
-        File[] files = getFiles(getExportDirFor(username), fname);
-        File downloadFile = files[0];
-        if(downloadFile.exists()){
-            return new BufferedInputStream(new FileInputStream(downloadFile));
-        }
-        throw new FileNotFoundException("could not find file for user "+ username + ":" +  fname);
+    public static InputStream download(String username, String fname) throws IOException{
+        Optional<ExportDir.ExportFile<ExportMetaData>> downloadFile = new ExportDir<>(getExportDirFor(username), ExportMetaData.class).getFile(fname);
+        System.out.println("trying to download " + downloadFile);
+        return downloadFile.orElseThrow(()->new FileNotFoundException("could not find file for user "+ username + ":" +  fname))
+                    .getInputStreamOutputStream();
+//        File[] files = getFiles(getExportDirFor(username), fname);
+//        File downloadFile = files[0];
+//        if(downloadFile.exists()){
+//            return new BufferedInputStream(new FileInputStream(downloadFile));
+//        }
+//        throw new FileNotFoundException("could not find file for user "+ username + ":" +  fname);
     }
 
 
@@ -61,18 +66,36 @@ public class ExportProcessFactory {
         //might be a better way to do this as a one-liner using paths
         //but I don't think Path's path can contain null
         String username = metadata.username;
-        File[] filename = getFiles(metadata, username);
+        ExportDir.ExportFile<ExportMetaData> exportFile =  createExportFileFor(metadata, username);
+
         
         inProgress.put(metadata.id, metadata);
-        
-        return new ExportProcess(filename[0], metadata, filename[1], substanceSupplier);
+        return new ExportProcess(exportFile, substanceSupplier);
+//        return new ExportProcess(exportFile.getFile(), metadata, exportFile.getMetaDataFile(), substanceSupplier);
     }
 
-    private File[] getFiles(ExportMetaData metadata, String username) {
+    private Optional<ExportDir.ExportFile<ExportMetaData>> getExportFile(String username, String filename){
         File exportDir = new File(rootDir,username);
-
-        return createFilesFrom(exportDir, metadata);
+        try {
+            return new ExportDir<>(exportDir, ExportMetaData.class).getFile(filename);
+        } catch (IOException e) {
+           throw new UncheckedIOException(e);
+        }
     }
+    private ExportDir.ExportFile<ExportMetaData> createExportFileFor(ExportMetaData metadata, String username){
+        File exportDir = new File(rootDir,username);
+        try {
+            return new ExportDir<>(exportDir, ExportMetaData.class).createFile(metadata.getFilename(), metadata);
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+    }
+
+//    private File[] getFiles(ExportMetaData metadata, String username) {
+//        File exportDir = new File(rootDir,username);
+//
+//        return createFilesFrom(exportDir, metadata);
+//    }
 
     private static File getExportDirFor(String username) {
         return new File((String) ConfigHelper.getOrDefault("export.path.root", "exports"), username);
@@ -88,19 +111,19 @@ public class ExportProcessFactory {
         return metaDirectory;
     }
 
-    private File[] createFilesFrom(File parent, ExportMetaData metadata){
-        return getFiles(parent, metadata.getFilename());
-    }
-
-    private static File[] getFiles(File exportDir, String fname){
-        
-        File metaDirectory = getExportMetaDirFor(exportDir);
-        
-        return new File[]{
-                (new File(exportDir, fname)),
-                (new File(metaDirectory, fname + ".metadata"))
-        };
-    }
+//    private File[] createFilesFrom(File parent, ExportMetaData metadata){
+//        return getFiles(parent, metadata.getFilename());
+//    }
+//
+//    private static File[] getFiles(File exportDir, String fname){
+//
+//        File metaDirectory = getExportMetaDirFor(exportDir);
+//
+//        return new File[]{
+//                (new File(exportDir, fname)),
+//                (new File(metaDirectory, fname + ".metadata"))
+//        };
+//    }
 
     
     //TODO: probably change the way this is stored to make it a little easier
@@ -117,7 +140,9 @@ public class ExportProcessFactory {
             return Collections.emptyList();
         }
         return Arrays.stream(files)
+
                      .filter(f->f.getName().endsWith(".metadata"))
+                     .peek(f-> System.out.println(f.getAbsolutePath()))
                      .map(f->{
                             try {
                                 return em.readValue(f, ExportMetaData.class);
@@ -163,10 +188,18 @@ public class ExportProcessFactory {
     
     public static void remove(ExportMetaData meta){
         inProgress.remove(meta.id);
-        File[] files = getFiles(getExportDirFor(meta.username), meta.getFilename());
 
-        files[0].delete();
-        files[1].delete();
+        Optional<ExportDir.ExportFile<ExportMetaData>> downloadFile = null;
+        try {
+            downloadFile = new ExportDir<>(getExportDirFor(meta.username), ExportMetaData.class).getFile(meta.getFilename());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        if(downloadFile.isPresent()){
+            downloadFile.get().delete();
+        }
+
         
     }
     
