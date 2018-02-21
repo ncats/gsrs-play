@@ -28,6 +28,15 @@ public final class TimeUtil {
 
     private static AtomicReference<Long> FIXED_TIME = new AtomicReference<>();
 
+    /**
+     * Convert a LocalDate at midnight into a java.util.Date object.
+     *
+     * @param localDate
+     * @return
+     */
+    public static Date toDate(LocalDate localDate){
+        return Date.from(localDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
+    }
     public static Date getCurrentDate(){
         return new Date(getCurrentTimeMillis());
     }

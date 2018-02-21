@@ -5,10 +5,12 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
 import ix.core.controllers.EntityFactory;
+import ix.core.models.Edit;
 import ix.core.models.Group;
 import ix.core.models.Keyword;
 import ix.core.models.Principal;
@@ -336,4 +338,12 @@ public abstract class AbstractSubstanceBuilder<S extends Substance, T extends Ab
         });
 
     }
+
+    public T removeCodes(java.util.function.Predicate<Code> test) {
+        Objects.requireNonNull(test);
+        return andThen(s -> {
+            s.codes = s.getCodes().stream().filter(test.negate()).collect(Collectors.toList());
+        });
+    }
+
 }

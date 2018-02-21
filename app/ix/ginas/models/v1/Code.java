@@ -52,7 +52,7 @@ public class Code extends CommonDataElementOfCollection{
     public String codeText;
     
     @JSONEntity(title = "Code Type", format = JSONConstants.CV_CODE_TYPE)
-    public String type;
+    public String type = "PRIMARY";
     
     @JSONEntity(title = "Code URL", format = "uri")
     @Lob

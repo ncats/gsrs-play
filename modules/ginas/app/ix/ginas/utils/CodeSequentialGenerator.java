@@ -53,6 +53,8 @@ public class CodeSequentialGenerator extends SequentialNumericIDGenerator{
 		Reference r = new Reference();
 		r.docType="SYSTEM";
 		r.citation="System Generated Code";
+		r.addRestrictGroup("protected");
+		c.addRestrictGroup("protected");
 		c.addReference(r, s);
 		return c;
 	}

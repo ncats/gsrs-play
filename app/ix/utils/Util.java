@@ -614,20 +614,23 @@ public class Util {
 		return sbSource.toString();
 	}
 	
+	public static <T> Comparator<T> comparatorItems(T ... order){
+	             return comparator(t->t, Arrays.stream(order));
+    }
 	
 	public static <T> Comparator<T> comparator(Stream<T> order){
-		return comparitor(t->t, order);
+		return comparator(t->t, order);
 	}
 	
 	public static <T> Comparator<T> comparator(Collection<T> order){
-		return comparitor(t->t, order.stream());
+		return comparator(t->t, order.stream());
 	}
 	
 	public static <T> Comparator<T> comparator(T[] order){
-		return comparitor(t->t, Arrays.stream(order));
+		return comparator(t->t, Arrays.stream(order));
 	}
 	
-	public static <T, V> Comparator<V> comparitor(Function<V,T> namer,Stream<T> order){
+	public static <T, V> Comparator<V> comparator(Function<V,T> namer,Stream<T> order){
 		Map<T,Integer> mapOrder=order.map(toIndexedTuple())
 								     .collect(Collectors.toMap(t->t.v(), 
 								    		 				   t->t.k(),
@@ -739,6 +742,8 @@ public class Util {
 			return params.get().entrySet()
 					.stream()
 					.flatMap(this::flatten)
+                    .filter(t->t.k()!=null)
+                    .filter(t->t.v()!=null)
 					.map(es->urlEncodeUTF8(es.k()) + "=" + urlEncodeUTF8(es.v()))
 					.collect(Collectors.joining("&"));
 		}
@@ -893,6 +898,7 @@ public class Util {
      */
     public static String facetEncode(String facetName, String ... facetValue){
     	String fname = encodeFacetComponent(facetName);
+    	
     	
     	return fname + "/" + Arrays.stream(facetValue).map(f->encodeFacetComponent(f)).collect(Collectors.joining("/"));
     	

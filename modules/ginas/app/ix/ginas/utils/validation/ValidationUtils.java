@@ -2,13 +2,18 @@ package ix.ginas.utils.validation;
 
 import java.net.URL;
 import java.util.*;
+import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 
 import ix.core.chem.StructureProcessor;
+import ix.core.controllers.AdminFactory;
+import ix.core.models.Group;
 import ix.core.models.Keyword;
 import ix.core.models.Payload;
 import ix.core.models.Structure;
@@ -18,6 +23,7 @@ import ix.ginas.controllers.v1.SubstanceFactory;
 import ix.ginas.models.EmbeddedKeywordList;
 import ix.ginas.models.GinasAccessReferenceControlled;
 import ix.ginas.models.v1.*;
+import ix.ginas.models.v1.Substance.SubstanceClass;
 import ix.ginas.models.v1.Substance.SubstanceDefinitionLevel;
 import ix.ginas.models.v1.Substance.SubstanceDefinitionType;
 import ix.ginas.utils.*;
@@ -110,6 +116,54 @@ public class ValidationUtils {
 						.INFO_MESSAGE("Substance had no UUID, generated one:"
 								+ uuid));
 			}
+			s.references.stream()
+			 .filter(r->{
+				 if("IND".equals(r.docType))return true;
+				 Pattern indPattern = Pattern.compile(".*[ ]IND[ -]*[0-9][0-9][0-9]*.*");
+				 if(indPattern.matcher(" " + r.citation).find()){
+					 return true;
+				 }
+				 return false;
+			 })
+			 .filter(r->r.isPublic() || r.isPublicDomain() || r.isPublicReleaseReference())
+			 .forEach(r->{
+				 
+				 GinasProcessingMessage mes = GinasProcessingMessage
+							.WARNING_MESSAGE(
+									"IND-like reference:\""
+											+ r.docType + ":" + r.citation + "\" cannot be public. Setting to protected.")
+							.appliableChange(true);
+					gpm.add(mes);
+					strat.processMessage(mes);
+					if (mes.actionType == GinasProcessingMessage.ACTION_TYPE.APPLY_CHANGE) {
+						r.publicDomain=false;
+						Group g=AdminFactory.getGroupByName("protected");
+						if(g==null){
+							g=new Group();
+							g.name="protected";
+							
+						}
+						
+						EmbeddedKeywordList klist = new EmbeddedKeywordList();
+						
+						r.tags.stream()
+						.filter(t->!Reference.PUBLIC_DOMAIN_REF.equals(t.getValue()))
+						.forEach(t->{
+							klist.add(t);
+						});
+						
+						r.tags=klist;
+						
+						r.setAccess(Stream.of(g).collect(Collectors.toSet()));
+						
+						
+						
+					}
+			 });
+			 
+			 ;
+			 
+			
 			if (s.definitionType == SubstanceDefinitionType.PRIMARY) {
 				if (ValidationUtils.validationConf.get().requireName()) {
 					validateNames(s, gpm, strat);
@@ -264,6 +318,31 @@ public class ValidationUtils {
 	enum ReferenceAction {
 		FAIL, WARN, ALLOW
 	}
+	
+	private static <D extends GinasAccessReferenceControlled> void validatePublicReferenced(Substance s,
+			D data,
+			List<GinasProcessingMessage> gpm, 
+			GinasProcessingStrategy strat, 
+			Function<D,String> namer) {
+		//If public
+		if(data.getAccess().isEmpty()){
+			boolean hasPublicReference = data.getReferences().stream()
+			                    .map(r->r.getValue())
+			                    .map(r->s.getReferenceByUUID(r))
+			                    .filter(r->r.isPublic())
+			                    .filter(r->r.isPublicDomain())
+			                    .findAny()
+			                    .isPresent();
+			
+			if(!hasPublicReference){
+				GinasProcessingMessage mes = GinasProcessingMessage
+						.ERROR_MESSAGE(namer.apply(data) + " needs an unprotected reference marked \"Public Domain\" in order to be made public.");
+				gpm.add(mes);
+				strat.processMessage(mes);
+			}
+		}
+		
+	}
 
 	private static boolean validateReferenced(Substance s,
 			GinasAccessReferenceControlled data,
@@ -353,9 +432,9 @@ public class ValidationUtils {
        public static CachedSupplier<List<Replacer>> replacers = CachedSupplier.of(()->{
                List<Replacer> repList = new ArrayList<>();
                repList.add(new Replacer("[\\t\\n\\r]", " ")
-                               .message("Name \"$0\" has non-space whitespace, replacing with spaces"));
+                               .message("Name \"$0\" has non-space whitespace characters. They will be replaced with spaces."));
                repList.add(new Replacer("\\s\\s\\s*", " ")
-                       .message("Name \"$0\" has consecutive whitespace characters, replacing with single spaces."));
+                       .message("Name \"$0\" has consecutive whitespace characters. These will be replaced with single spaces."));
                
                return repList;
                
@@ -446,8 +525,8 @@ public class ValidationUtils {
                     }
                 }
 
-			for(Replacer r: replacers.get()){
-                                       if(r.matches(n.getName())){
+				for(Replacer r: replacers.get()){
+                   if(r.matches(n.getName())){
                                                GinasProcessingMessage mes = GinasProcessingMessage
                                    .WARNING_MESSAGE(
                                            r.getMessage(n.getName()))
@@ -457,8 +536,9 @@ public class ValidationUtils {
                            if (mes.actionType == GinasProcessingMessage.ACTION_TYPE.APPLY_CHANGE) {
                                n.setName(r.fix(n.getName()));
                            }   
-                                       }
-                               }
+                   }
+                 }
+				validatePublicReferenced(s,n,gpm,strat, n1->"The name :\"" + n1.getName() + "\"");
 
 			}
 			if (!validateReferenced(s, n, gpm, strat, ReferenceAction.FAIL)) {
@@ -512,40 +592,21 @@ public class ValidationUtils {
 			strat.processMessage(mes);
 		}
 
-		Map<String, Set<String>> nameSetByLanguage = new HashMap<>();
+		Set<String> nameSet = new HashSet<String>();
 		
 		
 		for (Name n : s.names) {
-			Iterator<Keyword> iter = n.languages.iterator();
-			String uppercasedName = n.getName().toUpperCase();
-
-			while(iter.hasNext()){
-				String language = iter.next().getValue();
-//				System.out.println("language for " + n + "  = " + language);
-				Set<String> names = nameSetByLanguage.computeIfAbsent(language, k->new HashSet<>());
-				if(!names.add(uppercasedName)){
-					GinasProcessingMessage mes = GinasProcessingMessage
-							.ERROR_MESSAGE(
-									"Name '"
-											+ n.getName()
-											+ "' is a duplicate name in the record.")
-							.markPossibleDuplicate();
-					gpm.add(mes);
-					strat.processMessage(mes);
-				}
-
-			}
-//		    if(nameSet.contains(n.getName().toUpperCase())){
-//		        GinasProcessingMessage mes = GinasProcessingMessage
-//                        .ERROR_MESSAGE(
-//                                "Name '"
-//                                        + n.getName()
-//                                        + "' is a duplicate name in the record.")
-//                        .markPossibleDuplicate();
-//                gpm.add(mes);
-//                strat.processMessage(mes);
-//		    }
-//		    nameSet.add(n.getName().toUpperCase());
+		    if(nameSet.contains(n.getName().toUpperCase())){
+		        GinasProcessingMessage mes = GinasProcessingMessage
+                        .ERROR_MESSAGE(
+                                "Name '"
+                                        + n.getName()
+                                        + "' is a duplicate name in the record.")
+                        .markPossibleDuplicate();
+                gpm.add(mes);
+                strat.processMessage(mes);
+		    }
+		    nameSet.add(n.getName().toUpperCase());
 		    //nameSet.add(n.getName());
 			try {
 				List<Substance> sr = ix.ginas.controllers.v1.SubstanceFactory
@@ -715,6 +776,12 @@ public class ValidationUtils {
 			GinasProcessingMessage mes = GinasProcessingMessage
 					.ERROR_MESSAGE(
 							"Variant concepts may not specify more than one parent record");
+			gpm.add(mes);
+			strat.processMessage(mes);
+		}else if(parentList>=1 && (s.substanceClass != SubstanceClass.concept)){
+			GinasProcessingMessage mes = GinasProcessingMessage
+					.ERROR_MESSAGE(
+							"Non-concepts may not be specified as subconcepts.");
 			gpm.add(mes);
 			strat.processMessage(mes);
 		}
