@@ -4,7 +4,6 @@ var GSRSAPI={
         g_api.GlobalSettings = {
        //   _url:"https://ginas.ncats.nih.gov/ginas/app/api/v1/",
         _url:"http://localhost:5000/ginas/app/api/v1/",
-       //   _url:"https://tripod.nih.gov/dev/ginas/app/api/v1/",
           getBaseURL: function() {
             return g_api.GlobalSettings._url;
           },
