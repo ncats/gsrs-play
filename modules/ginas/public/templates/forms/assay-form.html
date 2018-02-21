@@ -1,100 +1,110 @@
 <div class="row info">
     <div class="row">
-        <form-header type="Assay" iscollapsed="iscollapsed"></form-header>
+        <form-header class="col-md-3" type="Assay" parent="parent" iscollapsed="iscollapsed"></form-header>
+        <br>
+        <button class="btn btn-primary" ng-click="addAssay();iscollapsed=false"><i class="fa fa-plus"></i> Add Assay</button>
     </div>
     <div class="col-md-12" uib-collapse="iscollapsed">
         <form class="form-horizontal" name="assayForm" role="form" id="addAssayForm" novalidate>
-
+            <div ng-repeat="(index,obj) in substance.specifiedSubstanceDetails.assay">
                 <ng-form name="form">
                     <div class="form-div" ng-class="{'bg-warning' : form.$invalid && form.$flagged}">
                         <div class="row">
                             <div class="col-md-1 text-center">
-                                <delete-button delete="obj" path="assay"></delete-button>
+                                <div ng-cloak><b>{{index+1}}</b></div><br>
+                                <a ng-click="deleteAssay(index)" ng-keypress="deleteAssay(index);" tabindex="0" role="button" role="button" uib-tooltip="Delete Item"><i class="fa fa-trash fa-2x danger"></i></a>
                             </div>
-                            <div class="col-md-9">
+                            <div class="col-md-11">
                                 <div class="row">
-                                    <div class="col-md-4">
-                                        <gsrs-input type="dropdown"
-                                                    ng-model="obj.substanceMeasure"
-                                                    field="Substance Measure"
-                                                    cv=""
-                                                    max="1"
-                                                    formname=form>
-                                        </gsrs-input>
-                                    </div>
-                                    <div class="col-md-5">
-                                        <gsrs-input type="text"
-                                                    ng-model="obj.assayRange"
-                                                    field="Assay Range"
-                                                    required="false"
-                                                    formname=form>
-                                        </gsrs-input>
-                                    </div>
                                     <div class="col-md-3">
-                                        <gsrs-input type="dropdown"
-                                                    ng-model="obj.unit"
-                                                    field="Unit"
-                                                    cv=""
-                                                    formname=form>
-                                        </gsrs-input>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="col-md-1 pull-right">
-                                <modal-form-button type="access"
-                                                   referenceobj="obj"
-                                                   parent="parent">
-                                </modal-form-button>
-                            </div>
-                            <div class="col-md-1 pull-right">
-                                <modal-form-button type="reference"
-                                                   referenceobj="obj"
-                                                   parent="parent">
-                                </modal-form-button>
-                            </div>
-                        </div>
-
-                        <!-- Second Row -->
-                        <div class="row">
-                            <div class="col-md-1 text-center">
-                                &nbsp;
-                            </div>
-                            <div class="col-md-9">
-                                <div class="row">
-                                    <div class="col-md-4">
                                         <gsrs-input type="text"
                                                     ng-model="obj.test"
                                                     field="Test"
                                                     required="false"
-                                                    formname=form>
+                                                    formname=assayForm>
                                         </gsrs-input>
                                     </div>
-                                    <div class="col-md-3">
-                                        <gsrs-input type="dropdown"
-                                                    ng-model="obj.testType"
-                                                    field="Test Type"
-                                                    cv=""
-                                                    max="1"
-                                                    formname=form>
-                                        </gsrs-input>
+                                    <div class="col-md-2">
+                                        <gsrs-input type="dropdown" ng-model="obj.testType" field="testType" label="Test Type" cv="SSG_TEST_TYPE" formname=assayForm></gsrs-input>
                                     </div>
                                     <div class="col-md-5">
                                         <gsrs-input type="text"
-                                                    ng-model="obj.testFreeText"
-                                                    field="Test Free Text"
+                                                    ng-model="obj.testDescription"
+                                                    field="Test Description"
                                                     required="false"
-                                                    formname=form>
+                                                    formname=assayForm>
                                         </gsrs-input>
                                     </div>
-                                </div>
+                                    <div class="col-md-1 pull-right">
+                                        <modal-form-button type="access"
+                                                           referenceobj="obj"
+                                                           parent="parent">
+                                        </modal-form-button>
+                                    </div>
+                                    <div class="col-md-1 pull-right">
+                                        <modal-form-button type="reference"
+                                                           referenceobj="obj"
+                                                           parent="substance"
+                                                           required = true
+                                                           formname=form>
+                                        </modal-form-button>
+                                    </div>
+                                </div> <!-- row -->
+
+                                <!-- Add Multiple Ingredients -->
+                                <button class="btn btn-primary" ng-click="addAssayIngredient(index)"><i class="fa fa-plus"></i> Add Ingredient</button>
+                                <br><br>
+                                <div ng-repeat="(indexIng,objIngred) in obj.ingredients">
+                                    <div class="row">
+                                        <div class="col-md-1 text-center">
+                                            <div ng-cloak><b>{{indexIng+1}}</b></div><br>
+                                            <a ng-click="deleteAssayIngredient(index, indexIng)" ng-keypress="deleteAssayIngredient(index, indexIng);" tabindex="0" role="button" role="button" uib-tooltip="Delete Item"><i class="fa fa-trash fa-2x danger"></i></a>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <substance-chooser-selector referenceobj="objIngred"
+                                                       field="substanceName"
+                                                       name="substanceName"
+                                                       formname="assayForm"
+                                                       label="Substance Name"
+                                                       type="search">
+                                            </substance-chooser-selector>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <modal-form-button type="amount"
+                                                          field="value"
+                                                          referenceobj="objIngred"
+                                                          parent="parent">
+
+                                            </modal-form-button>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <gsrs-input
+                                                    type="dropdown"
+                                                    ng-model="objIngred.resultType"
+                                                    field="resultType"
+                                                    label="Result Type"
+                                                    cv="SSG_RESULT_TYPE"
+                                                    formname=assayForm>
+                                            </gsrs-input>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <gsrs-input type="text"
+                                                        ng-model="objIngred.comment"
+                                                        field="Comment"
+                                                        required="false"
+                                                        formname=assayForm>
+                                            </gsrs-input>
+                                        </div>
+                                    </div> <!-- row -->
+                                    <br>
+                                </div> <!-- ng-repeat Ingredient -->
+
                             </div>
                         </div>
-
-                    </div>
-                    <hr>
+                    </div> <!-- form-div -->
                 </ng-form>
-
+                <hr>
+            </div> <!-- div repeat -->
         </form>
     </div>
 </div>

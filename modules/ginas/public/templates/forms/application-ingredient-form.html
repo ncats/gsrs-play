@@ -9,36 +9,77 @@
         </div>
     </div>
 
-    <div class="row form-row2">
+    <div class="row form-row2" ng-controller="TypeAheadController">
         <div class="col-md-3">
             <gsrs-input type="text" ng-model="ingredList.applicantIngredName" field="applicantIngredName" label="Applicant Ingredient Name" formname=formApp></gsrs-input>
         </div>
-        <div class="col-md-4">
-            <label id="searchExistName" class="text-capitalize">Search Existing Ingredient</label><br>
-            <input type="text" ng-model="ingredList.existIngName" size="10" class="form-control">
-            <div class="font12px-maroon padtop5px"><b>{{ingredList.ingredientName}}</b></div>
+        <div class="col-md-3">
+            <label id="searchExistName" class="text-capitalize">Ingredient Name</label><br>
+            <form class="form-inline main-search" role="search">
+                    <input type="text"
+                               class="form-control"
+                               id="search"
+                               aria-label="Search G-SRS"
+                               title="Search"
+                               placeholder="Search ..."
+                               ng-model = "queryIngred"
+                               typeahead-popup-template-url="app/assets/templates/elements/suggest-popup.html"
+                               uib-typeahead="r.d as r.d for r in getSuggestions($viewValue)"
+                               typeahead-on-select="onSelect($item, $model, $label)"
+                               typeahead-loading="loadingSuggest"
+                               typeahead-focus-first ="false"
+                               autocomplete="off"
+                               size = 35>
+            </form>
+            <div class="font12px-maroon padtop5px"><b>{{ingredList.ingredientName}}</b><br>
+                <span class="colororange"><b>{{ingredList.bdnum}}</b></span>
+                <br>
+                <a href="" class="textdecorateunderline" ng-if="ingredList.bdnum" ng-click="deleteAppIngredientName(prodIdx, ingIdx)">Delete Ingredient Name</a>
+            </div>
             <input type="hidden" name="ingredList.bdnum" value="{{ingredList.bdnum}}">
         </div>
         <div class="col-md-1">
             <br>
-            <button input type="button" ng-click="searchAppIngredientName(prodIdx, ingIdx)">Search</button><br>
-            <span class="colorgreen"><b>{{ingredList.ingNameMessage}}</b></span>
+            <button input type="button" ng-click="searchAppIngredientName(queryIngred, prodIdx, ingIdx)">Search</button><br>
+            <span class="colorred"><b>{{ingredList.ingNameMessage}}</b></span>
         </div>
         <div class="col-md-3">
-            <label id="searchExistBasis" class="text-capitalize">Search Existing Basis of Strength</label><br>
+            <label id="searchExistBasis" class="text-capitalize">Basis of Strength</label><br>
+            <form class="form-inline main-search" role="search">
+                <input type="text"
+                       class="form-control"
+                       id="searchBasis"
+                       aria-label="Search G-SRS"
+                       title="Search"
+                       placeholder="Search ..."
+                       ng-model = "queryBasis"
+                       typeahead-popup-template-url="app/assets/templates/elements/suggest-popup.html"
+                       uib-typeahead="r.d as r.d for r in getSuggestions($viewValue)"
+                       typeahead-on-select="onSelect($item, $model, $label)"
+                       typeahead-loading="loadingSuggest"
+                       typeahead-focus-first ="false"
+                       autocomplete="off"
+                       size="35">
+            </form>
+            <!--
             <input type="text" ng-model="ingredList.existIngBasis" size="10" class="form-control">
-            <div class="font12px-maroon padtop5px"><b>{{ingredList.basisOfStrength}}</b></div>
+            -->
+            <div class="font12px-maroon padtop5px"><b>{{ingredList.basisOfStrength}}</b><br>
+                <span class="colororange"><b>{{ingredList.basisOfStrengthBdnum}}</b></span>
+                <br>
+                <a href="" class="textdecorateunderline" ng-if="ingredList.basisOfStrengthBdnum" ng-click="deleteAppBasisOfStrength(prodIdx, ingIdx)">Delete Basis of Strength</a>
+            </div>
             <input type="hidden" name="ingredList.basisOfStrengthBdnum" value="{{ingredList.basisOfStrengthBdnum}}">
         </div>
         <div class="col-md-1">
             <br>
-            <button input type="button" ng-click="searchAppIngredientBasis(prodIdx, ingIdx)">Search</button><br>
-            <span class="colorgreen"><b>{{ingredList.ingBasisMessage}}</b></span>
+            <button input type="button" ng-click="searchAppIngredientBasis(queryBasis, prodIdx, ingIdx)">Search</button><br>
+            <span class="colorred"><b>{{ingredList.ingBasisMessage}}</b></span>
         </div>
     </div>
 
     <div class="row form-row2">
-        <div class="col-md-2">
+        <div class="col-md-3">
             <gsrs-input type="dropdown" ng-model="ingredList.ingredientType" field="ingredientType" label="Ingredient Type" cv="INGREDIENT_TYPE" formname=formApp></gsrs-input>
         </div>
         <div class="col-md-2">
@@ -47,10 +88,10 @@
         <div class="col-md-2">
             <gsrs-input type="text" ng-model="ingredList.low" field="low" label="Low" formname=formApp></gsrs-input>
         </div>
-        <div class="col-md-2">
-            <gsrs-input type="text" ng-model="ingredList.high" field="high" label="High" formname=formApp></gsrs-input>
+        <div class="col-md-1">
+            <gsrs-input type="text" ng-model="ingredList.high" field="high"></gsrs-input>
         </div>
-        <div class="col-md-2">
+        <div class="col-md-3">
             <gsrs-input type="dropdown" ng-model="ingredList.unit" field="unit" label="Unit" cv="PROD_UNIT" formname=formApp></gsrs-input>
         </div>
     </div>

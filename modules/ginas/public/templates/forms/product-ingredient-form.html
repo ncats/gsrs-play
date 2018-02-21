@@ -17,22 +17,24 @@
             <input type="text" ng-model="ingredList.existIngName" size="10" class="form-control">
             <div class="font12px-maroon padtop5px"><b>{{ingredList.ingredientName}}</b></div>
             <input type="hidden" name="ingredList.bdnum" value="{{ingredList.bdnum}}">
+            <a href="" class="textdecorateunderline padleft40px" ng-if="ingredList.bdnum" ng-click="deleteProdIngredientName(compIdx, lotIdx, ingIdx)">Delete Ingredient Name</a>
         </div>
         <div class="col-md-1">
             <br>
             <button input type="button" ng-click="searchIngredientName(compIdx, lotIdx, ingIdx)">Search</button><br>
-            <span class="colorgreen"><b>{{ingredList.ingNameMessage}}</b></span>
+            <span class="colorred"><b>{{ingredList.ingNameMessage}}</b></span>
         </div>
         <div class="col-md-4">
             <label id="searchExistBasis" class="text-capitalize">Search Existing Basis of Strength</label><br>
             <input type="text" ng-model="ingredList.existIngBasis" size="10" class="form-control">
             <div class="font12px-maroon padtop5px"><b>{{ingredList.basisOfStrength}}</b></div>
             <input type="hidden" name="ingredList.basisOfStrengthBdnum" value="{{ingredList.basisOfStrengthBdnum}}">
+            <a href="" class="textdecorateunderline padleft40px" ng-if="ingredList.basisOfStrengthBdnum" ng-click="deleteProdBasisOfStrength(compIdx, lotIdx, ingIdx)">Delete Basis of Strength</a>
         </div>
         <div class="col-md-1">
             <br>
             <button input type="button" ng-click="searchIngredientBasis(compIdx, lotIdx, ingIdx)">Search</button><br>
-            <span class="colorgreen"><b>{{ingredList.ingBasisMessage}}</b></span>
+            <span class="colorred"><b>{{ingredList.ingBasisMessage}}</b></span>
         </div>
     </div>
 
