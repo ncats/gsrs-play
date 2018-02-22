@@ -1,3 +1,5 @@
+@import ix.core.util.EntityUtils.EntityWrapper
+
 @(id: String, seqType: String)
 
     @ginas("Sequence Search", null) {
@@ -42,7 +44,7 @@
                                     	<option value="LOCAL">Local Alignment Match</option>
                                     </select>
                                 </div>
-                                <div class="col-md-2">
+                                <div class="col-md-4">
                                     <label for="identityType">Sequence Type: </label>
                                     <select class="form-control" ng-init="preload('@seqType')" ng-change="preload(seqType)"
                                     ng-model="seqType" id="seqType" name="seqType" >
@@ -53,17 +55,22 @@
                                 <div class="row">
                                     <div class="col-md-12">
                                         <label for="sequence">Query Sequence:</label>
-                                        <span class="align-right"><a ng-click="cleanSequence('@seqType')" uib-tooltip="Clean sequence"><i
-                                        class="fa fa-magic fa-2x"></i></a></span>
+                                        
                                         <textarea class="form-control" rows="6" id="sequence"
-                                            ng-model="sequence"
                                         style="font-family: monospace"
-                                        title="Search" name="sequence">@ix.ginas.controllers.GinasFactory.getSequence(id)</textarea>
+                                        ng-model="sequence"
+                                        ng-init='sequence=@EntityWrapper.of(ix.ginas.controllers.GinasFactory.getSequence(id)).toFullJson()'
+                                        title="Search" name="sequence">@ix.ginas.controllers.GinasFactory.getSequence(id)
+                                        </textarea>
+                                        <span class="align-right"><a ng-click="cleanSequence('@seqType')" uib-tooltip="Clean sequence"><i
+                                        class="fa fa-magic fa-2x"></i>Clean Sequence</a></span>
+                                        
                                     </div>
                                 </div>
-                            <div class="row">
-                                <button type="submit" class="btn btn-default">Search</button>
-                            </div>
+                                
+                            	<div class="row">
+                                	<button type="submit" class="btn btn-default">Search</button>
+                            	</div>
                             </div>
                     </form>
                 </div>
