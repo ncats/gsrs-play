@@ -69,8 +69,6 @@ import play.db.ebean.Model;
 import play.mvc.Controller;
 import play.mvc.Http;
 import play.mvc.Result;
-import play.mvc.Results;
-import ix.srs.models.*;
 
 public class EntityFactory extends Controller {
     private static final String RESPONSE_TYPE_PARAMETER = "type";
