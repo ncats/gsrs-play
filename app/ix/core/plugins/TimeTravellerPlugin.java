@@ -13,7 +13,7 @@ public class TimeTravellerPlugin  extends Plugin {
 
     public TimeTravellerPlugin (Application app){
         String date = app.configuration().getString("ix.timeTraveller.jumpTo");
-        System.out.println("TIME TRAVELLING TO " + date);
+//        System.out.println("TIME TRAVELLING TO " + date);
         if(date !=null) {
             DateTimeFormatter formatter = DateTimeFormatter.ISO_LOCAL_DATE;
             TimeUtil.setCurrentTime( LocalDate.parse(date, formatter));
