@@ -37,7 +37,7 @@ public class ComparatorMakerTest extends AbstractGinasTest{
 		}
 		Collections.shuffle(mylist);
 		List<MyClass> prefOrder = new ArrayList<>(mylist);
-		Comparator<MyClass> comp=Util.comparitor((m)->m.getId(),prefOrder.stream().map(m->m.getId()));
+		Comparator<MyClass> comp=Util.comparator((m)->m.getId(),prefOrder.stream().map(m->m.getId()));
 		Collections.shuffle(mylist);
 		assertNotEquals(prefOrder,mylist);
 		mylist.sort(comp);

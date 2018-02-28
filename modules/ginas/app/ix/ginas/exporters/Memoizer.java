@@ -1,23 +1,8 @@
 package ix.ginas.exporters;
 
-import ix.ginas.models.v1.Substance;
-
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.UncheckedIOException;
-import java.util.Collections;
-import java.util.LinkedHashSet;
-import java.util.Set;
-import play.Logger;
-import ix.ginas.controllers.*;
-import ix.srs.models.*;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.*;
-import java.util.HashMap;
-import java.util.Map.*;
-import java.util.Map.Entry;
-import java.util.*;
+
 
 public class Memoizer {
 
