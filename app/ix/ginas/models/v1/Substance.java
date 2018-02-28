@@ -1057,7 +1057,7 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
     @JsonIgnore
     @Indexable(facet = true, name = "Reference Count", sortable=true)
     public int getReferenceCount(){
-        return names.size();
+        return references.size();
     }
 
     @JsonIgnore

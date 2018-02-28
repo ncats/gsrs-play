@@ -11,6 +11,7 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import ix.core.util.RunOnly;
 import ix.ginas.models.v1.*;
 import ix.ginas.modelBuilders.ChemicalSubstanceBuilder;
 import org.apache.commons.lang3.StringUtils;
@@ -58,7 +59,6 @@ public class EditingWorkflowTest extends AbstractGinasServerTest {
 		ChemicalSubstanceBuilder csbuild=new SubstanceBuilder()
 				.asChemical()
 				.setStructure(structure)
-				.addName("Test")
 				.generateNewUUID();
 
 		List<Reference> refList = new ArrayList<>();
@@ -67,6 +67,7 @@ public class EditingWorkflowTest extends AbstractGinasServerTest {
 			r.citation="Reference " + i;
 			r.getOrGenerateUUID();
 			r.docType = "SRS";
+			r.makePublicReleaseReference();
 			refList.add(r);
 			csbuild.addReference(r);
 		}
@@ -82,6 +83,7 @@ public class EditingWorkflowTest extends AbstractGinasServerTest {
 		JsonNode node = csbuild.buildJson();
 		String uuid = node.get("uuid").asText();
 
+		assertEquals(1001, ((ArrayNode)node.get("references")).size());
 	/*	try(FileWriter writer = new FileWriter("./testchemical.json")){
 			writer.write(node.toString());
 
@@ -97,7 +99,9 @@ public class EditingWorkflowTest extends AbstractGinasServerTest {
 			ensurePass(api.submitSubstance(node));
 
 			ChemicalSubstance returned = api.fetchSubstanceObjectByUuid(uuid, ChemicalSubstance.class);
-			System.out.println(returned.getReferenceCount());
+			//each of the 1000 names has a reference + the 1 reference for the structure
+			// //+ 1 validation message reference = 1002
+			assertEquals(1002, returned.getReferenceCount());
 		}
 
 		//assertTrue(true);

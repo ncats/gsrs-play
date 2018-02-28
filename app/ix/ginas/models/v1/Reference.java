@@ -145,5 +145,19 @@ public class Reference extends GinasCommonData {
 	public boolean isPublicDomain(){
 		return this.publicDomain;
 	}
-	
+
+	@Override
+	public String toString() {
+		return "Reference{" +
+				"owner=" + owner +
+				", citation='" + citation + '\'' +
+				", docType='" + docType + '\'' +
+				", documentDate=" + documentDate +
+				", publicDomain=" + publicDomain +
+				", tags=" + tags +
+				", uploadedFile='" + uploadedFile + '\'' +
+				", id='" + id + '\'' +
+				", url='" + url + '\'' +
+				'}';
+	}
 }
