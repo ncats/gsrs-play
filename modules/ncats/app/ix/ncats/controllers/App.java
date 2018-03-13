@@ -58,6 +58,8 @@ import ix.core.controllers.StructureFactory;
 import ix.core.controllers.search.SearchFactory;
 import ix.core.controllers.search.SearchRequest;
 import ix.core.models.Structure;
+import ix.core.models.Structure.Optical;
+import ix.core.models.Structure.Stereo;
 import ix.core.models.VInt;
 import ix.core.plugins.IxCache;
 import ix.core.plugins.IxContext;
