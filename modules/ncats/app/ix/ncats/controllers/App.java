@@ -918,7 +918,7 @@ public class App extends Authentication {
 	public static byte[] render (Structure struc, String format, int size, int[] amap)
 			throws Exception {
 		Map newDisplay = new HashMap();
-		if(struc.stereoChemistry == struc.stereoChemistry.RACEMIC){
+		if(Stereo.RACEMIC.equals(struc.stereoChemistry)){
 			newDisplay.put(DisplayParams.PROP_KEY_DRAW_STEREO_LABELS_AS_RELATIVE, true);
 		}
 		MolHandler mh = new MolHandler
@@ -927,32 +927,32 @@ public class App extends Authentication {
 		if (mol.getDim() < 2) {
 			mol.clean(2, null);
 		}
-		if(struc.opticalActivity!= struc.opticalActivity.UNSPECIFIED
+		if(!Optical.UNSPECIFIED.equals(struc.opticalActivity)
 				&& struc.opticalActivity!=null){
 			if(struc.definedStereo>0){
-				if(struc.opticalActivity==struc.opticalActivity.PLUS_MINUS){
-					if(struc.stereoChemistry==struc.stereoChemistry.EPIMERIC
-							||struc.stereoChemistry==struc.stereoChemistry.RACEMIC
-							||struc.stereoChemistry==struc.stereoChemistry.MIXED){
+				if(Optical.PLUS_MINUS.equals(struc.opticalActivity)){
+					if(Stereo.EPIMERIC.equals(struc.stereoChemistry)
+							||Stereo.RACEMIC.equals(struc.stereoChemistry)
+							||Stereo.MIXED.equals(struc.stereoChemistry)){
 						mol.setProperty("BOTTOM_TEXT","relative stereochemistry");
 					}
 				}
 			}
-			if(struc.opticalActivity==struc.opticalActivity.PLUS){
+			if(struc.opticalActivity==Optical.PLUS){
 				mol.setProperty("BOTTOM_TEXT","optical activity: (+)");
-				if(struc.stereoChemistry == struc.stereoChemistry.UNKNOWN){
+				if(Stereo.UNKNOWN.equals(struc.stereoChemistry)){
 					newDisplay.put(DisplayParams.PROP_KEY_DRAW_STEREO_LABELS_AS_STARRED, true);
 				}
-			} else if(struc.opticalActivity==struc.opticalActivity.MINUS) {
+			} else if(struc.opticalActivity==Optical.MINUS) {
 				mol.setProperty("BOTTOM_TEXT","optical activity: (-)");
-				if(struc.stereoChemistry == struc.stereoChemistry.UNKNOWN){
+				if(Stereo.UNKNOWN.equals(struc.stereoChemistry)){
 					newDisplay.put(DisplayParams.PROP_KEY_DRAW_STEREO_LABELS_AS_STARRED, true);
 				}
 			}               
 		}
 
 		if(size>250){
-			if(struc.stereoChemistry != struc.stereoChemistry.ACHIRAL)
+			if(Stereo.ACHIRAL.equals(struc.stereoChemistry))
 				newDisplay.put(DisplayParams.PROP_KEY_DRAW_STEREO_LABELS, true);
 		}
 		if(newDisplay.size()==0)newDisplay=null;
