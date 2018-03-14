@@ -76,6 +76,7 @@ import ix.core.search.text.TextIndexer;
 import ix.core.search.text.TextIndexer.FV;
 import ix.core.search.text.TextIndexer.Facet;
 import ix.core.util.CachedSupplier;
+import ix.core.util.ConfigHelper;
 import ix.core.util.Java8Util;
 import ix.core.util.StopWatch;
 import ix.core.util.TimeUtil;
@@ -109,7 +110,7 @@ public class App extends Authentication {
 	private static final String DISPLAY_CD_VALUE_RELATIVE = "RELATIVE";
 
 	static final String APP_CACHE = App.class.getName();
-	public static final int FACET_DIM = 20;
+	public static final int FACET_DIM = ConfigHelper.getInt("ix.core.facetValueCount", 20);
 	public static final int MAX_SEARCH_RESULTS = 1000;
 	
 	
