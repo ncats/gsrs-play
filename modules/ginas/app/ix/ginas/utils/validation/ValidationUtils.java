@@ -1524,6 +1524,7 @@ public class ValidationUtils {
 			strat.addAndProcess(
 					validateChemicalStructure(cs.structure, struc, strat), gpm);
 			
+			ChemUtils.fixChiralFlag(cs.structure, gpm);
 			ChemUtils.checkChargeBalance(cs.structure, gpm);
 			
 			
@@ -1605,6 +1606,7 @@ public class ValidationUtils {
 		}
 
 		ChemUtils.checkValance(newstr, gpm);
+		
 		
 
 		return gpm;
