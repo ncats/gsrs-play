@@ -14,7 +14,7 @@
                                 <delete-button delete="obj" path="polymer.structuralUnits"></delete-button>
                             </div>
                             <div class="col-md-2">
-                                <rendered id={{obj._structure.id}}></rendered>
+                                <rendered id={{obj._structure.id || obj.uuid}}></rendered>
                             </div>
                             <div class="col-md-8">
                                 <div class="row">

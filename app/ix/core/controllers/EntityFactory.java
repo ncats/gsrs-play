@@ -40,11 +40,7 @@ import com.fasterxml.jackson.databind.deser.DeserializationProblemHandler;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.github.fge.jsonpatch.JsonPatch;
 
-import ix.core.CacheStrategy;
-import ix.core.DefaultValidator;
-import ix.core.ExceptionValidationMessage;
-import ix.core.ValidationResponse;
-import ix.core.Validator;
+import ix.core.*;
 import ix.core.adapters.EntityPersistAdapter;
 import ix.core.adapters.InxightTransaction;
 import ix.core.controllers.v1.RouteFactory;
@@ -1248,7 +1244,23 @@ public class EntityFactory extends Controller {
 
                 EntityPersistAdapter.getInstance().deepreindex(entityThatWasSaved);
             }catch(Exception e){
-                Logger.error("Error updating entity", e);
+                String errorID=UUID.randomUUID().toString().split("-")[0];
+                Logger.error("Error updating entity [Error ID:" + errorID + "]", e);
+
+                vrlist.get(0).setInvalid();
+                vrlist.get(0).addValidationMessage(new ValidationMessage(){
+
+                    @Override
+                    public String getMessage() {
+                        return "Error updating entity [Error ID:" + errorID + "]:" + e.getMessage() +  ". See applicaiton log for more details.";
+                    }
+
+                    @Override
+                    public MESSAGE_TYPE getMessageType() {
+                        return MESSAGE_TYPE.ERROR;
+                    }
+
+                });
             }finally{
                 tx.end();
             }
