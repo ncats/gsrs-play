@@ -8,7 +8,7 @@ import java.util.Collections;
 import java.util.Set;
 
 /**
- * Created by katzelda on 8/23/16.
+ * Created by peryeata on 8/29/17.
  */
 public class SRSLegacyDictionaryExporterFactory implements SubstanceExporterFactory {
 
@@ -28,6 +28,4 @@ public class SRSLegacyDictionaryExporterFactory implements SubstanceExporterFact
     public Exporter<Substance> createNewExporter(OutputStream out, Parameters params) throws IOException {
         return new SRSLegacyDictionaryExporter(out);
     }
-
-
 }

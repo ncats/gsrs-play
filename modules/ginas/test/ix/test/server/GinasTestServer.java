@@ -5,35 +5,30 @@ import static play.test.Helpers.fakeApplication;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.UncheckedIOException;
 import java.lang.reflect.Field;
 import java.net.URI;
 import java.net.URL;
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import javax.sql.DataSource;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.typesafe.config.ConfigFactory;
 import com.typesafe.config.ConfigValueFactory;
-import ix.core.adapters.EntityPersistAdapter;
 import ix.core.factories.EntityProcessorFactory;
+import ix.core.models.*;
 import org.apache.commons.io.FileUtils;
 import org.junit.rules.ExternalResource;
 import org.junit.rules.TemporaryFolder;
-import org.omg.SendingContext.RunTime;
 import org.w3c.dom.Document;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -56,8 +51,8 @@ import ix.test.util.TestUtil;
 import ix.utils.Util;
 import net.sf.ehcache.CacheManager;
 import play.Configuration;
-import play.GlobalSettings;
 import play.api.Application;
+import play.db.DB;
 import play.db.ebean.Model;
 import play.libs.ws.WSCookie;
 import play.libs.ws.WSResponse;
@@ -129,6 +124,53 @@ public class GinasTestServer extends ExternalResource{
         }
     }
 
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    public static class EntityProcessorConfig{
+        private final Class<?> entityClass, processorClass;
+
+        private final Map<String, Object> with;
+
+        private EntityProcessorConfig(Builder builder){
+            this.entityClass = builder.entityClass;
+            this.processorClass = builder.processorClass;
+            this.with = new LinkedHashMap<>(builder.with);
+        }
+
+        @JsonProperty("with")
+        public Map<String, Object> getWith(){
+            return with;
+        }
+        @JsonProperty("class")
+        public Class<?> getEntityClass() {
+            return entityClass;
+        }
+        @JsonProperty("processor")
+        public Class<?> getProcessorClass() {
+            return processorClass;
+        }
+
+
+        public static class Builder{
+            private final Class<?> entityClass, processorClass;
+
+            private Map<String, Object> with = new LinkedHashMap<>();
+
+            public Builder(Class<?> entityClass, Class<?> processorClass) {
+                this.entityClass = entityClass;
+                this.processorClass = processorClass;
+            }
+
+            public Builder with(String key, Object value){
+                with.put(key, value);
+                return this;
+            }
+
+            public EntityProcessorConfig build(){
+                return new EntityProcessorConfig(this);
+            }
+        }
+    }
+
     public static int DEFAULT_PORT = 9005;
 
      private static final String FAKE_USERNAME_PREFIX="FAKE";
@@ -180,6 +222,8 @@ public class GinasTestServer extends ExternalResource{
     private File storage;
     private CacheManager cacheManager;
 
+
+    private Predicate<EntityProcessorConfig> entityProcessorFilter =  null;
     public URL getHomeUrl() throws IOException{
         return new URL(defaultBrowserSession.constructUrlFor("ginas/app"));
     }
@@ -548,8 +592,11 @@ public class GinasTestServer extends ExternalResource{
     }
 
     public DataSource getDataSource() {
+        return getDataSource("default");
+    }
+
+    public DataSource getDataSource(String source){
         Config confFile = ConfigUtil.getDefault().getConfig();
-        String source = "default";
         Config dbconf = confFile.getConfig("db");
         Config db = dbconf.getConfig(source);
         BoneCPDataSource ds = new BoneCPDataSource();
@@ -557,7 +604,10 @@ public class GinasTestServer extends ExternalResource{
         ds.setUsername(db.getString("user"));
         ds.setPassword(db.getString("password"));
         return ds;
+
     }
+
+
 
     @Override
     protected void before() throws Throwable {
@@ -614,26 +664,55 @@ public class GinasTestServer extends ExternalResource{
     protected void extendedBefore(Supplier<Config> confSupplier){
 
     }
+    public void addEntityProcessor( EntityProcessorConfig processorConfig) {
+        addEntityProcessor(ConfigOptions.THIS_TEST_ONLY, processorConfig);
+    }
+
+    public void addEntityProcessor(ConfigOptions options, EntityProcessorConfig processorConfig) {
+        Objects.requireNonNull(processorConfig);
+        String processorJson;
+        try {
+            processorJson = new ObjectMapper().writer().writeValueAsString(processorConfig);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+        this.modifyConfig("ix.core.entityprocessors += " + processorJson, options);
+
+
+    }
+
+    /**
+     * Remove Any Entity processors AT START UP TIME that match
+     * the given predicate.  Calling this method multiple times
+     * will chain the predicates together with "or".
+     *
+     * @param predicate if the predicate returns true, remove that processor before starting;
+     *                  can not be null.
+     */
+    public void removeEntityProcessors(java.util.function.Predicate<EntityProcessorConfig> predicate){
+
+        Objects.requireNonNull(predicate);
+
+        if(entityProcessorFilter == null){
+            entityProcessorFilter = predicate;
+        }else{
+            entityProcessorFilter.or(predicate);
+        }
+
+    }
+
     public void addEntityProcessor(Class<?> substanceClass, Class<?> myProcessorClass) {
         this.addEntityProcessor(ConfigOptions.THIS_TEST_ONLY, substanceClass, myProcessorClass);
 
     }
     public void addEntityProcessor(ConfigOptions options, Class<?> substanceClass, Class<?> myProcessorClass) {
 
-        this.modifyConfig("ix.core.entityprocessors +=  { "+
-                    "               \"class\":\""+substanceClass.getName()+"\",\n" +
-                    "               \"processor\":\""+myProcessorClass.getName() +"\",\n" +
-                    "        }", options);
+        this.addEntityProcessor(options, new EntityProcessorConfig.Builder(substanceClass, myProcessorClass).build());
+
 
     }
 
-    public void addEntityProcessor(ConfigOptions options, Class<?> substanceClass, Class<?> myProcessorClass, String with) {
-        this.modifyConfig("ix.core.entityprocessors +=  { "+
-                "               \"class\":\""+substanceClass.getName()+"\",\n" +
-                "               \"processor\":\""+myProcessorClass.getName() +"\",\n" +
-                        "\"with\":" + with +
-                "        }", options);
-    }
+
 
     private void initializeControllers() {
     	CachedSupplier.resetAllCaches();
@@ -648,7 +727,6 @@ public class GinasTestServer extends ExternalResource{
         TestUtil.tryToDeleteRecursively(home);
 
 
-        createExtraTables(createConnection(ds));
 
     }
 
@@ -748,7 +826,6 @@ public class GinasTestServer extends ExternalResource{
     protected void after() {
         stop();
         testSpecificConfig = ConfigFactory.empty();
-        System.out.println("export dir is " + exportDir.getRoot().getAbsolutePath());
         exportDir.delete();
     }
 
@@ -793,6 +870,46 @@ public class GinasTestServer extends ExternalResource{
         }
         running = true;
 
+
+        if(entityProcessorFilter !=null){
+            List<EntityProcessorConfig> filteredEntities = config.getObjectList("ix.core.entityprocessors")
+                    .stream()
+                    .map(co -> {
+                        Map<String, Object> map = co.unwrapped();
+                        try{
+                            ClassLoader classLoader = GinasTestServer.class.getClassLoader();
+                            //We have to use loadClass instead of Class.forName
+                            //because forName will also initialize the class
+                            //and Play processors have static initializers that
+                            //will crash when the application isn't running (which it isn't yet).
+
+                            Class<?> entity = classLoader.loadClass((String) map.get("class"));
+                            Class<?> processor = classLoader.loadClass((String) map.get("processor"));
+
+                            Map<String, ?> with = (Map<String, ?>) map.get("with");
+
+                            EntityProcessorConfig.Builder builder = new EntityProcessorConfig.Builder(entity, processor);
+                            if(with !=null && !with.isEmpty()){
+                                with.forEach( builder::with);
+                            }
+                            return builder.build();
+                        }catch(Throwable t){
+                            throw new RuntimeException(t);
+                        }
+                    })
+                    .filter(entityProcessorFilter.negate())
+                    .collect(Collectors.toList());
+
+            try {
+                String json = "ix.core.entityprocessors = " + new ObjectMapper().writer().writeValueAsString(filteredEntities);
+
+                config = ConfigFactory.parseString(json)
+                        .withFallback(config);
+            } catch (JsonProcessingException e) {
+                e.printStackTrace();
+            }
+        }
+
 //        System.out.println("before");
 //
 //        new Configuration(config).asMap().entrySet()
@@ -812,11 +929,13 @@ public class GinasTestServer extends ExternalResource{
                     new Model.Finder(Long.class, Principal.class);
 
             initializeControllers();
+            createExtraTables(createConnection(DB.getDataSource()));
+
             //we have to wait to create the users until after Play has started.
             createInitialFakeUsers();
         } catch(Throwable ex){
             running = false;
-            throw ex;
+            throw new RuntimeException(ex);
         }
     }
     

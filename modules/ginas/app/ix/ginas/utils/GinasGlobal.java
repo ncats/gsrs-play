@@ -130,8 +130,10 @@ public class GinasGlobal extends Global {
 
 
 			AccessLogger.info(messagePrefix + " FETCH \""+ req.uri() +"\"");
+			long start = System.currentTimeMillis();
 			Promise<Result> result= this.delegate.call(ctx);
-			AccessLogger.info(messagePrefix + " RETURNED \""+ req.uri() +"\"");
+			long end = System.currentTimeMillis();
+			AccessLogger.info(messagePrefix + " RETURNED:"+ (end-start)+ "ms \""+ req.uri() +"\"");
 			return result;
 		}
 	}

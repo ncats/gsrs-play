@@ -7,6 +7,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.TreeMap;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
@@ -15,8 +16,9 @@ import java.util.stream.Stream;
 import ix.core.controllers.RequestOptions;
 import ix.core.util.CachedSupplier;
 import ix.core.util.EntityUtils;
-import ix.core.util.StreamUtil;
 import ix.core.util.EntityUtils.EntityInfo;
+import ix.core.util.StreamUtil;
+import ix.utils.Util;
 import play.Logger;
 import play.mvc.Http;
 
@@ -53,26 +55,6 @@ public class SearchOptions implements RequestOptions {
 		public void add(String title, long[] range) {
 			this.range.put(title, range);
 		}
-
-		@Override
-		public String toString() {
-
-			StringBuilder builderMap = new StringBuilder(100);
-			builderMap.append("{");
-			for(Iterator<Map.Entry<String, long[]>> iter = range.entrySet().iterator(); iter.hasNext();){
-				Map.Entry<String, long[]> entry = iter.next();
-				builderMap.append(entry.getKey()).append(" : ").append(Arrays.toString(entry.getValue()));
-				if(iter.hasNext()){
-					builderMap.append(",");
-				}
-			}
-			builderMap.append("}");
-
-			return "FacetLongRange{" +
-					"field='" + field + '\'' +
-					", range=" + builderMap.toString() +
-					'}';
-		}
 	}
 
 	public static final int DEFAULT_TOP = 10;
@@ -104,6 +86,7 @@ public class SearchOptions implements RequestOptions {
 	
 	private boolean wait = false;
 	private String filter;
+
 
 	/**
 	 * Facet is of the form: DIMENSION/VALUE...
@@ -244,8 +227,8 @@ public class SearchOptions implements RequestOptions {
 
 	public String toString() {
 		StringBuilder sb = new StringBuilder("SearchOptions{kind=" + (getKind() != null ? getKind().getName() : "") + ",top="
-				+ getTop() + ",skip=" + skip + ",fdim=" + getFdim() + ",fetch=" + getFetch() + ",sideway=" + isSideway() + ",filter="
-				+ filter + ",facets={");
+	 + getTop() + ",skip=" + skip + ",fdim=" + getFdim() + ",fetch=" + getFetch() + ",sideway=" + isSideway() + ",filter="
+	 + filter + ",facets={");
 		for (Iterator<String> it = facets.iterator(); it.hasNext();) {
 			sb.append(it.next());
 			if (it.hasNext())
@@ -268,40 +251,48 @@ public class SearchOptions implements RequestOptions {
 	}
 
 	private DrillAndPath parseDrillAndPath(String dd) {
-		int pos = dd.indexOf('/');
-		if (pos > 0) {
-			String facet = dd.substring(0, pos);
-			String value = dd.substring(pos + 1);
-			String[] drill = value.split("/");
-			for (int i = 0; i < drill.length; i++) {
-				drill[i] = drill[i].replace("$$", "/");
-			}
-			return new DrillAndPath(facet, drill);
-		}
-		return null;
+		return DrillAndPath.fromRaw(dd);
 	}
 
 	public Map<String, List<DrillAndPath>> getDrillDownsMap() {
+        // parses to a map, though it doesn't NEED to be a map,
+        // it could just as easily be a flat list
+        Map<String, List<DrillAndPath>> providedDrills = StreamUtil.with(this.facets.stream())
+                                                                   .and(this.lfacets.stream())
+                                                                   .stream()
+                            .map(dd -> parseDrillAndPath(dd))
+                            .filter(Objects::nonNull)
+                            .collect(Collectors.groupingBy(d->d.getParentDrillName()));
+        return providedDrills;
+    }
+	
+    public Map<String, List<DrillAndPath>> getDrillDownsMapExcludingRanges() {
+        Map<String, List<DrillAndPath>> providedDrills = StreamUtil.with(this.facets.stream())
+                                                                   //.and(this.lfacets.stream())
+                                                                   .stream()
+                            .map(dd -> parseDrillAndPath(dd))
+                            .filter(Objects::nonNull)
+                            .collect(Collectors.groupingBy(d->d.getParentDrillName()));
+        return providedDrills;
+    }
+	
+	/**
+	 * Join facets together with special flags for NOT and AND
+	 * @return
+	 */
+	public Map<String, List<DrillAndPath>> getEnhancedDrillDownsMap() {
 		// parses to a map, though it doesn't NEED to be a map,
 	    // it could just as easily be a flat list
-		Map<String, List<DrillAndPath>> providedDrills = StreamUtil.with(this.facets.stream())
-				                                                   .and(this.lfacets.stream())
-				                                                   .stream()
+		Map<String, List<DrillAndPath>> providedDrills =this.facets
+		                    .stream()
 		                    .map(dd -> parseDrillAndPath(dd))
 		                    .filter(Objects::nonNull)
-		                    .collect(Collectors.groupingBy(d->d.getDrill()));
+		                    
+		                    .collect(Collectors.groupingBy(d->d.getParentDrillName()));
 		return providedDrills;
 	}
-	public Map<String, List<DrillAndPath>> getDrillDownsMapExcludingRanges() {
-		Map<String, List<DrillAndPath>> providedDrills = StreamUtil.with(this.facets.stream())
-				//.and(this.lfacets.stream())
-				.stream()
-				.map(dd -> parseDrillAndPath(dd))
-				.filter(Objects::nonNull)
-				.collect(Collectors.groupingBy(d->d.getDrill()));
-		return providedDrills;
-	}
-	public class DrillAndPath {
+
+	public static class DrillAndPath {
 		private String drill;
 		private String[] paths;
 
@@ -313,13 +304,54 @@ public class SearchOptions implements RequestOptions {
 		public String asLabel() {
 			return String.join("/", getPaths());
 		}
+		
+		/**
+		 * Returns the selected facet as it would be specified in a URL
+		 * @return
+		 */
+		public String asEncoded(){
+			return Util.encodeFacetComponent(this.getDrill()) + "/" 
+		         + Util.encodeFacetComponent(this.asLabel());
+		}
+		
 
 		public String getDrill() {
 			return drill;
 		}
+		
+		public String getParentDrillName(){
+			String edrill = getDrill();
+			if(edrill.startsWith("!") || edrill.startsWith("^")){
+				return edrill.substring(1);
+			}
+			return edrill;
+		}
+		
+		public String getPrefix(){
+			String edrill = getDrill();
+			if(edrill.startsWith("!") || edrill.startsWith("^")){
+				return edrill.substring(0, 1);
+			}
+			return "";
+		}
+		
 
 		public String[] getPaths() {
 			return paths;
+		}
+		
+		public static DrillAndPath fromRaw(String dd){
+				int pos = dd.indexOf('/');
+				if (pos > 0) {
+					String facet = dd.substring(0, pos);
+					String value = dd.substring(pos + 1);
+					String[] drill = value.split("/");
+					for (int i = 0; i < drill.length; i++) {
+						drill[i] = Util.decodeFacetComponent(drill[i]);
+					}
+					return new SearchOptions.DrillAndPath(facet, drill);
+				}
+				return null;
 		}
 
 	}
@@ -444,6 +476,16 @@ public class SearchOptions implements RequestOptions {
 		}
 		public Builder facets(String ... facets) {
 			this.facets = Arrays.asList(facets);
+			return this;
+		}
+		
+		public Builder addfacet(String facetName, String facetValue) {
+			
+			String toAdd = Util.facetEncode(facetName, facetValue);
+			
+			if(this.facets==null)this.facets= new ArrayList<String>();
+			this.facets.add(toAdd);
+			
 			return this;
 		}
 

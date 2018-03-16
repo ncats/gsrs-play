@@ -2,7 +2,8 @@
 
 
 @(references: List[Reference])
-<button class="btn btn-primary label-offset det" ng-click = "referencescollapse = !referencescollapse">
+
+<button class="btn btn-primary label-offset det" ng-init="referencescollapse=true" ng-click = "referencescollapse = !referencescollapse">
     <i ng-show="referencescollapse" class="fa fa-caret-right"></i>
     <i ng-hide="referencescollapse" class="fa fa-caret-down"></i>
     References&nbsp;<span class="badge"> @references.length</span></button>

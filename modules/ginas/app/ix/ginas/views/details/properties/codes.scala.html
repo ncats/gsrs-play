@@ -30,15 +30,19 @@
                 <td>
                     <tree-view text = "'@c.comments'"></tree-view>
                 </td>
+
+
                 @if(c.getReferences.size > 0){
                     <td>
-                <referencesmanager ref-count substance ="'@id'" divid ="'@c.getUuid'" references = "@GinasApp.getAsJson(c.getReferences())"></referencesmanager>
-            </td>
-            </tr>
-            <tr><td class = "'@c.getUuid'" colspan = "5"></td></tr>
-        }else{
-                <td>no refs</td></tr>
-            }
+                      <referencesmanager ref-count substance ="'@id'" divid ="'@c.getUuid'" references = "@GinasApp.getAsJson(c.getReferences())"></referencesmanager>
+                    </td>
+
+                </tr>
+                <tr><td class = "'@c.getUuid'" colspan = "5"></td></tr>
+                }else{
+                    <td>no refs</td></tr>
+                }
+
             <tr ng-if="audit==true"><td colspan = "5">Created by <code>@c.createdBy</code> on <code>@c.created</code> , Edited by <code>@c.lastEditedBy</code> on <code>@c.lastEdited</code></td></tr>
         }
     </table>

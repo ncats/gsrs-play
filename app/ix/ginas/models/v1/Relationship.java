@@ -117,6 +117,7 @@ public class Relationship extends CommonDataElementOfCollection {
      */
     @JsonIgnore
     public boolean isAutomaticInvertable(){
+    	if(type==null)return false;
         //Explicitly ignore alternative relationships
         if(this.type.equals(Substance.ALTERNATE_SUBSTANCE_REL) || this.type.equals(Substance.PRIMARY_SUBSTANCE_REL)){
             return false;

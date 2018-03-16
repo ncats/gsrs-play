@@ -1,7 +1,7 @@
 [
     {"codeSystem":"JMPR-PESTICIDE RESIDUE","url":"http://www.codexalimentarius.net/pestres/data/pesticides/details.html?id=$CODE$"},    
     {"codeSystem":"CODEX ALIMENTARIUS (GSFA)","url":"http://www.fao.org/gsfaonline/additives/details.html?id=$CODE$"},   
-    {"codeSystem":"Food Contact Sustance Notif, (FCN No.)","url":"http://www.accessdata.fda.gov/scripts/fcn/fcnDetailNavigation.cfm?rpt=fcslisting&id=$CODE$"},    
+    {"codeSystem":"Food Contact Substance Notif, (FCN No.)","url":"http://www.accessdata.fda.gov/scripts/fcn/fcnDetailNavigation.cfm?rpt=fcslisting&id=$CODE$"},
     {"codeSystem":"JECFA EVALUATION","url":"http://apps.who.int/food-additives-contaminants-jecfa-database/chemical.aspx?chemINS=$CODE$"},    
     {"codeSystem":"IUPHAR","url":"http://www.guidetopharmacology.org/GRAC/LigandDisplayForward?ligandId=$CODE$"},    
     {"codeSystem":"ALANWOOD","url":"http://www.alanwood.net/pesticides/$CODE$"},    

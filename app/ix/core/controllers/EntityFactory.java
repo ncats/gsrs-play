@@ -1140,12 +1140,17 @@ public class EntityFactory extends Controller {
          	return (EntityWrapper<T>)nWrap; //Delete & Create
          }
     }
-    
+
     public static void doPojoPatch(EntityWrapper oldValue, EntityWrapper newValue) throws Exception{
-    	
-    	Object rawOld = oldValue.getValue();
-    	Object rawNew = newValue.getValue();
-    	
+
+            Object rawOld = oldValue.getValue();
+            Object rawNew = newValue.getValue();
+            System.out.println("=================");
+            System.out.println(EntityWrapper.of(rawOld).toInternalJson());
+            System.out.println("=================");
+            System.out.println(EntityWrapper.of(rawNew).toInternalJson());
+            System.out.println("=================");
+
     	//Get the difference as a patch
         PojoPatch patch =PojoDiff.getDiff(rawOld, rawNew);
         
@@ -1183,7 +1188,6 @@ public class EntityFactory extends Controller {
     		   .map(o->EntityWrapper.of(o))
     		   .filter(ew->ew.isExplicitDeletable())
     		   .forEach(ew->{
-    			   System.out.println("Deleting:" +((Model)ew.getValue()) );
     			   Logger.warn("deleting:" + ((Model)ew.getValue()));
     			   ew.delete();
     		   });
@@ -1304,12 +1308,7 @@ public class EntityFactory extends Controller {
             return RouteFactory._apiBadRequest("Error updating record");
         }
     }
-    
-    
 
-    
-    
-    
     // This could become a nice method.
     //TODO: move to EntityWrapper
     private static Optional<EntityWrapper<?>> getCurrentValue(Object value){
@@ -1319,5 +1318,6 @@ public class EntityFactory extends Controller {
     		return Optional.empty();
     	}
     }
-    
+
 }
+ 

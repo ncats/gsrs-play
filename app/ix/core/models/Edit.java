@@ -31,6 +31,21 @@ import ix.utils.Global;
 @Entity
 @Table(name="ix_core_edit")
 public class Edit extends BaseModel {
+
+
+    public static <T> Edit create(T before, T after){
+        EntityWrapper<?> ew = EntityWrapper.of(after);
+        Edit edit = new Edit(ew.getEntityClass(), ew.getKey().getIdString());
+        EntityWrapper<?> ewold = EntityWrapper.of(before);
+
+        edit.oldValue = ewold.toFullJson();
+        edit.version = ewold.getVersion().orElse(null);
+        edit.comments = ew.getChangeReason().orElse(null);
+        edit.kind = ew.getKind();
+        edit.newValue = ew.toFullJson();
+
+        return edit;
+    }
     @JsonIgnore
     @Id
     public UUID id; // internal random id

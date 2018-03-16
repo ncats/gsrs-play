@@ -1,247 +1,272 @@
 @import ix.ncats.controllers.App
 @import ix.ncats.controllers.FacetDecorator
+
 @import ix.core.search.FieldedQueryFacet
 @import ix.core.models.Structure
 @import ix.core.search.SearchResultContext
 @import ix.ginas.models.v1.{ChemicalSubstance, ProteinSubstance, MixtureSubstance, PolymerSubstance, Substance}
 @import ix.core.search.FieldedQueryFacet
 @import ix.ginas.controllers.GinasApp
-
+@import ix.core.search.SearchOptions.DrillAndPath
 
 @import be.objectify.deadbolt.java.views.html._
 @import ix.ncats.controllers.security.IxDynamicResourceHandler
 
 @(title: String, kind: String,
-        resetAction: String,
-        current: Int, rows: Int, total: Int,
-        pages: Array[Int],
-        facets: Array[FacetDecorator],
-        ctx: SearchResultContext = null
+resetAction: String,
+current: Int, rows: Int, total: Int,
+pages: Array[Int],
+facets: Array[FacetDecorator],
+ctx: SearchResultContext = null
 )(header: Html)(content: Html)
 
 @ginas(title, kind) {
-    @header
+@header
 } {
-    @defining(ctx != null &&
-            "Running".equals(ctx.getStatus().toString()) &&
-            request().getQueryString("q") != null) { searchFlag =>
-        <div class="row">
+@defining(ctx != null &&
+"Running".equals(ctx.getStatus().toString()) &&
+request().getQueryString("q") != null) { searchFlag =>
+<div class="row">
 
-            @if(total > 0 && facets.length > 0) {
-                <div class="col-md-3" id="facet-col">
+    @if(total > 0 && facets.length > 0) {
+    <div class="col-md-3" id="facet-col">
 
 
-                    <div class="btn btn-primary hidden-md hidden-lg" ng-show="isCollapsed" ng-click ='isCollapsed = !isCollapsed'>
-                        <i class="fa fa-filter"></i> Show Filters
-                    </div>
-                    <div class="btn btn-primary hidden-md hidden-lg" ng-hide="isCollapsed" ng-click ='isCollapsed = !isCollapsed'>
-                        <i class="fa fa-filter"></i> Hide Filters
-                    </div>
-                    <div uib-collapse="isCollapsed" class="panel-group">
-                    @dynamic(name = IxDynamicResourceHandler.IS_ADMIN, handler = new ix.ncats.controllers.security.IxDeadboltHandler()) {
-                        <div>
-                        <label class="minor-option">
-                            Show Deprecated Records
-                            <input type="checkbox"     ng-model="showDeprecated"
-                                                       ng-change="showDeprecatedChange();"
-                                                       ng-true-value="'true'"
-                                                       ng-false-value="null"
-                                                       title="Show Deprecated"
-                                                       name="ShowDeprecated"
-                                                       id ="ShowDeprecated"
-                                                       aria-label="Show Deprecated" />
-                        </label>
-                        </div>
-                    }
-                    @filters(facets, searchFlag)
-                    </div>
-                </div>
+        <div class="btn btn-primary hidden-md hidden-lg" ng-show="isCollapsed" ng-click ='isCollapsed = !isCollapsed'>
+            <i class="fa fa-filter"></i> Show Filters
+        </div>
+        <div class="btn btn-primary hidden-md hidden-lg" ng-hide="isCollapsed" ng-click ='isCollapsed = !isCollapsed'>
+            <i class="fa fa-filter"></i> Hide Filters
+        </div>
+        <div uib-collapse="isCollapsed" class="panel-group">
+            @dynamic(name = IxDynamicResourceHandler.IS_ADMIN, handler = new ix.ncats.controllers.security.IxDeadboltHandler()) {
+            <div>
+                <label class="minor-option">
+                    Show Deprecated Records
+                    <input type="checkbox"     ng-model="showDeprecated"
+                           ng-change="showDeprecatedChange();"
+                           ng-true-value="'true'"
+                           ng-false-value="null"
+                           title="Show Deprecated"
+                           name="ShowDeprecated"
+                           id ="ShowDeprecated"
+                           aria-label="Show Deprecated" />
+                </label>
+            </div>
+            }
+            @filters(facets, searchFlag)
+        </div>
+    </div>
 
-                <div class="col-md-9">
+    <div class="col-md-9">
+        } else {
+        <div class="col-md-12">
+            }
+            
+            
+				@defining(App.getSelectedFacets()) { selfacets =>
+					@if(selfacets!=null && selfacets.size()>0){
+						<div 
+						
+						
+						 @if(total > 0) {
+                class="alert alert-success alert-dismissible" 
                 } else {
-                <div class="col-md-12">
+               class="alert alert-danger alert-dismissible" 
                 }
+						class="alert alert-success alert-dismissible" 
+						role="alert" id="selected-filter-container">
+							<div id="selected-filter-container-inner">
+								@for( fac <- selfacets ){
+									@facetRemoval(fac)
+								}
+							</div>
+						</div>                
+						@if(request().getQueryString("type")==null){
+							<div ng-init="refineenabled=true"></div>
+						}
+					}
+					
+				}
+            
             @defining(App.getUnspecifiedFacets(facets)) { unspecf =>
-                @if(request().getQueryString("q") != null || !unspecf.isEmpty()) {
-                    <div
-                        @if(total > 0) {
-                    class="alert alert-dismissible no-margin center-text"
-                        } else {
-                    class="alert alert-danger alert-dismissible no-margin center-text"
-                        }
-                    role="alert">
+            @if(request().getQueryString("q") != null || (!unspecf.isEmpty() && total > 0)) {
+            <div
+                    @if(total > 0) {
+                class="alert alert-dismissible no-margin center-text"
+                } else {
+                class="alert alert-danger alert-dismissible no-margin center-text"
+                }
+                role="alert">
 
-                        @defining(flash().remove("qStructureID")) { qStructureID =>
-                            @request().getQueryString("type") match {
-                                case "sequence" => {
+                @defining(flash().remove("qStructureID")) { qStructureID =>
+                @request().getQueryString("type") match {
+                case "sequence" => {
                                     <span><h4>Sequence Query:&nbsp;
                                         <a target="_self" href='@ix.ginas.controllers.routes.GinasApp.sequence(request().getQueryString("q"))'><code>@ix.ginas.controllers.GinasFactory.getSequence(request().getQueryString("q"), 15)</code> (edit search)</a> </h4>
                                     </span> <div id="searching"></div>
-                                }
-                                case "Substructure" => {
+                }
+                case "Substructure" => {
                                     <span><h4>Substructure Query:&nbsp; <a
-                                    target="_self"
-                                    href="@ix.ginas.controllers.routes.GinasApp.structuresearch(qStructureID)&type=Substructure"
-                                    data-toggle="popover"
-                                    data-animation="true"
-                                    data-placement="bottom"
-                                    data-trigger="click hover focus"
-                                    data-title=""
-                                    data-html="true"
-                                    data-content="<img src= '@ix.ginas.controllers.routes.GinasApp.structure(qStructureID, "svg", 150, null)'>"><code>@ix.ginas.controllers.GinasFactory.getSmiles(request().getQueryString("q"), 15)</code> (edit search)</a></h4>
+                                            target="_self"
+                                            href="@ix.ginas.controllers.routes.GinasApp.structuresearch(qStructureID)&type=Substructure"
+                                            data-toggle="popover"
+                                            data-animation="true"
+                                            data-placement="bottom"
+                                            data-trigger="click hover focus"
+                                            data-title=""
+                                            data-html="true"
+                                            data-content="<img src= '@ix.ginas.controllers.routes.GinasApp.structure(qStructureID, "svg", 150, null)'>"><code>@ix.ginas.controllers.GinasFactory.getSmiles(request().getQueryString("q"), 15)</code> (edit search)</a></h4>
 
                                     </span> <div id="searching"></div>
-                                }
-                                case "Similarity" => {
+                }
+                case "Similarity" => {
                                     <span><h4>Similarity Query:&nbsp; <a
-                                    target="_self"
-                                    href="@ix.ginas.controllers.routes.GinasApp.structuresearch(qStructureID)&type=Similarity&cutoff=@request().getQueryString("cutoff")"
-                                    data-toggle="popover"
-                                    data-animation="true"
-                                    data-placement="bottom"
-                                    data-trigger="click hover focus"
-                                    data-title=""
-                                    data-html="true"
-                                    data-content="<img src= '@ix.ginas.controllers.routes.GinasApp.structure(qStructureID, "svg", 150, null)'>"><code>@ix.ginas.controllers.GinasFactory.getSmiles(request().getQueryString("q"), 15)</code> (edit search)</a> &ge; @request().getQueryString("cutoff")</h4>
+                                            target="_self"
+                                            href="@ix.ginas.controllers.routes.GinasApp.structuresearch(qStructureID)&type=Similarity&cutoff=@request().getQueryString("cutoff")"
+                                        data-toggle="popover"
+                                        data-animation="true"
+                                        data-placement="bottom"
+                                        data-trigger="click hover focus"
+                                        data-title=""
+                                        data-html="true"
+                                        data-content="<img src= '@ix.ginas.controllers.routes.GinasApp.structure(qStructureID, "svg", 150, null)'>"><code>@ix.ginas.controllers.GinasFactory.getSmiles(request().getQueryString("q"), 15)</code> (edit search)</a> &ge; @request().getQueryString("cutoff")</h4>
                                     </span> <div id="searching"></div>
-                                }
-                                case "Exact" => {
+                }
+                case "Exact" => {
                                     <span><h4>Exact Structure Query:&nbsp; <a
-                                    target="_self"
-                                    href="@ix.ginas.controllers.routes.GinasApp.structuresearch(qStructureID)&type=Exact"
-                                    data-toggle="popover"
-                                    data-animation="true"
-                                    data-placement="bottom"
-                                    data-trigger="click hover focus"
-                                    data-title=""
-                                    data-html="true"
-                                    data-content="<img src= '@ix.ginas.controllers.routes.GinasApp.structure(qStructureID, "svg", 150, null)'>"><code>@ix.ginas.controllers.GinasFactory.getSmiles(request().getQueryString("q"), 15)</code> (edit search)</a></h4>
+                                            target="_self"
+                                            href="@ix.ginas.controllers.routes.GinasApp.structuresearch(qStructureID)&type=Exact"
+                                            data-toggle="popover"
+                                            data-animation="true"
+                                            data-placement="bottom"
+                                            data-trigger="click hover focus"
+                                            data-title=""
+                                            data-html="true"
+                                            data-content="<img src= '@ix.ginas.controllers.routes.GinasApp.structure(qStructureID, "svg", 150, null)'>"><code>@ix.ginas.controllers.GinasFactory.getSmiles(request().getQueryString("q"), 15)</code> (edit search)</a></h4>
                                     </span> <div id="searching"></div>
-                                }
-                                case "Flex" => {
+                }
+                case "Flex" => {
                                     <span><h4>Flex Structure Query:&nbsp; <a
-                                    target="_self"
-                                    href="@ix.ginas.controllers.routes.GinasApp.structuresearch(qStructureID)&type=Flex"
-                                    data-toggle="popover"
-                                    data-animation="true"
-                                    data-placement="bottom"
-                                    data-trigger="click hover focus"
-                                    data-title=""
-                                    data-html="true"
-                                    data-content="<img src= '@ix.ginas.controllers.routes.GinasApp.structure(qStructureID, "svg", 150, null)'>"><code>@ix.ginas.controllers.GinasFactory.getSmiles(request().getQueryString("q"), 15)</code> (edit search)</a></h4>
+                                            target="_self"
+                                            href="@ix.ginas.controllers.routes.GinasApp.structuresearch(qStructureID)&type=Flex"
+                                            data-toggle="popover"
+                                            data-animation="true"
+                                            data-placement="bottom"
+                                            data-trigger="click hover focus"
+                                            data-title=""
+                                            data-html="true"
+                                            data-content="<img src= '@ix.ginas.controllers.routes.GinasApp.structure(qStructureID, "svg", 150, null)'>"><code>@ix.ginas.controllers.GinasFactory.getSmiles(request().getQueryString("q"), 15)</code> (edit search)</a></h4>
                                     </span> <div id="searching"></div>
-                                }
-                                case _ => {
-                                    <div ng-hide="hideall" ng-cloak>
-                                        @displayFieldFacets(ctx)
-                                    </div>
-                                }
-                            }
-                        }
-                        </div>
-                    }
-                @defining(flash().remove("warning")) { mesg =>
-                    @if(mesg != null) {
-                        <div class="alert alert-warning alert-dismissible" role="alert">
-                            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                                <span aria-hidden="true">&times;</span>
-                            </button>
-                            <p class="warning-message">@mesg</p>
-                        </div>
-                    }
                 }
+                case _ => {
+                	@displayFieldFacets(ctx)
+                
+                }
+                }
+                }
+            </div>
             }
- 
+            @defining(flash().remove("warning")) { mesg =>
+            @if(mesg != null) {
+            <div class="alert alert-warning alert-dismissible" role="alert">
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <p class="warning-message">@mesg</p>
+            </div>
+            }
+            }
+            }
+
             @if(total >= 1) {
-                @defining(if (ctx!=null) ctx.getId() else null) { ctxId =>
-                	@if(ctxId!=null){
-                	    @if(current==1){
-	                    @if(ctx.hasExactMatches()){
-		                    <div class="specialmatches" ng-init="hideall=true" ng-show="hideall">
-		                    @if(ctx.getExactMatches().size()==1){
-		                        <h4>There is one exact (name or code) match for <em>@request().getQueryString("q")</em></h4>
-		                    }else{
-		                        <h4>Here are the exact (name or code) matches for <em>@request().getQueryString("q")</em></h4>
-		                    }
-		                    @for(sub <- ctx.getExactMatches()) {
-		                        @GinasApp.getListContentFor(sub,ctx)
-		                    }
-	                        <div>&nbsp;</div>
-	                        <button class="btn btn-primary" ng-click="hideall=false">Show All Records Matching Search</button>
-	                        </div>
-	                    }
-	                    }
-                    }
+            @defining(if (ctx!=null) ctx.getId() else null) { ctxId =>
+            @if(ctxId!=null){
+            @if(ctx.hasExactMatches()){
+            <div class="specialmatches" ng-init="hideall=true" ng-show="hideall">
+                @if(ctx.getExactMatches().size()==1){
+                <h4>There is one exact (name or code) match for <em>@request().getQueryString("q")</em></h4>
+                }else{
+                <h4>Here are the exact (name or code) matches for <em>@request().getQueryString("q")</em></h4>
                 }
-                <div ng-hide="hideall" class="panel panel-default" id="allResults">
-                    <div class="panel-heading">
-                        <div class="row">
-                            <div class = "col-md-12">
+                @for(sub <- ctx.getExactMatches()) {
+                @GinasApp.getListContentFor(sub,ctx)
+                }
+                <div>&nbsp;</div>
+                <button class="btn btn-primary" ng-click="hideall=false">Show All Records Matching Search</button>
+            </div>
+            }
+            }
+            }
+            <div ng-hide="hideall" class="panel panel-default" id="allResults">
+                <div class="panel-heading">
+                    <div class="row">
+                        <div class = "col-md-12">
                             @ix.ginas.views.html.pagination(current, rows, total, pages, searchFlag)(HtmlFormat.empty)
-                            </div>
                         </div>
-                         @*Should be more abstract*@
-                         @if(kind.contains("ubstance")){
-                        <div class="row">
-                            <div class = "col-md-3">
-                            
-                           
-	                            @subjectPresent(new ix.ncats.controllers.security.IxDeadboltHandler()) {
-	                                <div class="btn-group">
-	                                    <button ng-click="showExport=true" type="button" uib-tooltip="Download Results" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-	                                        <i class="fa fa-download" ></i>&nbsp; <span class="caret"></span>
-	                                    </button>
-	                                    <ul ng-if="showExport" class="dropdown-menu">
-	                                        @for(fmt <- ix.ginas.controllers.GinasApp.getAllSubstanceExportFormats()) {
-	                                            <li><a href="#" ng-click="downloadFile('@ix.ginas.controllers.routes.GinasApp.generateExportFileUrl(ix.ncats.controllers.App.getKeyForCurrentRequest(), fmt.getExtension()).url')">@fmt.getDisplayName()</a></li>
-	                                        }
-	                                        <li><input type="checkbox" ng-change="showPriv()"  ng-model="showprivates" id="includePrivateDataCbox">Include Private Data</li>
-	                                    </ul>
-	
-	                                </div>
-	                            }
+                    </div>
+                    @*Should be more abstract*@
+                    @if(kind.contains("ubstance")){
+                    <div class="row">
+                        <div class = "col-md-3">
+
+
+                            @subjectPresent(new ix.ncats.controllers.security.IxDeadboltHandler()) {
+                            <div class="btn-group">
+                                <button ng-click="showExport=true" type="button" uib-tooltip="Download Results" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                    <i class="fa fa-download" ></i>&nbsp; <span class="caret"></span>
+                                </button>
+                                <ul ng-if="showExport" class="dropdown-menu">
+                                    @for(fmt <- ix.ginas.controllers.GinasApp.getAllSubstanceExportFormats()) {
+                                    <li><a href="#" ng-click="downloadFile('@ix.ginas.controllers.routes.GinasApp.generateExportFileUrl(ix.ncats.controllers.App.getBestKeyForCurrentRequest(), fmt.getExtension()).url')">@fmt.getDisplayName()</a></li>
+                                    }
+                                    <li><input type="checkbox" ng-change="showPriv()"  ng-model="showprivates" id="includePrivateDataCbox">Include Private Data</li>
+                                </ul>
+
                             </div>
-                            <div class="col-md-7  text-left row">
-                                <div class="col-md-4">
-                                    <div class="pull-right">
+                            }
+                        </div>
+                        <div class="col-md-7  text-left row">
+                            <div class="col-md-4">
+                                <div class="pull-right">
                                     Sort By:
-                                    </div>
-                                </div>
-                                <div class="col-md-8">
-                                    <select
-                                    class="form-control"
-                                    ng-model= selectedSort
-                                    ng-change="sortSubstances();"
-                                    ng-options="r.display for r in sortValues track by r.display"
-                                    placeholder ="Sort By"
-                                    title="Sort By"
-                                    name="SortBy"
-                                    id ="SortBy"
-                                    aria-label="Sort By">
-                                        <option class= "text-capitalize" value="" selected>Sort By</option>
-                                    </select>
                                 </div>
                             </div>
-                            <div class= "col-md-2 text-right hidden-xs">
-                                <form class="form" name="grid-select" id = "grid-select">
-                                    <switch id="enabled" name="enabled" ng-model="gridView" ng-change="toggleGrid()" on='<i class="fa fa-th-list fa-2x"></i>' off='<i class="fa fa-th fa-2x"></i>'></switch>
-                                </form>
+                            <div class="col-md-8">
+                                <select
+                                        class="form-control"
+                                        ng-model= selectedSort
+                                        ng-change="sortSubstances();"
+                                        ng-options="r.display for r in sortValues track by r.display"
+                                        placeholder ="Sort By"
+                                        title="Sort By"
+                                        name="SortBy"
+                                        id ="SortBy"
+                                        aria-label="Sort By">
+                                    <option class= "text-capitalize" value="" selected>Sort By</option>
+                                </select>
                             </div>
                         </div>
-                        }
+                        <div class= "grid-toggle col-md-2 text-right hidden-xs">
+                            <form class="form" name="grid-select" id = "grid-select">
+                                <switch id="enabled" name="enabled" ng-model="gridView" ng-change="toggleGrid()" on='<i class="fa fa-th-list fa-2x"></i>' off='<i class="fa fa-th fa-2x"></i>'></switch>
+                            </form>
+                        </div>
                     </div>
-                    <div class="placeholder-content"> @content </div>
-                    <div class="panel-footer">
-                    @if(pages.length > 1) {
-                        @ix.ginas.views.html.pagination(current, rows, total, pages, searchFlag)(HtmlFormat.empty)
                     }
-                    </div>
                 </div>
+                <div class="placeholder-content"> @content </div>
+                <div class="panel-footer">
+                    @if(pages.length > 1) {
+                    @ix.ginas.views.html.pagination(current, rows, total, pages, searchFlag)(HtmlFormat.empty)
+                    }
+                </div>
+            </div>
             } else {
-                There are no results to show.
+            There are no results to show.
             }
         </div>
-        </div>
+    </div>
     }
 
     <script>
@@ -342,54 +367,115 @@
                 }
             });
     </script>
+    }
+
+@facetDescription(fac: DrillAndPath) = {
+  <strong>@fac.getParentDrillName()</strong>
+  @if(fac.getPrefix().equals("!")){
+  	<i>IS NOT</i> 
+  }else{
+    @if(fac.getPrefix().equals("^")){
+      <i>MUST BE</i> 
+    }else{
+      <i>MAY BE</i>
+    }
+  }
+  <strong>@fac.asLabel()</strong>
+}
+
+@facetDescriptionText(fac: DrillAndPath) = {
+  &quot;@fac.getParentDrillName()&quot;
+  @if(fac.getPrefix().equals("!")){
+  	**IS NOT<**
+  }else{
+    @if(fac.getPrefix().equals("^")){
+      **MUST BE** 
+    }else{
+      **MAY BE**
+    }
+  }
+  &quot;@fac.asLabel()&quot;
 }
 
 
-@displayFieldFacets(ctx: SearchResultContext) = {
+@facetRemoval(fac: DrillAndPath) = {
+
+<button style="margin-top:2px;" class="btn btn-primary" 
+
+data-toggle="popover" 
+data-animation="false" 
+data-placement="top" 
+data-trigger="hover focus" 
+data-html="true" 
+data-content="<div>Click to remove filter:<br> @facetDescription(fac)</div>" 
+onclick="removeFacet('@fac.getDrill()','@fac.asLabel()')" 
+>
+@if(fac.getPrefix().equals("!")){
+  <i class="fa fa-ban"></i>
+}else{
+  @if(fac.getPrefix().equals("^")){
+    <i class="fa fa-plus-circle"></i>
+  }
+}
+@fac.getParentDrillName()
+	         &nbsp;
+		 <span class="badge">@fac.asLabel()</span>
+	         <span class="fa fa-remove" aria-hidden="true"></span>
+	      </button>
+	      
+}
+
+    @displayFieldFacets(ctx: SearchResultContext) = {
     @if(ctx != null) {
-                        @defining(ctx.getFieldFacets()) { searchFacets =>
-                        @if(searchFacets != null && searchFacets.size() > 0) {
-                                <h4>Would you like to restrict the search for <em>@request().getQueryString("q")</em> to field?
+    @defining(ctx.getFieldFacets()) { searchFacets =>
+    @if(searchFacets != null && searchFacets.size() > 0) {
+    <div ng-hide="hideall" ng-cloak>
+    <h4>Would you like to restrict the search for <em>@request().getQueryString("q")</em> to field?
 
 
-                                 <div class="dropdown center-text fieldfacet btn-group">
-                                                        <button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown">
-                                                                <span>Matches</span>
-                                                                <span class="badge">@searchFacets.size()</span>
-                                                                <span class="caret"></span>
-                                                        </button>
-                                    <ul class="dropdown-menu" role="menu" >
-                                     @for( es <- ctx.getFieldFacetsMap().entrySet()){
-                                        <li role="presentation"><span class="field-facet-group"><label>
-                                        @if(es.getKey().toString().equals("FULL")){
-                                            Exact Match
-                                        }else{
-                                            Contains Match
-                                        }
-                                        </label></span>
-                                        </li>
-                                        @es.getValue().map { item =>
-                                                            <li role="presentation">
-                                                                <a target="_self" tabindex="-1" href='@ix.ginas.controllers.routes.GinasApp.substances().url?q=@item.toLuceneQuery()'>
-                                                                    <span class="badge pull-right">@item.getCountText()</span>
-                                                                    <span class="field-facet-label">@item.getDisplayField()</span>
-                                                                </a>
-                                                            </li>
-                                                        }
-                                    }
-                                    </ul>
-                              </div>
-
-                              </h4>
-                        } else {
-                                    <span class="center-text"><h4 class="no-margin">Searched for:<em>
-                                    @defining(FieldedQueryFacet.displayQuery(kind,request().getQueryString("q"))) { keyval =>
-                                        @if(keyval!=null){
-                                            <b>@keyval(0)</b> : <span class="query-term">@keyval(1)</span>  <span>@keyval(2)</span>
-                                        }
-                                    }
-                                    </em></h4></span>
-                                }
-                        }
+        <div class="dropdown center-text fieldfacet btn-group">
+            <button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown">
+                <span>Matches</span>
+                <span class="badge">@searchFacets.size()</span>
+                <span class="caret"></span>
+            </button>
+            <ul class="dropdown-menu" role="menu" >
+                @for( es <- ctx.getFieldFacetsMap().entrySet()){
+                <li role="presentation"><span class="field-facet-group"><label>
+                    @if(es.getKey().toString().equals("FULL")){
+                    Exact Match
+                    }else{
+                    Contains Match
                     }
-}
+                </label></span>
+                </li>
+                @es.getValue().map { item =>
+                <li role="presentation">
+                    <a target="_self" tabindex="-1" href='@ix.ginas.controllers.routes.GinasApp.substances().url?q=@item.toLuceneQuery()'>
+                        <span class="badge pull-right">@item.getCountText()</span>
+                        <span class="field-facet-label">@item.getDisplayField()</span>
+                    </a>
+                </li>
+                }
+                }
+            </ul>
+        </div>
+
+    </h4>
+    </div>
+    } else {
+    @defining(FieldedQueryFacet.displayQuery(kind,request().getQueryString("q"))) { keyval =>
+                                        @if(keyval!=null){
+                                        <div ng-hide="hideall" ng-cloak>
+                                    <span class="center-text"><h4 class="no-margin">Searched for:<em>
+                                        
+                                        <b>@keyval(0)</b> : <span class="query-term">@keyval(1)</span>  <span>@keyval(2)</span>
+                                        
+                                    </em></h4></span>
+                                    </div>
+                                    }
+                                        }
+    }
+    }
+    }
+    }

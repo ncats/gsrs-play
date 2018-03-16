@@ -1,118 +1,137 @@
 <div class="row info">
     <div class="row">
-        <form-header type="Identification" iscollapsed="iscollapsed"></form-header>
+        <form-header class="col-md-3" type="Identification" parent="parent" iscollapsed="iscollapsed"></form-header>
+        <br>
+        <button class="btn btn-primary" ng-click="addIdentification();iscollapsed=false"><i class="fa fa-plus"></i> Add Test</button>
     </div>
     <div class="col-md-12" uib-collapse="iscollapsed">
         <form class="form-horizontal" name="identificationForm" role="form" id="addIdentificationForm" novalidate>
-
-            <ng-form name="form">
-                <div class="form-div" ng-class="{'bg-warning' : form.$invalid && form.$flagged}">
-                    <div class="row">
-                        <div class="col-md-1 text-center">
-                            <delete-button delete="obj" path="assay"></delete-button>
-                        </div>
-                        <div class="col-md-9">
-                            <div class="row">
-                                <div class="col-md-4">
-                                    <gsrs-input type="dropdown"
-                                                ng-model="obj.testType"
-                                                field="Test Type"
-                                                cv=""
-                                                max="1"
-                                                formname=form>
-                                    </gsrs-input>
-                                </div>
-                                <div class="col-md-4">
-                                    <gsrs-input type="text"
-                                                ng-model="obj.testReference"
-                                                field="Test Reference"
-                                                required="false"
-                                                formname=form>
-                                    </gsrs-input>
-                                </div>
-                                <div class="col-md-4">
-                                    <gsrs-input type="text"
-                                                ng-model="obj.nonNumericValue"
-                                                field="Non-Numeric Value"
-                                                required="false"
-                                                formname=form>
-                                    </gsrs-input>
-                                </div>
+            <div ng-repeat="(index,obj) in substance.specifiedSubstanceDetails.identification">
+                <ng-form name="form">
+                    <div class="form-div" ng-class="{'bg-warning' : form.$invalid && form.$flagged}">
+                        <div class="row">
+                            <div class="col-md-1 text-center">
+                                <div ng-cloak><b>{{index+1}}</b></div><br>
+                                <a ng-click="deleteIdentification(index)" ng-keypress="deleteIdentification(index);" tabindex="0" role="button" role="button" uib-tooltip="Delete Item"><i class="fa fa-trash fa-2x danger"></i></a>
                             </div>
-                        </div>
-                        <div class="col-md-1 pull-right">
-                            <modal-form-button type="access"
-                                               referenceobj="obj"
-                                               parent="parent">
-                            </modal-form-button>
-                        </div>
-                        <div class="col-md-1 pull-right">
-                            <modal-form-button type="reference"
-                                               referenceobj="obj"
-                                               parent="parent">
-                            </modal-form-button>
-                        </div>
-                    </div>
+                            <div class="col-md-11">
+                                <div class="row">
+                                    <div class="col-md-3">
+                                        <gsrs-input type="text"
+                                                    ng-model="obj.test"
+                                                    field="Test"
+                                                    required="false"
+                                                    formname=identificationForm>
+                                        </gsrs-input>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <gsrs-input type="dropdown" ng-model="obj.testType" field="testType" label="Test Type" cv="SSG_TEST_TYPE" formname=identificationForm></gsrs-input>
+                                    </div>
+                                    <div class="col-md-5">
+                                        <gsrs-input type="text"
+                                                    ng-model="obj.testDescription"
+                                                    field="Test Description"
+                                                    required="false"
+                                                    formname=identificationForm>
+                                        </gsrs-input>
+                                    </div>
+                                    <div class="col-md-1 pull-right">
+                                        <modal-form-button type="access"
+                                                           referenceobj="obj"
+                                                           parent="parent">
+                                        </modal-form-button>
+                                    </div>
+                                    <div class="col-md-1 pull-right">
+                                        <modal-form-button type="reference"
+                                                           referenceobj="obj"
+                                                           parent="substance"
+                                                           required = true
+                                                           formname=identificationForm>
+                                        </modal-form-button>
+                                    </div>
+                                </div> <!-- Row -->
 
-                    <!-- Second Row -->
-                    <div class="row">
-                        <div class="col-md-1 text-center">
-                            &nbsp;
-                        </div>
-                        <div class="col-md-9">
-                            <div class="row">
-                                <div class="col-md-4">
-                                    <gsrs-input type="dropdown"
-                                                ng-model="obj.acceptanceCriteriaType"
-                                                field="Acceptance Criteria Type"
-                                                cv=""
-                                                max="1"
-                                                formname=form>
-                                    </gsrs-input>
-                                </div>
-                                <div class="col-md-4">
-                                    <gsrs-input type="text"
-                                                ng-model="obj.acceptanceCriteria"
-                                                field="Acceptance Criteria"
-                                                required="false"
-                                                formname=form>
-                                    </gsrs-input>
-                                </div>
-                                <div class="col-md-4">
-                                    <gsrs-input type="text"
-                                                ng-model="obj.acceptanceCriteriaValues"
-                                                field="Acceptance Criteria Values"
-                                                required="false"
-                                                formname=form>
-                                    </gsrs-input>
-                                </div>
-                            </div>
-                        </div>
-                    </div> <!-- second row -->
+                                <!-- Add Multiple Acceptance Criteria -->
+                                <button class="btn btn-primary" ng-click="addIdentificationAcceptanceCriteria(index)"><i class="fa fa-plus"></i> Add Acceptance Criteria</button>
+                                <br><br>
+                                <div ng-repeat="(indexAcceptCriteria,objAcceptCriteria) in obj.acceptanceCriterias">
+                                    <div class="row">
+                                        <div class="col-md-1 text-center">
+                                            <div ng-cloak><b>{{indexAcceptCriteria+1}}</b></div><br>
+                                            <a ng-click="deleteIdentificationAcceptanceCriteria(index, indexAcceptCriteria)" ng-keypress="deleteIdentificationAcceptanceCriteria(index, indexAcceptCriteria);" tabindex="0" role="button" role="button" uib-tooltip="Delete Item"><i class="fa fa-trash fa-2x danger"></i></a>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <gsrs-input type="dropdown" ng-model="objAcceptCriteria.acceptanceCriteriaType" field="acceptanceCriteriaType" label="Acceptance Criteria Type" cv="SSG_ACCEPTANCE_CRITERIA_TYPE" formname=identificationForm></gsrs-input>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <gsrs-input type="text"
+                                                        ng-model="objAcceptCriteria.acceptanceCriteria"
+                                                        field="Acceptance Criteria"
+                                                        required="false"
+                                                        formname=identificationForm>
+                                            </gsrs-input>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <gsrs-input type="text"
+                                                        ng-model="objAcceptCriteria.comment"
+                                                        field="Comment"
+                                                        required="false"
+                                                        formname=identificationForm>
+                                            </gsrs-input>
+                                        </div>
+                                    </div> <!-- row -->
 
-                    <!-- Third Row -->
-                    <div class="row">
-                        <div class="col-md-1 text-center">
-                            &nbsp;
-                        </div>
-                        <div class="col-md-9">
-                            <div class="row">
-                                <div class="col-md-12">
-                                    <gsrs-input type="text"
-                                                ng-model="obj.comments"
-                                                field="Comments"
-                                                required="false"
-                                                formname=form>
-                                    </gsrs-input>
-                                </div>
-                            </div>
-                        </div>
-                    </div> <!-- third row -->
+                                    <div class="row">
+                                        <div class="col-md-1 text-center">
+                                          &nbsp;
+                                        </div>
+                                        <div class="col-md-2">
+                                            <modal-form-button type="amount"
+                                                               field="value"
+                                                               referenceobj="objAcceptCriteria"
+                                                               parent="parent">
+                                            </modal-form-button>
+                                        </div>
+                                    </div> <!-- Row -->
+                                    <br>
 
-                </div>
-                <hr>
-            </ng-form>
+                                    <!-- Add Multiple Ingredients -->
+                                    <div class="row">
+                                        <div class="col-md-1 text-center">
+                                            &nbsp;
+                                        </div>
+                                        <div class="col-md-11">
+                                            <button class="btn btn-primary" ng-click="addIdentificationACIngredient(index, indexAcceptCriteria)"><i class="fa fa-plus"></i> Add Ingredient</button>
+                                            <div ng-repeat="(indexIng,objIngred) in objAcceptCriteria.ingredients">
+                                                <div class="row">
+                                                    <div class="col-md-1 text-center">
+                                                        <div ng-cloak><b>{{indexIng+1}}</b></div><br>
+                                                        <a ng-click="deleteIdentificationACIngredient(index, indexAcceptCriteria, indexIng)" ng-keypress="deleteIdentificationACIngredient(index, indexAcceptCriteria, indexIng);" tabindex="0" role="button" role="button" uib-tooltip="Delete Item"><i class="fa fa-trash fa-2x danger"></i></a>
+                                                    </div>
+                                                    <div class="col-md-3">
+                                                        <substance-chooser-selector referenceobj="objIngred"
+                                                                                    field="substanceName"
+                                                                                    name="substanceName"
+                                                                                    formname="identificationForm"
+                                                                                    label="Substance Name"
+                                                                                    type="search">
+                                                        </substance-chooser-selector>
+                                                    </div>
+                                                </div> <!-- Row -->
+                                                <br>
+                                            </div> <!-- ng-repeat Ingredients -->
+                                        </div> <!-- div col-md-11 -->
+                                    </div> <!-- Row multiple Ingredients-->
+                                    <br>
 
+                                </div> <!-- ng-repeat Acceptance Criteria -->
+
+                            </div> <!-- col-md-11 -->
+                        </div> <!-- Row -->
+                    </div> <!-- form-div -->
+                </ng-form>
+            <hr>
+            </div> <!-- div repeat -->
         </form>
     </div>
 </div>

@@ -752,11 +752,10 @@ public class GinasApp extends App {
                 //Dummy version for query
 
                 Principal prof = UserFetcher.getActingUser(true);
-                System.out.println("User is:" + prof.username);
                 ExportMetaData emd=new ExportMetaData(collectionID, null, prof, publicOnlyBool, extension);
 
-                String fname=request().getQueryString("filename");
-                String qgen=request().getQueryString("genUrl");
+                String fname= request().getQueryString("filename");
+                String qgen = request().getQueryString("genUrl");
 
                 if(fname!=null){
                     emd.setDisplayFilename(fname);
@@ -794,8 +793,9 @@ public class GinasApp extends App {
             try {
                 String username=UserFetcher.getActingUser(true).username;
                 String filename=request().getQueryString("filename");
-
+                System.out.println("here");
                 Optional<ExportMetaData>emeta = ExportProcessFactory.getStatusFor(username, downloadID);
+                System.out.println("optional metadata is present? " + emeta.isPresent());
                 ExportMetaData data=emeta.get();
 
                 if(filename==null){
@@ -803,11 +803,13 @@ public class GinasApp extends App {
                 }
 
                 InputStream in= ExportProcessFactory.download(username, data.getFilename());
+                System.out.println("getting inputstream " + in);
                 response().setContentType("application/x-download");
                 response().setHeader("Content-disposition", "attachment; filename=" + filename);
                 return ok(in);
             } catch (Exception e) {
                 Logger.error(e.getMessage(), e);
+                e.printStackTrace();
                 return error(404, e.getMessage());
             }
         });
@@ -870,6 +872,7 @@ public class GinasApp extends App {
                 if(key!=null){
                     list=list.stream()
                             .filter(m->m.getKey().equals(key))
+                            .sorted(Comparator.comparing(m -> m.finished))
                             .collect(Collectors.toList());
                 }
 
@@ -1321,7 +1324,7 @@ public class GinasApp extends App {
     public static SearchResult getSubstanceSearchResult(final String q, final int total) {
         final Map<String, String[]> params = App.getRequestQuery();
 
-        final String sha1 = App.getKeyForCurrentRequest();
+        //final String sha1 = App.getKeyForCurrentRequest();
 
         String[] order = params.get("order");
 
@@ -1333,11 +1336,23 @@ public class GinasApp extends App {
 
         try {
             long start = System.currentTimeMillis();
+            SearchRequest sr = new SearchRequest.Builder()
+                                          .fdim(App.FACET_DIM)
+                                          .withParameters(params)
+                                          .top(total)
+                                          .kind(Substance.class)
+                                          .query(q)
+                                          .build();
+            
+            final String sha1 = App.getKeyForCurrentRequest() + ((sr.getOptions().getFdim()!=App.FACET_DIM)?sr.getOptions().getFdim():"");
+            
+            
+
             SearchResult result = getOrElse(sha1, TypedCallable.of(() -> {
                 try{
-                    SearchOptions options = new SearchOptions(Substance.class, total, 0, FACET_DIM).parse(params);
+                	SearchOptions options = sr.getOptions();
                     instrumentSubstanceSearchOptions(options, params);
-                    return cacheKey(getTextIndexer().search(options, q), sha1);
+                    return cacheKey(sr.execute(), sha1);
                 }catch(Exception e){
                     e.printStackTrace();
                     throw e;
@@ -1369,6 +1384,7 @@ public class GinasApp extends App {
         final int total = Math.max(SubstanceFactory.getCount(), 1);
         final String key = "substances/" + Util.sha1(request());
 
+        
         // final String[] searchFacets = facets;
         boolean forcesql = "true".equals(request().getQueryString("sqlOnly"));
 
@@ -1628,10 +1644,11 @@ public class GinasApp extends App {
                     
                     //lookup in ad-hoc list
                     if(values.isEmpty()){
-                    	values=AdHocNameResolver.getAdaptedRecordKey(name)
-                    	                 .map(nk->resolveName(nk))
-                    	                 .orElse(values);
+                       values=AdHocNameResolver.getAdaptedRecordKey(name)
+                                        .map(nk->resolveName(nk))
+                                        .orElse(values);
                     }
+
                 }
             }
         }
@@ -1861,7 +1878,7 @@ public class GinasApp extends App {
 		}
 	}
 
-	private static Pattern FASTA_FILE_PATTERN = Pattern.compile(">(.+)\\|.+");
+    private static Pattern FASTA_FILE_PATTERN = Pattern.compile(">(.+)\\|.+");
     public static class GinasSequenceResultProcessor
             extends SearchResultProcessor<SequenceIndexer.Result, ProteinSubstance> {
         public GinasSequenceResultProcessor() {
@@ -1889,6 +1906,7 @@ public class GinasApp extends App {
                         .eq("protein.subunits.uuid", r.id).findList(); // also slow
                 protein = proteins.isEmpty() ? null : proteins.get(0);
             }
+
             if (protein != null) {
                 Key key=EntityWrapper.of(protein).getKey();
                 Map<String,Object> added = IxCache.getMatchingContext(this.getContext(), key);
@@ -2046,11 +2064,15 @@ public class GinasApp extends App {
 
 
             //History view
-            if(history && !cs.version.equals(version)){
-                cs=SubstanceFactory.getSubstanceVersion(cs.getUuid().toString(), version);
-                if(cs==null){
-                    return placeHolderImage(cs);
-                }
+            if(history){
+            	if(!cs.version.equals(version)){
+	                cs=SubstanceFactory.getSubstanceVersion(cs.getUuid().toString(), version);
+	                if(cs==null){
+	                    return placeHolderImage(cs);
+	                }
+            	}else{
+            		history=false;
+            	}
             }
 
 
@@ -2068,6 +2090,8 @@ public class GinasApp extends App {
 
             if(cs instanceof ChemicalSubstance){
                 Structure struc = ((ChemicalSubstance)cs).structure;
+                //System.out.println("Looking at structure:" + struc.id.toString());
+                //System.out.println("Found structure:" + struc.molfile);
                 if(!history){
                     structureID=struc.id.toString();
                     return App.structure(structureID, format, size, atomMap);
@@ -2382,6 +2406,7 @@ public class GinasApp extends App {
         try {
             return render.render((T) o, ctx);
         } catch (Throwable e) {
+        	e.printStackTrace();
             Logger.error(e.getMessage(), e);
             return Html.apply("<div class=\"col-md-3 thumb-col\">"
                     + ix.ginas.views.html.errormessage.render(CAN_T_DISPLAY_RECORD + e.getMessage()).body() + "</div>");
@@ -2473,7 +2498,6 @@ public class GinasApp extends App {
         } catch (Exception ex) {
             return _internalServerError(ex);
         }
-
     }
 
     // This won't typically work, as it will collide with existing CV
@@ -2677,13 +2701,13 @@ public class GinasApp extends App {
                 if(m.find()){
                     String parentId = m.group(1);
                     nuc = SubstanceFactory.nucfinder.get().byId(UUID.fromString(parentId));
-
                 }
             }else {
                 List<NucleicAcidSubstance> nucSubstances = SubstanceFactory.nucfinder.get().where()
                         .eq("nucleicAcid.subunits.uuid", r.id).findList(); // also slow
                 nuc = nucSubstances.isEmpty() ? null : nucSubstances.get(0);
             }
+
             if (nuc != null) {
                 Key key=EntityWrapper.of(nuc).getKey();
                 Map<String,Object> added = IxCache.getMatchingContext(this.getContext(), key);

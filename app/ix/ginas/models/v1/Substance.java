@@ -1,7 +1,6 @@
 package ix.ginas.models.v1;
 
 import java.util.*;
-import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -60,9 +59,12 @@ import ix.ginas.models.serialization.PrincipalDeserializer;
 import ix.ginas.models.serialization.PrincipalSerializer;
 import ix.ginas.models.utils.JSONEntity;
 import ix.utils.Global;
+import ix.utils.Tuple;
 import ix.utils.Util;
 import play.Logger;
 import play.Play;
+
+import static java.util.stream.Collectors.toList;
 
 @Backup
 @JSONEntity(name = "substance", title = "Substance")
@@ -138,8 +140,37 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
     public SubstanceClass substanceClass;
 
 
-    @Indexable(suggest = true, facet = true, name = "Record Status")
+    @Indexable(suggest = true, name = "Record Status")
     public String status = STATUS_PENDING;
+    
+    @JsonIgnore
+    @Indexable(facet=true, name = "Record Status")
+    public String getFacetStatus(){
+    	if(this.isNonSubstanceConcept()){
+    		return "Concept";
+    	}else if(this.isSubstanceVariant()){
+    		SubstanceReference sr=this.getParentSubstanceReference();
+    		if(sr!=null){
+    			try{
+	    			Substance parent=(Substance) Class.forName("ix.ginas.controllers.v1.SubstanceFactory").getMethod("getFullSubstance",SubstanceReference.class).invoke(null, sr);
+	    			if(parent!=null){
+		    			if(parent.status.equals(this.STATUS_APPROVED)){
+		    				return "Validated Subconcept (UNII)";
+		    			}
+	    			}
+    			}catch(Exception e){
+    				e.printStackTrace();
+    			}
+    		}
+    		
+    		if(sr.approvalID!=null){
+    			return "Validated Subconcept (UNII)";
+    		}
+    		return "Pending Subconcept";
+    	}else{
+    		return this.status;
+    	}
+    }
 
     @DataVersion
     public String version = "1";
@@ -247,6 +278,7 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
     }
     public Substance() {
         this(SubstanceClass.concept);
+        this.status = "non-approved";
     }
 
     public Substance(SubstanceClass subcls) {
@@ -474,6 +506,13 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
         ret.removeAll(getImpurities());
         ret.removeAll(getMetabolites());
         ret.removeAll(getActiveMoieties());
+        ret.removeAll(getAlternativeDefinitionRelationships());
+        return ret;
+    }
+
+    @JsonIgnore
+    public List<Relationship> getNonAltRelationships() {
+        List<Relationship> ret = new ArrayList<Relationship>(this.relationships);
         ret.removeAll(getAlternativeDefinitionRelationships());
         return ret;
     }
@@ -1018,7 +1057,7 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
     @JsonIgnore
     @Indexable(facet = true, name = "Reference Count", sortable=true)
     public int getReferenceCount(){
-        return names.size();
+        return references.size();
     }
 
     @JsonIgnore
@@ -1176,9 +1215,41 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
 
     @JsonIgnore
     public List<Edit> getEdits(){
+        List<Edit> elist = EntityWrapper.of(this).getEdits();
+
+        /*.stream()
+                .map(t-> Tuple.of(t.version,t))
+                .map(Tuple.kmap(n->{
+                    try {
+                        return Integer.parseInt(n);
+                    }catch(Exception e){
+                        return 0;
+                    }
+                }))
+                .sorted((a,b)->{
+                    return b.k()-a.k();
+                })
+                .map(t->t.v())
+                .collect(toList());*/
+
+        elist.sort(new Comparator<Edit>(){
+            public int compare(Edit e1, Edit e2) {
+
+                       try {
+                           int i1 = Integer.parseInt(e1.version) ;
+                           int i2 = Integer.parseInt(e2.version);
+
+                           return i2 -i1;
+                       }catch (Exception e){
+                            return e2.version.compareTo(e1.version);
+                       }
+            }
+        });
+
         //this is not entirely necessary, and could be done
         //more explicitly
-        return EntityWrapper.of(this).getEdits(); 
+       // return EntityWrapper.of(this).getEdits();
+        return elist;
     }
 
     /**

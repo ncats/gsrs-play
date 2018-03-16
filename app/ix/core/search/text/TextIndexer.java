@@ -142,7 +142,7 @@ import play.Play;
  * Singleton class that responsible for all entity indexing
  */
 public class TextIndexer implements Closeable, ProcessListener {
-	private static final String TERM_VEC_PREFIX = "F";
+	public static final String TERM_VEC_PREFIX = "F";
 
     public static final String IX_BASE_PACKAGE = "ix";
 	
@@ -558,6 +558,13 @@ public class TextIndexer implements Closeable, ProcessListener {
 		private Set<String> selectedLabel=new HashSet<>();
 		private SearchResult sr;
 		
+		public boolean enhanced=true;
+		
+		
+		//TODO: This is a bad way to do this,
+		//need to fix
+		private String prefix="";
+		
 		private CachedSupplier<List<FV>> selectedFVfetch = 
 		        CachedSupplier.of(()->{
 		           return this.values.stream()
@@ -573,8 +580,17 @@ public class TextIndexer implements Closeable, ProcessListener {
 		 * @param label
 		 */
 		public void setSelectedLabel(String ... label){
-			this.setSelectedLabels(Arrays.stream(label).collect(Collectors.toList()));   
+			this.setSelectedLabels(Arrays.stream(label).collect(Collectors.toList())); 
 		}
+		
+		public void setPrefix(String prefix){
+			this.prefix=prefix;
+		}
+		
+		public String getPrefix(){
+			return this.prefix;
+		}
+		
 		
 		@JsonInclude(Include.NON_EMPTY)
 		public Set<String> getSelectedLabels(){
@@ -752,11 +768,12 @@ public class TextIndexer implements Closeable, ProcessListener {
 		}
 
         public void setSelectedLabels(List<String> collect) {
-
             this.selectedLabel.clear();
             this.selectedLabel.addAll(collect);
             this.selectedFVfetch.resetCache();
         }
+        
+        
 	}
 
 	class SuggestLookup implements Closeable {
@@ -1488,7 +1505,7 @@ public class TextIndexer implements Closeable, ProcessListener {
 	
 	
 	public static void collectBasicFacets(Facets facets, SearchResult sr) throws IOException{
-		Map<String,List<DrillAndPath>> providedDrills = sr.getOptions().getDrillDownsMap();
+		Map<String,List<DrillAndPath>> providedDrills = sr.getOptions().getEnhancedDrillDownsMap();
 		
 		List<FacetResult> facetResults = facets.getAllDims(sr.getOptions().getFdim());
 		if (DEBUG(1)) {
@@ -1496,45 +1513,58 @@ public class TextIndexer implements Closeable, ProcessListener {
 		}
 		
 		//Convert FacetResult -> Facet, and add to 
-		//search result
-		facetResults.stream()
-			.filter(Objects::nonNull)
-			.map(result -> {
-				Facet fac = new Facet(result.dim, sr);
-				
-				// make sure the facet value is returned
-				// for selected value
-				
-				List<DrillAndPath> dp = providedDrills.get(result.dim);
-				if (dp != null) {
-				    List<String> selected=dp.stream()
-				                        .map(l->l.asLabel())
-				                        .collect(Collectors.toList());
-					fac.setSelectedLabels(selected);
-				}
-				
-				for(LabelAndValue lv:result.labelValues){
-				    fac.add(lv.label, lv.value.intValue());
-				}
-				
-				fac.getMissingSelections().stream().forEach(l->{
-				    try {
-                        Number value = facets.getSpecificValue(result.dim, l);
-                        if (value != null && value.intValue() >= 0) {
-                            fac.add(l, value.intValue());
-                        } else {
-                            Logger.warn("Facet \"" + result.dim + "\" doesn't have any " + "value for label \""
-                                    + l + "\"!");
-                        }
-                    } catch (Exception e) {
-                       Logger.warn("error collecting facets", e);
-                    }
-				});
-				
-				fac.sort();
-				return fac;
-			})
-			.forEach(f -> sr.addFacet(f));
+				//search result
+				facetResults.stream()
+					.filter(Objects::nonNull)
+					.map(result -> {
+						Facet fac = new Facet(result.dim, sr);
+						
+						// make sure the facet value is returned
+						// for selected value
+						
+						List<DrillAndPath> dp = providedDrills.get(result.dim);
+						if (dp != null) {
+							
+						    List<String> selected=dp.stream()
+						                        .map(l->l.asLabel())
+						                        .collect(Collectors.toList());
+						    
+						    dp.stream()
+			                        .map(l->l.getPrefix())
+			                        .filter(p->!"".equals(p))
+			                        .sorted()
+			                        .distinct()
+			                        .findFirst()
+			                        .ifPresent(pre->{
+			                        	fac.setPrefix(pre);        	
+			                        });
+						    
+						    
+							fac.setSelectedLabels(selected);
+						}
+						
+						for(LabelAndValue lv:result.labelValues){
+						    fac.add(lv.label, lv.value.intValue());
+						}
+						
+						fac.getMissingSelections().stream().forEach(l->{
+						    try {
+		                        Number value = facets.getSpecificValue(result.dim, l);
+		                        if (value != null && value.intValue() >= 0) {
+		                            fac.add(l, value.intValue());
+		                        } else {
+		                            Logger.warn("Facet \"" + result.dim + "\" doesn't have any " + "value for label \""
+		                                    + l + "\"!");
+		                        }
+		                    } catch (Exception e) {
+		                       Logger.warn("error collecting facets", e);
+		                    }
+						});
+						
+						fac.sort();
+						return fac;
+					})
+					.forEach(f -> sr.addFacet(f));
 	}
 	
 	
@@ -1628,7 +1658,6 @@ public class TextIndexer implements Closeable, ProcessListener {
 			 * 
 			 */
 			if (!options.getLongRangeFacets().isEmpty()){
-			    System.out.println("doing long range facets collector search for " + options.getLongRangeFacets());
 				FacetsCollector.search(searcher, ddq, filter, options.max(), facetCollector);
 			}
 
@@ -1738,6 +1767,7 @@ public class TextIndexer implements Closeable, ProcessListener {
 		SearchOptions options = searchResult.getOptions();
 		FacetsCollector facetCollector = new FacetsCollector();
 		LuceneSearchProvider lsp;
+		
 		Filter filter = ifilter;
 		
 		// You may wonder why some of these options parsing 
@@ -1774,9 +1804,11 @@ public class TextIndexer implements Closeable, ProcessListener {
 		//to be joined by an "OR", while each group is joined
 		//by "AND" to the other groups
 		if(!filtersFromOptions.isEmpty()){
-			filter = new ChainedFilter(Stream.concat(filtersFromOptions.stream(), Stream.of(ifilter))
-                                            .toArray(size -> new Filter[size]),
-                                        ChainedFilter.AND);
+			filtersFromOptions.add(ifilter);
+			filter = new ChainedFilter(filtersFromOptions.stream()
+										.collect(Collectors.toList())
+										.toArray(new Filter[0]), ChainedFilter.AND);
+			filtersFromOptions.remove(filtersFromOptions.size()-1);
 		}
 		
 		//no specified facets (normal search)
@@ -2168,7 +2200,7 @@ public class TextIndexer implements Closeable, ProcessListener {
 			Facets facets = new LongRangeFacetCounts(flr.field, fc, range);
 			FacetResult result = facets.getTopChildren(options.getFdim(), flr.field);
 			Facet f = new Facet(result.dim, searchResult);
-			
+			f.enhanced=false;
 			if (DEBUG(1)) {
 				Logger.info(" + [" + result.dim + "]");
 			}

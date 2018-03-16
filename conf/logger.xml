@@ -4,7 +4,7 @@
     <file>${user.dir}/logs/application.log</file>
     <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
       <!-- Daily rollover with compression -->
-      <fileNamePattern>application-log-%d{yyyy-MM-dd}.gz</fileNamePattern>
+      <fileNamePattern>${user.dir}/logs/archive/application-log-%d{yyyy-MM-dd}.gz</fileNamePattern>
       <!-- keep 99999 days worth of history -->
       <maxHistory>99999</maxHistory>
     </rollingPolicy>
@@ -17,7 +17,7 @@
     <file>${user.dir}/logs/access.log</file>
     <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
       <!-- daily rollover with compression -->
-      <fileNamePattern>access-log-%d{yyyy-MM-dd}.gz</fileNamePattern>
+      <fileNamePattern>${user.dir}/logs/archive/access-log-%d{yyyy-MM-dd}.gz</fileNamePattern>
       <timeBasedFileNamingAndTriggeringPolicy
           class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
           <!-- or whenever the file size reaches 50MB -->
@@ -37,7 +37,7 @@
     <file>${user.dir}/logs/fail-persist.log</file>
     <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
       <!-- weekly rollover with compression -->
-      <fileNamePattern>fail-persist-log-%d{yyyy-ww}.gz</fileNamePattern>
+      <fileNamePattern>${user.dir}/logs/archive/fail-persist-log-%d{yyyy-ww}.gz</fileNamePattern>
       <!-- keep 99999 days worth of history -->
       <maxHistory>99999</maxHistory>
     </rollingPolicy>
@@ -51,7 +51,7 @@
     <file>${user.dir}/logs/fail-transform.log</file>
     <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
       <!-- weekly rollover with compression -->
-      <fileNamePattern>fail-persist-log-%d{yyyy-ww}.gz</fileNamePattern>
+      <fileNamePattern>${user.dir}/logs/archive/fail-persist-log-%d{yyyy-ww}.gz</fileNamePattern>
       <!-- keep 99999 days worth of history -->
       <maxHistory>99999</maxHistory>
     </rollingPolicy>
@@ -66,7 +66,7 @@
     <file>${user.dir}/logs/fail-extract.log</file>
     <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
       <!-- weekly rollover with compression -->
-      <fileNamePattern>fail-persist-log-%d{yyyy-ww}.gz</fileNamePattern>
+      <fileNamePattern>${user.dir}/logs/archive/fail-persist-log-%d{yyyy-ww}.gz</fileNamePattern>
       
       <!-- keep 99999 days worth of history -->
       <maxHistory>99999</maxHistory>
@@ -82,7 +82,7 @@
     <file>${user.dir}/logs/reindex.log</file>
     <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
       <!-- weekly rollover with compression -->
-      <fileNamePattern>reindex-log-%d{yyyy-ww}.gz</fileNamePattern>
+      <fileNamePattern>${user.dir}/logs/archive/reindex-log-%d{yyyy-ww}.gz</fileNamePattern>
 
       <!-- keep 99999 days worth of history -->
       <maxHistory>99999</maxHistory>

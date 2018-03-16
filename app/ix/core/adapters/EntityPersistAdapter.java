@@ -181,10 +181,11 @@ public class EntityPersistAdapter extends BeanPersistAdapter implements ProcessL
             } else {
                 saved = EntityWrapper.of(op.get());
             }
-            e.kind = saved.getKind();
+            //dkatzel 1/3/2018 - below edit block removed because we should now be making the edit upstream
+          /*  e.kind = saved.getKind();
             e.newValue = saved.toFullJson();
             e.comments = ew.getChangeReason().orElse(null);
-            e.save();
+            e.save();*/
             worked = true;
 
             return saved;
@@ -279,7 +280,6 @@ public class EntityPersistAdapter extends BeanPersistAdapter implements ProcessL
 
     @Override
     public void postInsert(BeanPersistRequest<?> request) {
-
         InxightTransaction it = InxightTransaction.getTransaction(request.getTransaction());
         final Object bean = request.getBean();
         it.addPostCommitCall(new Callable() {
@@ -334,6 +334,7 @@ public class EntityPersistAdapter extends BeanPersistAdapter implements ProcessL
 
         final Object oldValues = request.getOldValues();
         it.addPostCommitCall(new Callable() {
+
             @Override
             public Object call() throws Exception {
                 postUpdateBeanDirect(bean, oldValues);
@@ -347,8 +348,10 @@ public class EntityPersistAdapter extends BeanPersistAdapter implements ProcessL
     }
 
     public void postUpdateBeanDirect(Object bean, Object oldvalues, boolean storeEdit) {
+
         EntityWrapper<?> ew = EntityWrapper.of(bean);
         EditLock ml = lockMap.get(ew.getKey());
+
         if (ml != null && ml.hasPostUpdateBeenCalled()) {
             return;
         }
@@ -363,6 +366,7 @@ public class EntityPersistAdapter extends BeanPersistAdapter implements ProcessL
                 // then start one and save it. Otherwise just ignore
                 // the edit piece.
                 if (ml == null || !ml.hasEdit()) {
+
                     Edit edit = new Edit(ew.getEntityClass(), key.getIdString());
                     EntityWrapper<?> ewold = EntityWrapper.of(oldvalues);
 
@@ -371,12 +375,31 @@ public class EntityPersistAdapter extends BeanPersistAdapter implements ProcessL
                     edit.comments = ew.getChangeReason().orElse(null);
                     edit.kind = ew.getKind();
                     edit.newValue = ew.toFullJson();
+
                     edit.save();
 
+                }else{
+                    Edit e = ml.getEdit().get();
+                    e.kind = ew.getKind();
+                    e.newValue = ew.toFullJson();
+                    if(ew.getChangeReason().isPresent()){
+
+                        if(e.comments ==null){
+                            e.comments = ew.getChangeReason().get();
+                        }else{
+                            //append comment ?
+                            e.comments += ew.getChangeReason().get();
+                        }
+                    }
+
+
+                    e.save();
                 }
             } else {
                 Logger.warn("Entity bean [" + ew.getKind() + "]" + " doesn't have Id annotation!");
             }
+
+
         } catch (Exception ex) {
             Logger.trace("Can't retrieve bean id", ex);
         }
@@ -390,6 +413,7 @@ public class EntityPersistAdapter extends BeanPersistAdapter implements ProcessL
         if (ml != null) {
             ml.markPostUpdateCalled();
         }
+
     }
 
     @Override

@@ -1,14 +1,15 @@
 @import ix.ginas.controllers.v1.SubstanceFactory
 @import ix.ginas.models.v1.{ChemicalSubstance, SubstanceReference}
-@(sub: SubstanceReference, showStruct: Boolean = true)
+@(sub: SubstanceReference)
     @defining(SubstanceFactory.getFullSubstance(sub)) { ref =>
         <div class="text-center thumb-col">
             		  @if(ref != null) {
             		  	<div><code><a href="@ix.ginas.controllers.routes.GinasApp.substance(sub.getLinkingID())" target="_self">@ref.approvalID</a></code></div>
             		  }else{
-            		   <div><code>@sub.approvalID</code></i></div>
+            		   <div><i><code>@sub.approvalID</code></i></div>
             		  }
-                    @if(ref != null && showStruct) {
+                    @if(ref != null) {
+						<div>
 						@if(ref.getClass.toString.equals("class ix.ginas.models.v1.ChemicalSubstance")){
 
 	                            	<img class="struc-thumb img-responsive subref" alt="Structure of @ref.getName()" title="Structure of @ref.getName()"
@@ -23,7 +24,7 @@
 	                                	}else{
 		                                	@if(ref.getClass.toString.equals("class ix.ginas.models.v1.MixtureSubstance")){
 		                                		<div class = "col-md-3">
-													<img src="@routes.Assets.at("ginas/images/mixture.svg")" alt="Register a Mixture Substance" class = "img-responsive subrefThumb"/>
+													<img src="@routes.Assets.at("ginas/images/mixture.svg")" alt="Mixture Substance" class = "img-responsive subrefThumb"/>
 									            </div>
 		                                	}else{
 		                                		@if(ref.getClass.toString.equals("class ix.ginas.models.v1.PolymerSubstance")){
@@ -39,6 +40,7 @@
 	                                	}
 	                                } 
 	                            }
+						</div>
 	                           }else{
 	                            	
 	                           }

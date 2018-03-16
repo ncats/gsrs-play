@@ -1,30 +1,18 @@
 <div class="row info">
     <div class="row">
-        <form-header type="Definition" iscollapsed="iscollapsed"></form-header>
+        <form-header type="Definition" parent="parent" iscollapsed="iscollapsed"></form-header>
     </div>
     <div class="col-md-12" uib-collapse="iscollapsed">
-        <form class="form-horizontal" name="definitionForm" role="form" id="addAssayForm" novalidate>
-
+        <form class="form-horizontal" name="definitionForm" role="form" id="addDefinitionForm" novalidate>
             <ng-form name="form">
                 <div class="form-div" ng-class="{'bg-warning' : form.$invalid && form.$flagged}">
                     <div class="row">
-                        <div class="col-md-1 text-center">
-                            <delete-button delete="obj" path="assay"></delete-button>
-                        </div>
-                        <div class="col-md-9">
+                        <div class="col-md-10">
                             <div class="row">
-                                <div class="col-md-6">
+                                <div class="col-md-12">
                                     <gsrs-input type="text"
-                                                ng-model="obj.definition"
+                                                ng-model="substance.specifiedSubstanceDetails.definition.definitionDesc"
                                                 field="Definition"
-                                                required="false"
-                                                formname=form>
-                                    </gsrs-input>
-                                </div>
-                                <div class="col-md-6">
-                                    <gsrs-input type="text"
-                                                ng-model="obj.source"
-                                                field="Source"
                                                 required="false"
                                                 formname=form>
                                     </gsrs-input>
@@ -33,22 +21,22 @@
                         </div>
                         <div class="col-md-1 pull-right">
                             <modal-form-button type="access"
-                                               referenceobj="obj"
+                                               referenceobj="substance.specifiedSubstanceDetails.definition"
                                                parent="parent">
                             </modal-form-button>
                         </div>
                         <div class="col-md-1 pull-right">
                             <modal-form-button type="reference"
-                                               referenceobj="obj"
-                                               parent="parent">
+                                               referenceobj="substance.specifiedSubstanceDetails.definition"
+                                               parent="substance"
+                                               required = true
+                                               formname=form>
                             </modal-form-button>
                         </div>
                     </div>
 
                 </div>
-                <hr>
             </ng-form>
-
         </form>
     </div>
 </div>

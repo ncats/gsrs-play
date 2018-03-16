@@ -190,7 +190,7 @@ public class RouteFactory extends Controller {
                                     .map(u->u.getRoles())
                                     .orElse(new ArrayList<Role>());
             
-            
+
             return Optional.ofNullable(resources.get(context))
                     .filter(nr -> nr.isAccessible(roles))
                     .orElseThrow(() -> {

@@ -1,10 +1,6 @@
 package ix.ginas.exporters;
 
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.OutputStream;
+import java.io.*;
 import java.util.Objects;
 import java.util.concurrent.Future;
 import java.util.function.Function;
@@ -27,10 +23,10 @@ import play.Play;
 public class ExportProcess {
     private static CachedSupplier<GinasSubstanceExporterFactoryPlugin> factoryPlugin = CachedSupplier
             .of(() -> Play.application().plugin(GinasSubstanceExporterFactoryPlugin.class));
-    private final File outputFile;
-    private final File metaDataFile;
 
-    private final ExportMetaData metaData;
+    private ExportDir.ExportFile<ExportMetaData> exportFile;
+
+
 
     private State currentState = State.INITIALIZED;
     
@@ -40,18 +36,23 @@ public class ExportProcess {
     private final Supplier<Stream<Substance>> substanceSupplier;
 
     public ExportMetaData getMetaData() {
-        return metaData;
+        try {
+            return exportFile.getMetaData().get();
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+
     }
 
-    public ExportProcess(File outputFile, ExportMetaData metaData, File metaDataFile, Supplier<Stream<Substance>> substanceSupplier) {
-        this.metaDataFile = metaDataFile;
-        this.outputFile = outputFile;
-        this.metaData = metaData;
+    public ExportProcess(ExportDir.ExportFile<ExportMetaData> exportFile, Supplier<Stream<Substance>> substanceSupplier){
+        this.exportFile= Objects.requireNonNull(exportFile);
+
         this.substanceSupplier = Objects.requireNonNull(substanceSupplier);
     }
 
+
     public synchronized Future<?> run(Function<OutputStream, Exporter<Substance>> exporterFunction) throws IOException{
-        System.out.println("run state = " + currentState);
+
         if(currentState != State.INITIALIZED){
             return null;
         }
@@ -61,13 +62,12 @@ public class ExportProcess {
         OutputStream out=null;
         try{
             out = createOutputFileStream(); // throws IOException
-            System.out.println("output stream = " + out);
             exporter = exporterFunction.apply(out);
-
+            ExportMetaData metaData = exportFile.getMetaData().orElse(new ExportMetaData());
             currentState = State.RUNNING;
             metaData.started = TimeUtil.getCurrentTimeMillis();
 
-            IOUtil.closeQuietly(this::writeMetaDataFile);
+            IOUtil.closeQuietly(() ->  exportFile.saveMetaData(metaData));
             //make another final reference to outputstream
             //so we can reference it in the lambda for submit
             //final OutputStream fout = out;
@@ -77,10 +77,10 @@ public class ExportProcess {
                     System.out.println("Starting export");
                     sstream.peek(s -> {
                         Unchecked.ioException( () -> exporter.export(s));
-                        this.metaData.addRecord();
+                        metaData.addRecord();
                     })
                     .anyMatch(m->{
-                     return this.metaData.cancelled;   
+                     return metaData.cancelled;
                     });
                     
                     currentState = State.DONE;
@@ -92,7 +92,7 @@ public class ExportProcess {
                     
                     
                     try {
-                    	File f=this.getOutputFile();
+                    	File f=exportFile.getFile();
                     	
                         metaData.sha1=Util.sha1(f);
                         metaData.size=f.length();
@@ -101,7 +101,7 @@ public class ExportProcess {
                     }
                     metaData.finished=TimeUtil.getCurrentTimeMillis();
                     
-                    IOUtil.closeQuietly(this::writeMetaDataFile);
+                    IOUtil.closeQuietly(() ->  exportFile.saveMetaData(metaData));
                     IOUtil.closeQuietly(exporter);
                     
                     
@@ -120,17 +120,16 @@ public class ExportProcess {
     }
 
     private void writeMetaDataFile() throws IOException{
-        try(BufferedWriter writer = new BufferedWriter(new FileWriter(metaDataFile))){
-            EntityFactory.EntityMapper.FULL_ENTITY_MAPPER().writer().writeValue(writer, metaData);
-        }
+//        try(BufferedWriter writer = new BufferedWriter(new FileWriter(metaDataFile))){
+//            EntityFactory.EntityMapper.FULL_ENTITY_MAPPER().writer().writeValue(writer, metaData);
+//        }
+//        exportFile.saveMetaData(metaData);
     }
     private OutputStream createOutputFileStream() throws IOException{
-        return IOUtil.newBufferedOutputStream(outputFile);
+        return IOUtil.newBufferedOutputStream(exportFile.getFile());
     }
 
-    public File getOutputFile() {
-        return outputFile;
-    }
+
 
 
     public enum State{

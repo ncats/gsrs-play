@@ -9,25 +9,96 @@ use Cwd 'abs_path';
 
 use File::Find;
 use Proc::Daemon;
-use LWP::UserAgent;
-  
+
+use Getopt::Long;
+use Pod::Usage;
 
 sub getOldPid($);
 sub getValue($$);
 sub toString($);
 
+my $load = 1;
+my $loadFile = "modules/ginas/test/testdumps/jsonDumpINN_3000.txt.gz";
+
 my @files = glob('modules/ginas/target/universal/*.zip');
 #should only be one file
 my $zipFile = $files[0];
+
+my $outputPathRoot = undef;
+my $port = undef;
+
+my $applicationHost= undef;
+my $applicationContext= "/dev/ginas/app";
+my $conf = "ginas.conf";
+my $start=1;
+my $apply_evolutions=1;
+
+
+
+my $kill9= 0;
+my %overrides = ();
+
+
+
+=head1 SYNOPSIS
+
+Deploy a built ginas dist zip file to this machine.
+
+A dist zip file will be copied to a folder under $deploy_root + "_" + $port (defined by required parameters) and
+then unzipped and run.  If any ginas instances are running underthat deploy folder, this program will kill the process and delete
+the old contents before doing anything else.
+
+=head1 Options
+
+  --deploy_root           (Required) root path to unzip the the dist.zip file to.  The actual unzip location will be $deploy_root + "_" + $port
+  --port                  (Required) port number to use.
+  --conf                  The ginas conf file to use. If not set will default to "ginas.conf" in the dist.
+  --host                  The application host to use instead of the one in the conf file.
+  --context               The application context, if not set default to /dev/ginas/app
+  --zip_file              The dist zip file to use, if not specified will pick the first zip found in 'modules/ginas/target/universal/*.zip'
+                          which is where the dist packages are generated.
+  --load_file             The ginas JSON file of Substances to load at start up.  If --load is set.
+  --load                  Load a ginas JSON file of Substances at start up.  This is on by default.
+  --no-load, --noload     Do not load a ginas JSON file by default
+  --no-start              Do not Start the ginas instance only kill and delete the old running on if needed.
+  --no-evolution          Do not apply evolution
+  --kill9                 When killing the old process perform a "kill -9" instead of a normal kill
+  --override key=value    Override a $key in the conf file setting it's value to $value instead.
+                          This is the same as -Dkey=value when running a ginas instance.
+
+  --help                  Print this help
+
+=head1 VERSION
+
+1.0
+
+=cut
+
+GetOptions( 'load!' => \$load,
+            'load_file=s' => \$loadFile,
+            'zip_file=s' => \$zipFile,
+            'port=i' => \$port,
+            'deploy_root=s' => \$outputPathRoot,
+            'host=s' => \$applicationHost,
+            'context=s' => \$applicationContext,
+            'start!' => \$start,
+            'override=s%' => \%overrides,
+            'conf=s' => \$conf,
+            'evolution!' => \$apply_evolutions,
+            'kill9' => \$kill9,
+            'help'     =>   sub { pod2usage(0) },
+) or pod2usage(1);
+
+
+
 
 print "Running as: ", getpwuid($<), "\n";
 
 my $zipName = basename($zipFile);
 
-my $outputPathRoot = $ENV{JENKINS_GINAS_DEPLOY_ROOT};
-my $port = $ENV{JENKINS_GINAS_DEPLOY_PORT};
+
 #set the loadFile to the value of the environment variable or our default value if not set (falsy)
-my $loadFile = $ENV{JENKINS_GINAS_LOAD_FILE} || "modules/ginas/test/testdumps/jsonDumpINN_3000.txt.gz";
+#my $loadFile = $ENV{JENKINS_GINAS_LOAD_FILE} || "modules/ginas/test/testdumps/jsonDumpINN_3000.txt.gz";
 print "output root = ". $outputPathRoot ."\n";
 die "no deploy root specified" unless(defined $outputPathRoot);
 die "no deploy port specified" unless(defined $port);
@@ -45,34 +116,62 @@ if( -e $outputPath){
 	foreach my $pid (@pids){
 		#kill it
 		print "\t$pid\n";
-		system("kill -9 $pid");
+		if($kill9){
+		    system("kill -9 $pid");
+		}else{
+		    system("kill $pid");
+		}
 	}
-	
+
 	remove_tree($outputPath);
 }
 
+exit unless $start;
+
+print "getting ready to start new instance\n";
 make_path($outputPath);
 #my $outputPath = "ginastmp/$zipName";
 
 copy($zipFile, $outputPath)  or die "Copy failed: $!";
 
 
-`unzip $zipFile -d $outputPath`; 
+`unzip $zipFile -d $outputPath`;
 my ($subDir, undef, undef) = fileparse($zipFile, ".zip");
 my $abs_path = abs_path($outputPath. "/$subDir");
-					
+
 #chdir ($abs_path) or die  "cannot change to $abs_path: $!\n";
 print("working dir is $abs_path\n");
 #my $ginasFileDump = abs_path("modules/ginas/test/testdumps/rep90.ginas");
 my $ginasFileDump = abs_path($loadFile);
 
-print "$ginasFileDump\n";
-if(-e $ginasFileDump){
-	print "file exists\n";
-}else{
-	die "FILE DOES NOT EXIST!!!!";
+
+my $command = "$abs_path/bin/ginas -mem 4096 -Djava.awt.headless=true -Dhttp.port=$port -Dconfig.resource=$conf -Dapplication.context=$applicationContext";
+
+if($load){
+    $command .= " -Dix.ginas.load.file=$ginasFileDump";
+
+    print "$ginasFileDump\n";
+    if(-e $ginasFileDump){
+    	print "file exists\n";
+    }else{
+    	die "FILE DOES NOT EXIST!!!!";
+    }
 }
-my $command = "$abs_path/bin/ginas -mem 4096 -Djava.awt.headless=true -Dhttp.port=$port -Dconfig.resource=ginas.conf -DapplyEvolutions.default=true -Dapplication.host=https://tripod.nih.gov/ -Dapplication.context=/dev/ginas/app -Dix.ginas.load.file=$ginasFileDump";
+
+if($apply_evolutions){
+$command .=" -DapplyEvolutions.default=true";
+}
+if(defined $applicationHost){
+    $command .= " -Dapplication.host=$applicationHost";
+}
+
+ while (my ($key, $value) = each %overrides) {
+ if( defined $key && defined $value){
+    $command .= " -D$key=$value";
+ }
+ }
+
+ print "command = $command\n";
 #-Dix.admin=true -Dix.authentication.allownonauthenticated=false";
 
 my $daemon = Proc::Daemon->new(
@@ -83,98 +182,14 @@ my $daemon = Proc::Daemon->new(
         child_STDERR => $abs_path . "/daemon.err",
         file_umask => 022
     );
-    
+
 my $Kid_1_PID = $daemon->Init;
 print "daemon process is $Kid_1_PID\n";
 
 #just exit for now don't worry about the graph for now
 exit;
 
-#sleep for 4hrs since the load takes a long time to run
-#sleep(60*60*4);
-sleep(5);
 
-
-my $ua = LWP::UserAgent->new;
-my $startUpURL = "http://localhost:$port/dev/ginas/app/api/v1";
-my $startReq = HTTP::Request->new(GET => $startUpURL);
-my $startResponse;
-my $tries=0;
-do{
-	#wait 30 seconds for ginas to start up...
-	#NOTE: PERL SLEEP IS IN SECS NOT MILLIS
-  sleep(30);
-  $startResponse = $ua->request($startReq);
-  $tries++;
-  print "$tries\n";
-}while($tries < 10 && $startResponse->is_error());
-
-if($startResponse->is_error()){
-my $stdErr = toString($abs_path . "/daemon.err");
-#$response->status_line
-	die "could not connect to ginas ", $startResponse->status_line, "\nSTDERR=\n", $stdErr;
-}
-
-
-
-
-
-
-#system "curl -v -F file-type=JSON -F file-name=@" ."$ginasFileDump http://localhost:$port/dev/ginas/app/load";
-
-
-print "=======================\n";
-print "querying status JSON\n";
-print "=======================\n";
-my $statusURL = "http://localhost:$port/dev/ginas/app/api/v1/jobs/1";
-my $res;
-my $done=undef;
-while (!$done){
-	sleep(5);
-	print "status URL =  $statusURL\n";
-
-	# Create a request
-	my $req = HTTP::Request->new(GET => $statusURL);
-	# Pass request to the user agent and get a response back
-	$res = $ua->request($req);
-	
-	#res is a JSON response we want to look for value of "status":"PENDING" or RUNNING or COMPLETE
-	print $res->content , "\n";
-	
-	my $status = getValue($res->content, "status");
-	print "STATUS = ",  $status, "\n";
-	$done =  $status eq "COMPLETE";
-	
-
-}
-
-#if we are here, we are done
-#pull stats for jenkins plots (step 8)
-
-my $jsonResponse = $res->content;
-
-my $start = getValue($jsonResponse, "start");
-my $stop = getValue($jsonResponse, "stop");
-
-my $time = ($stop - $start)/1000;
-my $records = getValue($jsonResponse, "recordsPersistedSuccess");
-
-my $workspace = $ENV{'WORKSPACE'};
-my $jobName = $ENV{'JOB_NAME'};
-
-
-
-my $baseDir = "$workspace/deploy_metrics";
-make_path($baseDir);
-open(RECORD_OUT, ">$baseDir/records.properties")|| die "can not open output file: $!";
-open(RECORD_TIME, ">$baseDir/time.properties")|| die "can not open output file: $!";
-
-print RECORD_TIME "YVALUE=$time\n";
-print RECORD_OUT "YVALUE=$records\n";
-
-
-close RECORD_OUT;
-close RECORD_TIME;
 
 sub getValue($$){
 	my ($json, $key) = @_;
@@ -182,13 +197,13 @@ sub getValue($$){
 	print "json = \n$json\n";
 
 	if($json =~/\"$key\"\:\"(\S+?)\"/){
-		return $1;	
+		return $1;
 	}
 	if($json =~/\"$key\"\:(\d+)/){
 		return $1;
 	}
 	return undef;
-	
+
 }
 
 sub toString($){
@@ -213,7 +228,7 @@ sub getOldPid($){
 			open my $fh, "<", $file;
 			#should only be 1 line
 			my $line = <$fh>;
-			
+
 			chomp $line;
 			push @pids, $line;
 			close $fh;
@@ -221,8 +236,8 @@ sub getOldPid($){
 		}
 	},
 	$dir);
-	
+
 	return \@pids;
 	}
-	
+
 END;

@@ -1,16 +1,25 @@
 package ix.core.controllers.search;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Consumer;
 
 import org.apache.lucene.facet.DrillDownQuery;
 import org.apache.lucene.facet.FacetsConfig;
+import org.apache.lucene.index.Term;
+import org.apache.lucene.queries.BooleanFilter;
+import org.apache.lucene.queries.ChainedFilter;
+import org.apache.lucene.queries.FilterClause;
+import org.apache.lucene.queries.TermsFilter;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.classic.QueryParser;
+import org.apache.lucene.search.BooleanClause;
+import org.apache.lucene.search.Filter;
 import org.apache.lucene.search.MatchAllDocsQuery;
 import org.apache.lucene.search.Query;
 
@@ -51,7 +60,7 @@ public class SearchRequest {
 	
 	public static class Builder {
 		private Collection<?> subset;
-		private String query;
+		private String query = "*:*"; //defaults to "all" query
 		private SearchOptions.Builder opBuilder = new SearchOptions.Builder();
 		
 		public Builder kind(Class<?> kind) {
@@ -93,6 +102,13 @@ public class SearchRequest {
 			opBuilder.facets(facets);
 			return this;
 		}
+		
+		public Builder addFacet(String facetName, String facetValue){
+			this.opBuilder.addfacet(facetName, facetValue);
+			return this;
+			
+		}
+		
 
 		public Builder longRangeFacets(List<FacetLongRange> longRangeFacets) {
 			opBuilder.longRangeFacets(longRangeFacets);
@@ -186,25 +202,53 @@ public class SearchRequest {
             return ddq;
 	    }
 	}
-	
-	public Query extractFullFacetQuery(QueryParser parser, FacetsConfig facetsConfig, String facet) throws ParseException{
+	public Tuple<Query,Filter> extractFullFacetQueryAndFilter(QueryParser parser, FacetsConfig facetsConfig, String facet) throws ParseException{
 	    if(!options.isSideway() || options.getFacets().isEmpty()){
-	        return extractFullQuery(parser,facetsConfig);
+	        return Tuple.of(extractFullQuery(parser,facetsConfig),null);
 	    }
 	    
 	    
 	    Query query = extractLuceneQuery(parser);
+	    
+
+	    
+	    List<Filter> nonStandardFacets = new ArrayList<Filter>();
 
 	    DrillDownQuery ddq = new DrillDownQuery(facetsConfig, query);
 	    options.getDrillDownsMap().values()
                     	    .stream()
                     	    .flatMap(t->t.stream())
                     	    .filter(dp->!dp.getDrill().equals(facet))
+                    	    .filter(dp->{
+                    	    	if(dp.getDrill().startsWith("^")){
+                		    		nonStandardFacets.add(new TermsFilter(new Term(TextIndexer.TERM_VEC_PREFIX + dp.getDrill().substring(1), dp.getPaths()[0])));
+                		    		return false;
+                		    	}else if(dp.getDrill().startsWith("!")){
+                		    		System.out.println("Found a not!" + dp.getDrill());
+                		    		BooleanFilter f = new BooleanFilter();
+                		    		TermsFilter tf = new TermsFilter(new Term(TextIndexer.TERM_VEC_PREFIX + dp.getDrill().substring(1), dp.getPaths()[0]));
+                		    		f.add(new FilterClause(tf, BooleanClause.Occur.MUST_NOT));
+                		    		nonStandardFacets.add(f);
+                		    		return false;
+                		    	}
+                		    	return true;
+                    	    })
                     	    .forEach(dp->{
                     	        ddq.add(dp.getDrill(), dp.getPaths());
                     	    });
-	    return ddq;
+	    Filter filter = null;
+	    
+	    if(!nonStandardFacets.isEmpty()){
+			filter = new ChainedFilter(nonStandardFacets.toArray(new Filter[0])
+					                  ,ChainedFilter.AND);	
+		}
+	    return Tuple.of(ddq,filter);
     }
+	
+	public Query extractFullFacetQuery(QueryParser parser, FacetsConfig facetsConfig, String facet) throws ParseException{
+	    return extractFullFacetQueryAndFilter(parser,facetsConfig,facet).k();
+    }
+	
 	
 	
     public Map<String, String[]> asQueryParams() {

@@ -6,19 +6,18 @@
 
 @(sub: ix.ginas.models.v1.Substance)(breadcrumb: Html)(details: Html)(content: Html)
 
-
 @ix.ginas.views.html.ginas(sub.getName, "ix.ginas.models.v1.Substance") {
-    @ix.ginas.views.html.menu()
+@ix.ginas.views.html.menu()
 } {
 
-    <div class = "row">
+<div class = "row">
 
-        <div class = "col-md-3 hidden-xs hidden-sm sidebar">
-            <h3 class="display-name"><em>@sub.getName()</em></h3>
-           <nav id="breadcrumb">
-                <ul class="nav nav-pills nav-stacked" id="breadcrumb-list">
-                    <li role="presentation" class ="text-capitalize active"><a href="#details" prevent-default="" ng-click="scrollTo('details')">
-                        {{_.startCase('@sub.substanceClass')}} Details</a></li>
+    <div class = "col-md-3 hidden-xs hidden-sm sidebar">
+        <h3 class="display-name"><em>@sub.getName()</em></h3>
+        <nav id="breadcrumb">
+            <ul class="nav nav-pills nav-stacked" id="breadcrumb-list">
+                <li role="presentation" class ="text-capitalize active"><a href="#details" prevent-default="" ng-click="scrollTo('details')">
+                    {{_.startCase('@sub.substanceClass')}} Details</a></li>
 
                     @if(sub.getAlternativeDefinitionRelationships().size() > 0) {
                         <li role="presentation" ><a href="#altrelationships" prevent-default="" ng-click="scrollTo('altrelationships')">
@@ -28,6 +27,7 @@
                         <li role="presentation" ><a href="#pridefinition" prevent-default="" ng-click="scrollTo('pridefinition')">
                             Primary Definition </a></li>
                     }
+                @substancedetailsheader(sub)
                     @breadcrumb
                     @defining(sub.getModificationCount()) { gcount =>
                         @if(gcount > 0) {
@@ -37,6 +37,9 @@
                             </li>
                         }
                     }
+
+
+
                     @if(sub.getAllNames().size() > 0) {
                         <li role="presentation" ><a href="#names" prevent-default="" ng-click="scrollTo('names')">
                             Names <span class="badge pull-right">@sub.names.size()</span></a></li>
@@ -45,7 +48,7 @@
                         <li role="presentation"><a href="#codes" prevent-default="" ng-click="scrollTo('codes')">
                             Codes <span class="badge pull-right">@sub.codes.size()</span></a></li>
                     }
-                    @if(sub.getActiveMoieties.size() > 0) {
+                   @* @if(sub.getActiveMoieties.size() > 0) {
                         <li role="presentation" ><a href="#activemoieties" prevent-default="" ng-click="scrollTo('activemoieties')" >
                             Active Moieties <span class="badge pull-right">@sub.getActiveMoieties.size()</span></a></li>
                     }
@@ -56,10 +59,10 @@
                     @if(sub.getImpurities.size() > 0) {
                         <li role="presentation" ><a href="#impurities" prevent-default="" ng-click="scrollTo('impurities')">
                             Impurities <span class="badge pull-right">@sub.getImpurities.size()</span></a></li>
-                    }
-                    @if(sub.getFilteredRelationships.size() > 0) {
+                    }*@
+                    @if(sub.getNonAltRelationships.size() > 0) {
                         <li role="presentation" ><a href="#relationships" prevent-default="" ng-click="scrollTo('relationships')" id = "relation">
-                            Relationships <span class="badge pull-right">@sub.getFilteredRelationships.size()</span></a></li>
+                            Relationships <span class="badge pull-right">@sub.getNonAltRelationships.size()</span></a></li>
                     }
                     @if(sub.properties.size() > 0) {
                         <li role="presentation"><a href="#properties" prevent-default="" ng-click="scrollTo('properties')">
@@ -79,9 +82,11 @@
                         <li role="presentation"><a href="#audit" prevent-default="" ng-click="scrollTo('audit')">
                             Audit Information </a></li>
                     }
-                </ul>
-            </nav>
-        </div>
+            </ul>
+        </nav>
+        <br><br><br>
+    </div>  <!-- sidebar -->
+
         <div class = "col-md-9 col-md-offset-3 col-xs-12">
             <div class="row info" id="details">
                 <button class="btn btn-primary label-offset det text-capitalize" ng-click = "detiscollapsed=!detiscollapsed">
@@ -101,6 +106,11 @@
                                 <code class="text-uppercase">Deprecated</code>
                             }
                         </div>
+                        <div class="col-md-5" id="divIdStructHeader">
+                            @if(sub.getActiveMoieties.size() > 0) {
+                                <a href=""><rendered id = '@sub.uuid' size="180" ctx=''></rendered></a>
+                            }
+                        </div>
                         <div class = "col-md-3 pull-right">
                             <h5>Substance ID:</h5>
                             @if(sub.isSubstanceVariant()) {
@@ -112,38 +122,40 @@
                                 <ul class= "list-inline pull-right list-unstyled">
                                 @dynamic(name = IxDynamicResourceHandler.CAN_UPDATE, handler = new ix.ncats.controllers.security.IxDeadboltHandler()) {
                                     <li>
-                                        <a href="@ix.ginas.controllers.routes.GinasFactory.edit(GinasApp.getId(sub))" target="_self" uib-tooltip="Edit Substance" aria-label="Edit Substance">
-                                            <span class="sr-only">Edit Substance</span>
-                                            <span class="fa fa-pencil fa-2x success"></span></a>
+                                    <a href="@ix.ginas.controllers.routes.GinasFactory.edit(GinasApp.getId(sub))" target="_self" uib-tooltip="Edit Substance" aria-label="Edit Substance">
+                                        <span class="sr-only">Edit Substance</span>
+                                        <span class="fa fa-pencil fa-2x success"></span></a>
                                     </li>
                                     <li> <a href="@routes.Assets.at("gsrs2/index.html")#/substance/@sub.getUuid()/names" target="_blank" uib-tooltip="New Form" aria-label="Edit Substance">
                                         <span class="sr-only">Edit New Form</span>
                                         <i class="fa fa-pencil-square fa-2x" aria-hidden="true" ></i></a>
                                     </li>
                                 }
-                                    <li> <download-button uuid="@sub.getUuid" format = format>Download</download-button></li>
-                                </ul>
-                            </div>
+                                <li> <download-button uuid="@sub.getUuid" format = format>Download</download-button></li>
+                            </ul>
                         </div>
                     </div>
-                  
-                    <div class = "row table-responsive">
+                </div>
+
+                <div class = "row table-responsive">
+                    @substancedetailsoverview(sub)
                     @details
-                    </div>
                 </div>
             </div>
+        </div>
 
-         @if(sub.getAlternativeDefinitionRelationships().size() > 0) {
-                <div class="row info table-responsive" id="altrelationships">
-                @properties.relationships(sub.getAlternativeDefinitionRelationships(), "Alternative Definitions", sub.uuid.toString, false)
-                </div>
-            }
-            @if(sub.getPrimaryDefinitionReference() != null) {
-                <div class="row info table-responsive" id="pridefinition">
-                	@properties.primarydefinition(sub.getPrimaryDefinitionReference())
-                </div>
-            }
+        @if(sub.getAlternativeDefinitionRelationships().size() > 0) {
+        <div class="row info table-responsive" id="altrelationships">
+            @properties.relationships(sub.getAlternativeDefinitionRelationships(), "Alternative Definitions", sub.uuid.toString, false)
+        </div>
+        }
+        @if(sub.getPrimaryDefinitionReference() != null) {
+        <div class="row info table-responsive" id="pridefinition">
+            @properties.primarydefinition(sub.getPrimaryDefinitionReference())
+        </div>
+        }
 
+            @substancedetailsbodysection(sub)
             @content
 
             @if(sub.hasModifications()) {
@@ -154,69 +166,69 @@
                         <i ng-hide="modscollapse" class="fa fa-caret-down"></i>
                         Modifications&nbsp;<span class="badge head">
                             @sub.getModificationCount()</span></button>
-                        <div class="col-md-12 table-responsive" uib-collapse = "modscollapse">
-                        @if(sub.getModifications().agentModifications.size > 0) {
-                            @properties.agentmodifications(sub.getModifications().agentModifications)
-                        }
-                        @if(sub.getModifications().physicalModifications.size > 0) {
-                            @properties.physicalmodifications(sub.getModifications().physicalModifications)
-                        }
-                        @if(sub.getModifications().structuralModifications.size > 0) {
-                            @properties.structuralmodifications(sub.getModifications().structuralModifications)
-                        }
-                    </div>
-                </div>
-            }
-            @if(sub.getAllNames().size() > 0) {
-                <div class="row info" id="names">
-                @properties.names(sub.getAllNames(), sub)
-                </div>
-            }
-             @if(sub.codes.size() > 0) {
-                <div class="row info " id="codes">
-                @properties.codes(sub.codes, sub.uuid.toString)
-                </div>
-            }
-            @if(sub.hasChildConceptReferences()) {
-                <div class="row info " id="variants">
-                @properties.variantconcepts(sub)
-                </div>
-            }
+            <div class="col-md-12 table-responsive" uib-collapse = "modscollapse">
+                @if(sub.getModifications().agentModifications.size > 0) {
+                @properties.agentmodifications(sub.getModifications().agentModifications)
+                }
+                @if(sub.getModifications().physicalModifications.size > 0) {
+                @properties.physicalmodifications(sub.getModifications().physicalModifications)
+                }
+                @if(sub.getModifications().structuralModifications.size > 0) {
+                @properties.structuralmodifications(sub.getModifications().structuralModifications)
+                }
+            </div>
+        </div>
+        }
+        @if(sub.getAllNames().size() > 0) {
+        <div class="row info" id="names">
+            @properties.names(sub.getAllNames(), sub)
+        </div>
+        }
+        @if(sub.codes.size() > 0) {
+        <div class="row info " id="codes">
+            @properties.codes(sub.codes, sub.uuid.toString)
+        </div>
+        }
+        @if(sub.hasChildConceptReferences()) {
+        <div class="row info " id="variants">
+            @properties.variantconcepts(sub)
+        </div>
+        }
 
-            @if(sub.getActiveMoieties().size() > 0) {
-                <div class="row info " id="activemoieties">
-                @properties.relationships(sub.getActiveMoieties(), "Active Moieties", sub.uuid.toString)
-                </div>
-            }
+       @* @if(sub.getActiveMoieties().size() > 0) {
+        <div class="row info " id="activemoieties">
+            @properties.relationships(sub.getActiveMoieties(), "Active Moieties", sub.uuid.toString)
+        </div>
+        }
 
-            @if(sub.getMetabolites().size() > 0) {
-                <div class="row info " id="metabolites">
-                @properties.relationships(sub.getMetabolites(), "Metabolites", sub.uuid.toString)
-                </div>
-            }
+        @if(sub.getMetabolites().size() > 0) {
+        <div class="row info " id="metabolites">
+            @properties.relationships(sub.getMetabolites(), "Metabolites", sub.uuid.toString)
+        </div>
+        }
 
-            @if(sub.getImpurities().size() > 0) {
-                <div class="row info " id="impurities">
-                @properties.relationships(sub.getImpurities(), "Impurities", sub.uuid.toString)
-                </div>
-            }
+        @if(sub.getImpurities().size() > 0) {
+        <div class="row info " id="impurities">
+            @properties.relationships(sub.getImpurities(), "Impurities", sub.uuid.toString)
+        </div>
+        }*@
 
-            @if(sub.getFilteredRelationships().size() > 0) {
-                <div class="row info " id="relationships">
-                @properties.relationships(sub.getFilteredRelationships(), "Relationships", sub.uuid.toString)
-                </div>
-            }
+        @if(sub.getNonAltRelationships().size() > 0) {
+        <div class="row info " id="relationships">
+            @properties.relationships(sub.getNonAltRelationships(), "Relationships", sub.uuid.toString)
+        </div>
+        }
 
-            @if(sub.properties != null && sub.properties.size() > 0) {
-                <div class="row info " id="properties">
-                @properties.properties(sub.properties, sub.uuid.toString)
-                </div>
-            }
-            @if(sub.notes != null && sub.notes.size() > 0) {
-                <div class="row info " id="notes">
-                @properties.notes(sub.getDisplayNotes(), sub.uuid.toString)
-                </div>
-            }
+        @if(sub.properties != null && sub.properties.size() > 0) {
+        <div class="row info " id="properties">
+            @properties.properties(sub.properties, sub.uuid.toString)
+        </div>
+        }
+        @if(sub.notes != null && sub.notes.size() > 0) {
+        <div class="row info " id="notes">
+            @properties.notes(sub.getDisplayNotes(), sub.uuid.toString)
+        </div>
+        }
 
             <div class="row info" id="refs">
                 <button class="btn btn-primary label-offset det" ng-init="referencescollapse=true" ng-click = "referencescollapse = !referencescollapse">
@@ -225,7 +237,7 @@
                     References&nbsp;<span class="badge"> @sub.references.size()</span></button>
                 <div class="col-md-12 table-responsive" uib-collapse = "referencescollapse">
                     <referencesmanager reftable substance ="'@sub.uuid'"></referencesmanager>
-                    </div>
+                </div>
             </div>
 
             @if(sub.getEdits().size() > 0) {
@@ -296,8 +308,8 @@
                                     }
                                     <tr><td> Created </td><td>@sub.created</td></tr>
                                     <tr><td> Created By </td><td>@sub.createdBy</td></tr>
-                                    <tr><td> lastEdited </td><td>@sub.lastEdited</td></tr>
-                                    <tr><td> lastEdited By </td><td>@sub.lastEditedBy</td></tr>
+                                    <tr><td> Last Edited </td><td>@sub.lastEdited</td></tr>
+                                    <tr><td> Last Edited By </td><td>@sub.lastEditedBy</td></tr>
                                     @if(sub.changeReason != null) {
                                         <tr><td>Change Reason</td><td>@sub.changeReason</td></tr>
                                     }
@@ -311,3 +323,4 @@
         </div>
 </div>
 }
+

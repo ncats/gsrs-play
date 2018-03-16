@@ -311,6 +311,13 @@ public class AdminFactory extends Controller {
         List<Group> groupByUser = AdminFactory.groupfinder.get().where().eq("members.id", userId).findList();
         return groupByUser;
     }
+    
+    public static Group getGroupByName(String name){
+    	return AdminFactory.groupfinder.get().where().ieq("name", name).findList()
+    			.stream()
+    			.findFirst()
+    			.orElse(null);
+    }
 
 
     public static List<Acl> permissionByPrincipal(Principal cred) {

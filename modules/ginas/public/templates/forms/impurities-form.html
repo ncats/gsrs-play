@@ -1,164 +1,164 @@
 <div class="row info">
     <div class="row">
-        <form-header type="Impurities" iscollapsed="iscollapsed"></form-header>
+        <form-header class="col-md-3" type="Impurities" parent="parent" iscollapsed="iscollapsed"></form-header>
+        <br>
+        <button class="btn btn-primary" ng-click="addImpurities();iscollapsed=false"><i class="fa fa-plus"></i> Add Test</button>
     </div>
     <div class="col-md-12" uib-collapse="iscollapsed">
-        <form class="form-horizontal" name="impuritiesForm" role="form" id="addImpOrganicForm" novalidate>
-
+        <form class="form-horizontal" name="impuritiesForm" role="form" id="impuritiesForm" novalidate>
+            <div ng-repeat="(index,obj) in substance.specifiedSubstanceDetails.impurities">
                 <ng-form name="form">
                     <div class="form-div" ng-class="{'bg-warning' : form.$invalid && form.$flagged}">
                         <div class="row">
                             <div class="col-md-1 text-center">
-                                <delete-button delete="obj" path="assay"></delete-button>
+                                <div ng-cloak><b>{{index+1}}</b></div><br>
+                                <a ng-click="deleteImpurities(index)" ng-keypress="deleteImpurities(index);" tabindex="0" role="button" role="button" uib-tooltip="Delete Item"><i class="fa fa-trash fa-2x danger"></i></a>
                             </div>
-                            <div class="col-md-9">
+                            <div class="col-md-11">
                                 <div class="row">
-                                    <div class="col-md-4">
+                                    <div class="col-md-3">
                                         <gsrs-input type="text"
-                                                    ng-model="obj.impuritySubstance"
-                                                    field="Substance Name"
+                                                    ng-model="obj.test"
+                                                    field="Test"
                                                     required="false"
-                                                    formname=form>
+                                                    formname=impuritiesForm>
                                         </gsrs-input>
                                     </div>
-                                    <div class="col-md-4">
+                                    <div class="col-md-2">
                                         <gsrs-input type="dropdown"
-                                                    ng-model="obj.identifyCharType"
-                                                    field="Identifying Characteristic Type"
-                                                    cv=""
-                                                    max="1"
-                                                    formname=form>
-                                        </gsrs-input>
+                                                    ng-model="obj.testType"
+                                                    field="testType"
+                                                    label="Test Type"
+                                                    cv="SSG_TEST_TYPE"
+                                                    formname=impuritiesForm></gsrs-input>
                                     </div>
-                                    <div class="col-md-4">
+                                    <div class="col-md-5">
                                         <gsrs-input type="text"
-                                                    ng-model="obj.charValue"
-                                                    field="Characteristic Value"
+                                                    ng-model="obj.testDescription"
+                                                    field="Test Description"
                                                     required="false"
-                                                    formname=form>
+                                                    formname=impuritiesForm>
                                         </gsrs-input>
                                     </div>
-                                </div>
-                            </div>
+                                    <div class="col-md-1 pull-right">
+                                        <modal-form-button type="access"
+                                                           referenceobj="obj"
+                                                           parent="parent">
+                                        </modal-form-button>
+                                    </div>
+                                    <div class="col-md-1 pull-right">
+                                        <modal-form-button type="reference"
+                                                           referenceobj="obj"
+                                                           parent="substance"
+                                                           required = true
+                                                           formname=form>
+                                        </modal-form-button>
+                                    </div>
+                                </div> <!-- Row -->
 
-                            <div class="col-md-1 pull-right">
-                                <modal-form-button type="access"
-                                                   referenceobj="obj"
-                                                   parent="parent">
-                                </modal-form-button>
-                            </div>
-                            <div class="col-md-1 pull-right">
-                                <modal-form-button type="reference"
-                                                   referenceobj="obj"
-                                                   parent="parent">
-                                </modal-form-button>
-                            </div>
+                                <!-- Add Multiple Ingredients -->
+                                <br>
+                                <button class="btn btn-primary" ng-click="addImpurityIngredient(index)"><i class="fa fa-plus"></i> Add Impurity</button>
+                                <br><br>
+                                <div ng-repeat="(indexIng,objIngred) in obj.ingredients">
+                                    <div class="row">
+                                        <div class="col-md-1 text-center">
+                                            <div ng-cloak><b>{{indexIng+1}}</b></div><br>
+                                            <a ng-click="deleteImpurityIngredient(index, indexIng)" ng-keypress="deleteImpurityIngredient(index, indexIng);" tabindex="0" role="button" role="button" uib-tooltip="Delete Item"><i class="fa fa-trash fa-2x danger"></i></a>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <substance-chooser-selector referenceobj="objIngred"
+                                                                        field="substanceName"
+                                                                        name="substanceName"
+                                                                        formname="impuritiesForm"
+                                                                        label="Substance Name"
+                                                                        type="search">
+                                            </substance-chooser-selector>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <modal-form-button type="amount"
+                                                               field="value"
+                                                               referenceobj="objIngred"
+                                                               parent="parent">
+
+                                            </modal-form-button>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <gsrs-input type="dropdown"
+                                                        ng-model="objIngred.impurityType"
+                                                        field="impurityType"
+                                                        label="Impurity Type"
+                                                        cv="SSG_IMPURITY_TYPE"
+                                                        formname=impuritiesForm>
+                                            </gsrs-input>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <gsrs-input type="dropdown"
+                                                        ng-model="objIngred.resultType"
+                                                        field="resultType"
+                                                        label="Result Type"
+                                                        cv="SSG_RESULT_TYPE"
+                                                        formname=impuritiesForm>
+                                            </gsrs-input>
+                                        </div>
+                                    </div> <!-- row -->
+
+                                    <!-- Add Multiple Identifying Characteristics -->
+                                    <br>
+                                    <div class="row">
+                                        <div class="col-md-1">
+                                            &nbsp;
+                                        </div>
+                                        <div class="col-md-3">
+                                            <button class="btn btn-primary" ng-click="addIdentifyingCharacteristics(index, indexIng)"><i class="fa fa-plus"></i> Add Identifying Characteristics</button>
+                                        </div>
+                                    </div> <!-- Row -->
+                                    <br>
+                                    <div ng-repeat="(indexIdenChar,objIngredIdenChar) in objIngred.identifyingCharacteristics">
+                                        <div class="row">
+                                            <div class="col-md-1">
+                                                &nbsp;
+                                            </div>
+                                            <div class="col-md-1 text-center">
+                                                <div ng-cloak><b>{{indexIdenChar+1}}</b></div><br>
+                                                <a ng-click="deleteIdentifyingCharacteristics(index, indexIng, indexIdenChar)" ng-keypress="deleteIdentifyingCharacteristics(index, indexIng, indexIdenChar)" tabindex="0" role="button" role="button" uib-tooltip="Delete Item"><i class="fa fa-trash fa-2x danger"></i></a>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <gsrs-input type="dropdown"
+                                                            ng-model="objIngredIdenChar.acceptanceCriteriaType"
+                                                            field="acceptanceCriteriaType"
+                                                            label="Acceptance Criteria Type"
+                                                            cv="SSG_ACCEPTANCE_CRITERIA_TYPE"
+                                                            formname=impuritiesForm>
+                                                </gsrs-input>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <gsrs-input type="text"
+                                                            ng-model="objIngredIdenChar.characteristicValue"
+                                                            field="Characteristic Value"
+                                                            required="false"
+                                                            formname=impuritiesForm>
+                                                </gsrs-input>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <gsrs-input type="text"
+                                                            ng-model="objIngredIdenChar.comment"
+                                                            field="Comment"
+                                                            required="false"
+                                                            formname=impuritiesForm>
+                                                </gsrs-input>
+                                            </div>
+                                        </div> <!-- row characteristic-->
+                                    </div> <!-- ng-repeat Identifying Characteristics -->
+                                    <br><br>
+                                </div> <!-- ng-repeat Ingredient -->
+                                <br>
+                            </div> <!-- row 11 -->
                         </div>
-
-                        <!-- Second Row -->
-                        <div class="row">
-                            <div class="col-md-1 text-center">
-                                &nbsp;
-                            </div>
-                            <div class="col-md-9">
-                                <div class="row">
-                                    <div class="col-md-4">
-                                        <gsrs-input type="dropdown"
-                                                    ng-model="obj.impurityType"
-                                                    field="Impurity Type"
-                                                    cv=""
-                                                    max="1"
-                                                    formname=form>
-                                        </gsrs-input>
-                                    </div>
-                                    <div class="col-md-4">
-                                        <gsrs-input type="text"
-                                                    ng-model="obj.nonNumericValue"
-                                                    field="Non-Numeric Value"
-                                                    required="false"
-                                                    formname=form>
-                                        </gsrs-input>
-                                    </div>
-                                    <div class="col-md-4">
-                                        <gsrs-input type="text"
-                                                    ng-model="obj.identifyingDescription"
-                                                    field="Identifying Description"
-                                                    required="false"
-                                                    formname=form>
-                                        </gsrs-input>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Third Row -->
-                        <div class="row">
-                            <div class="col-md-1 text-center">
-                                &nbsp;
-                            </div>
-                            <div class="col-md-9">
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <gsrs-input type="text"
-                                                    ng-model="obj.descriptionText"
-                                                    field="Description Text"
-                                                    required="false"
-                                                    formname=form>
-                                        </gsrs-input>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <gsrs-input type="text"
-                                                    ng-model="obj.source"
-                                                    field="Source"
-                                                    required="false"
-                                                    formname=form>
-                                        </gsrs-input>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Fourth Row -->
-                        <div class="row">
-                            <div class="col-md-1 text-center">
-                                &nbsp;
-                            </div>
-                            <div class="col-md-9">
-                                <div class="row">
-                                    <div class="col-md-4">
-                                        <gsrs-input type="dropdown"
-                                                    ng-model="obj.acceptanceCriteriaType"
-                                                    field="Acceptance Criteria Type"
-                                                    cv=""
-                                                    max="1"
-                                                    formname=form>
-                                        </gsrs-input>
-                                    </div>
-                                    <div class="col-md-4">
-                                        <gsrs-input type="text"
-                                                    ng-model="obj.acceptanceCriteria"
-                                                    field="Acceptance Criteria"
-                                                    required="false"
-                                                    formname=form>
-                                        </gsrs-input>
-                                    </div>
-                                    <div class="col-md-4">
-                                        <gsrs-input type="text"
-                                                    ng-model="obj.acceptanceCriteriaValues"
-                                                    field="Acceptance Criteria Values"
-                                                    required="false"
-                                                    formname=form>
-                                        </gsrs-input>
-                                    </div>
-                                </div>
-                            </div>
-                        </div> <!-- Fourth row -->
-
-
                     </div>
-                    <hr>
                 </ng-form>
-
+                <hr>
+            </div> <!-- div repeat -->
         </form>
     </div>
 </div>

@@ -33,15 +33,15 @@
         
         $scope.apply = function (){
             $location.search("facet",$scope.getAllSelected());
+            $location.search("page",1);
             window.location = $location.absUrl();
         }
         
         $scope.getAllSelected = function(){
-            return _.flatMap($scope.allFacets,function(f){
-                return _.map(f.selectedLabels, function(l){
-                    return f.name + "/" + l.replace(/\//g,"$$$");
-                });
-            });
+        	return _.flatMap($scope.childred,function(cs){
+                       return cs.getSelected();
+        		   });
+
         }
         
         $scope.collapsed = false;
@@ -72,6 +72,9 @@
         $scope.facets =[];
         $scope.filtered=false;
         $scope.fbaseurl="";
+        $scope.facetType="any";
+        $scope.ofacetType="any";
+
         
         $scope.selectedFacets=[];
         
@@ -91,13 +94,29 @@
         $scope.defquantitymax=20;
         $scope.refreshing=false;
         
+
+        
+        $scope.negated={};
+        $scope.originalnegated=[];
+        $scope.negatedList=[];
+        
         
         $scope.quantity=$scope.defquantity;
         
+        $scope.isEnhanced=true;
         
         $scope.mode = "SERVER"; // or CLIENT or OFF
         
-        
+        $scope.hexEncode= function(str){
+            var hex, i;
+            var result = "";
+            for (i=0; i<str.length; i++) {
+                hex = str.charCodeAt(i).toString(16);
+                result += ("000"+hex).slice(-4);
+            }
+            return result;
+        };
+
      
         
         $scope.init = function (base, pfacet, mode) {
@@ -106,7 +125,21 @@
             }
             $scope.fbaseurl=base.replace("ffilter=","");
             if(pfacet){
-                
+                if(pfacet.enhanced===false){
+                	$scope.isEnhanced=false;
+                }
+            	
+            	
+                if(pfacet.prefix==="^"){
+                         $scope.facetType="all";
+                         $scope.ofacetType="all";
+                }
+                if(pfacet.prefix==="!"){
+                         $scope.facetType="not";
+                         $scope.ofacetType="not";
+                         $scope.isnegated=true;
+                }
+            	
                 $scope.parentFacet=pfacet;
                 
                 $scope.selectedFacets=$scope.parentFacet.selectedLabels;
@@ -133,16 +166,23 @@
                     if(fac){
                         fac.checked=true;
                         
+                        fac.mid= "f" + $scope.hexEncode(s);
                         selfac.push(fac);
                     }else{
-                        selfac.push({label:s,display: getDisplayFacetValue($scope.facetName, s), checked:true});
+                               selfac.push({
+                                        label:   s,
+                                        display: getDisplayFacetValue($scope.facetName, s), 
+                                        checked: true,
+                                        mid:     "f" + $scope.hexEncode(s)
+                                       });
                     }
                 });
                 
                 _.chain($scope.ofacets)
                  .filter(function(fo){return !fo.checked;})
                  .forEach(function (fo){
-                     selfac.push(fo);
+                	 fo.mid="f" + $scope.hexEncode(fo.label);
+                	 selfac.push(fo);
                  })
                  .value();
                 $scope.ofacets=selfac;
@@ -182,6 +222,7 @@
                                    .map(function(f){
                                        var lab = getDisplayFacetValue($scope.facetName,f.label);
                                        f.labelHighlight=$sce.trustAsHtml(lab.replace(exp,"<b>$1</b>"));
+                                       f.mid="mm"+$scope.hexEncode(f.label);
                                        if(_.includes($scope.selectedFacets, f.label)){
                                            f.checked=true;
                                        }
@@ -217,14 +258,29 @@
             return $scope.fbaseurl + "&ffilter=" + $scope.fq;
         };
         
+        $scope.testChanged = function(){
+               
+               
+               
+               if(_.isEqual($scope.selectedFacets.sort(),
+                                    $scope.originalSelectedFacets.sort()) 
+                       && $scope.ofacetType === $scope.facetType               
+                       ){
+                       $scope.changed=false;
+               }else{
+                       $scope.changed=true;    
+               }
+        };
+
         $scope.fToggle=function(facet){
             var fval = facet.label + "/";
             
+            _.pull($scope.selectedFacets, facet.label);
+            
             if(facet.checked){
                 $scope.selectedFacets.push(facet.label);
-            }else{
-                _.pull($scope.selectedFacets, facet.label);
             }
+            
             _.chain($scope.ofacets)
                     .filter({label:facet.label})
                     .forEach(function(f){
@@ -232,14 +288,37 @@
                     })
                     .value();
             
-            if(_.isEqual($scope.selectedFacets.sort(),$scope.originalSelectedFacets.sort())){
-                $scope.changed=false;
-            }else{
-                $scope.changed=true;    
-            }
+            $scope.testChanged();
             
             
         };
+        $scope.typeChange = function(negated){
+               if(negated===true){
+                       $scope.isnegated=true;
+                       $scope.facetType="not";
+               }else if(negated===false){
+                       $scope.isnegated=false;
+                       $scope.facetType="any";
+               }else{
+                       $scope.isnegated=false;
+               }
+               $scope.testChanged();
+        }
+
+
+        $scope.getSelected = function(){
+               var f=$scope.parentFacet;
+               var pre="";
+               if($scope.facetType==="all"){
+                       pre="^";
+               }else if($scope.facetType==="not"){
+                       pre="!";
+               }
+               
+               return _.map(f.selectedLabels, function(l){
+                               return pre + f.name + "/" + l.replace(/\//g,"$$$");
+                       });
+        }
 
         
         $scope.escapeRegExp = function(str) {
@@ -267,11 +346,7 @@
             _.forEach($scope.facets, function(f){
                 f.checked=false;
             });
-            if(_.isEqual($scope.selectedFacets.sort(),$scope.originalSelectedFacets.sort())){
-                $scope.changed=false;
-            }else{
-                $scope.changed=true;    
-            }
+            $scope.testChanged();
         };
         
         $scope.showMore = function(){
@@ -292,6 +367,14 @@
             }
         }
         
+        $scope.showFacetSearch = function(){
+                       // show facet search field 
+                       // if number of items in a facet is greater than predefined number (5)
+                       // and the facet is not collapsed
+                       return ($scope.ofacets.length > $scope.defquantity && !$scope.collapsed);
+        };
+
+        
         $scope.showShowLess = function(){
             if($scope.quantity===$scope.defquantity){
                 return false;
@@ -310,13 +393,11 @@ var gglob = window;
 function removeFacet (k,v) {
     
     v=v.replace(/\//g,"$$$");
-    //console.log('k='+k+' v='+v);
     var q = [];
     location.search.substr(1).split("&").forEach(function(item) {
         var s = item.split("="),
         sk = decodeURIComponent(s[0]),
         sv = decodeURIComponent(s[1]).replace(/\+/g,' ');
-    //console.log('sk='+sk+' sv='+sv);
     if (sk == 'facet' && sv.startsWith(k)) {
        if (v == sv.split("/")[1]) {
           // remove
@@ -338,7 +419,7 @@ function removeFacet (k,v) {
 }
 
 function getDisplayFacetName(name){
-    if(name==="SubstanceStereochemistry"){
+    if(name.toLowerCase()==="substancestereochemistry"){
         return "Stereochemistry";
     }
     if(name==="root_lastEdited"){
@@ -389,4 +470,10 @@ function getDisplayFacetValue(name, label){
     
     return label;
 }
+
+window.onpopstate = function(event) {
+	if(document.location.href.indexOf("#")==-1){		  
+	  window.location.reload();
+	}
+};
 
