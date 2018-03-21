@@ -14,9 +14,9 @@
                                 <reference-apply ng-if ="applyRefs" ng-model="obj.$$apply" obj=obj referenceobj=referenceobj parent=parent update ="obj.$$update"></reference-apply>
                                 <delete-button ng-if ="!applyRefs" path="references"></delete-button>
                             </div>
-                            <div class="col-md-8">
+                            <div class="col-md-10">
                                 <div class="row">
-                                    <div class="col-md-3">
+                                    <div class="col-md-2">
                                         <gsrs-input type="dropdown"
                                                     ng-model="obj.docType"
                                                     field="docType"
@@ -26,7 +26,7 @@
                                                     formname=form>
                                         </gsrs-input>
                                     </div>
-                                    <div class="col-md-5">
+                                    <div class="col-md-4">
                                         <gsrs-input type="text-box"
                                                     ng-model="obj.citation"
                                                     field="citation"
@@ -36,11 +36,16 @@
                                         </gsrs-input>
                                     </div>
                                     <div class="col-md-2 text-center">
+                                            <check-box ng-model="obj.publicDomain" field="publicDomain"
+                                                       label="Public Domain"></check-box>
+                                    </div>
+                                    <div class="col-md-2 text-center">
                                         <modal-form-button type="access"
                                                            referenceobj="obj"
                                                            parent="parent">
                                         </modal-form-button>
                                     </div>
+                                   
                                     <div class="col-md-2">
                                         <button ng-click="obj.$details=!obj.$details">{{obj.$details?"Hide Details":"Show Details"}}</button>
                                     </div>
@@ -94,10 +99,7 @@
                                                 <br>
                                             </ng-form>
                                         </div>
-                                        <div class="col-md-3 text-center">
-                                            <check-box ng-model="obj.publicDomain" field="publicDomain"
-                                                       label="Public Domain"></check-box>
-                                        </div>
+                                        
                                         <div class="col-md-4">
                                             <gsrs-input type="multi"
                                                         ng-model=obj.tags
