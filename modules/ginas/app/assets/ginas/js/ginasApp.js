@@ -236,6 +236,11 @@
 
             if (_.has(sub, 'polymer')) {
                 polymerUtils.setSRUFromConnectivityDisplay(sub.polymer.structuralUnits);
+                _.forEach(sub.polymer.structuralUnits, function(sru){
+                	if(_.has(sru,"attachmentMap")){
+                		delete sru.attachmentMap["$errors"];
+                	}
+                });
             }
 
 
@@ -309,7 +314,7 @@
             }
             var errors =[];
             var connections = display.split(";");
-            var regex = /^\s*[A-Z][A-Z]*[0-9]*_(R[0-9][0-9]*)[-][A-Z][A-Z]*[0-9]*_(R[0-9][0-9]*)\s*$/g;
+            var regex = /^\s*[A-Za-z][A-Za-z]*[0-9]*_(R[0-9][0-9]*)[-][A-Za-z][A-Za-z]*[0-9]*_(R[0-9][0-9]*)\s*$/g;
 
 
             var map = {};
@@ -332,7 +337,7 @@
             }
 
             if(errors.length > 0) {
-                map.errors = errors;
+                map.$errors = errors;
             }
             return map;
         };
@@ -2241,6 +2246,7 @@
                                         data.structuralUnits[i].type = _.find(cv, ['value', data.structuralUnits[i].type]);
                                     }
                                     polymerUtils.setSRUConnectivityDisplay(data.structuralUnits);
+                                    polymerUtils.setSRUFromConnectivityDisplay(data.structuralUnits);
                                     scope.parent.polymer.structuralUnits = data.structuralUnits;
                                 });
                             }

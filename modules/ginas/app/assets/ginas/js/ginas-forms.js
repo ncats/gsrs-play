@@ -1301,7 +1301,8 @@
             link: function (scope) {
                 scope.validateConnectivity = function (obj) {
                     var map = polymerUtils.sruDisplayToConnectivity(obj);
-                    return map.errors;
+                    
+                    return map.$errors;
                 }
             }
         };
