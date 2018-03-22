@@ -2,6 +2,7 @@ package ix.ginas.utils;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import chemaxon.struc.MolAtom;
@@ -19,6 +20,7 @@ import ix.core.models.Structure.Stereo;
 
 public class ChemUtils {
 
+	private static Pattern NEW_LINE_PATTERN = Pattern.compile("\n");
 	/**
 	 * Checks for basic valence problems on structure, adding warnings to the
 	 * supplied list
@@ -83,7 +85,12 @@ public class ChemUtils {
 			}
 		}
 	
-		String[] lines=newstr.molfile.split("\n");
+		String[] lines=NEW_LINE_PATTERN.split(newstr.molfile);
+		if(lines.length < 3){
+			//guess it's a smiles? ignore
+			return;
+		}
+
 		String chiralFlag=lines[3].substring(12, 14);
 		
 		if(!newChiralFlag.equals(chiralFlag)){
