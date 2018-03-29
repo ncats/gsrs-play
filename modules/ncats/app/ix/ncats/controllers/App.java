@@ -27,6 +27,7 @@ import java.util.stream.Collectors;
 import javax.imageio.ImageIO;
 
 import ix.ginas.models.v1.Substance;
+import ix.ncats.resolvers.OpsinResolver;
 import org.freehep.graphicsio.svg.SVGGraphics2D;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -1899,6 +1900,7 @@ public class App extends Authentication {
 	}
 
 	final static Resolver[] RESOLVERS = new Resolver[] {
+			new OpsinResolver(),
 			new NCIStructureResolver (),
 			new PubChemStructureResolver ()
 	};

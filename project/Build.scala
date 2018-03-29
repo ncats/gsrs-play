@@ -80,6 +80,7 @@ object ApplicationBuild extends Build {
       ,"org.webjars.bower" % "spin.js" % "2.0.2"
       ,"be.objectify" %% "deadbolt-java" % "2.3.3"
       ,"com.sleepycat" % "je" % "5.0.73"
+    ,"uk.ac.cam.ch.opsin" % "opsin-core" % "2.3.1"
   )
 
   val scalaBuildOptions = Seq(
