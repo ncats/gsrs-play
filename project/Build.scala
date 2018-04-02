@@ -12,6 +12,7 @@ object ApplicationBuild extends Build {
     .format(new java.util.Date())
   val appVersion = "%s-%s-%s".format(branch, buildDate, commit)
 
+  val displayVersion = "version 2.1 beta"
   val commonSettings = Seq(
     version := appVersion,    
     scalaVersion := "2.11.7",
@@ -118,8 +119,9 @@ public class BuildInfo {
    public static final String COMMIT = "%s";
    public static final String TIME = "%s";
    public static final String AUTHOR = "%s";
+   public static final String VERSION = "%s";
 }
-""".format(branch, buildDate, commit, new java.util.Date(), author))
+""".format(branch, buildDate, commit, new java.util.Date(), author, displayVersion))
       Seq(file)
     }
   )
