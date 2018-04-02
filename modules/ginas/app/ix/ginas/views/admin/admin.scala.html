@@ -1,4 +1,5 @@
 @import ix.ginas.controllers.GinasApp
+@import ix.core.plugins.IxCache
 
 @ix.ginas.views.html.ginas("Admin Portal", "null", false, true) {
     @ix.ginas.views.html.menu()
@@ -239,6 +240,12 @@
 
                 </div>
 
+        </uib-tab>
+        <uib-tab select="">
+            <uib-tab-heading>
+                Cache Summary <i class ="fa fa-database fa-2x"></i>
+            </uib-tab-heading>
+            @ix.ncats.views.html.cachestats(IxCache.getStatistics())
         </uib-tab>
     </uib-tabset>
 

@@ -2110,9 +2110,12 @@
                     } else {
                         bridge = acid.otherLinks;
                     }
-                    var allAA = element[0].querySelectorAll('amino-acid');
-                    var targetElement = angular.element(allAA[bridge.residueIndex - 1]);
-                    targetElement.isolateScope().showBridge();
+                    if(bridge && bridge.residueIndex){
+                       var allAA = element[0].querySelectorAll('amino-acid');
+                       var targetElement = angular.element(allAA[bridge.residueIndex - 1]);
+                       targetElement.isolateScope().showBridge();
+                    }
+
                 };
 
                 scope.cleanSequence = function () {
@@ -2229,14 +2232,14 @@
                                         return definitionalChange;
                                 };
 
-                scope.updateMol = function () {
+                scope.updateMol = function (force) {
                         var url = baseurl + 'structure';
                         $http.post(url, scope.mol, {
                             headers: {
                                 'Content-Type': 'text/plain'
                             }
                         }).success(function (data) {
-                            if (scope.parent.substanceClass === "polymer") {
+                            if (force && scope.parent.substanceClass === "polymer") {
                                 scope.parent.polymer.idealizedStructure = data.structure;
                                 scope.structure = data.structure;
                                 CVFields.getCV("POLYMER_SRU_TYPE").then(function (response) {
@@ -2246,6 +2249,25 @@
                                         data.structuralUnits[i].type = _.find(cv, ['value', data.structuralUnits[i].type]);
                                     }
                                     polymerUtils.setSRUConnectivityDisplay(data.structuralUnits);
+                                    //merge amounts with whatever is already there
+                                    var amounts={};
+                                    
+                                    _.chain(scope.parent.polymer.structuralUnits)
+                                     .map(function(sru){
+                                         amounts[sru.label]=sru.amount;
+                                     })
+                                     .value();
+                                    
+                                    _.chain(data.structuralUnits)
+                                     .map(function(sru){
+                                        var oldAmount = amounts[sru.label];
+                                        if(oldAmount){
+                                               sru.amount=oldAmount;
+                                        }
+                                     })
+                                     .value();
+                                    
+                                    
                                     polymerUtils.setSRUFromConnectivityDisplay(data.structuralUnits);
                                     scope.parent.polymer.structuralUnits = data.structuralUnits;
                                 });
@@ -2282,7 +2304,8 @@
                             }
                         });
                 };
-
+                scope.$parent.updateMol=scope.updateMol;
+                
                 scope.sketcher = new JSDraw("sketcherForm");
                 scope.sketcher.options.data = scope.mol;
                 scope.sketcher.setMolfile(scope.mol);
