@@ -139,6 +139,19 @@ public class SubstanceFactory extends EntityFactory {
 			throw e;
 		}
 	}
+	
+	public static Optional<UUID> resolveID(String s){
+		System.out.println("Trying to resolve:" + s);
+		List<UUID> uuidlist=resolve(s)
+		      .stream()
+		      .map(sub->sub.uuid)
+		      .collect(Collectors.toList());
+		System.out.println("Found:" + uuidlist.size());
+		if(uuidlist.size()==1)return Optional.of(uuidlist.get(0));
+		
+		return Optional.empty();
+		
+	}
 
 	public static List<Substance> getSubstanceWithAlternativeDefinition(Substance altSub) {
 		List<Substance> sublist = new ArrayList<Substance>();
@@ -482,9 +495,23 @@ public class SubstanceFactory extends EntityFactory {
 		return approve(substanceId.toString());
 	}
 
+	/**
+	 * Resolve the given term to a list of substances, by using the following attempts at resolution:
+	 * 
+	 * <ol>
+	 * <li>Resolve to UUID</li>
+	 * <li>Resolve to first 8 characters of UUID</li>
+	 * <li>Resolve to approvalID</li>
+	 * <li>Resolve to exact name match</li>
+	 * <li>Resolve to exact code match</li>
+	 * </ol>
+	 * 
+	 * @param name
+	 * @return List of substances which resolve to the first criteria above which returns a non-empty set.
+	 */
 	public static List<Substance> resolve(String name) {
 		if (name == null) {
-			return null;
+			return new ArrayList<Substance>();
 		}
 
 		try {
@@ -494,9 +521,7 @@ public class SubstanceFactory extends EntityFactory {
 				retlist.add(s);
 				return retlist;
 			}
-		} catch (Exception e) {
-
-		}
+		} catch (Exception e) {}
 
 		List<Substance> values = new ArrayList<Substance>();
 		if (name.length() == 8) { // might be uuid
