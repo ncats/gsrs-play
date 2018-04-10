@@ -75,6 +75,12 @@ PATCH   /$context<[a-z0-9_]+>/$id<[a-fA-F0-9\-]+>              ix.core.controlle
 PATCH   /$context<[a-z0-9_]+>($id<[a-fA-F0-9\-]+>)             ix.core.controllers.v1.RouteFactory.patchUUID(context: String, id:String)
 
 
+##
+## Flexible ID version
+##
+GET     /$context<[a-z0-9_]+>($id<[^)]+>)         ix.core.controllers.v1.RouteFactory.getFlex(context: String, id: String, field:String ?= null)
+GET     /$context<[a-z0-9_]+>($id<[^)]+>)/*field  ix.core.controllers.v1.RouteFactory.fieldFlex(context: String, id: String, field: String)
+
 
 GET     /$context<[a-z0-9_]+>*field      ix.core.controllers.v1.RouteFactory.stream(context: String, field: String, top: Int ?= 10, skip: Int ?= 0)
 
