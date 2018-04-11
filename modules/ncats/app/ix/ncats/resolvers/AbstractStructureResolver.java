@@ -1,12 +1,12 @@
 package ix.ncats.resolvers;
 
+import gov.nih.ncgc.chemical.Chemical;
 import ix.core.util.ConfigHelper;
 import play.Logger;
 
-import java.io.ByteArrayOutputStream;
-import java.io.InputStream;
-import java.io.IOException;
+import java.io.*;
 import java.net.*;
+import java.util.Objects;
 import java.util.Properties;
 
 import ix.core.models.Structure;
@@ -51,10 +51,47 @@ public abstract class AbstractStructureResolver implements Resolver<Structure> {
     public int getConnectTimeout () { return connTimeout; }
 
     protected Structure resolve (InputStream is) throws IOException {
-        MolImporter mi = new MolImporter (is);
+        return resolve(is, "sdf");
+    }
+    protected Structure resolve (InputStream is, String format) throws IOException {
+        StringBuilder builder = new StringBuilder();
+        //katzelda - April 2018
+        //sometimes we have an invalid mol or sdfile
+        //jchem and cdk will silently just make an empty object
+        //so check to make sure we actually got something right
+        //so we read the record and scan it to make sure it's complete
+        //if it's not don't even bother.
+
+        boolean isValid= Objects.equals("smiles", format);
+
+        try(BufferedReader reader = new BufferedReader(new InputStreamReader(is))){
+            String line;
+            while( (line = reader.readLine()) !=null){
+                builder.append(line).append("\n");
+                if(!isValid && line.startsWith("M END") || line.contains("$$$$")){
+                    isValid = true;
+                }
+            }
+        }
+
+        if(!isValid){
+            return null;
+        }
+        MolImporter mi = new MolImporter (new ByteArrayInputStream(builder.toString().getBytes()));
         try {
             Structure struc =
                 StructureProcessor.instrument(mi.read(), null, true);
+            //katzelda - April 2018
+            //sometimes we have an invalid mol file
+            //jchem and cdk will silently just make an empty object
+            //so check to make sure we actually got something right
+            Chemical chemical = struc.toChemical();
+
+            if(chemical.getAtomCount() ==0 || chemical.getBondCount() ==0){
+                System.out.println("atom or bond count was 0");
+                return null;
+            }
+
             struc.save();
             return struc;
         }
@@ -63,15 +100,16 @@ public abstract class AbstractStructureResolver implements Resolver<Structure> {
         }
     }
 
-    protected abstract URL[] resolvers (String name)
+    protected abstract UrlAndFormat[] resolvers (String name)
         throws MalformedURLException;
 
     public Structure resolve (String name) {
         try {
-            URL[] urls = resolvers (name);        
+            UrlAndFormat[] urls = resolvers (name);
+            for (UrlAndFormat url : urls) {
+
             for (int tries = 0; tries < maxtries; ++tries) {
                 try {
-                    for (URL url : urls) {
 
                         // If the Proxy flag is enabled in the Config file, it connects to proxy or it wouldn't
                         Proxy proxy = null;
@@ -79,12 +117,10 @@ public abstract class AbstractStructureResolver implements Resolver<Structure> {
                             proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress(PROXY_NAME, PORT_NUMBER));
                             System.out.println("Checking for Config file values");
                             System.out.println("Proxy Name is :"+PROXY_NAME+"\n"+"Port Number is :"+PORT_NUMBER);
-                        }
-                        else
-                        {
+                        } else {
                             proxy = Proxy.NO_PROXY;
                         }
-                        HttpURLConnection con = (HttpURLConnection)url.openConnection(proxy);
+                        HttpURLConnection con = (HttpURLConnection) url.url.openConnection(proxy);
                         con.connect();
 
                         con.setReadTimeout(readTimeout);
@@ -92,22 +128,38 @@ public abstract class AbstractStructureResolver implements Resolver<Structure> {
 
                         int status = con.getResponseCode();
                         Logger.debug("Resolving "+url+"..."+status);
-                        if (status == HttpURLConnection.HTTP_NOT_FOUND)
-                            return null;
-
-                        return resolve (con.getInputStream());
+                        if (status == HttpURLConnection.HTTP_NOT_FOUND) {
+                            break;
                     }
+                        Structure s = resolve(con.getInputStream(), url.format);
+                        if (s != null) {
+                            return s;
                 }
-                catch (Exception ex) {
+                        //if we get this far something worked
+                        break;
+
+                    } catch (Exception ex) {
+                        ex.printStackTrace();
                     Logger.warn("Fail to resolve \""+name+"\"; "
                                 +tries+"/"+maxtries+" attempts");
                     Thread.sleep(500); // 
                 }
             }
         }
+        }
         catch (Exception ex) {
             Logger.error("Fail to resolve \""+name+"\"", ex);
         }
         return null;
+    }
+
+    protected static class UrlAndFormat{
+        public final URL url;
+        public final String format;
+
+        public UrlAndFormat(URL url, String format) {
+            this.url = url;
+            this.format = format;
+        }
     }
 }

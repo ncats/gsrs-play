@@ -19,8 +19,8 @@ public class OpsinResolver extends AbstractStructureResolver{
     }
 
     @Override
-    protected URL[] resolvers(String name) throws MalformedURLException {
-        return new URL[0]; // unused
+    protected UrlAndFormat[] resolvers(String name) throws MalformedURLException {
+        return new UrlAndFormat[0]; // unused
     }
 
     @Override
@@ -28,7 +28,7 @@ public class OpsinResolver extends AbstractStructureResolver{
         String smiles = nts.parseToSmiles(name);
         if(smiles !=null){
             try {
-                return this.resolve(new ByteArrayInputStream(smiles.getBytes()));
+                return this.resolve(new ByteArrayInputStream(smiles.getBytes()), "smiles");
             } catch (IOException e) {
                 return null;
             }

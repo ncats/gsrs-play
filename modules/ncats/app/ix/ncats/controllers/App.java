@@ -27,7 +27,7 @@ import java.util.stream.Collectors;
 import javax.imageio.ImageIO;
 
 import ix.ginas.models.v1.Substance;
-import ix.ncats.resolvers.OpsinResolver;
+import ix.ncats.resolvers.*;
 import org.freehep.graphicsio.svg.SVGGraphics2D;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -83,9 +83,6 @@ import ix.core.util.StopWatch;
 import ix.core.util.TimeUtil;
 import ix.ncats.controllers.auth.Authentication;
 import ix.ncats.controllers.security.IxDynamicResourceHandler;
-import ix.ncats.resolvers.NCIStructureResolver;
-import ix.ncats.resolvers.PubChemStructureResolver;
-import ix.ncats.resolvers.Resolver;
 import ix.seqaln.SequenceIndexer.CutoffType;
 import ix.utils.CallableUtil.TypedCallable;
 import ix.utils.Global;
@@ -1902,7 +1899,8 @@ public class App extends Authentication {
 	final static Resolver[] RESOLVERS = new Resolver[] {
 			new OpsinResolver(),
 			new NCIStructureResolver (),
-			new PubChemStructureResolver ()
+//			new PubChemStructureResolver ()
+			PubChemService.INSTANCE
 	};
 	static Result _resolve (String name) throws Exception {
 		ObjectMapper mapper = new ObjectMapper ();
