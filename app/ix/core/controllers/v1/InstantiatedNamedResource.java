@@ -4,7 +4,9 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import javax.persistence.Id;
@@ -27,6 +29,9 @@ public interface InstantiatedNamedResource<I,V> {
     public static enum Operations{
         CREATE_OPERATION(new Operation("create")),
         VALIDATE_OPERATION(new Operation("validate")),
+        //TODO: implement
+        RESOLVE_OPERATION(new Operation("resolve", 
+                Argument.of(null, String.class, "id"))),
         UPDATE_ENTITY_OPERATION(new Operation("updateEntity")),
         PATCH_OPERATION(new Operation("patch",
                 Argument.of(null, Id.class, "id"))),
@@ -201,6 +206,16 @@ public interface InstantiatedNamedResource<I,V> {
 	
 	default Result updateEntity(){
 		return operate(Operations.UPDATE_ENTITY_OPERATION.with());
+	}
+	
+		
+	default Optional<I> resolveID(String synonym){
+		if(Long.class.equals(this.getIdType())){
+			return (Optional<I>) Optional.of(Long.parseLong(synonym));
+		}else if(UUID.class.equals(this.getIdType())){
+			return (Optional<I>) Optional.of(UUID.fromString(synonym));
+		}
+		return Optional.empty();
 	}
 	
 	

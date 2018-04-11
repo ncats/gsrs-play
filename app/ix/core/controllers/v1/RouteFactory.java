@@ -466,6 +466,33 @@ public class RouteFactory extends Controller {
         }
     }
 
+    public static Result getFlex (String context, String someid, String expand) {
+        try {
+        	InstantiatedNamedResource nr = _registry.get()
+                    .getResource(context);
+        	
+        	Object id = nr.resolveID(someid).orElse(null);        	
+            return nr.get(id, expand);
+        }catch (Exception ex) {
+            Logger.trace("["+context+"]", ex);
+            return _apiInternalServerError (ex);
+        }
+    }
+    
+    public static Result fieldFlex (String context, String someid, String field) {
+    	  try {
+    		  InstantiatedNamedResource nr = _registry.get()
+                      .getResource(context);
+          	
+          	  Object id = nr.resolveID(someid).orElse(null);        	
+              return nr.field(id, field);
+          }catch (Exception ex) {
+              Logger.trace("["+context+"]", ex);
+              return _apiInternalServerError (ex);
+          }
+    }
+    
+    
     public static Result get (String context, Long id, String expand) {
         try {
             return _registry.get()

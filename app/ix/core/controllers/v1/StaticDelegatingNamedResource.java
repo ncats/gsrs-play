@@ -4,6 +4,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
@@ -54,6 +55,8 @@ public class StaticDelegatingNamedResource<I,V> implements InstantiatedNamedReso
 	private Class<V> entityType;
 	private boolean adminOnly;
 	
+	private Function<String, Optional<I>> resolver=null;
+	
 	public StaticDelegatingNamedResource(Class<? extends EntityFactory> factory, Class<I> idType, Class<V> resource){
 		this.ef=factory;
 		this.nr=factory.getAnnotation(NamedResource.class);
@@ -90,6 +93,24 @@ public class StaticDelegatingNamedResource<I,V> implements InstantiatedNamedReso
     			};
     		});
 		}
+		
+		
+		try{
+			Method m = ef.getMethod("resolveID", String.class);
+			this.resolver = (res)->{
+				try{
+					return (Optional<I>)m.invoke(null, res);
+				}catch(Exception e){
+					Logger.info("Error resolving ID:'" + res + "' from " + factory.getName());
+					return Optional.empty();
+				}
+			};
+		}catch(Exception e){
+		    Logger.info("No resolveID operation for resource:" + factory.getName());
+		}
+		
+		
+		
 	}
 	
 	@Override
@@ -97,6 +118,19 @@ public class StaticDelegatingNamedResource<I,V> implements InstantiatedNamedReso
 		return resultList
 				.getOrDefault(op,(o)->InstantiatedNamedResource.super.operate(o))
 				.apply(op);
+	}
+
+	@Override
+	public Optional<I> resolveID(String synonym) {
+		try{
+			if(resolver!=null){
+				Optional<I> id1=resolver.apply(synonym);
+				if(id1.isPresent())return id1;
+			}
+		}catch(Exception e){
+			 Logger.info("Error resolving ID for :" + this.getName());
+		}
+		return InstantiatedNamedResource.super.resolveID(synonym);
 	}
 
 	@Override
@@ -118,4 +152,5 @@ public class StaticDelegatingNamedResource<I,V> implements InstantiatedNamedReso
 	public Set<ix.core.controllers.v1.InstantiatedNamedResource.Operation> getSupportedOperations() {
 		return resultList.keySet();
 	}
+
 }
