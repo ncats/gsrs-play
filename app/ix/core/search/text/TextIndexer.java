@@ -1314,11 +1314,31 @@ public class TextIndexer implements Closeable, ProcessListener {
 			
 			//If there's an error parsing, it probably needs to have
 			//quotes. Likely this happens from ":" chars
-			try{
-				return super.parse(qtext);
-			}catch(Exception e){
-				return super.parse("\"" + qtext  +"\"");
+			
+			Query q = null;
+			try {
+				q = super.parse(qtext);
+			} catch (Exception e) {
+				q = super.parse("\"" + qtext + "\"");
 			}
+			if (q instanceof TermRangeQuery) {
+				TermRangeQuery trq = (TermRangeQuery) q;
+				String lower = trq.getLowerTerm().utf8ToString();
+				String higher = trq.getUpperTerm().utf8ToString();
+
+				try {
+					double low = Double
+							.parseDouble(lower);
+					double high = Double
+							.parseDouble(higher);
+					q = NumericRangeQuery.newDoubleRange(trq.getField(),
+							 low, high, trq.includesLower(),
+							trq.includesUpper());
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+			return q;
 		}
 	}
 
@@ -2860,107 +2880,69 @@ public class TextIndexer implements Closeable, ProcessListener {
 		Object value = indexableValue.value();
 		boolean sorterAdded = false;
 		boolean asText = true;
-		if (value instanceof Long) {
-			Long lval = (Long) value;
-			fields.accept(new LongField(full, lval, NO));
-			asText = indexableValue.facet();
-			if (!asText && !name.equals(full))
-				fields.accept(new LongField(name, lval, store));
-			if (indexableValue.sortable()) {
-				String f = SORT_PREFIX + full;
-				sorters.put(f, SortField.Type.LONG);
-				fields.accept(new LongField(f, lval, store));
-				sorterAdded = true;
-			}
-			FacetField ff = getRangeFacet(fname, indexableValue.ranges(), lval);
-			if (ff != null) {
-				facetsConfig.setMultiValued(fname, true);
-				facetsConfig.setRequireDimCount(fname, true);
-				fields.accept(ff);
-				asText = false;
-			}
-		} else if (value instanceof Integer) {
-			// fields.add(new IntDocValuesField (full, (Integer)value));
-			Integer ival = (Integer) value;
-			fields.accept(new IntField(full, ival, NO));
-			asText = indexableValue.facet();
-			if (!asText && !name.equals(full))
-				fields.accept(new IntField(name, ival, store));
-
-			if (indexableValue.sortable()) {
-				String f = SORT_PREFIX + full;
-				sorters.put(f, SortField.Type.INT);
-				fields.accept(new IntField(f, ival, store));
-				sorterAdded = true;
-			}
-
-			FacetField ff = getRangeFacet(fname, indexableValue.ranges(), ival);
-			if (ff != null) {
-				facetsConfig.setMultiValued(fname, true);
-				facetsConfig.setRequireDimCount(fname, true);
-				fields.accept(ff);
-				asText = false;
-			}
-		} else if (value instanceof Float) {
-			// fields.add(new FloatDocValuesField (full, (Float)value));
-			Float fval = (Float) value;
-			fields.accept(new FloatField(name, fval, store));
-			if (!full.equals(name))
-				fields.accept(new FloatField(full, fval, NO));
-
-			if (indexableValue.sortable()) {
-				String f = SORT_PREFIX + full;
-				sorters.put(f, SortField.Type.FLOAT);
-				fields.accept(new FloatField(f, fval, NO));
-				sorterAdded = true;
-			}
-
-			FacetField ff = getRangeFacet(fname, indexableValue.dranges(), fval, indexableValue.format());
-			if (ff != null) {
-				facetsConfig.setMultiValued(fname, true);
-				facetsConfig.setRequireDimCount(fname, true);
-				fields.accept(ff);
-			}
-			asText = false;
-		} else if (value instanceof Double) {
-			// fields.add(new DoubleDocValuesField (full, (Double)value));
-			Double dval = (Double) value;
-			fields.accept(new DoubleField(name, dval, store));
-			if (!full.equals(name)) {
-				fields.accept(new DoubleField(full, dval, NO));
-			}
-			if (indexableValue.sortable()) {
-				String f = SORT_PREFIX + full;
-				sorters.put(f, SortField.Type.DOUBLE);
-				fields.accept(new DoubleField(f, dval, NO));
-				sorterAdded = true;
-			}
-
-			FacetField ff = getRangeFacet(fname, indexableValue.dranges(), dval, indexableValue.format());
-			if (ff != null) {
-				facetsConfig.setMultiValued(fname, true);
-				facetsConfig.setRequireDimCount(fname, true);
-				fields.accept(ff);
-			}
-			asText = false;
-		} else if (value instanceof java.util.Date) {
+		
+		Object nvalue = value;
+		
+		if (value instanceof java.util.Date) {
 			long date = ((Date) value).getTime();
-			fields.accept(new LongField(name, date, YES));
-			if (!full.equals(name)) {
-				fields.accept(new LongField(full, date, YES));
-			}
-			if (indexableValue.sortable()) {
-				String f = SORT_PREFIX + full;
-				sorters.put(f, SortField.Type.LONG);
-				fields.accept(new LongField(f, date, NO));
-				sorterAdded = true;
-			}
+			nvalue = (Long)date;
 			asText = indexableValue.facet();
 			if (asText) {
 				value = YEAR_DATE_FORMAT.get().format(date);
 			}
 		}
-
+		
+		if(nvalue instanceof Number){
+			// fields.add(new DoubleDocValuesField (full, (Double)value));
+			Number dval = (Number) nvalue;
+			
+			boolean addedFacet = false;
+			if(nvalue instanceof Long  || nvalue instanceof Integer){
+				Long lval =  dval.longValue();
+				fields.accept(new LongField(full, lval, NO));
+				asText = indexableValue.facet();
+				if (!asText && !name.equals(full))
+					fields.accept(new LongField(name, lval, store));
+				
+				if(indexableValue.facet()){
+					FacetField ffl = getRangeFacet(fname, indexableValue.ranges(), lval);
+					if (ffl != null) {
+						facetsConfig.setMultiValued(fname, true);
+						facetsConfig.setRequireDimCount(fname, true);
+						fields.accept(ffl);
+						asText = false;
+						addedFacet=true;
+					}
+					
+				}
+			}
+			
+			
+			fields.accept(new DoubleField(name, dval.doubleValue(), store));
+			if (!full.equals(name)) {
+				fields.accept(new DoubleField(full, dval.doubleValue(), NO));
+			}
+			if (indexableValue.sortable()) {
+				String f = SORT_PREFIX + full;
+				sorters.put(f, SortField.Type.DOUBLE);
+				fields.accept(new DoubleField(f, dval.doubleValue(), NO));
+				sorterAdded = true;
+			}
+			if(indexableValue.facet() && !addedFacet){
+				FacetField ff = getRangeFacet(fname, indexableValue.dranges(), dval.doubleValue(), indexableValue.format());
+				if (ff != null) {
+					facetsConfig.setMultiValued(fname, true);
+					facetsConfig.setRequireDimCount(fname, true);
+					fields.accept(ff);
+				}
+			}
+			asText = false;
+			
+		}
+		
+		
+		
+		
 		if (asText) {
 			String text = value.toString();
 			if(text.isEmpty()){
