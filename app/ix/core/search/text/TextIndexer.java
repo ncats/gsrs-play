@@ -1303,7 +1303,34 @@ public class TextIndexer implements Closeable, ProcessListener {
 //            setDefaultOperator(QueryParser.AND_OPERATOR);
 		}
 
-		@Override
+        @Override
+        protected Query getRangeQuery(String field, String part1, String part2, boolean startInclusive, boolean endInclusive) throws ParseException {
+            Query q= super.getRangeQuery(field, part1, part2, startInclusive, endInclusive);
+            //katzelda 4/14/2018
+            //this is to get range queries to work with our datetimestamps
+            //without having to use the lucene DateTools
+            if (q instanceof TermRangeQuery) {
+                TermRangeQuery trq = (TermRangeQuery) q;
+                String lower = trq.getLowerTerm().utf8ToString();
+                String higher = trq.getUpperTerm().utf8ToString();
+
+                try {
+                    double low = Double
+                            .parseDouble(lower);
+                    double high = Double
+                            .parseDouble(higher);
+                    q = NumericRangeQuery.newDoubleRange(trq.getField(),
+                            low, high, trq.includesLower(),
+                            trq.includesUpper());
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+
+            return q;
+        }
+
+        @Override
 		public Query parse(String qtext) throws ParseException {
 			if (qtext != null) {
 				qtext = transformQueryForExactMatch(qtext);
@@ -1321,23 +1348,7 @@ public class TextIndexer implements Closeable, ProcessListener {
 			} catch (Exception e) {
 				q = super.parse("\"" + qtext + "\"");
 			}
-			if (q instanceof TermRangeQuery) {
-				TermRangeQuery trq = (TermRangeQuery) q;
-				String lower = trq.getLowerTerm().utf8ToString();
-				String higher = trq.getUpperTerm().utf8ToString();
 
-				try {
-					double low = Double
-							.parseDouble(lower);
-					double high = Double
-							.parseDouble(higher);
-					q = NumericRangeQuery.newDoubleRange(trq.getField(),
-							 low, high, trq.includesLower(),
-							trq.includesUpper());
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			}
 			return q;
 		}
 	}
