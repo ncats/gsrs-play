@@ -34,8 +34,7 @@ public final class TestFacetUtil {
         
         
         Map<String, Map<String, Integer>> empty=new HashMap<>();
-        
-        assertEquals(empty.entrySet(),missing);
+        assertEquals("actual facet set is missing", empty.entrySet(),missing);
     }
 
     /**

@@ -1319,7 +1319,7 @@ public class TextIndexer implements Closeable, ProcessListener {
                             .parseDouble(lower);
                     double high = Double
                             .parseDouble(higher);
-                    q = NumericRangeQuery.newDoubleRange(trq.getField(),
+                    q = NumericRangeQuery.newDoubleRange("D_" +trq.getField(),
                             low, high, trq.includesLower(),
                             trq.includesUpper());
                 } catch (Exception e) {
@@ -2883,7 +2883,7 @@ public class TextIndexer implements Closeable, ProcessListener {
 		// Used to be configurable, now just always NO
 		// for all cases we use.
 		org.apache.lucene.document.Field.Store store = Store.NO;
-		
+
 		String fname = indexableValue.name();
 		String name = indexableValue.rawName();
 
@@ -2891,30 +2891,34 @@ public class TextIndexer implements Closeable, ProcessListener {
 		Object value = indexableValue.value();
 		boolean sorterAdded = false;
 		boolean asText = true;
-		
+
 		Object nvalue = value;
-		
+
+        org.apache.lucene.document.Field.Store shouldStoreLong= NO;
+
 		if (value instanceof java.util.Date) {
 			long date = ((Date) value).getTime();
-			nvalue = (Long)date;
+			nvalue = date;
 			asText = indexableValue.facet();
 			if (asText) {
 				value = YEAR_DATE_FORMAT.get().format(date);
+
 			}
+
 		}
-		
+
 		if(nvalue instanceof Number){
 			// fields.add(new DoubleDocValuesField (full, (Double)value));
 			Number dval = (Number) nvalue;
-			
+
 			boolean addedFacet = false;
 			if(nvalue instanceof Long  || nvalue instanceof Integer){
 				Long lval =  dval.longValue();
-				fields.accept(new LongField(full, lval, NO));
+				fields.accept(new LongField(full, lval, shouldStoreLong));
 				asText = indexableValue.facet();
-				if (!asText && !name.equals(full))
-					fields.accept(new LongField(name, lval, store));
-				
+				if (!asText && !name.equals(full)) {
+                    fields.accept(new LongField(name, lval, store));
+                }
 				if(indexableValue.facet()){
 					FacetField ffl = getRangeFacet(fname, indexableValue.ranges(), lval);
 					if (ffl != null) {
@@ -2924,14 +2928,14 @@ public class TextIndexer implements Closeable, ProcessListener {
 						asText = false;
 						addedFacet=true;
 					}
-					
+
 				}
 			}
-			
-			
-			fields.accept(new DoubleField(name, dval.doubleValue(), store));
+
+
+			fields.accept(new DoubleField("D_" +name, dval.doubleValue(), store));
 			if (!full.equals(name)) {
-				fields.accept(new DoubleField(full, dval.doubleValue(), NO));
+				fields.accept(new DoubleField("D_" +full, dval.doubleValue(), NO));
 			}
 			if (indexableValue.sortable()) {
 				String f = SORT_PREFIX + full;
@@ -2948,12 +2952,12 @@ public class TextIndexer implements Closeable, ProcessListener {
 				}
 			}
 			asText = false;
-			
+
 		}
-		
-		
-		
-		
+
+
+
+
 		if (asText) {
 			String text = value.toString();
 			if(text.isEmpty()){
@@ -2964,11 +2968,11 @@ public class TextIndexer implements Closeable, ProcessListener {
 				}
 			}
 			String dim = indexableValue.name();
-			
+
 			if("".equals(dim)){
 				dim = full;
 			}
-			
+
 			if (indexableValue.facet() || indexableValue.taxonomy()) {
 
 
