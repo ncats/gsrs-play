@@ -59,8 +59,14 @@
                                         <textarea class="form-control" rows="6" id="sequence"
                                         style="font-family: monospace"
                                         ng-model="sequence"
+                                            @if(id==null){
+                                                ng-init=sequence=""
+                                                title="Search" name="sequence">
+                                            }else{
                                         ng-init='sequence=@EntityWrapper.of(ix.ginas.controllers.GinasFactory.getSequence(id)).toFullJson()'
                                         title="Search" name="sequence">@ix.ginas.controllers.GinasFactory.getSequence(id)
+                                            }
+
                                         </textarea>
                                         <span class="align-right"><a ng-click="cleanSequence('@seqType')" uib-tooltip="Clean sequence"><i
                                         class="fa fa-magic fa-2x"></i>Clean Sequence</a></span>
