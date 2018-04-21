@@ -5,6 +5,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import java.util.*;
@@ -83,7 +84,36 @@ public class SubstanceFactory extends EntityFactory {
 			return null;
 		return getSubstance(UUID.fromString(id));
 	}
+	public static OptionalInt getMaxVersionForSubstance(String id){
+		if (id == null) {
+			return OptionalInt.empty();
+		}
+		return getMaxVersionForSubstance(UUID.fromString(id));
 
+	}
+	public static OptionalInt getMaxVersionForSubstance(UUID uuid){
+		if (uuid == null) {
+			return OptionalInt.empty();
+		}
+		Substance s = getSubstance(uuid);
+		if(s ==null){
+			return OptionalInt.empty();
+		}
+		String subVersion = s.version;
+		if(s !=null){
+			System.out.println("substance version = " + s.version);
+		}
+		List<Edit> edits = getEdits(uuid);
+		if(edits ==null){
+			return OptionalInt.of(Integer.parseInt(subVersion));
+
+		}
+		return IntStream.concat(IntStream.of(Integer.parseInt(subVersion)),edits.stream()
+				.mapToInt(e-> Integer.parseInt(e.version))
+		)
+				.peek(v -> System.out.println("version of edit = " + v))
+				.max();
+	}
 	public static Substance getSubstanceVersion(String id, String version) {
 		if (id == null)
 			return null;
