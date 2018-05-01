@@ -94,7 +94,7 @@ public class Global extends GlobalSettings {
 		}
 
 		RouteFactory._registry.get();
-		loadDefaultUsers();
+//		loadDefaultUsers();
 		
 		InitializerFactory.getInstance(app)
 		                  .getInitializers()

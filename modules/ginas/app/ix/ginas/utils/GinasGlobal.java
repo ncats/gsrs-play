@@ -211,9 +211,9 @@ public class GinasGlobal extends Global {
 					   .getBoolean("ix.ginas.debug.showheaders", false);
 		setupAuthenticators();
 		
-		loadCV=app.configuration()
-				   .getBoolean("ix.ginas.init.loadCV", true);
-		loadCV();
+//		loadCV=app.configuration()
+//				   .getBoolean("ix.ginas.init.loadCV", true);
+//		loadCV();
 		
 		IxDeadboltHandler.setErrorResultProvider(GinasApp::error);
 		
