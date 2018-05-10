@@ -23,10 +23,8 @@
 											<img src="@routes.Assets.at("ginas/images/protein.svg")" alt="Protein" class = "img-responsive subrefThumb"/>
 	                                	}else{
 		                                	@if(ref.getClass.toString.equals("class ix.ginas.models.v1.MixtureSubstance")){
-		                                		<div class = "col-md-3">
-													<img src="@routes.Assets.at("ginas/images/mixture.svg")" alt="Mixture Substance" class = "img-responsive subrefThumb"/>
-									            </div>
-		                                	}else{
+		                                		<img src="@routes.Assets.at("ginas/images/mixture.svg")" alt="Mixture Substance" class = "img-responsive subrefThumb"/>
+									         }else{
 		                                		@if(ref.getClass.toString.equals("class ix.ginas.models.v1.PolymerSubstance")){
 													<img src="@routes.Assets.at("ginas/images/polymer.svg")" alt="Polymer" class = "img-responsive subrefThumb"/>
 												}else{
