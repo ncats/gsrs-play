@@ -4,6 +4,8 @@ import java.net.MalformedURLException;
 import java.net.URL;
 
 import ix.utils.Util;
+import ix.ncats.resolvers.AbstractStructureResolver.UrlAndFormat;
+
 
 public class NCIStructureResolver extends AbstractStructureResolver {
     public static final String NCI_RESOLVER1 =

@@ -2,6 +2,7 @@ package ix.ncats.resolvers;
 
 import java.net.URL;
 import java.net.MalformedURLException;
+import ix.ncats.resolvers.AbstractStructureResolver.UrlAndFormat;
 
 import ix.utils.Util;
 
