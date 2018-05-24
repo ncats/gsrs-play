@@ -59,8 +59,7 @@ public class GinasUtils {
 	public static ChemicalFactory DEFAULT_FACTORY = new JchemicalReader();
 	public static String NULL_MOLFILE = "\n\n\n  0  0  0     0  0            999 V2000\nM  END\n\n$$$$";
 
-	public static final SequenceIndexer _seqIndexer = Play.application().plugin(SequenceIndexerPlugin.class)
-			.getIndexer();
+
 
 
 

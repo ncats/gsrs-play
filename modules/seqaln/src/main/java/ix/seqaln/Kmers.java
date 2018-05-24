@@ -56,9 +56,6 @@ public class Kmers implements Comparator<String> {
 
     public int getK () { return K; }
 
-    public static Kmers create (String seq) {
-        return create (seq, 3);
-    }
     
 
     public static Kmers create (String seq, int K) {
@@ -78,7 +75,7 @@ public class Kmers implements Comparator<String> {
     public static void main (String[] argv) throws Exception {
         String text = "ABCDABCHIJKLMN";
         System.out.println("+++ \""+text+"\"");
-        Kmers kmers = Kmers.create(text);
+        Kmers kmers = Kmers.create(text, 3);
         for (String k : kmers.kmers()) {
             System.out.println(k+": "+kmers.positions(k));
         }
