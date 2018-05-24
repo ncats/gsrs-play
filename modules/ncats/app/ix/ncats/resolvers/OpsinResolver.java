@@ -7,7 +7,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
-
+import ix.ncats.resolvers.AbstractStructureResolver.UrlAndFormat;
 /**
  * Created by katzelda on 3/29/18.
  */
