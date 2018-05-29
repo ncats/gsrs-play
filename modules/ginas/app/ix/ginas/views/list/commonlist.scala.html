@@ -3,6 +3,7 @@
 @import ix.ginas.controllers.v1.SubstanceHierarchyFinder;
 @import be.objectify.deadbolt.java.views.html._
 @import ix.ncats.controllers.security.IxDynamicResourceHandler
+@import ix.core.util.ConfigHelper
 @(sub: Substance)(contentThumb: Html)(contentDetails: Html)(contentFooter: Html)
 
 <div ng-controller="ListViewController" class="panel panel-default sub-list">
@@ -23,12 +24,14 @@
             </div>
         </div>
         
-        
+        @if(ConfigHelper.getBoolean("ix.ginas.list.hierarchy.enabled",false)){
         <div id="tree_@sub.uuid"></div>
+        }
         
         @contentFooter
         @additionalListDetails(sub)
         
+        @if(ConfigHelper.getBoolean("ix.ginas.list.hierarchy.enabled",false)){
         <script>
         
         $(document).ready(function () {
@@ -94,31 +97,9 @@
              	});
             	
             });
-/*
-            $(elmID).on("changed.jstree", function (e, data) {
-				console.log(data);                
-            });
-
-            $(elmID).on("select_node.jstree", function (e, data) {
-                console.log(data);
-                $(this).jstree('toggle_node', data.selected[0]);
-            });
-
-
-
-            $(elmID).on("open_node.jstree", function (e, data) {
-                console.log("opened " + data.node.id);
-                data.instance.set_icon(data.node, "fa fa-folder-open-o");
-            });
-
-            $(elmID).on("after_close.jstree", function (e, data) {
-                console.log("closed " + data.node.id);
-                data.instance.set_icon(data.node, "fa fa-folder-o");
-            });
-            */
             
         });
         </script>
-
+	   }
     </div>
 </div>

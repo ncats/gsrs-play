@@ -2195,7 +2195,7 @@
                 };
 
                 scope.cleanSequence = function () {
-                    console.log("clean sequence");
+                    //console.log("clean sequence");
                     scope.obj.sequence = subunitParser.cleanSequence(scope.obj.sequence);
                     scope.obj.$sequence = scope.preformatSeq(subunitParser.cleanSequence(scope.obj.$sequence));
                     scope.parseSubunit();
@@ -2725,13 +2725,13 @@
             		scope.showPopup=!scope.showPopup;
             		setTimeout(function(){
             			scope.iclass="";
-            			console.log("resetting class");
+            			//console.log("resetting class");
             			scope.$apply();
             		},10);
             	};
             	
             	scope.update=function(){
-            		console.log("Updating");
+            		//console.log("Updating");
             	};
             	
             	if(!scope.substance){
@@ -2859,7 +2859,6 @@
 
             				
             				if(mods.structure){
-            					console.log(mods.structure);
             					mods._urls.push(iconButtonMaker()
 		            					   .setURL(baseurl + "structure?q=" + mods.structure.id)
 		            					   .setTitle("Search Structure")

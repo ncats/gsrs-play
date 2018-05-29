@@ -830,7 +830,7 @@ public class App extends Authentication {
 			}
 		}
 
-		DisplayParams dp = displayParams.get();
+		DisplayParams dp = displayParams.get().clone2();
 		if(newDisplay!=null)
 			dp.changeSettings(newDisplay);
 
@@ -921,6 +921,8 @@ public class App extends Authentication {
 		Map newDisplay = new HashMap();
 		if(Stereo.RACEMIC.equals(struc.stereoChemistry)){
 			newDisplay.put(DisplayParams.PROP_KEY_DRAW_STEREO_LABELS_AS_RELATIVE, true);
+		}else{
+			newDisplay.put(DisplayParams.PROP_KEY_DRAW_STEREO_LABELS_AS_RELATIVE, false);
 		}
 		MolHandler mh = new MolHandler
 				(struc.molfile != null ? struc.molfile : struc.smiles);
@@ -953,7 +955,7 @@ public class App extends Authentication {
 		}
 
 		if(size>250){
-			if(Stereo.ACHIRAL.equals(struc.stereoChemistry))
+			if(!Stereo.ACHIRAL.equals(struc.stereoChemistry))
 				newDisplay.put(DisplayParams.PROP_KEY_DRAW_STEREO_LABELS, true);
 		}
 		if(newDisplay.size()==0)newDisplay=null;
@@ -997,9 +999,10 @@ public class App extends Authentication {
 
 		final int[] amap = stringToIntArray(atomMap);
 		if (format.equals("svg") || format.equals("png")) {
-			final String key =
-					Structure.class.getName()+"/"+size+"/"+id+"."+format
-					+ ":" + atomMap;
+			final String key = Structure.class.getName() + "/" + size + "/" + id + "." + format + ":" + atomMap
+                    + "||" + "%" + displayParams.get().hashCode()+ "|" 
+	                   + RequestHelper.request().getQueryString("stereo")
+                     + "|" + RequestHelper.request().getQueryString("version");
 			String mime = format.equals("svg") ? "image/svg+xml" : "image/png";
 			try {
 				byte[] result = getOrElse (key, TypedCallable.of(() -> {
@@ -1620,7 +1623,6 @@ public class App extends Authentication {
 	@Dynamic(value = IxDynamicResourceHandler.IS_ADMIN, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
 	public static Result cacheSummary () {
 
-		Util.printAllExecutingStackTraces();
 		return ok (ix.ncats.views.html.cachestats.render
 				(IxCache.getStatistics()));
 	}
