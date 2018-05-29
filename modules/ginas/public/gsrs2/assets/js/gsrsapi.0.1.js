@@ -1413,7 +1413,7 @@ FetcherRegistry.addFetcher(
                             return SubstanceFinder.get(amuuid)
                                            .andThen(function(amsub){
                                                 return amsub.fetch("structure/mwt").andThen(function(mwt2){
-                                                    return mwt/mwt2;
+                                                    return mwt2/mwt;
                                                 });
                                            });
                       });
