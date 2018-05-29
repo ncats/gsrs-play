@@ -54,6 +54,7 @@ import ix.ginas.controllers.plugins.GinasSubstanceExporterFactoryPlugin;
 import ix.ginas.controllers.v1.CV;
 import ix.ginas.controllers.v1.ControlledVocabularyFactory;
 import ix.ginas.controllers.v1.SubstanceFactory;
+import ix.ginas.controllers.v1.SubstanceHierarchyFinder;
 import ix.ginas.controllers.viewfinders.ListViewFinder;
 import ix.ginas.controllers.viewfinders.ThumbViewFinder;
 import ix.ginas.exporters.*;
@@ -2043,11 +2044,19 @@ public class GinasApp extends App {
      */
     @Dynamic(value = IxDynamicResourceHandler.CAN_SEARCH, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
     public static Result structure(final String id, final String format, final int size, final String contextId, final String version) {
-        if (!UUIDUtil.isUUID(id)) {
-            return App.render(id, size);
+    	UUID uuid;
+    	
+    	
+    	if (!UUIDUtil.isUUID(id)) {
+        	Optional<UUID> t= SubstanceFactory.resolveID(id);
+        	if(t.isPresent()){
+        		uuid=t.get();
+        	}else{
+        		return App.render(id, size);
+        	}
+        }else{
+        	uuid = UUID.fromString(id);
         }
-
-        UUID uuid = UUID.fromString(id);
 
         String structureID = id;
         String atomMap = contextId;
@@ -2099,7 +2108,19 @@ public class GinasApp extends App {
                     return App.structure(struc, format, size, atomMap);
                 }
             }else{
-                return placeHolderImage(cs);
+            	if(cs instanceof PolymerSubstance){
+            		Structure struc = ((PolymerSubstance)cs).polymer.displayStructure;
+                    //System.out.println("Looking at structure:" + struc.id.toString());
+                    //System.out.println("Found structure:" + struc.molfile);
+                    if(!history){
+                        structureID=struc.id.toString();
+                        return App.structure(structureID, format, size, atomMap);
+                    }else{
+                        return App.structure(struc, format, size, atomMap);
+                    }
+            	}else{
+            		return placeHolderImage(cs);
+            	}
             }
         }else{  //Can't get a unique substance from the ID
             Result r1 = App.structure(id, format, size, atomMap);

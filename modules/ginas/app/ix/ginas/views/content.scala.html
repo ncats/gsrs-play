@@ -20,7 +20,7 @@ facets: Array[FacetDecorator],
 ctx: SearchResultContext = null
 )(header: Html)(content: Html)
 
-@ginas(title, kind) {
+@ginas(title, kind, false, true) {
 @header
 } {
 @defining(ctx != null &&

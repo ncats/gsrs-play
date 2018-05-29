@@ -2,6 +2,15 @@
     var module = angular.module('ginasScheduled', []);
 
 
+    //TODO: Move to better location
+    //This is the controller for the list view for chemicals
+    module.controller('ListViewController', function ($scope, $http, $timeout,$interval,$uibModal) {
+        $scope.showLarge=false;
+        console.log("Test");
+
+    });
+
+
     module.controller('ScheduledJobController', function ($scope, $http, $timeout,$interval,$uibModal) {
         $scope.state ={};
         
@@ -133,6 +142,9 @@
                 });
         };
         
+        $scope.formatDate = function(ts){
+        	return new Date(ts)+"";        	
+        };
         
         $scope.confirm = function(title, message, cb){
     		$scope.warnTitle=title;
