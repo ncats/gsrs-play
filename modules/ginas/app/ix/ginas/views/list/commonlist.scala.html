@@ -24,8 +24,10 @@
             </div>
         </div>
         
+        @defining(((5000*Math.random())).toInt+"") { sug =>
+        
         @if(ConfigHelper.getBoolean("ix.ginas.list.hierarchy.enabled",false)){
-        <div id="tree_@sub.uuid"></div>
+        <div id="tree_@sub.uuid@sug"></div>
         }
         
         @contentFooter
@@ -38,71 +40,71 @@
         	var dat1= @Html(SubstanceHierarchyFinder.makeRawJsonTree(sub));	
         	
         	
-        	var elmID1='tree_@sub.uuid';
+        	var elmID1='tree_@sub.uuid@sug';
         	var elmID="#" + elmID1;
         	var domID = function(i){
              	return "D" +i + elmID1  + dat1[i].value.value.refuuid;
              };
              
-             $(function () {
-	            $(elmID).jstree({ 'core' : {
-	            	"animation" : 0,
-	                "check_callback" : true,
-	                "themes" : { "stripes" : true },
-	                'data' :
-	                function(node, cb){
-	                    var data = dat1;
-	                   
-	                    for(var i=0;i<data.length;i++){
-	
-	               		 	var subref=data[i].value.value;
-	                    	data[i].text="<span id='" +domID(i) + "' >" + data[i].text + "</span>";
-	                    	if(subref.refuuid==="@sub.uuid.toString()"){
-	                    		data[i].state={selected:true};
-	                    		data[i].text="<b>" + data[i].text + "</b>";
-	                    	}
-	                    }
-	                    cb.call(this, data);
-	                    
-	                    
-	                   
-	                }
-	
-	            },
-	            "plugins" : [
-	                "wholerow"
-	              ]
-	            
-	            }).on('loaded.jstree', function() {
-	            	$(elmID).jstree('open_all');
-	            	for(var i=0;i<dat1.length;i++){
-	            		//This should become its own directive
-	            		 var subref=dat1[i].value.value;
-	            		 var divO="<info-popup><div style='text-align: center;' class='stop-prop'>" + 
-	            		           "<substance-preview substance-views=\"['Preferred Term','img','Approval ID (UNII)','iconButtons']\"" + 
-			                   	   "     substanceuuid='" + subref.refuuid +  "'>" +
-			                   	   "</substance-preview>" + 
-	            		             "</div></info-popup>";
-	            		 var div="<substance-line substanceuuid=\"" + subref.refuuid + "\"></substance-line>";
-	                     $target=$("#" + domID(i));
-	                     angular.element($target).injector().invoke(function($compile) {
-	                         var $scope = angular.element($target).scope();
-	                         $target.html("");
-	                         $target.prepend($compile(div)($scope));
-	                         // Finally, refresh the watch expressions in the new element
-	                         $scope.$apply();
-	                       });
-	                     
-	            	}
-	            	$("info-popup").click(function(e) {
-	             	   e.stopPropagation();
-	             	});
-	            	
-	            });
-             });
+             
+            $(elmID).jstree({ 'core' : {
+            	"animation" : 0,
+                "check_callback" : true,
+                "themes" : { "stripes" : true },
+                'data' :
+                function(node, cb){
+                    var data = dat1;
+                   
+                    for(var i=0;i<data.length;i++){
+
+               		 	var subref=data[i].value.value;
+                    	data[i].text="<span id='" +domID(i) + "' >" + data[i].text + "</span>";
+                    	if(subref.refuuid==="@sub.uuid.toString()"){
+                    		data[i].state={selected:true};
+                    		data[i].text="<b>" + data[i].text + "</b>";
+                    	}
+                    }
+                    cb.call(this, data);
+                    
+                    
+                   
+                }
+
+            },
+            "plugins" : [
+                "wholerow"
+              ]
+            
+            }).on('loaded.jstree', function() {
+            	$(elmID).jstree('open_all');
+            	for(var i=0;i<dat1.length;i++){
+            		//This should become its own directive
+            		 var subref=dat1[i].value.value;
+            		 var divO="<info-popup><div style='text-align: center;' class='stop-prop'>" + 
+            		           "<substance-preview substance-views=\"['Preferred Term','img','Approval ID (UNII)','iconButtons']\"" + 
+		                   	   "     substanceuuid='" + subref.refuuid +  "'>" +
+		                   	   "</substance-preview>" + 
+            		             "</div></info-popup>";
+            		 var div="<substance-line substanceuuid=\"" + subref.refuuid + "\"></substance-line>";
+                     $target=$("#" + domID(i));
+                     angular.element($target).injector().invoke(function($compile) {
+                         var $scope = angular.element($target).scope();
+                         $target.html("");
+                         $target.prepend($compile(div)($scope));
+                         // Finally, refresh the watch expressions in the new element
+                         $scope.$apply();
+                       });
+                     
+            	}
+            	$("info-popup").click(function(e) {
+             	   e.stopPropagation();
+             	});
+            	
+            });
             
         });
         </script>
+        }
 	   }
     </div>
 </div>
