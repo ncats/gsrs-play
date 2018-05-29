@@ -1609,6 +1609,82 @@
         return refFinder;
     });
 
+
+
+
+    ginasApp.directive('infoTooltip', function($compile, $templateRequest) {
+        return {
+            restrict: 'E',
+            //replace: true,
+            scope: {
+                facetinfo: '='
+            },
+
+            link: function (scope, element, attrs) {
+                var facetinfo = scope.facetinfo;
+                var template;
+
+                $templateRequest(baseurl + "assets/templates/popovers/popover-template.html").then(function (html) {
+                        template = angular.element(html);
+                        element.html(template).show();
+                        $compile(element.contents())(scope);
+                    });
+            }
+        }
+    });
+
+    ginasApp.directive('infoPopup', function($compile, $sce) {
+      var dir = {
+        restrict: 'E',
+        //replace: true,
+        scope:{
+            type: '@',
+            icon: '@',
+            showPopup:'=',
+            trigger:'@'
+        },
+        xemplate: '<a class="info-pop" popover-trigger="{{trigger}}" popover-is-open="showPopup" popover-placement="TYPEVAR" data-container="body" popover-append-to-body="false" uib-popover-template="\'htmlvar\'"><i class="fa {{icon}}"></i></a>',
+        compile: function(element, attrs, linker) {
+        
+          var original = element.html(); // grab original
+          element.html("");
+          
+          
+          
+          
+          var rnd = 'pop-' + (Math.random()+"").replace(".","") + '.html';
+          
+          var template= '<script type="text/ng-template" id="' + rnd  +'">'+
+                           original+
+                        '</script>';
+
+          //element.html(dir.xemplate); // set template html manually
+          
+          return function(scope, element, attributes) {
+            if(typeof scope.type === 'undefined'){
+                scope.type = "auto";
+            }
+            if(typeof scope.icon === 'undefined'){
+            	scope.icon = "fa-info-circle";
+            }
+            if(typeof scope.trigger === 'undefined'){
+            	scope.trigger = "click";
+            }
+
+            
+            //scope.showPopup=true;
+            var elm=angular.element(template + dir.xemplate.replace("htmlvar",rnd).replace("TYPEVAR",scope.type));
+            
+            scope.htmlvar=$sce.trustAsHtml(original);
+            element.append($compile(elm)(scope));
+            
+            
+          }
+        }
+      };
+      return dir;
+    });
+
     ginasApp.directive('referencesmanager', function ($compile, $templateRequest, referenceRetriever, toggler) {
         return {
             controller: function ($scope) {
@@ -2577,12 +2653,363 @@
 
     });
 
+
+//*****************************************************************
+// Experimental !!!
+//*****************************************************************
+
+    
+    /*
+     * 
+     * 
+     * I want another directive (possibly same as below) for a simlpe in-line
+     * preview of a substance with hover-over / click to expand.
+     * 
+     * <substance-line 
+     *     substanceuuid="f982d178-7bcb-448a-9fd3-25c59e181c7b"
+     *     preview-on="['hover','click']"
+     *     
+     *     preview-substance-views="['Preferred Term','img','Approval ID (UNII)']"
+     * >
+     * </substance-line>
+     * 
+     * The above will just show the name + approvalID
+     * 
+     * 
+     * 
+     * 
+     */
+
+    ginasApp.directive("substanceLine", function ($compile, APIFetcher) {
+        return {
+            restrict: 'E',
+            replace: true,
+            scope: {
+            	substance: '=',
+            	substanceuuid: '@',
+            	showPopup: '@'
+            },
+            link: function (scope, element, attrs) {
+                
+            	var div="<span ng-class='iclass' ng-click='click()' class='stop-prop' >\n" +
+            	     "<info-popup ng-mouseleave='mouesOut()' ng-mouseover='mouesIn()'  icon='fa-search-plus' show-popup=showPopup trigger='none' >" +
+            	     "  <div style='text-align: center;'>" + 
+		           	 "  <substance-preview substance-views=\"['Preferred Term','img','Approval ID (UNII)','iconButtons']\"" + 
+		           	 "     substanceuuid='" + scope.substanceuuid +  "'>" +
+		           	 "  </substance-preview>" + 
+		             "  </div>" +
+		             "</info-popup>\n" +
+		             "<span>{{_substance._name}} [{{_substance._approvalIDDisplay}}]</span>\n" +
+		             "</span>";
+            	
+            	scope.iclass="";
+            	
+            	
+            	scope.mouesIn=function(){
+            		if(!scope.showPopup){
+            			scope.fromMouse=true;
+            			scope.showPopup=true;
+            		}
+            	};
+            	
+            	scope.mouesOut=function(){
+            		if(scope.fromMouse){
+            			scope.showPopup=false;
+            			scope.fromMouse=false;
+            		}
+            	};
+            	
+            	scope.click=function(){
+            		scope.iclass="keep-open";
+            		scope.fromMouse=false;
+            		scope.showPopup=!scope.showPopup;
+            		setTimeout(function(){
+            			scope.iclass="";
+            			console.log("resetting class");
+            			scope.$apply();
+            		},10);
+            	};
+            	
+            	scope.update=function(){
+            		console.log("Updating");
+            	};
+            	
+            	if(!scope.substance){
+            		var uuid=scope.substanceuuid;
+            		if(uuid){
+            			APIFetcher.fetch(uuid, scope.version)
+            		        	  .then(function(s){
+            		        		  
+            						scope._substance=s;
+            						scope.update();
+            					  });
+            		}
+            	}else{
+            		scope._substance=scope.substance;
+            		scope.update();
+            	}
+            	
+                element.append($compile(div)(scope));
+            }
+        }
+    });
+    
+	/*
+	    <substance-preview> Directive
+	    	
+		This will be a basic widget for previewing a substance.
+		
+		A few examples:
+		
+		<!-- From a scope substance object -->
+		<substance-preview substance="someScopeSubstanceJson" ></substance-preview>
+		<!-- From a scope substance uuid -->
+		<substance-preview substanceUUID="5ce23012-506e-47f5-8601-44b7d605a929" ></substance-preview>
+		
+		For now, if you have the two above, you can discover ways of doing it later.
+		
+		Now, we also need to decide what things to show:
+			1. Name
+			2. Structure
+			3. Edit Icon
+			4. Link
+			5. etc ...
+			
+		<substance-preview substance-views="['Preferred Term','img','Approval ID (UNII)']" 
+		                   substanceuuid="f982d178-7bcb-448a-9fd3-25c59e181c7b">
+		                   
+		</substance-preview>
+		
+		The above is an example of how to do that. As of this moment, it will use whatever
+		fetchers are in the js api, and can render those. But there will need to be more
+		room for interaction.                   
+	*/
+	ginasApp.directive("substancePreview", function ($compile,APIFetcher) {
+        return {
+            restrict: 'E',
+            replace: true,
+            scope: {
+            	substance: '=',
+                substanceuuid: '@',
+                substanceViews: '='
+            },
+            link: function (scope, element, attrs) {
+            	//Set the global helper
+            	GGlob.GlobalSettings.setBaseURL(baseurl + "api/v1/");
+            	
+            	//######################
+            	//HELPER FUNCTIONS START
+            	//######################
+            	const iconButtonMaker= function(){
+        	 				var u={};
+        	 				u.setURL=function(url){
+        	 					u.url=url;
+        	 					return u;
+        	 				};
+        	 				u.setTitle=function(t){
+        	 					u.title=t;
+        	 					return u;
+        	 				};
+        	 				u.setIcon=function(i){
+        	 					u.icon=i;
+        	 					return u;
+        	 				};
+        	 				return u;
+            	 		};
+            
+            	const ViewFetcher=function(){
+            		var vf={};
+            		
+            		vf.name = function(n){
+            			if(n){
+            				vf._name=n;
+            				return vf;
+            			}else{
+            				return vf._name;
+            			}
+            		};
+            		
+            		vf.isSet=false;
+            		
+            		vf.setFunction = function(f){
+            			vf._f=f;
+            			vf.isSet=true;
+            			return this;
+            		};
+            		
+            		vf.make = function(s){
+            			//should be a promise?
+            			return vf._f(s);
+            		};           		
+            		
+            		vf.IDENTITY = function(){
+            			return ViewFetcher().setFunction(function(s){
+            				return JPromise.ofScalar(vf._prepareSubstance(s));
+            			});
+            		};
+            		
+            		vf._prepareSubstance = function(s){
+            				var mods=SubstanceBuilder.fromSimple(s);
+            				mods._urls=[];
+            				
+            				mods._urls.push(iconButtonMaker()
+            					.setURL(baseurl + "substance/" + mods.uuid + "/edit")
+            					.setTitle("Edit Record")
+            					.setIcon("fa-pencil"));
+
+            				
+            				if(mods.structure){
+            					console.log(mods.structure);
+            					mods._urls.push(iconButtonMaker()
+		            					   .setURL(baseurl + "structure?q=" + mods.structure.id)
+		            					   .setTitle("Search Structure")
+		            					   .setIcon("fa-search"));
+            				}
+            				
+            				if(mods.protein && mods.protein.subunits){
+            					_.chain(mods.protein.subunits)
+            					 .map(function(su){
+            						 mods._urls.push(iconButtonMaker()
+  		            					   .setURL(baseurl + "sequence?id=" + su.uuid)
+  		            					   .setTitle("Sequence Subunit " + su.subunitIndex + " Search")
+  		            					   .setIcon("fa-search"));	 
+            					 })
+            					 .value();
+            				}
+            				
+							mods._urls.push(iconButtonMaker()
+            					.setURL(baseurl + "substance/" + mods.uuid)
+            					.setTitle("View Record")
+            					.setIcon("fa-sign-in"));
+            				
+            				return mods;
+            		};
+            		
+            		vf.fromFetcher = function(f){
+            			if(!f)return vf;
+            			return vf.name(f.name).setFunction(function(s){
+            				var mods=vf._prepareSubstance(s);
+            				return f.fetcher(mods);
+            			});
+            		};
+            		
+            		vf.after = function(m){
+            			var vft=ViewFetcher().name(vf.name());
+            			return vft.setFunction(function(s){
+            									return vf.make(s)            			
+            										     .andThen(function(r){
+            										    	 	return m(r,vft);
+            										     });
+            								   });
+            				
+            		};
+            		
+            		return vf;
+            	};
+            
+            	const kvclean = function (e,vf){
+            		var elm="<div class='row'>" + 
+            		 	 	        "<div ng-hide='hideTitles' class='col-md-12'>" + vf.name() + "</div>" 
+            		 	 	       +"<div class='col-md-12'>" + e + "</div>";
+            		return elm;
+            	};
+            	
+            	const fetchFetcher = function(vf){
+            		var fetcher=FetcherRegistry.getFetcher(vf);
+            		if(fetcher){
+            			return ViewFetcher().name(vf)
+            			                    .fromFetcher(fetcher)
+            			                    .after(kvclean);
+            		}
+            		if(vf==="img"){
+            	 			return ViewFetcher()
+            	 				.fromFetcher(FetcherRegistry.getFetcher("UUID"))
+            	 				.after(function(uu){
+            	 					return "<div><rendered id='" + uu + "'></rendered></div>";
+            	 				});   
+            	 	}
+            	 	if(vf==="iconButtons"){
+            	 			return ViewFetcher()
+            	 				.IDENTITY()
+            	 				.name("TEST")
+            	 				.after(function(s){
+            	 					scope.iconButtons=s._urls;
+            	 					return "											<div class=\"col-md-12 text-center\">\n" + 
+            	 					"											        <ul class=\"list-inline list-unstyled tools\">\n" + 
+            	 					"											            <!-- basic icons -->\n" + 
+            	 					"											            <li ng-repeat=\"u in iconButtons\">\n" + 
+            	 					"											                <a href=\"{{u.url}}\" uib-tooltip=\"{{u.title}}\" target=\"_self\" aria-label=\"{{u.title}}\">\n" + 
+            	 					"											                    <span class=\"sr-only\">\n" + 
+            	 					"											                    {{u.title}}\n" + 
+            	 					"											                    </span>\n" + 
+            	 					"											                    <span class=\"fa {{u.icon}} fa-2x success\"></span>\n" + 
+            	 					"											                </a>                \n" + 
+            	 					"											            </li>\n" + 
+            	 					"											        </ul>\n" + 
+            	 					"											</div>";
+            	 				});   
+            	 	}
+            	};
+            	//######################
+            	//HELPER FUNCTIONS END
+            	//######################
+            	            
+            	scope.allViews=[];
+            	scope.views=[];
+            	
+            	scope.hideTitles=true;
+            	
+            	//calculate views based on specified views
+            	scope.views=_.chain(scope.substanceViews)
+            	 			 .map(fetchFetcher)
+            	 			 .value();
+            	            	                             
+            	scope.update=function(){
+            		element.html("");
+            		_.chain(scope.views)
+            		 .map(function(v){
+            		 	v.make(scope._substance)
+            		 	 .get(function(e){
+	            		 	element.append($compile(e)(scope));
+            		 	 });
+            		 })
+            		 .value();
+            	};                    
+                        
+            	if(!scope.substance){
+            		var uuid=scope.substanceuuid;
+            		if(uuid){
+            			APIFetcher.fetch(uuid, scope.version)
+            		        	  .then(function(s){
+            						scope._substance=s;
+            						scope.update();
+            					  });
+            		}
+            	}else{
+            		scope._substance=scope.substance;
+            		scope.update();
+            	}
+            },
+            template: function(element, scope) {
+		     	return "<div></div>";
+		    }
+        }
+    });
+
+//*****************************************************************
+//Views and General UI
+//*****************************************************************
+
+
+
+
+
     ginasApp.directive("treeView", function ($compile) {
         return {
             restrict: 'E',
             replace: true,
             scope: {
-                text: '='
+                text: '@'
             },
             link: function (scope, element, attrs) {
                 scope.codes = [];
@@ -2593,7 +3020,7 @@
                     scope.codes.push(c.split('['));
                 });
                 _.forEach(scope.codes, function (c, key) {
-                    var link = "app/substances?q=comments:%22" + _.join(_.slice(scope.link, 0, key + 1), '|') + "%22";
+                    var link = baseurl + "substances?q=comments:%22" + _.join(_.slice(scope.link, 0, key + 1), '|') + "%22";
                     template += '<ul class="tree-list"><li><a href = "' + link + '" uib-tooltip="Search ginas for ' + c[0] + '" target ="_self">' + c[0] + '</a>';
                     if (c[1]) {
                         template += '<span>' + '[' + c[1] + '</span>';
@@ -2609,4 +3036,212 @@
         }
     });
 
+    ginasApp.directive('card', function () {
+
+        return {
+            restrict: 'E',
+            replace: true,
+            scope: {
+                eid:   '@',
+                cardTitle: '@',
+                count: '@',
+                audit: '=',
+                initcollapse: '=',
+                
+            },
+            link: function(scope){
+            	scope.scrollTo = scope.$parent.scrollTo;
+            	scope.getRange = scope.$parent.getRange;
+            	scope.redirectVersion = function(){
+            		console.log(scope.versionNumber);
+            		scope.$parent.redirectVersion(scope.versionNumber);
+            	};
+            },
+            template: function(element, scope) {
+		     var content = element[0].innerHTML;
+		     return [
+		        '<div ng-cloak class="row detail-card info fade-ng-cloak ng-cloak" id="{{eid}}">',
+					"<button class=\"btn btn-primary label-offset det\" ng-class=\"(collapse)?'collapsed':''\" ng-init = \"collapse=initcollapse\" ng-click = \"collapse = !collapse\">",
+					"<i ng-show=\"collapse\" class=\"fa fa-caret-right\"></i>",
+					"<i ng-hide=\"collapse\" class=\"fa fa-caret-down\"></i>",
+					"{{cardTitle}}&nbsp;<span ng-if=\"count!=0\" class=\"badge\"> {{count}}</span></button>",
+					"<div class=\"col-md-12 table-responsive card-content\" uib-collapse = \"collapse\">",
+					content, 
+					'</div>',
+				'</div>'
+		      ].join("\n");
+		    }
+        };
+    });
+    
+    ginasApp.directive('clickOutside', function ($document) {
+
+        return {
+           restrict: 'A',
+           scope: {
+               clickOutside: '&'
+           },
+           link: function (scope, el, attr) {
+
+               $document.on('click', function (e) {
+                   if (el !== e.target && !el[0].contains(e.target)) {
+                        scope.$apply(function () {
+                            scope.$eval(scope.clickOutside);
+                        });
+                    }
+               });
+           }
+        }
+
+    });
+
 })();
+
+
+
+
+//Routing intercept
+//this is not strictly angular kosher
+window.onhashchange = function(w){
+	var nhash=w.newURL.split("#")[1];
+	if(nhash.indexOf(":")>=0){
+		var wkeys=nhash.split(":");
+		$("#" + wkeys[0]).val(wkeys[1]);
+		$("#" + wkeys[0]).change();
+		$(".temp-focus").removeClass("temp-focus");
+		$("." + wkeys[2].replace("/","_")).addClass("temp-focus");
+	}
+}
+
+/* Add 'Show more...' to Description section on cards in list view
+runs on page load */
+$(function(){
+    $('.list-item .text-block').each(function(event){
+        /* set the max content length after which a show more link will be added */
+        var max_length = 250; //show two lines of description by default
+
+        /* check for content length */
+        if($(this).html().length > max_length){
+
+            var short_content 	= $(this).html().substr(0,max_length); /* split the content in two parts */
+            var long_content	= $(this).html().substr(max_length);
+            var ellipses = "..."
+
+            /* alter the html to allow the read more functionality */
+            $(this).html('<span class="less_text">'+short_content+'</span>'+
+                '<span class="ellipses">'+ellipses+'</span>'+
+                '<a href="#" class="show_more"></br>Show More</a>'+
+                '<span class="more_text" style="display:none;">'+long_content+'</span>'+
+                '<a href="#" class="show_less" style="display:none;"></br>Show Less</a>');
+
+            /* find the a.read_more element within the new html and bind the following code to it */
+            $(this).find('a.show_more').click(function(event){
+                /* prevent the a from changing the url */
+                event.preventDefault();
+                /* hide the show more button */
+                $(this).hide();
+                $(this).parents('.text-block').find('.ellipses').hide();
+                /* show the .more_text span and show less link*/
+                $(this).parents('.text-block').find('.more_text').show();
+                $(this).parents('.text-block').find('.show_less').show();
+
+
+            });
+
+            $(this).find('a.show_less').click(function(event){
+                /* prevent the a from changing the url */
+                event.preventDefault();
+                /* hide the show less button */
+                $(this).hide();
+                /* hide the extra text */
+                $(this).parents('.text-block').find('.more_text').hide();
+                /* show the ellipses and the read more button */
+                $(this).parents('.text-block').find('.ellipses').show();
+                $(this).parents('.text-block').find('.show_more').show();
+            });
+        }
+    });
+});
+
+/* remove info-popups if clicked anywhere outside */
+$(function(){
+	$('body').click(function(event){ 
+		//if any present
+        if($(".popover").length > 0 && 
+		//and if does not have popover parent
+	    event.target.closest('.popover') === null && 
+		//and if does not have info-popup parent
+	    event.target.closest('info-popup') === null){
+			//remove popover div
+        	//var toRemove=$('.popover');
+        	$('.popover').parents(".keep-open").find(".popover").addClass("keep-open-popover");
+        	$('.popover:not(.keep-open-popover)').remove();
+        	$('.keep-open-popover').removeClass("keep-open-popover");
+        } else {
+	        return;
+	    }
+	});
+});
+
+/* controls the "show smiles/inchi" block in the Structure card */
+$(function(){
+    $('.show-smiles-inchi').click(function(event){
+		$(this).hide();
+		$("#smiles-inchi").show();
+	});
+});
+/* controls the "hide smiles/inchi" block in the Structure card */
+$(function(){
+   $('.hide-smiles-inchi').click(function(event){
+		$('#smiles-inchi').hide();
+		$(".show-smiles-inchi").show();
+	});
+});
+
+/* format numbers: 1000 => 1,000 */
+$(function(){
+	$(".badge, .label-default").each(function(){
+		/* if this is a filter on top of the page -- do not apply script
+		since it should be shown as is (can be Year, etc.) */
+		if($(this).parents('.alert-dismissible').length){
+				return;
+		}
+			
+		$(this).text(function(i,old){
+			
+			//if not a valid number -- exit
+			if(isNaN(old)){
+				return;
+			}
+
+			// i,old = index, old text
+			// convert to string and trim
+			old = old.toString().trim();
+			var count_i = 0;
+			var new_arr = [];
+			
+			// count from the back of the string-array
+			for(i = old.length-1; i>-1; i--){
+				if(count_i === 3){
+					//add a comma to array 
+					//after each set of 3 elements
+					new_arr.push(",");
+					count_i = 0;
+				}
+				new_arr.push(old[i]);
+				count_i += 1;
+			}
+			//reverse array, join, and return
+			return new_arr.reverse().join("");
+        });
+	});
+	
+});
+
+
+Number.isFinite = Number.isFinite || function(value) {
+    return typeof value === 'number' && isFinite(value);
+};
+
+
+

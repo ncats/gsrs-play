@@ -1,7 +1,6 @@
 package ix.core.util;
 
 import java.io.Closeable;
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
@@ -13,12 +12,19 @@ import java.util.PriorityQueue;
 import java.util.Set;
 import java.util.Spliterator;
 import java.util.Spliterators;
+import java.util.Stack;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.Phaser;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiConsumer;
 import java.util.function.BinaryOperator;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collector;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
@@ -75,6 +81,121 @@ public class StreamUtil {
         };
         return forIterator(ir);
     }
+    
+    
+    /**
+     * <p>Creates a {@link Stream} for a given {@link Consumer}
+     * which supplies elements by feeding them to the supplied
+     * {@link Consumer}. This emulated the idea of a Generator
+     * common to JavaScript and C# using the "yield" keyword.
+     * Type inference on this method isn't always easy. For 
+     * a more explicit typing, use {@link #forYieldingGenerator(TypeReference, Consumer)}.
+     * </p>
+     * 
+     * <pre>
+     * private static Stream<String> example(){
+     *    return StreamUtil.forYieldingGenerator(c->{
+	 * 		c.accept("D");
+	 * 		c.accept("B");	//very similar to "yield" keyword	
+	 * 		c.accept("A");      
+	 *      c.accept("C");  
+	 *    });
+     * }
+     * 
+     * private static void printSortedExample(){
+     * 	  
+     *    //Prints "A;B;C;D" 
+     * 	  System.out.println(example().sorted().collect(Collectors.joining(","));
+     *     
+     * }
+     * 
+     * <pre>
+     * 
+     * <p>
+     * Special care must be taken if the resulting stream is going to be terminated
+     * early (e.g. with {@link Stream#limit(long)}), as this will result in 
+     * incomplete execution of the supplied operation. It will simply
+     * keep a created {@link Thread} in a waiting state. This can cause issues
+     * if there are resources which need to be closed or released in the
+     * generator code.
+     * </p>
+     * 
+     * 
+     * 
+	 * @param takerConsumer
+	 * @return
+	 */
+    public static <T> Stream<T> forYieldingGenerator(Consumer<Consumer<T>> takerConsumer){
+    	BlockingQueue<Optional<T>> bq = new LinkedBlockingQueue<Optional<T>>(1);
+    	
+    	boolean[] isDone=new boolean[]{false};
+    	
+    	Consumer<Optional<T>> taker = (t)->{
+    		try{
+    			if(isDone[0])return;
+    			if(!t.isPresent())isDone[0]=true;
+    			bq.put(t);
+    		}catch(Exception e){
+    			throw new RuntimeException(e);
+    		}
+    	};
+
+    	Stream<T> stream= forGenerator(()->{
+    		try {
+    			return bq.take();
+			} catch (InterruptedException e) {
+				throw new RuntimeException(e);
+			}
+    	});
+    	
+    	Thread t= new Thread(()->{
+    		takerConsumer.accept(t1->{
+    			taker.accept(Optional.ofNullable(t1));
+    		});
+    		//force ending
+    		taker.accept(Optional.empty());
+    	});
+    	
+    	t.start();
+    	
+    	return stream;
+    }
+    
+    
+    /**
+     * Does the same as for {@link #forYieldingGenerator(Consumer)}
+     * except a {@link TypeReference} is used to make
+     * the type used explicit.
+     * 
+     * <pre>
+     *  //This won't have issues with type inference
+     * 	StreamUtil.forYieldingGenerator(new TypeReference<String>(),(c)->{
+     * 		c.accept("A");
+     *      c.accept("B");
+     *  })
+     *  .collect(Collectors.joining(";"); 
+     * </pre>
+     * 
+     * </pre>
+     * @param tr
+     * @param takerConsumer
+     * @return
+     */
+    public static <T> Stream<T> forYieldingGenerator(TypeReference<T> tr,Consumer<Consumer<T>> takerConsumer){
+    	return forYieldingGenerator(takerConsumer);
+    }
+    
+    
+    /**
+     * This is simply a class used to make type references
+     * more explicit in certain cases. By speficying 
+     * @author tyler
+     *
+     * @param <T>
+     */
+    public static class TypeReference<T>{
+    }
+
 
 
     /**
@@ -435,4 +556,5 @@ public class StreamUtil {
         }
 
     }
+    
 }
