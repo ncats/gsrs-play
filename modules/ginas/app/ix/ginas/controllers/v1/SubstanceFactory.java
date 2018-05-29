@@ -111,7 +111,6 @@ public class SubstanceFactory extends EntityFactory {
 		return IntStream.concat(IntStream.of(Integer.parseInt(subVersion)),edits.stream()
 				.mapToInt(e-> Integer.parseInt(e.version))
 		)
-				.peek(v -> System.out.println("version of edit = " + v))
 				.max();
 	}
 	public static Substance getSubstanceVersion(String id, String version) {
@@ -451,14 +450,10 @@ public class SubstanceFactory extends EntityFactory {
 	}
 	
 
-	public static SequenceIndexer getSeqIndexer() {
-		return EntityPersistAdapter.getSequenceIndexer();
-	}
-
 	public static List<Substance> getNearCollsionProteinSubstancesToSubunit(int top, int skip, Subunit subunit) {
 		Set<Substance> dupes = new LinkedHashSet<Substance>();
 		try {
-			ResultEnumeration re = getSeqIndexer().search(subunit.sequence, SubstanceFactory.SEQUENCE_IDENTITY_CUTOFF,
+			ResultEnumeration re = EntityPersistAdapter.getSequenceIndexer().search(subunit.sequence, SubstanceFactory.SEQUENCE_IDENTITY_CUTOFF,
 					CutoffType.GLOBAL);
 			int i = 0;
 			while (re.hasMoreElements()) {

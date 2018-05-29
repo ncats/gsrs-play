@@ -53,6 +53,8 @@ public class SequenceIndexer {
 
     static CacheManager CACHE_MANAGER;
 
+    static int DEFAULT_KMER_SIZE = 3;
+
     /**
      * A slightly slimmed down form of CachedSupplier,
      * only repeated here because the seqaln module 
@@ -404,6 +406,8 @@ public class SequenceIndexer {
 
     private AtomicLong lastModified = new AtomicLong (0);
 
+    private int kmerSize = DEFAULT_KMER_SIZE;
+
     public static SequenceIndexer openReadOnly (File dir) throws IOException {
         return new SequenceIndexer (dir, true);
     }
@@ -457,6 +461,14 @@ public class SequenceIndexer {
 
         this.baseDir = dir;
         this.threadPool = threadPool;
+    }
+
+    public int getKmerSize() {
+        return kmerSize;
+    }
+
+    public void setKmerSize(int kmerSize) {
+        this.kmerSize = kmerSize;
     }
 
     @SuppressWarnings("deprecation")
@@ -537,7 +549,7 @@ public class SequenceIndexer {
             indexWriter.addDocument(doc);
             // indexWriter.updateDocument(new Term (FIELD_ID, id), doc);
 
-            Kmers kmers = Kmers.create(seq);
+            Kmers kmers = Kmers.create(seq, kmerSize);
             for (String kmer : kmers.kmers()) {
                 BitSet positions = kmers.positions(kmer);
                 StringField kmerf = new StringField (FIELD_KMER, kmer, YES);
@@ -570,7 +582,7 @@ public class SequenceIndexer {
     }
 
     public ResultEnumeration search (String query, double identity,CutoffType rt) {
-        return search (query, identity, 3,rt);
+        return search (query, identity, kmerSize,rt);
     }
 
     public ResultEnumeration search (final String query,
@@ -622,7 +634,7 @@ public class SequenceIndexer {
             String query, double identity, int gap, CutoffType rt)
                     throws Exception {
 
-        Kmers kmers = Kmers.create(query);
+        Kmers kmers = Kmers.create(query, kmerSize);
         final int K = kmers.getK();
 
         int ndocs = Math.max(1, kmerSearcher.getIndexReader().numDocs());

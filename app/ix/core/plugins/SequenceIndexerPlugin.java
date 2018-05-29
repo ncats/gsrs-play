@@ -29,6 +29,8 @@ public class SequenceIndexerPlugin extends Plugin {
         try {
             File sequence = ctx.sequence();
             indexer = SequenceIndexer.open(sequence);
+            int kmersize = app.configuration().getInt("ix.kmer.size", 3);
+            indexer.setKmerSize(kmersize);
 
             Logger.info("Plugin "+getClass().getName()+" started!");        
         }
