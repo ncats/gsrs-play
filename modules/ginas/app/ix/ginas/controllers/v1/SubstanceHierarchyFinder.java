@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
@@ -23,6 +24,7 @@ import ix.core.util.StreamUtil;
 import ix.ginas.models.utils.RelationshipUtil;
 import ix.ginas.models.v1.Relationship;
 import ix.ginas.models.v1.SpecifiedSubstanceGroup1Substance;
+import ix.ginas.models.v1.StructurallyDiverseSubstance;
 import ix.ginas.models.v1.Substance;
 import ix.ginas.models.v1.SubstanceReference;
 import ix.ncats.controllers.App;
@@ -61,7 +63,8 @@ public class SubstanceHierarchyFinder {
 		finders.add(new InvertibleRelationshipHierarchyFinder("SALT/SOLVATE->PARENT").renameChildType("IS SALT/SOLVATE OF"));
 		finders.add(new InvertibleRelationshipHierarchyFinder("SUB_CONCEPT->SUBSTANCE").renameChildType("IS SUBCONCEPT OF"));
 		finders.add(new G1SSConstituentFinder().renameChildType("IS G1SS CONSTITUENT OF"));
-		
+		finders.add(new StructurallyDiverseParentFinder());
+		//StructurallyDiverseParentFinder
 		//finders.add(new InvertibleRelationshipHierarchyFinder("SUB_CONCEPT->SUBSTANCE"));
 		return finders;		
 	});
@@ -389,6 +392,42 @@ public class SubstanceHierarchyFinder {
 							 ))
 					 .map(Tuple.kmap(k->"HAS G1SS:" + k))
 					 .map(Tuple.vmap(sub->(Substance)sub))
+					 .collect(Collectors.toList());
+		}
+	}
+	
+	/**
+	 * This hierarchy finder finds parent source material
+	 * @author tyler
+	 *
+	 */
+	public static class StructurallyDiverseParentFinder implements HierarchyFinder{
+		
+		public StructurallyDiverseParentFinder(){
+		}
+		@Override
+		public List<Tuple<String, Substance>> findParents(Substance s) {
+			if(s instanceof StructurallyDiverseSubstance){
+				StructurallyDiverseSubstance ssg=(StructurallyDiverseSubstance)s;
+				return Optional.ofNullable(ssg.structurallyDiverse.parentSubstance)
+					.map(c->Tuple.of("Source Parent",SubstanceFactory.getFullSubstance(c)))
+					.filter(rs->rs.v()!=null)
+					.map(c->Stream.of(c).collect(Collectors.toList()))
+					.orElse(new ArrayList<>());
+				 
+			}
+			return new ArrayList<>();
+		}
+		@Override
+		public List<Tuple<String, Substance>> findChildren(Substance s) {
+			return SubstanceFactory.finder.get()
+					 .where()
+					 .eq("structurallyDiverse.parentSubstance.refuuid", s.uuid.toString())
+					 .findList()
+					 .stream()
+					 .map(sg->Tuple.of("Source Child",
+							             sg
+							 ))
 					 .collect(Collectors.toList());
 		}
 	}
