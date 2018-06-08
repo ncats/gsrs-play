@@ -67,7 +67,6 @@ public class EndToEndSequenceAlignmentTest extends AbstractGinasServerTest{
     }
 
     @Test
-    @RunOnly
     public void findLoadedSequence(){
 
 
