@@ -5,6 +5,8 @@ import static org.junit.Assert.assertEquals;
 import java.io.File;
 import java.util.List;
 
+import ix.core.util.RunOnly;
+import ix.test.server.GinasTestServer;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -26,6 +28,15 @@ public class EndToEndSequenceAlignmentTest extends AbstractGinasServerTest{
     File folder=new File("test/testJSON/pass");
     
     private BrowserSession session;
+
+    @Override
+    public GinasTestServer createGinasTestServer() {
+        GinasTestServer ts = super.createGinasTestServer();
+        //force kmer size to 3... larger sizes might make the tests fail
+        ts.modifyConfig("ix.kmer.size = 3", GinasTestServer.ConfigOptions.ALL_TESTS);
+
+        return ts;
+    }
 
     @Before
     public void login(){
@@ -56,12 +67,15 @@ public class EndToEndSequenceAlignmentTest extends AbstractGinasServerTest{
     }
 
     @Test
+    @RunOnly
     public void findLoadedSequence(){
+
+
         File jsonFile = new File(folder, "peptide.json");
         submitSubstance(jsonFile);
 
         SequenceSearchAPI api = new SequenceSearchAPI(session);
-                                                               //"CYIQNCPLG"
+                                                                                     //"CYIQNCPLG"
         List<SequenceSearchAPI.SearchResult> actual = api.searchProteins("CYIQXCPLG", .5);
         //we can't guess the uuid at the moment because it's randomly generated
 
