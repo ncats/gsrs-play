@@ -641,7 +641,6 @@
         };
         
         $scope.submitq= function(query, action) {
-            console.log($scope.searchLimit);
             if (query.indexOf("\"") < 0 && query.indexOf("*") < 0 && query.indexOf(":") < 0 && query.indexOf(" AND ") < 0 && query.indexOf(" OR ") < 0) {
                 $scope.q = "\"" + query + "\"";
             }else{
@@ -658,11 +657,37 @@
                 break;
             }
             
+            //First, we get the absolute url where we currently are            
+            var whereiam=window.location.href;
+            
+            //Then we get the base path of the app, which will have
+            //a terminal "/", but we want to remove that slash, which
+            //we do with the following regex.
+            var base=baseurl.replace(/.$/g,"");
+            
+            //We only want the part of the URL _before_ the base path.
+            //The reason is that angular is trying to be smart
+            //and preserve all paths to be from the base path, so you can't give
+            //it a full path, because it will append the base path.
+            whereiam = whereiam.split(base)[0];
+            
+            //The action already has the base path built in, so this 
+            //is the "new" absolute base path + the action we want
+            var nav= whereiam + action;  
+                      
             $location.search({});
-            $location.path(".." + baseurl +"substances");
             $location.search("q",$scope.q);
             $location.hash("");
-            window.location = $location.absUrl();
+            
+            //This just gets angular's encoding of the query portion of the URL,
+            //which will be explicitly added.
+            var qpart=_.chain(($location.absUrl().split("?")))
+            		   .filter(function(a,b){return b;}) //get rid of first element
+            		   .value()
+            		   .join("?");
+            		   
+           
+            window.location = nav + "?" + qpart;
         };
 
         if (typeof $window.loadjson !== "undefined" &&
