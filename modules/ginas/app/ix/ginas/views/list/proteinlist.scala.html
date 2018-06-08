@@ -43,7 +43,7 @@
                         		@for(subunit <- prot.protein.getSubunits()) {
                         			<div>
 		                               	<a href="@ix.ginas.controllers.routes.GinasApp.sequence(subunit.uuid.toString())" target="_self" uib-tooltip="Sequence Subunit @subunit.subunitIndex Search" aria-label="Structure Subunit @subunit.subunitIndex Search">
-	                                    	<span>Subunit <code>@subunit.subunitIndex</code> (@subunit.sequence.length) Similarity Search</span>
+	                                    	<span>Subunit <code>@subunit.subunitIndex</code> (@{if(subunit.sequence==null) 0 else subunit.sequence.length}) Similarity Search</span>
 	                                	</a>
                                 	</div>
                                 }
