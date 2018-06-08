@@ -31,7 +31,6 @@ public class LoadDefaultUsersInitializer implements Initializer {
                     List roles = (List) m.get("roles");
                     List groups = (List) m.get("groups");
 
-                    System.out.println("groups found is " + groups);
                     Principal p = new Principal(username, email);
 
                     Principal p2 = PrincipalFactory.byUserName(username);
