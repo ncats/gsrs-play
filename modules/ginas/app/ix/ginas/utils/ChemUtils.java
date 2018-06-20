@@ -59,8 +59,8 @@ public class ChemUtils {
 	}
 	
 	/**
-	 * Checks for basic valence problems on structure, adding warnings to the
-	 * supplied list
+	 * Checks for basic chiral flag problems on structure, adding warnings to the
+	 * supplied list, and fix the flag.
 	 * 
 	 * @param newstr
 	 * @param gpm
@@ -91,10 +91,10 @@ public class ChemUtils {
 			return;
 		}
 
-		String chiralFlag=lines[3].substring(12, 14);
+		String chiralFlag=lines[3].substring(12, 15);
 		
 		if(!newChiralFlag.equals(chiralFlag)){
-			lines[3]=lines[3].substring(0, 11) + newChiralFlag +lines[3].substring(15);
+			lines[3]=lines[3].substring(0, 12) + newChiralFlag +lines[3].substring(15);
 			if(newChiralFlag.equals(chiralFlagOn)){
 				gpm.add(GinasProcessingMessage.INFO_MESSAGE("Adding chiral flag based on structure information"));
 			}else{
