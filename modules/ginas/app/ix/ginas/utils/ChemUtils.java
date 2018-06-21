@@ -13,6 +13,7 @@ import ix.core.GinasProcessingMessage;
 import ix.core.models.Structure;
 import ix.core.models.Structure.Optical;
 import ix.core.models.Structure.Stereo;
+import ix.utils.FortranLikeParserHelper.LineParser;
 
 
 //All of the code below should be changed to use
@@ -20,6 +21,7 @@ import ix.core.models.Structure.Stereo;
 
 public class ChemUtils {
 
+	private static LineParser MOLFILE_COUNT_LINE_PARSER=new LineParser("aaabbblllfffcccsssxxxrrrpppiiimmmvvvvvv");
 	private static Pattern NEW_LINE_PATTERN = Pattern.compile("\n");
 	/**
 	 * Checks for basic valence problems on structure, adding warnings to the
@@ -100,8 +102,9 @@ public class ChemUtils {
 			}else{
 				gpm.add(GinasProcessingMessage.INFO_MESSAGE("Removing chiral flag based on structure information"));
 			}
-			newstr.molfile=Arrays.stream(lines).collect(Collectors.joining("\n"));
 		}
+		lines[3]=MOLFILE_COUNT_LINE_PARSER.standardize(lines[3]);
+		newstr.molfile=Arrays.stream(lines).collect(Collectors.joining("\n"));
 		
 	}
 
