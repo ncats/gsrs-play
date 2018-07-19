@@ -15,8 +15,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import ix.core.GinasProcessingMessage;
-import ix.core.ValidationMessage;
+import ix.core.validator.GinasProcessingMessage;
+import ix.core.validator.ValidationMessage;
 import ix.core.controllers.EntityFactory;
 import ix.core.util.EntityUtils;
 import ix.ginas.models.v1.Substance;

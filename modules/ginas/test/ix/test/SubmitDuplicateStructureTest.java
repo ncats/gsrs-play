@@ -3,7 +3,7 @@ package ix.test;
 import com.fasterxml.jackson.databind.JsonNode;
 
 import ix.AbstractGinasServerTest;
-import ix.core.ValidationMessage;
+import ix.core.validator.ValidationMessage;
 import ix.core.models.Role;
 import ix.ginas.models.v1.ChemicalSubstance;
 import ix.ginas.modelBuilders.ChemicalSubstanceBuilder;

@@ -1,19 +1,19 @@
 package ix.ginas.utils.validation;
 
 import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
-import ix.core.AbstractValidator;
-import ix.core.GinasProcessingMessage;
-import ix.core.UserFetcher;
-import ix.core.ValidationResponse;
+import ix.core.*;
 import ix.core.models.Role;
 import ix.core.models.UserProfile;
-import ix.ginas.models.v1.Reference;
+import ix.core.validator.*;
+import ix.ginas.initializers.LoadValidatorInitializer;
 import ix.ginas.models.v1.Substance;
 import ix.ginas.utils.GinasProcessingStrategy;
 import ix.ginas.utils.GinasUtils;
 
-public class DefaultSubstanceValidator extends AbstractValidator<Substance>{
+public class DefaultSubstanceValidator extends AbstractValidator<Substance> {
 	GinasProcessingStrategy _strategy;
 	private static enum METHOD_TYPE{
 		CREATE,
@@ -60,84 +60,125 @@ public class DefaultSubstanceValidator extends AbstractValidator<Substance>{
 		return new DefaultSubstanceValidator(strategy,METHOD_TYPE.BATCH);
 	}
 	
-	
+	@Override
+	public void validate(Substance objnew, Substance objold, ValidatorCallback callback) {
+
+		Validator<Substance> validator = ValidatorFactory.getInstance().createValidatorFor(objnew, objold,
+				this.method ==null? null: LoadValidatorInitializer.ValidatorConfig.METHOD_TYPE.valueOf(this.method.name())
+		);
+		validator.validate(objnew, objold, callback);
+
+
+
+//		//Some users can put in records flagged as possible duplicates
+//		//some can't. We change some warnings to errors
+//		boolean allowPossibleDuplicates=false;
+//
+//
+//		if(		getCurrentUser().hasRole(Role.SuperUpdate) ||
+//				getCurrentUser().hasRole(Role.SuperDataEntry) ||
+//				getCurrentUser().hasRole(Role.Admin) ||
+//				this.method==METHOD_TYPE.BATCH){
+//			allowPossibleDuplicates=true;
+//		}
+//
+//
+//
+//		ValidationResponse<Substance> vr=new ValidationResponse<Substance>(objnew);
+//		if(this.method==METHOD_TYPE.IGNORE){
+//			callback.setValid();
+//			return;
+//		}
+//		callback.setInvalid();
+//		try{
+//			List<GinasProcessingMessage> vlad =ValidationUtils.validateAndPrepare(objnew, objold, _strategy);
+//
+//			//only for non-batch loads
+//			if(this.method!=METHOD_TYPE.BATCH){
+//				if(objold!=null){
+//					changeSubstanceValidation(objnew,objold,vlad);
+//				}else{
+//					addNewSubstanceValidation(objnew,vlad);
+//				}
+//
+//			}
+//			if (objnew.isPublic()){
+//				boolean allowed = objnew.references.stream()
+//						.filter(Reference::isPublic)
+//						.filter(Reference::isPublicDomain)
+//						.filter(Reference::isPublicReleaseReference)
+//						.findAny()
+//						.isPresent();
+//				if (!allowed) {
+//					if(!allowNonTaggedPublicRecords){
+//						vlad.add(GinasProcessingMessage
+//								.ERROR_MESSAGE("Public records must have a PUBLIC DOMAIN reference with a '"
+//										+ Reference.PUBLIC_DOMAIN_REF + "' tag"));
+//					}
+//				}
+//			}
+//
+//			if(vlad!=null){
+//				for(GinasProcessingMessage gpm:vlad){
+//					if(gpm.isProblem() && gpm.isPossibleDuplicate()){
+//						if(!allowPossibleDuplicates){
+//							gpm.makeError();
+//						}
+//					}
+//					callback.addMessage(gpm);
+//				}
+//			}
+//
+//			if(_strategy.handleMessages(objnew, vlad)){
+//				vr.setValid();
+//			}
+//			_strategy.addProblems(objnew, vlad);
+//
+//
+//
+//			if(GinasProcessingMessage.ALL_VALID(vlad)){
+//				vlad.add(GinasProcessingMessage.SUCCESS_MESSAGE("Substance is valid"));
+//			}
+//
+//		}catch(Exception e){
+//			throw e;
+//		}finally{
+//			//TimeProfiler.stopGlobalTime(TIME_KEY);
+//		}
+	}
+
 	@Override
 	public ValidationResponse<Substance> validate(Substance objnew, Substance objold) {
-		//Some users can put in records flagged as possible duplicates
-		//some can't. We change some warnings to errors
-		boolean allowPossibleDuplicates=false;
 		
 		
-		if(		getCurrentUser().hasRole(Role.SuperUpdate) || 
-				getCurrentUser().hasRole(Role.SuperDataEntry) || 
-				getCurrentUser().hasRole(Role.Admin) ||
-				this.method==METHOD_TYPE.BATCH){
-			allowPossibleDuplicates=true;
+		ValidationResponseBuilder callback = new ValidationUtils.GinasValidationResponseBuilder(objnew, _strategy);
+
+		//turn off duplicate checking in batch mode
+		if(this.method == METHOD_TYPE.BATCH){
+			callback.allowPossibleDuplicates(true);
 		}
 		
-		
-		
-		ValidationResponse<Substance> vr=new ValidationResponse<Substance>(objnew);
-		if(this.method==METHOD_TYPE.IGNORE){
-			vr.setValid();
-			return vr;
+		this.validate(objnew, objold, callback);
+		ValidationResponse<Substance> resp =  callback.buildResponse();
+
+		List<GinasProcessingMessage> messages = resp.getValidationMessages()
+													.stream()
+													.filter(m-> m instanceof GinasProcessingMessage)
+													.map(m ->(GinasProcessingMessage)m)
+													.collect(Collectors.toList());
+		messages.stream().forEach( _strategy::processMessage);
+		if(_strategy.handleMessages(objnew, messages)){
+			resp.setValid();
 		}
-		vr.setInvalid();
-		try{
-			List<GinasProcessingMessage> vlad =ValidationUtils.validateAndPrepare(objnew, objold, _strategy);
+		_strategy.addProblems(objnew, messages);
+
+
 			
-			//only for non-batch loads
-			if(this.method!=METHOD_TYPE.BATCH){
-				if(objold!=null){
-					changeSubstanceValidation(objnew,objold,vlad);
-				}else{
-					addNewSubstanceValidation(objnew,vlad);
-				}
-				
-			}
-			if (objnew.isPublic()){
-				boolean allowed = objnew.references.stream()
-					.filter(Reference::isPublic)
-					.filter(Reference::isPublicDomain)
-					.filter(Reference::isPublicReleaseReference)
-					.findAny()
-					.isPresent();
-				if (!allowed) {
-					if(!allowNonTaggedPublicRecords){
-						vlad.add(GinasProcessingMessage
-								.ERROR_MESSAGE("Public records must have a PUBLIC DOMAIN reference with a '"
-										+ Reference.PUBLIC_DOMAIN_REF + "' tag"));
-					}
-				}
-			}
-			
-			if(vlad!=null){
-				for(GinasProcessingMessage gpm:vlad){
-					if(gpm.isProblem() && gpm.isPossibleDuplicate()){
-						if(!allowPossibleDuplicates){
-							gpm.makeError();
+		if(GinasProcessingMessage.ALL_VALID(messages)){
+			resp.addValidationMessage(GinasProcessingMessage.SUCCESS_MESSAGE("Substance is valid"));
 						}
-					}
-					vr.addValidationMessage(gpm);
-				}
-			}
-			
-			if(_strategy.handleMessages(objnew, vlad)){
-				vr.setValid();
-			}
-			_strategy.addProblems(objnew, vlad);
-	
-			
-			
-	        if(GinasProcessingMessage.ALL_VALID(vlad)){
-	        	vlad.add(GinasProcessingMessage.SUCCESS_MESSAGE("Substance is valid"));
-	        }
-			return vr;
-		}catch(Exception e){
-			throw e;
-		}finally{
-			//TimeProfiler.stopGlobalTime(TIME_KEY);
-		}
+		return resp;
+
 	}
 
 	//TODO: All of this is ad-hoc, and needs to be moved to a more generic framework.
@@ -170,17 +211,26 @@ public class DefaultSubstanceValidator extends AbstractValidator<Substance>{
 		
 		//Changed approvalID
 		if (objold.approvalID != null) {
-			if (!objold.approvalID.equals(objnew.approvalID)) {
+			if (!Objects.equals(objold.approvalID,objnew.approvalID)) {
 				// Can't change approvalID!!! (unless admin)
 				if (up.hasRole(Role.Admin)) {
-					if(!GinasUtils.getAPPROVAL_ID_GEN().isValidId(objnew.approvalID)){
+					if("".equals(objnew.approvalID)){
+						objnew.approvalID=null;
+					}
+					if(objnew.approvalID == null){
 						vlad.add(GinasProcessingMessage
-								.ERROR_MESSAGE("The approvalID for the record has changed. Was ('" + objold.approvalID
-										+ "') but now is ('" + objnew.approvalID + "'). This approvalID is either a duplicate or invalid."));
+								.WARNING_MESSAGE("The approvalID for the record has been removed. The approvalID was \"" + objold.approvalID
+										+ "\". Removing an approvalID is strongly discouraged."));
 					}else{
-						vlad.add(GinasProcessingMessage
-							.WARNING_MESSAGE("The approvalID for the record has changed. Was ('" + objold.approvalID
-									+ "') but now is ('" + objnew.approvalID + "'). This is strongly discouraged."));
+						if(!GinasUtils.getAPPROVAL_ID_GEN().isValidId(objnew.approvalID)){
+							vlad.add(GinasProcessingMessage
+									.ERROR_MESSAGE("The approvalID for the record has changed. Was ('" + objold.approvalID
+											+ "') but now is ('" + objnew.approvalID + "'). This approvalID is either a duplicate or invalid."));
+						}else{
+							vlad.add(GinasProcessingMessage
+								.WARNING_MESSAGE("The approvalID for the record has changed. Was ('" + objold.approvalID
+										+ "') but now is ('" + objnew.approvalID + "'). This is strongly discouraged."));
+						}
 					}
 				} else {
 					vlad.add(GinasProcessingMessage.ERROR_MESSAGE(

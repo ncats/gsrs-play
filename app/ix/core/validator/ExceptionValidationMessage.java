@@ -1,8 +1,9 @@
-package ix.core;
+package ix.core.validator;
 
-public class ExceptionValidationMessage implements ValidationMessage{
 
-	private Throwable e;
+public class ExceptionValidationMessage implements ValidationMessage {
+
+	private final Throwable e;
 	
 	public ExceptionValidationMessage(Throwable e){
 		this.e=e;

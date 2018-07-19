@@ -1,8 +1,7 @@
 package ix.ginas.processors;
 
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 import ix.core.EntityProcessor;
 import ix.core.adapters.EntityPersistAdapter;
@@ -20,6 +19,8 @@ public class RelationshipProcessor implements EntityProcessor<Relationship>{
 	
 	private static RelationshipProcessor _instance = null;
 	
+	private Set<String> deletedUuidsInProgress = Collections.newSetFromMap(new ConcurrentHashMap<>());
+
 	public RelationshipProcessor(){
 		finder = new Model.Finder(UUID.class, Relationship.class);
 		_instance=this;
@@ -142,11 +143,17 @@ public class RelationshipProcessor implements EntityProcessor<Relationship>{
 	
 	@Override
 	public void preRemove(Relationship obj) {
+
 		if(obj.isGenerator() && obj.isAutomaticInvertable()){
+
 			List<Relationship> rel = finder.where().eq("originatorUuid",
 					obj.getOrGenerateUUID().toString()).findList();
+
 			for(final Relationship r1 : rel){
 				if(!r1.isGenerator()){
+					if(deletedUuidsInProgress.remove(r1.uuid.toString())){
+						continue;
+					}
 					r1.setOkToRemove();
 					final Substance osub=r1.fetchOwner();
 					if(osub !=null) {
@@ -161,9 +168,28 @@ public class RelationshipProcessor implements EntityProcessor<Relationship>{
 			}
 		}
 		if(!obj.isGenerator()){
-			if(!obj.isOkToRemove()){
-				throw new IllegalStateException("This relationship cannot be deleted. The primary relationship must be deleted instead.");
+			if(obj.isOkToRemove()){
+				return;
 			}
+
+			deletedUuidsInProgress.add(obj.uuid.toString());
+
+					for(Relationship r : finder.where().eq("uuid", obj.originatorUuid)
+														.findList()) {
+
+						Substance s2 = r.fetchOwner();
+
+						EntityPersistAdapter.performChangeOn(s2, osub2-> {
+									System.out.println("deleting r from primary " + r);
+									r.delete();
+									osub2.forceUpdate();
+							return Optional.of(osub2);
+								});
+
+					}
+
+
+
 		}
 	}
 

@@ -1,4 +1,4 @@
-package ix.core;
+package ix.core.validator;
 
 public abstract class AbstractValidator<T> implements Validator<T> {
 

@@ -1,7 +1,7 @@
 package ix.ginas.models.v1;
 
 import gov.nih.ncgc.chemical.Chemical;
-import ix.core.GinasProcessingMessage;
+import ix.core.validator.GinasProcessingMessage;
 import ix.core.models.Group;
 import ix.ginas.models.GinasAccessReferenceControlled;
 import ix.ginas.models.GinasSubstanceDefinitionAccess;

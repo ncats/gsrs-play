@@ -2,6 +2,7 @@ package ix.ginas.utils.validation;
 
 import java.net.URL;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -11,14 +12,15 @@ import java.util.stream.Stream;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 
+import ix.core.UserFetcher;
+import ix.core.validator.ValidationResponse;
+import ix.core.validator.ValidationResponseBuilder;
 import ix.core.chem.StructureProcessor;
 import ix.core.controllers.AdminFactory;
-import ix.core.models.Group;
-import ix.core.models.Keyword;
-import ix.core.models.Payload;
-import ix.core.models.Structure;
+import ix.core.models.*;
 import ix.core.plugins.PayloadPlugin;
 import ix.core.util.CachedSupplier;
+import ix.core.validator.ValidatorCallback;
 import ix.ginas.controllers.v1.SubstanceFactory;
 import ix.ginas.models.EmbeddedKeywordList;
 import ix.ginas.models.GinasAccessReferenceControlled;
@@ -27,8 +29,8 @@ import ix.ginas.models.v1.Substance.SubstanceClass;
 import ix.ginas.models.v1.Substance.SubstanceDefinitionLevel;
 import ix.ginas.models.v1.Substance.SubstanceDefinitionType;
 import ix.ginas.utils.*;
-import ix.core.GinasProcessingMessage;
-import ix.core.GinasProcessingMessage.Link;
+import ix.core.validator.GinasProcessingMessage;
+import ix.core.validator.GinasProcessingMessage.Link;
 import play.Application;
 import play.Configuration;
 import play.Logger;
@@ -55,7 +57,7 @@ public class ValidationUtils {
 	}
 	
 	
-	static CachedSupplier<PayloadPlugin> _payload = CachedSupplier.of(()->Play.application().plugin(PayloadPlugin.class));
+	private static CachedSupplier<PayloadPlugin> _payload = CachedSupplier.of(()->Play.application().plugin(PayloadPlugin.class));
 	static CachedSupplier<ValidationConfig> validationConf = CachedSupplier.of(()->{
 		return new ValidationConfig(Play.application());
 	});
@@ -315,7 +317,7 @@ public class ValidationUtils {
 		return gpm;
 	}
 
-	enum ReferenceAction {
+	public enum ReferenceAction {
 		FAIL, WARN, ALLOW
 	}
 	
@@ -395,6 +397,61 @@ public class ValidationUtils {
 		}
 
 		return worked;
+	}
+
+	public static boolean validateReference(Substance s,
+											 GinasAccessReferenceControlled data,
+											 ValidatorCallback callback,
+											 ReferenceAction onemptyref) {
+
+		AtomicBoolean worked = new AtomicBoolean(true);
+
+		Set<Keyword> references = data.getReferences();
+		if ((references == null || references.size() <= 0)) {
+			if (onemptyref == ReferenceAction.ALLOW) {
+				return worked.get();
+			}
+
+			GinasProcessingMessage gpmerr = null;
+			if (onemptyref == ReferenceAction.FAIL) {
+				gpmerr = GinasProcessingMessage.ERROR_MESSAGE(
+						data.toString() + " needs at least 1 reference")
+						.appliableChange(true);
+				worked.set(false);
+			} else if (onemptyref == ReferenceAction.WARN) {
+				gpmerr = GinasProcessingMessage.WARNING_MESSAGE(
+						data.toString() + " needs at least 1 reference")
+						.appliableChange(true);
+				worked.set(false);
+			} else {
+				gpmerr = GinasProcessingMessage.WARNING_MESSAGE(
+						data.toString() + " needs at least 1 reference")
+						.appliableChange(true);
+				worked.set(false);
+			}
+			//this extra reference is so it's effectively final
+			//and we can reference it in the lambda
+			GinasProcessingMessage gpmerr2 = gpmerr;
+			callback.addMessage(gpmerr2, () ->{
+				gpmerr2.appliedChange = true;
+				Reference r = Reference.SYSTEM_ASSUMED();
+				s.references.add(r);
+				data.addReference(r.getOrGenerateUUID().toString());
+				worked.set(true);
+			});
+
+		} else {
+			for (Keyword ref : references) {
+				Reference r = s.getReferenceByUUID(ref.getValue());
+				if (r == null) {
+					callback.addMessage(GinasProcessingMessage.ERROR_MESSAGE("Reference \""
+							+ ref.getValue() + "\" not found on substance."));
+					worked.set(false);
+				}
+			}
+		}
+
+		return worked.get();
 	}
 
 	static private void extractLocators(Substance s, Name n,
@@ -593,27 +650,27 @@ public class ValidationUtils {
 		}
 
 		Map<String, Set<String>> nameSetByLanguage = new HashMap<>();
-
-
+		
+		
 		for (Name n : s.names) {
 			Iterator<Keyword> iter = n.languages.iterator();
 			String uppercasedName = n.getName().toUpperCase();
-
+			
 			while(iter.hasNext()){
 				String language = iter.next().getValue();
 //				System.out.println("language for " + n + "  = " + language);
 				Set<String> names = nameSetByLanguage.computeIfAbsent(language, k->new HashSet<>());
 				if(!names.add(uppercasedName)){
-					GinasProcessingMessage mes = GinasProcessingMessage
-							.ERROR_MESSAGE(
-									"Name '"
-											+ n.getName()
+		        GinasProcessingMessage mes = GinasProcessingMessage
+                        .ERROR_MESSAGE(
+                                "Name '"
+                                        + n.getName()
 											+ "' is a duplicate name in the record.")
-							.markPossibleDuplicate();
-					gpm.add(mes);
-					strat.processMessage(mes);
-				}
-
+                        .markPossibleDuplicate();
+                gpm.add(mes);
+                strat.processMessage(mes);
+		    }
+		    
 			}
 		    //nameSet.add(n.getName());
 			try {
@@ -626,12 +683,12 @@ public class ValidationUtils {
 								.ERROR_MESSAGE(
 										"Name '"
 												+ n.name
-												+ "' collides (possible duplicate) with existing name for substance:")
-								.addLink(GinasUtils.createSubstanceLink(s2));
-						gpm.add(mes);
-						strat.processMessage(mes);
+													+ "' collides (possible duplicate) with existing name for substance:")
+									.addLink(GinasUtils.createSubstanceLink(s2));
+							gpm.add(mes);
+							strat.processMessage(mes);
+						}
 					}
-				}
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
@@ -726,20 +783,21 @@ public class ValidationUtils {
 		return true;
 	}
 
-       
-       
-       /**
-        * Check if the object is effectively null. That is,
-        * is it literally null, or is the string representation
-        * of the object an empty string.
-        * @param o
-        * @return
-        */
-       private static boolean isEffectivelyNull(Object o){
-               if(o==null) return true;
-               if(o.toString().equals(""))return true;
-               return false;
-       }
+
+	/**
+	 * Check if the object is effectively null. That is,
+	 * is it literally null, or is the string representation
+	 * of the object an empty string.
+	 *
+	 * @param o
+	 * @return
+	 */
+	public static boolean isEffectivelyNull(Object o) {
+		if (o == null) {
+			return true;
+		}
+		return o.toString().isEmpty();
+	}
 
 	private static boolean validateRelationships(Substance s,
 			List<GinasProcessingMessage> gpm, GinasProcessingStrategy strat) {
@@ -1222,21 +1280,21 @@ public class ValidationUtils {
 					.ERROR_MESSAGE("Nucleic Acid substance must have a nucleicAcid element"));
 		} else {
 			if (cs.nucleicAcid.getSubunits() == null
-					|| cs.nucleicAcid.getSubunits().size() < 1) {
+					|| cs.nucleicAcid.getSubunits().isEmpty()) {
 				gpm.add(GinasProcessingMessage
 						.ERROR_MESSAGE("Nucleic Acid substance must have at least 1 subunit"));
 			} else {
 
 			}
 			if (cs.nucleicAcid.getSugars() == null
-					|| cs.nucleicAcid.getSugars().size() < 1) {
+					|| cs.nucleicAcid.getSugars().isEmpty()) {
 				gpm.add(GinasProcessingMessage
 						.ERROR_MESSAGE("Nucleic Acid substance must have at least 1 specified sugar"));
 			} else {
 
 			}
 			if (cs.nucleicAcid.getLinkages() == null
-					|| cs.nucleicAcid.getLinkages().size() < 1) {
+					|| cs.nucleicAcid.getLinkages().isEmpty()) {
 				gpm.add(GinasProcessingMessage
 						.ERROR_MESSAGE("Nucleic Acid substance must have at least 1 specified linkage"));
 			} else {
@@ -1607,8 +1665,68 @@ public class ValidationUtils {
 
 		ChemUtils.checkValance(newstr, gpm);
 		
-		
+
 
 		return gpm;
+	}
+
+
+	public static class GinasValidationResponseBuilder<T> extends ValidationResponseBuilder<T> {
+
+		private final GinasProcessingStrategy _strategy;
+		public GinasValidationResponseBuilder(T o){
+			this(o, GinasProcessingStrategy.ACCEPT_APPLY_ALL());
+		}
+		public GinasValidationResponseBuilder(T o, GinasProcessingStrategy strategy) {
+			super(o, strategy);
+			this._strategy = Objects.requireNonNull(strategy);
+			boolean allowPossibleDuplicates=false;
+
+			UserProfile currentUser = getCurrentUser();
+
+			if(		currentUser.hasRole(Role.SuperUpdate) ||
+					currentUser.hasRole(Role.SuperDataEntry) ||
+					currentUser.hasRole(Role.Admin)){
+				allowPossibleDuplicates=true;
+			}
+			this.allowPossibleDuplicates(allowPossibleDuplicates);
+
+
+		}
+
+		private static UserProfile getCurrentUser(){
+			UserProfile up= UserFetcher.getActingUserProfile(true);
+			if(up==null){
+				up=UserProfile.GUEST();
+			}
+			return up;
+		}
+
+
+			@Override
+		public ValidationResponse<T> buildResponse() {
+			ValidationResponse<T> resp =  super.buildResponse();
+
+
+			if(resp.getNewObect() instanceof Substance) {
+				Substance objnew = (Substance) resp.getNewObect();
+				List<GinasProcessingMessage> messages = resp.getValidationMessages()
+						.stream()
+						.filter(m -> m instanceof GinasProcessingMessage)
+						.map(m -> (GinasProcessingMessage) m)
+						.collect(Collectors.toList());
+				messages.stream().forEach(_strategy::processMessage);
+				if (_strategy.handleMessages(objnew, messages)) {
+					resp.setValid();
+				}
+				_strategy.addProblems(objnew, messages);
+
+
+				if (GinasProcessingMessage.ALL_VALID(messages)) {
+					resp.addValidationMessage(GinasProcessingMessage.SUCCESS_MESSAGE("Substance is valid"));
+				}
+			}
+			return resp;
+		}
 	}
 }

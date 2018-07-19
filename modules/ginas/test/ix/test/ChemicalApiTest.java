@@ -22,7 +22,7 @@ import org.junit.Test;
 import com.fasterxml.jackson.databind.JsonNode;
 
 import ix.AbstractGinasServerTest;
-import ix.core.ValidationMessage;
+import ix.core.validator.ValidationMessage;
 import ix.core.controllers.EntityFactory;
 import ix.core.controllers.EntityFactory.EntityMapper;
 import ix.ginas.models.v1.ChemicalSubstance;

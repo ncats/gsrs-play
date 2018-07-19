@@ -1,5 +1,7 @@
 package ix.test.authentication;
 
+import java.util.Objects;
+
 /**
  * Created by katzelda on 3/3/17.
  */
@@ -18,7 +20,7 @@ public class UserResult {
 
         if (isActive != that.isActive) return false;
         if (!userName.equals(that.userName)) return false;
-        return email != null ? email.equals(that.email) : that.email == null;
+        return Objects.equals(userName, that.userName);
 
     }
 

@@ -149,6 +149,14 @@ public class GinasTestServer extends ExternalResource{
             return processorClass;
         }
 
+        @Override
+        public String toString() {
+            return "EntityProcessorConfig{" +
+                    "entityClass=" + entityClass +
+                    ", processorClass=" + processorClass +
+                    ", with=" + with +
+                    '}';
+        }
 
         public static class Builder{
             private final Class<?> entityClass, processorClass;
@@ -696,7 +704,7 @@ public class GinasTestServer extends ExternalResource{
         if(entityProcessorFilter == null){
             entityProcessorFilter = predicate;
         }else{
-            entityProcessorFilter.or(predicate);
+            entityProcessorFilter= entityProcessorFilter.or(predicate);
         }
 
     }

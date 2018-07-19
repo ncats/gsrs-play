@@ -27,7 +27,7 @@ import gov.nih.ncgc.chemical.Chemical;
 import gov.nih.ncgc.chemical.ChemicalFactory;
 import gov.nih.ncgc.jchemical.JchemicalReader;
 import ix.core.AbstractValueDeserializer;
-import ix.core.GinasProcessingMessage;
+import ix.core.validator.GinasProcessingMessage;
 import ix.core.chem.Chem;
 import ix.core.util.TimeUtil;
 import ix.utils.Util;

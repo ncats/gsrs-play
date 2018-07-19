@@ -168,7 +168,7 @@ public class BuildInfo {
   ).dependsOn(ncats).aggregate(ncats)
 
 
-  val ginasTestOptions = "-Dconfig.file=" + Option(System.getProperty("testconfig")).getOrElse("application.conf")
+
   val ginas = Project("ginas", file("modules/ginas"))
     .enablePlugins(PlayJava).settings(commonSettings:_*).settings(
       libraryDependencies ++= commonDependencies,
@@ -196,7 +196,7 @@ public class BuildInfo {
       javacOptions in (Compile, compile) ++= javaBuildOptions,
       javacOptions in (doc) ++= javaDocOptions,
 
-    javaOptions in Test += ginasTestOptions,
+    javaOptions in Test ++= Option(new File("modules/ginas").toPath.relativize(new File(System.getProperty("config.file")).toPath)).map("-Dconfig.file=" + _).toSeq,
     cleanFiles += file("modules/ginas/ginas.ix")
   ).dependsOn(ginasEvo).aggregate(ginasEvo)
 }

@@ -13,7 +13,7 @@ import java.util.Objects;
 
 import ix.ginas.controllers.GinasApp;
 import ix.ginas.models.v1.Substance;
-import ix.core.GinasProcessingMessage;
+import ix.core.validator.GinasProcessingMessage;
 import ix.ginas.utils.GinasUtils;
 import gov.nih.ncgc.chemical.Chemical;
 

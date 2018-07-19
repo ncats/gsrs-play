@@ -1,4 +1,4 @@
-package ix.core;
+package ix.core.validator;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -7,7 +7,7 @@ import java.util.List;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import play.Logger;
 
-public class GinasProcessingMessage implements ValidationMessage{
+public class GinasProcessingMessage implements ValidationMessage {
 	public enum ACTION_TYPE{IGNORE, APPLY_CHANGE, FAIL, DO_NOTHING};
 
 

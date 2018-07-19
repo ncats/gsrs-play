@@ -16,7 +16,7 @@ import ix.core.util.CachedSupplier;
 import ix.core.util.Java8Util;
 import ix.ginas.models.v1.ChemicalSubstance;
 import ix.ginas.models.v1.Substance;
-import ix.core.GinasProcessingMessage;
+import ix.core.validator.GinasProcessingMessage;
 import ix.ginas.utils.DefaultSdfLoader;
 import ix.ginas.utils.GinasProcessingStrategy;
 import ix.ginas.utils.GinasSDFUtils;

@@ -1,4 +1,4 @@
-package ix.core;
+package ix.core.validator;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -6,7 +6,7 @@ import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.annotation.JsonView;
 
-import ix.core.ValidationMessage.MESSAGE_TYPE;
+import ix.core.validator.ValidationMessage.MESSAGE_TYPE;
 import ix.core.models.BeanViews;
 
 public class ValidationResponse<T> {
@@ -80,5 +80,31 @@ public class ValidationResponse<T> {
 		});
 		return vr;
 	}
-	
+
+	public ValidationResponse<T> merge(ValidationResponse<T> other){
+		if(this.newObject !=other.newObject){
+			throw new IllegalStateException("validated object must be the same");
+		}
+		ValidationResponse<T> merged = new ValidationResponse<>(this.newObject);
+
+		for(ValidationMessage m : this.validationMessages){
+			merged.addValidationMessage(m);
+		}
+		for(ValidationMessage m : other.validationMessages){
+			merged.addValidationMessage(m);
+		}
+
+		merged.valid = this.valid && other.valid;
+
+		return merged;
+	}
+
+	@Override
+	public String toString() {
+		return "ValidationResponse{" +
+				"validationMessages=" + validationMessages +
+				", valid=" + valid +
+				", newObject=" + newObject +
+				'}';
+	}
 }
