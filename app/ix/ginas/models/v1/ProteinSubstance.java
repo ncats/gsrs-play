@@ -1,17 +1,16 @@
 package ix.ginas.models.v1;
 
-import ix.core.models.Group;
-import ix.ginas.models.GinasAccessReferenceControlled;
-import ix.ginas.models.GinasSubstanceDefinitionAccess;
-
 import javax.persistence.CascadeType;
 import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
 import javax.persistence.Inheritance;
 import javax.persistence.OneToOne;
 import javax.persistence.Transient;
-import java.util.Set;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
+
+import ix.ginas.models.GinasAccessReferenceControlled;
+import ix.ginas.models.GinasSubstanceDefinitionAccess;
 
 @SuppressWarnings("serial")
 @Entity
@@ -28,8 +27,8 @@ public class ProteinSubstance extends Substance implements GinasSubstanceDefinit
     }
     @Override
     public boolean hasModifications(){
-    	if(this.protein.modifications!=null){
-    		if(this.protein.modifications.agentModifications.size()>0 || this.protein.modifications.physicalModifications.size()>0 || this.protein.modifications.structuralModifications.size()>0){
+    	if(this.modifications!=null){
+    		if(this.modifications.agentModifications.size()>0 || this.modifications.physicalModifications.size()>0 || this.modifications.structuralModifications.size()>0){
     			return true;
     		}
     	}
@@ -38,10 +37,10 @@ public class ProteinSubstance extends Substance implements GinasSubstanceDefinit
     @Override
     public int getModificationCount(){
     	int ret=0;
-    	if(this.protein.modifications!=null){
-    		ret+=this.protein.modifications.agentModifications.size();
-    		ret+=this.protein.modifications.physicalModifications.size();
-    		ret+=this.protein.modifications.structuralModifications.size();
+    	if(this.modifications!=null){
+    		ret+=this.modifications.agentModifications.size();
+    		ret+=this.modifications.physicalModifications.size();
+    		ret+=this.modifications.structuralModifications.size();
     	}
     	return ret;
     }
@@ -49,7 +48,7 @@ public class ProteinSubstance extends Substance implements GinasSubstanceDefinit
     
     @Override
     public Modifications getModifications(){
-    	return this.protein.modifications;
+    	return this.modifications;
     }
     
     
@@ -57,17 +56,19 @@ public class ProteinSubstance extends Substance implements GinasSubstanceDefinit
     private boolean _dirtyModifications=false;
     
     
+    
     public void setModifications(Modifications m){
     	if(this.protein==null){
     		this.protein = new Protein();
     		_dirtyModifications=true;
     	}
-    	this.protein.setModifications(m);
     	this.modifications=m;
+    	this.protein.setModifications(m);
     }
     
     public void setProtein(Protein p){
     	this.protein=p;
+    	this.protein.setProteinSubstance(this);
     	if(_dirtyModifications){
     		this.protein.setModifications(this.modifications);
     		_dirtyModifications=false;

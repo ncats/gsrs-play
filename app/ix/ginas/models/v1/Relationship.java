@@ -1,5 +1,7 @@
 package ix.ginas.models.v1;
 
+import java.util.LinkedHashSet;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 import javax.persistence.Basic;
@@ -14,10 +16,17 @@ import javax.persistence.Table;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import ix.core.models.Indexable;
+import ix.core.models.Keyword;
+import ix.core.util.EntityUtils;
 import ix.ginas.models.CommonDataElementOfCollection;
 import ix.ginas.models.utils.JSONConstants;
 import ix.ginas.models.utils.JSONEntity;
+import ix.ginas.models.utils.RelationshipUtil;
+import org.json4s.JsonUtil;
 
 
 @JSONEntity(title = "Relationship", isFinal = true)
@@ -26,8 +35,6 @@ import ix.ginas.models.utils.JSONEntity;
 public class Relationship extends CommonDataElementOfCollection {
     
 	public static final String ACTIVE_MOIETY_RELATIONSHIP_TYPE="ACTIVE MOIETY";
-    private static final String RELATIONSHIP_INV_CONST = "->";
-    private static final Pattern RELATIONSHIP_SPLIT_REGEX = Pattern.compile(RELATIONSHIP_INV_CONST);
 
 	@JSONEntity(title="Amount")
     @OneToOne(cascade=CascadeType.ALL)
@@ -67,10 +74,7 @@ public class Relationship extends CommonDataElementOfCollection {
     
     @JsonIgnore
     public String getDisplayType(){
-        if(type.contains(RELATIONSHIP_INV_CONST)){
-                return type.split(RELATIONSHIP_INV_CONST)[0] + " (" +type.split(RELATIONSHIP_INV_CONST)[1] +")";
-        }
-        return type;
+       return RelationshipUtil.getDisplayType(this);
     }
     
     
@@ -117,20 +121,7 @@ public class Relationship extends CommonDataElementOfCollection {
      */
     @JsonIgnore
     public boolean isAutomaticInvertable(){
-    	if(type==null)return false;
-        //Explicitly ignore alternative relationships
-        if(this.type.equals(Substance.ALTERNATE_SUBSTANCE_REL) || this.type.equals(Substance.PRIMARY_SUBSTANCE_REL)){
-            return false;
-        }
-    	if(this.fetchOwner().getOrGenerateUUID().toString().equals(this.relatedSubstance.refuuid)){
-    		return false;
-    	}
-
-    	String[] types=RELATIONSHIP_SPLIT_REGEX.split(this.type);
-    	
-    	
-    	if(types.length>=2)return true;
-    	return false;
+    	return RelationshipUtil.isAutomaticInvertable(this);
     }
     
     public boolean hasComments(){
@@ -146,14 +137,7 @@ public class Relationship extends CommonDataElementOfCollection {
     }
     
     public Relationship fetchInverseRelationship(){
-    	if(!isAutomaticInvertable()){
-    		throw new IllegalStateException("Relationship :" + this.type + " is not invertable");
-    	}
-    	Relationship r=new Relationship();
-    	String[] types=RELATIONSHIP_SPLIT_REGEX.split(this.type);
-    	r.type=types[1] + RELATIONSHIP_INV_CONST + types[0];
-    	r.setAccess(this.getAccess());
-    	return r;
+        return RelationshipUtil.createInverseRelationshipFor(this);
     }
     
     //This flag is used to explicitly allow deleting of this relationship
@@ -169,5 +153,20 @@ public class Relationship extends CommonDataElementOfCollection {
     public boolean isOkToRemove(){
     	return okToRemoveFlag;
     }
-    
+
+    @Override
+    public String toString() {
+        return "Relationship{" +
+                "uuid =" + getOrGenerateUUID() +
+                ", amount=" + amount +
+                ", comments='" + comments + '\'' +
+                ", interactionType='" + interactionType + '\'' +
+                ", qualification='" + qualification + '\'' +
+                ", relatedSubstance=" + relatedSubstance +
+                ", mediatorSubstance=" + mediatorSubstance +
+                ", originatorUuid='" + originatorUuid + '\'' +
+                ", type='" + type + '\'' +
+                ", okToRemoveFlag=" + okToRemoveFlag +
+                '}';
+    }
 }

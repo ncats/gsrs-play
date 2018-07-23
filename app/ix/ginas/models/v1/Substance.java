@@ -3,27 +3,10 @@ package ix.ginas.models.v1;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
-import javax.persistence.CascadeType;
-import javax.persistence.Column;
-import javax.persistence.DiscriminatorValue;
-import javax.persistence.Entity;
-import javax.persistence.Inheritance;
-import javax.persistence.JoinTable;
-import javax.persistence.ManyToMany;
-import javax.persistence.ManyToOne;
-import javax.persistence.OneToMany;
-import javax.persistence.OneToOne;
-import javax.persistence.PrePersist;
-import javax.persistence.PreUpdate;
-import javax.persistence.Table;
-import javax.persistence.Transient;
+import javax.persistence.*;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonUnwrapped;
-import com.fasterxml.jackson.annotation.JsonView;
+import com.fasterxml.jackson.annotation.*;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
@@ -49,7 +32,6 @@ import ix.core.plugins.GinasRecordProcessorPlugin;
 import ix.core.util.EntityUtils.EntityWrapper;
 import ix.core.util.TimeUtil;
 import ix.ginas.modelBuilders.SubstanceBuilder;
-import ix.ginas.models.GinasAccessReferenceControlled;
 import ix.ginas.models.GinasCommonData;
 import ix.ginas.models.ValidationMessageHolder;
 import ix.ginas.models.serialization.DateDeserializer;
@@ -59,12 +41,7 @@ import ix.ginas.models.serialization.PrincipalDeserializer;
 import ix.ginas.models.serialization.PrincipalSerializer;
 import ix.ginas.models.utils.JSONEntity;
 import ix.utils.Global;
-import ix.utils.Tuple;
-import ix.utils.Util;
 import play.Logger;
-import play.Play;
-
-import static java.util.stream.Collectors.toList;
 
 @Backup
 @JSONEntity(name = "substance", title = "Substance")
@@ -113,11 +90,22 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
         unspecifiedSubstance, 
         concept, 
         reference
+        ;
+
+        @JsonValue
+        public String jsonValue(){
+            return name();
+        }
     }
 
     public enum SubstanceDefinitionType{
         PRIMARY,
         ALTERNATIVE
+        ;
+        @JsonValue
+        public String jsonValue(){
+            return name();
+        }
     }
 
     public enum SubstanceDefinitionLevel{
@@ -198,6 +186,8 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
     @JSONEntity(title = "Names", minItems = 1, isRequired = true)
     @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL)
     @JsonView(BeanViews.Full.class)
+//    @OrderColumn(name = "created")
+    @OrderColumn
     public List<Name> names = new ArrayList<Name>();
 
     // TOOD original schema has superfluous 
@@ -208,6 +198,41 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
     @JsonView(BeanViews.Full.class)
     public List<Code> codes = new ArrayList<Code>();
 
+
+    /**
+     * Returns the codes which are classifications
+     * @return
+     */
+    @JsonIgnore
+    public List<Code> getClassifications(){
+    	
+    	return codes.stream()
+    			    .filter(new java.util.function.Predicate<Code>(){
+    			    	public boolean test(Code c){
+    			    		return c.isClassification();
+    			    	}
+    			    })
+    			    .collect(Collectors.toList());
+    			    
+    }
+    
+    /**
+     * Returns the codes which are identifiers
+     * @return
+     */
+    @JsonIgnore
+    public List<Code> getIdentifiers(){
+
+    	return codes.stream()
+    			    .filter(new java.util.function.Predicate<Code>(){
+    			    	public boolean test(Code c){
+    			    		return !c.isClassification();
+    			    	}
+    			    })
+    			    .collect(Collectors.toList());
+    			    
+    }    
+    
     @OneToOne(cascade = CascadeType.ALL)
     @JsonView(BeanViews.Full.class)
     public Modifications modifications;

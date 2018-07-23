@@ -32,6 +32,7 @@ import ix.core.util.TimeUtil;
 import ix.ginas.models.EmbeddedKeywordList;
 import ix.ginas.models.GinasAccessContainer;
 import ix.ginas.models.GinasAccessReferenceControlled;
+import ix.ginas.models.GinasCommonData;
 import ix.ginas.models.GinasCommonSubData;
 import ix.ginas.models.serialization.GroupDeserializer;
 import ix.ginas.models.serialization.GroupSerializer;
@@ -39,6 +40,7 @@ import ix.ginas.models.serialization.PrincipalDeserializer;
 import ix.ginas.models.serialization.PrincipalSerializer;
 import ix.ginas.models.serialization.ReferenceSetDeserializer;
 import ix.ginas.models.serialization.ReferenceSetSerializer;
+import ix.utils.Util;
 
 @Entity
 @DiscriminatorValue("GSRS")
@@ -222,4 +224,12 @@ public class GinasChemicalStructure extends Structure implements GinasAccessRefe
 	public String toString(){
 		return "Structure Definition";
 	}
+	
+	@JsonIgnore
+	public GinasCommonData asAuditInfo(){
+		return Util.asAuditInfo(this);
+	}	
+	
+	
+	
 }

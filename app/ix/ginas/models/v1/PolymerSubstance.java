@@ -2,16 +2,13 @@ package ix.ginas.models.v1;
 
 import gov.nih.ncgc.chemical.Chemical;
 import ix.core.validator.GinasProcessingMessage;
-import ix.core.models.Group;
 import ix.ginas.models.GinasAccessReferenceControlled;
 import ix.ginas.models.GinasSubstanceDefinitionAccess;
-import ix.ginas.models.v1.Substance.SubstanceClass;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import javax.persistence.*;
 import java.util.List;
-import java.util.Set;
 
 @Entity
 @Inheritance
