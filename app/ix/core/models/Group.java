@@ -5,6 +5,8 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.Set;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import play.db.ebean.Model;
 import javax.persistence.*;
 
@@ -30,8 +32,8 @@ public class Group extends LongBaseModel {
     @JsonView(BeanViews.Full.class)
     public Set<Principal> members = new HashSet<Principal>();
 
-    public Group () {}
-    public Group (String name) {
+   @JsonCreator
+    public Group (@JsonProperty("name") String name) {
         this.name = name;
     }
     

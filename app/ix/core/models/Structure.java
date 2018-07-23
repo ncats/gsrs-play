@@ -167,7 +167,7 @@ public class Structure extends BaseModel implements ForceUpdatableModel{
     public enum NYU {
         No, Yes, Unknown
     }
-
+    
     @Column(length = 128)
     public String digest; // digest checksum of the original structure
     
@@ -212,7 +212,7 @@ public class Structure extends BaseModel implements ForceUpdatableModel{
     
     public Integer ezCenters; // counter of E/Z centers
     public Integer charge; // formal charge
-    @Indexable(name = "Molecular Weight", dranges = { 0, 200, 400, 600, 800, 1000 }, format = "%1$.0f", facet = true)
+    @Indexable(name = "Molecular Weight", dranges = { 0, 200, 400, 600, 800, 1000 }, format = "%1$.0f")
     public Double mwt; // molecular weight
 
     @ManyToMany(cascade = CascadeType.ALL)
@@ -394,6 +394,31 @@ public class Structure extends BaseModel implements ForceUpdatableModel{
     public Chemical toChemical() {
         return toChemical(new ArrayList<>());
     }
+    
+    
+    @JsonIgnore
+    @Transient
+    public String getInChIKey() {
+    	try{
+    		return toChemical().export(Chemical.FORMAT_STDINCHIKEY);
+    	}catch(Exception e){
+    		e.printStackTrace();
+    		return null;
+    	}
+    }
+
+    
+    @JsonIgnore
+    @Transient
+    public String getInChI() {
+    	try{
+    		return toChemical().getSTDInchi();
+    	}catch(Exception e){
+    		e.printStackTrace();
+    		return null;
+    	}
+    }
+    
     @JsonIgnore
     @Transient
     public Chemical toChemical(List<GinasProcessingMessage> messages) {
