@@ -2432,9 +2432,71 @@
 
 			return mol;
 		};
-		scope.getMol = function(){
-			return scope.clean(scope.sketcher.getMolfile());
-		}
+                // Extract information about charges from jsdraw XML.
+                // This is only needed due to a bug in jsdraw where molfiles don't
+                // produce the right charge components when charges are over 3.
+                // Returns null if no charges found.
+                
+                scope.getMChargeFromXML = function(xml){
+                    var rep = function(v, n){
+                        var t="";
+                        for(var i=0;i<n;i++){
+                            t=t+v;
+                        }
+                        return t;
+                    };
+                
+                    var leftPad = function(v, p){
+                        return rep(" ", p-v.length) + v;
+                    };
+                
+                    var charges=_.chain($(xml).find("a[c]"))
+                     .map(function(a){
+                          var ai = $(a).attr("i");
+                          var ac = $(a).attr("c");
+                          var o  = {"i":ai-0, 
+                                  "c":ac-0};
+                          o.toString=function(){
+                                return leftPad(o.i+"",4) + leftPad(o.c+"",4);
+                          };
+                          return o;
+                     })
+                     .value();
+                
+                    if(charges.length>0){
+                        var mCharge = "M  CHG" + leftPad(charges.length + "", 3) 
+                                    + _.chain(charges)
+                                       .map(function(c){return c.toString();})
+                                       .join("");
+                        return mCharge;
+                    }
+                    return null;
+                };
+
+                scope.getMol = function(){
+
+                        var chargeLine = scope.getMChargeFromXML(scope.sketcher.getXml());
+                        var mfile = scope.sketcher.getMolfile();
+
+                        //can't find charge section
+                        if(mfile.indexOf("M  CHG")<0){
+
+                                if(chargeLine!==null){
+                                        var lines = mfile.split("\n");
+                                        for(var i=lines.length-1;i>=3;i--){
+                                                if(lines[i]==="M  END"){
+                                                        var old=lines[i];
+                                                        lines[i]=chargeLine;
+                                                        lines[i+1]=old;
+                                                        mfile=lines.join("\n");
+                                                        break;
+                                                }
+                                        }
+                                }
+                        }
+                        //alert("using:" + mfile);
+                        return scope.clean(mfile);
+                };
 
                 scope.sketcher.options.ondatachange = function () {
                     scope.mol = scope.getMol();
