@@ -187,7 +187,7 @@ public class PojoDiffTest extends AbstractGinasTest{
             System.out.println("js2 class = " + js2.getClass());
 
 
-            System.out.println(JsonDiff.asJson(js1, js2));
+    		System.out.println(JsonDiff.asJson(js1, js2));
     		throw e;
     	}
     }
@@ -272,12 +272,12 @@ public class PojoDiffTest extends AbstractGinasTest{
         jsonMatches(update, prop);
 
     }
-
+    
     private void assertSameContents(Collection<?> a, Collection<?> b){
         assertEquals(new HashSet<>(a), new HashSet<>(b));
     }
-    
-    @Test 
+
+    @Test
     public void EmbedListTest() throws Exception{
     	Substance s = new Substance();
     	Name n = new Name();
@@ -541,7 +541,7 @@ public class PojoDiffTest extends AbstractGinasTest{
 	        prop=getChanged(prop, update);
 	        assertTrue(prop.getParameters().size()==3);
 	        assertEquals(update,prop);
-
+	        
     }
     @Test
     public void addNewToFrontOfListWithoutIDSimple() throws Exception {

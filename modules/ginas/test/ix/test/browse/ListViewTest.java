@@ -62,7 +62,7 @@ public class ListViewTest  extends AbstractGinasServerTest {
 			System.out.println("=====================");
 			String html = api.getTextSearchHTML(theName);
 //			System.out.println(html);
-			
+
 			assertTrue(html.contains("A_AA1:"));
 			assertTrue(html.contains("A_AA2:"));
 			assertTrue(html.contains("A_AA3:"));

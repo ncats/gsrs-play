@@ -1,5 +1,6 @@
 package ix;
 
+import ix.test.server.GinasTestServerFactory;
 import org.junit.Rule;
 
 import ix.test.server.GinasTestServer;
@@ -15,7 +16,7 @@ public abstract class AbstractGinasServerTest extends AbstractGinasTest{
 	 public GinasTestServer ts = createGinasTestServer();
 	 
 	 public GinasTestServer createGinasTestServer(){
-		 return new GinasTestServer();
+		 return GinasTestServerFactory.createNewTestServer();
 	 }
 	 
 }

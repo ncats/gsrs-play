@@ -111,6 +111,7 @@ public class GinasTestServer extends ExternalResource{
                 f = GinasTestServer.class.getDeclaredField(fieldName);
                 f.setAccessible(true);
             }catch(Exception e){
+                e.printStackTrace();
                     f=null;
                 }
         }
@@ -181,17 +182,17 @@ public class GinasTestServer extends ExternalResource{
 
     public static int DEFAULT_PORT = 9005;
 
-     private static final String FAKE_USERNAME_PREFIX="FAKE";
-     private static final String FAKE_PASSWORD_PREFIX="pa$$word";
-     
-	 public static final String FAKE_USER_1="fakeuser1";
-	 public static final String FAKE_USER_2="fakeuser2";
-	 public static final String FAKE_USER_3="fakeuser3";
+    private static final String FAKE_USERNAME_PREFIX="FAKE";
+    private static final String FAKE_PASSWORD_PREFIX="pa$$word";
 
-	 
-	 public static final String FAKE_PASSWORD_1="madeup1";
-	 public static final String FAKE_PASSWORD_2="madeup2";
-	 public static final String FAKE_PASSWORD_3="madeup3";
+    public static final String FAKE_USER_1="fakeuser1";
+    public static final String FAKE_USER_2="fakeuser2";
+    public static final String FAKE_USER_3="fakeuser3";
+
+
+    public static final String FAKE_PASSWORD_1="madeup1";
+    public static final String FAKE_PASSWORD_2="madeup2";
+    public static final String FAKE_PASSWORD_3="madeup3";
 
 
     public static final String FAKE_ADMIN = "fakeAdmin1";
@@ -220,7 +221,7 @@ public class GinasTestServer extends ExternalResource{
 
     private boolean running=false;
 
-   private Model.Finder<Long, Principal> principleFinder;
+    private Model.Finder<Long, Principal> principleFinder;
 
     private TemporaryFolder exportDir = new TemporaryFolder();
 
@@ -245,8 +246,8 @@ public class GinasTestServer extends ExternalResource{
     }
 
     public static class User{
-    	private final String username;
-    	private String password;
+        private final String username;
+        private String password;
 
         public User(String username, String password) {
             Objects.requireNonNull(username);
@@ -452,10 +453,10 @@ public class GinasTestServer extends ExternalResource{
     }
 
     public GinasTestServer(Supplier<Map<String,Object>> sup) {
-    	this(sup.get());
-	}
+        this(sup.get());
+    }
 
-	private void createInitialFakeUsers() {
+    private void createInitialFakeUsers() {
         fakeUserGroup= AdminFactory.groupfinder.get().where().eq("name", "fake").findUnique();
         if(fakeUserGroup ==null){
             fakeUserGroup=new Group("fake");
@@ -533,7 +534,7 @@ public class GinasTestServer extends ExternalResource{
         return session;
     }
     public RestSession newRestSession(User user, RestSession.AUTH_TYPE type){
-        RestSession session= new RestSession(this, user, port, type);
+        RestSession session= new RestSession(this,user, port, type);
         sessions.add(session);
         return session;
     }
@@ -574,7 +575,7 @@ public class GinasTestServer extends ExternalResource{
         return createUser(username, password,list);
     }
     public User createUser(String username, String password, List<Role> roles){
-    	if(roles.isEmpty()){
+        if(roles.isEmpty()){
             throw new IllegalArgumentException("roles can not be empty");
         }
 
@@ -582,8 +583,8 @@ public class GinasTestServer extends ExternalResource{
         if(existingUser !=null){
             throw new IllegalArgumentException("user already exists: " + username);
         }
-    	UserProfile up=UserProfileFactory.addActiveUser(username, password, roles, Collections.singletonList(fakeUserGroup));
-    	return new User(up.getIdentifier(), password);
+        UserProfile up=UserProfileFactory.addActiveUser(username, password, roles, Collections.singletonList(fakeUserGroup));
+        return new User(up.getIdentifier(), password);
     }
 
     public boolean isOracleDB(){
@@ -617,6 +618,20 @@ public class GinasTestServer extends ExternalResource{
 
 
 
+    /*
+    public DataSource getDataSource() {
+        Config confFile = ConfigUtil.getDefault().getConfig();
+        String source = "default";
+        Config dbconf = confFile.getConfig("db");
+        Config db = dbconf.getConfig(source);
+        BoneCPDataSource ds = new BoneCPDataSource();
+        ds.setJdbcUrl(db.getString("url"));
+        ds.setUsername(db.getString("user"));
+        ds.setPassword(db.getString("password"));
+        return ds;
+    }
+    */
+
     @Override
     protected void before() throws Throwable {
         testSpecificConfig = ConfigFactory.empty();
@@ -628,13 +643,13 @@ public class GinasTestServer extends ExternalResource{
                                                 .withFallback(defaultConfig)
                                                 .resolve();
 
-       if(isOracleDB()){
-           //System.out.println("in the Oracle db loop");
-           dropOracleDb();
-       }else { //h2 for now
-           //System.out.println("in the h2 db loop");
-           deleteH2Db();
-       }
+        if(isOracleDB()){
+            //System.out.println("in the Oracle db loop");
+            dropOracleDb();
+        }else { //h2 for now
+            //System.out.println("in the h2 db loop");
+            deleteH2Db();
+        }
 
         testSpecificConfigOperations = CompletableFuture.completedFuture(testSpecificConfig);
 
@@ -658,8 +673,8 @@ public class GinasTestServer extends ExternalResource{
 //        start();
 //        testSpecificAdditionalConfiguration.remove("ix.cache.clearpersist");
 //
-        
-   }
+
+    }
 
     /**
      * Override this method to add any additional setup as part
@@ -723,8 +738,8 @@ public class GinasTestServer extends ExternalResource{
 
 
     private void initializeControllers() {
-    	CachedSupplier.resetAllCaches();
-    	CachedSup.resetAllCaches();
+        CachedSupplier.resetAllCaches();
+        CachedSup.resetAllCaches();
     }
 
     private void deleteH2Db() throws Throwable {
@@ -739,13 +754,13 @@ public class GinasTestServer extends ExternalResource{
     }
 
     private static Supplier<Connection> createConnection(DataSource ds){
-       return () -> {
-           try {
-               return ds.getConnection();
-           } catch (SQLException e) {
-               throw new RuntimeException(e);
-           }
-       };
+        return () -> {
+            try {
+                return ds.getConnection();
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+        };
     }
 
 
@@ -786,11 +801,11 @@ public class GinasTestServer extends ExternalResource{
                 String tName = tableName.get(i).toString();
                 String query = "drop table " + tName + " cascade constraints purge";
                 //System.out.println("query:" + query);
-               try {
-                   stm.executeQuery(query);
-               }catch(Exception e){
-                  System.out.println(e.getMessage());
-               }
+                try {
+                    stm.executeQuery(query);
+                }catch(Exception e){
+                    System.out.println(e.getMessage());
+                }
             }
 
             PreparedStatement ps1 = con.prepareStatement("select SEQUENCE_NAME from dba_sequences where SEQUENCE_OWNER = '" + datasource.getUsername() +"'");
@@ -812,13 +827,13 @@ public class GinasTestServer extends ExternalResource{
             }
 
             dropExtraTables(() -> con);
-           System.out.println("CREATE TABLES XXXXXXXXXXXXXXXXXX");
-           for(int i = 0; i<ups.length; i++)
+            System.out.println("CREATE TABLES XXXXXXXXXXXXXXXXXX");
+            for(int i = 0; i<ups.length; i++)
             {
                 try{
-                   if(ups[i] != null && !ups[i].trim().equals("")) {
-                       stm.executeQuery(ups[i]);
-                   }
+                    if(ups[i] != null && !ups[i].trim().equals("")) {
+                        stm.executeQuery(ups[i]);
+                    }
                 }catch(Exception e){
                     System.out.println("query - " + ups[i] +" : " + e.getMessage());
                 }
@@ -865,10 +880,8 @@ public class GinasTestServer extends ExternalResource{
         if(running){
             return;
         }
-        start(
-//                defaultConfig
-                testSpecificConfigOperations.join()
-//                        .withFallback(acrossTestConfigOperations.join())
+
+        start(testSpecificConfigOperations.join()
 
                 .resolve());
     }
@@ -946,39 +959,39 @@ public class GinasTestServer extends ExternalResource{
             throw new RuntimeException(ex);
         }
     }
-    
+
     public static class ExpandedMap{
-    	Map<String,Object> unflattened = new HashMap<String,Object>();
-    	public ExpandedMap put(String key, Object value){
-    		String[] path=key.split("[.]");
-    		Object val=value;
-    		for(int i=path.length-1;i>=0;i--){
-    			val=Util.toMap(path[i], val);
-    		}
-    		if(val instanceof Map){
-    			mixIn(unflattened, (Map<String,Object>)val);
-    		}
-    		return this;
-    	}
-    	
-    	private static void mixIn(Map<String,Object> m1, Map<String,Object> m2){
-    		Set<String> commonKeys= new HashSet<String>(m1.keySet());
-    		commonKeys.retainAll(m2.keySet());
-    		
-    		for(String k:m2.keySet()){
-    			if(!commonKeys.contains(k)){
-    				m1.put(k, m2.get(k));
-    			}
-    		}
-    		for(String k:commonKeys){
-    			mixIn((Map)m1.get(k), (Map)m2.get(k)); //will fail if one isn't a map
-    		}
-    	}
-    	public Map<String,Object> build(){
-    		return this.unflattened;
-    	}
+        Map<String,Object> unflattened = new HashMap<String,Object>();
+        public ExpandedMap put(String key, Object value){
+            String[] path=key.split("[.]");
+            Object val=value;
+            for(int i=path.length-1;i>=0;i--){
+                val=Util.toMap(path[i], val);
+            }
+            if(val instanceof Map){
+                mixIn(unflattened, (Map<String,Object>)val);
+            }
+            return this;
+        }
+
+        private static void mixIn(Map<String,Object> m1, Map<String,Object> m2){
+            Set<String> commonKeys= new HashSet<String>(m1.keySet());
+            commonKeys.retainAll(m2.keySet());
+
+            for(String k:m2.keySet()){
+                if(!commonKeys.contains(k)){
+                    m1.put(k, m2.get(k));
+                }
+            }
+            for(String k:commonKeys){
+                mixIn((Map)m1.get(k), (Map)m2.get(k)); //will fail if one isn't a map
+            }
+        }
+        public Map<String,Object> build(){
+            return this.unflattened;
+        }
     }
-    
+
 
 
     /**
@@ -1110,7 +1123,7 @@ public class GinasTestServer extends ExternalResource{
      * @param confData a map of key-value pairs to add to the config.
      * @return this
      */
-    public GinasTestServer modifyConfig(Map<String, Object> confData) {
+    public GinasTestServer modifyConfig(Map<String, Object> confData){
 
         return modifyConfig(confData, ConfigOptions.THIS_TEST_ONLY);
     }
@@ -1180,7 +1193,7 @@ public class GinasTestServer extends ExternalResource{
      * @see #stop(boolean)
      */
     public void stop() {
-       stop(false);
+        stop(false);
     }
 
     public File getStorageRootDir(){

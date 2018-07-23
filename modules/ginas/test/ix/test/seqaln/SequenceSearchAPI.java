@@ -41,6 +41,7 @@ public class SequenceSearchAPI extends AbstractGinasTest{
     }
 
         public List<SearchResult> search(String querySequence, double percentIdentity, boolean proteins){
+
         try{
             List<SearchResult> retList = new ArrayList<>();
             List<NameValuePair> params = new ArrayList<>();
@@ -59,7 +60,8 @@ public class SequenceSearchAPI extends AbstractGinasTest{
 
             HtmlPage page = session.submit(request);
 
-            List<HtmlAnchor> results =  page.getByXPath("//div[@class='row']/div/h3/a");
+//            System.out.println(page.asXml());
+            List<HtmlAnchor> results =  page.getByXPath("//div[@class='row']/div/h4[@class='title-name']/a");
             List<HtmlPreformattedText> identities = page.getByXPath("//div[@class='row']/div/pre");
 
             Iterator<HtmlAnchor> anchorIter = results.iterator();
@@ -69,7 +71,8 @@ public class SequenceSearchAPI extends AbstractGinasTest{
                 HtmlAnchor anchor = anchorIter.next();
                 String uuid = parsePartialUuidFrom(anchor);
                 String name = anchor.getTextContent();
-
+//
+//                System.out.println("found " + name);
                 //TODO can we assume the order is the same as the order of the previous list?
                 float identity = Float.NaN;
                 if(identitiesIter.hasNext()) {

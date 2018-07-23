@@ -9,6 +9,7 @@ import ix.test.server.SubstanceAPI;
 import org.junit.Test;
 
 import java.util.List;
+
 import static org.junit.Assert.*;
 /**
  * Created by katzelda on 6/30/17.
@@ -44,3 +45,4 @@ public class IndexedSequenceSearchTest extends AbstractGinasServerTest{
 
 
 }
+

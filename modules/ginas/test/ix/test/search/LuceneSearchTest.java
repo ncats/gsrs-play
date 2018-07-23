@@ -3,6 +3,7 @@ package ix.test.search;
 import com.fasterxml.jackson.databind.JsonNode;
 import ix.AbstractGinasServerTest;
 import ix.core.util.ExpectFailureChecker.ExpectedToFail;
+import ix.core.util.RunOnly;
 import ix.core.util.TimeTraveller;
 import ix.ginas.models.v1.Substance;
 import ix.ginas.modelBuilders.SubstanceBuilder;
@@ -23,6 +24,8 @@ import java.util.stream.IntStream;
 
 import static ix.test.SubstanceJsonUtil.ensurePass;
 import static org.junit.Assert.*;
+import com.gargoylesoftware.htmlunit.FailingHttpStatusCodeException;
+
 
 public class LuceneSearchTest extends AbstractGinasServerTest {
 
@@ -269,9 +272,9 @@ public class LuceneSearchTest extends AbstractGinasServerTest {
 			assertTrue(api.getSuggestPrefixJson(pre1).at("/Name").isMissingNode());
 	}
 
-
 	@Test
 	public void ensureSuggestFieldDisappearsAfterNameRemovedAndNewSubstanceAddedAndReindexed() throws Exception {
+		try {
 			String pre1 = "IBUP";
 			String pre2 = "ASP";
 			String ib2 = "IBUPROFEN";
@@ -294,8 +297,8 @@ public class LuceneSearchTest extends AbstractGinasServerTest {
 									.generateNewUUID()
 									.buildJsonAnd(s -> ensurePass(api.submitSubstance(s)));
 
-			
-			
+
+
 			reindex();
 
 			assertTrue(api.getSuggestPrefixJson(pre1).at("/Name").isMissingNode());
@@ -303,11 +306,17 @@ public class LuceneSearchTest extends AbstractGinasServerTest {
 			JsonNode suggestLater = api.getSuggestPrefixJson(pre2);
 
 			SearchResult r = searcher.nameSearch(name2);
+
 			assertEquals("Name search should return 1 result", 1, r.getUuids().size());
+
 			
 			assertEquals(1, suggestLater.at("/Name").size());
 			assertEquals(name2, suggestLater.at("/Name/0/key").asText());
 
+		}catch(FailingHttpStatusCodeException e){
+			System.out.println(e.getResponse().getContentAsString());
+			throw e;
+		}
 	}
 
 	@Test

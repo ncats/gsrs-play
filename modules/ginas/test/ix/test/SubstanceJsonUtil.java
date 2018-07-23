@@ -18,7 +18,7 @@ public final class SubstanceJsonUtil {
 	private SubstanceJsonUtil(){
 		//can not instantiate
 	}
-
+	
 	public static void assertEquals(JsonNode a, JsonNode b, Comparator<JsonNode> comparator){
 
 		if(!equals(a,b, comparator)){
@@ -106,7 +106,7 @@ public final class SubstanceJsonUtil {
 
 
 	}
-	
+
 	/**
 	 * Normalizes a substance JSON to be as expected for a typical submission.
 	 * Specifically, removing approval information, changing status to pending,
@@ -169,7 +169,7 @@ public final class SubstanceJsonUtil {
 	public static void ensurePass(WSResponse response){
 		int status = response.getStatus();
 		try{
-			assertTrue("Expected pass code, got:" + status, status == 200 || status == 201);
+			assertTrue("Expected pass code, got:" + status +" message = " + response.getStatusText(), status == 200 || status == 201);
 		}catch(Throwable e){
 			System.err.println(response.getBody());
 			throw e;

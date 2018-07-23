@@ -42,7 +42,11 @@ public class ChangesBuilder {
         map.put(change.getKey(), change);
         return this;
     }
-    
+
+    public ChangesBuilder deleteFromMap(String key){
+        map.remove(key);
+        return this;
+    }
     
     public ChangesBuilder added(String key, String value){
     	return change(Change.add(key, value));
@@ -63,7 +67,7 @@ public class ChangesBuilder {
         switch(type){
             case ADDED: 
             	currentAfter=after; 
-            	key2=JsonUtil.normalizePath("add", key, before);
+//            	key2=JsonUtil.normalizePath("add", key, before);
             	break;
             case REMOVED: currentBefore = before; break;
             case REPLACED:

@@ -5,7 +5,10 @@ import static ix.test.SubstanceJsonUtil.ensurePass;
 import static org.junit.Assert.*;
 
 import java.io.File;
+import java.util.Collections;
 
+import ix.core.util.RunOnly;
+import ix.ginas.modelBuilders.SubstanceBuilder;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -345,9 +348,9 @@ public class RelationshipInvertTest extends AbstractGinasServerTest {
     }
     
     
-    @Test  
+    @Test
     public void testAddRelationshipAfterAddingEachSubstanceThenRemovingInvertedRelationshipShouldFail() throws Exception {
-    	
+
 	        //submit primary
 	        JsonNode js = SubstanceJsonUtil.prepareUnapprovedPublic(JsonUtil.parseJsonFile(invrelate1));
 	        JsonNode newRelate = js.at("/relationships/0");
@@ -389,8 +392,65 @@ public class RelationshipInvertTest extends AbstractGinasServerTest {
 			.remove("/relationships/0")
 			.ignoreMissing().build();
 	        
-	        ensureFailure(api.updateSubstance(updatedA));
-    	
+	        ensurePass(api.updateSubstance(updatedA));
+
+        assertEquals(Collections.emptyList(),  SubstanceBuilder.from(api.fetchSubstanceJsonByUuid(uuid)).build().relationships);
+        assertEquals("substance with uuid " + uuidA, Collections.emptyList(),  SubstanceBuilder.from(api.fetchSubstanceJsonByUuid(uuidA)).build().relationships);
+
+
+    }
+
+    @Test
+    public void testAddRelationshipAfterAddingEachSubstanceThenRemovingFromPrimaryRelationshipShouldPass() throws Exception {
+
+        //submit primary
+        JsonNode js = SubstanceJsonUtil.prepareUnapprovedPublic(JsonUtil.parseJsonFile(invrelate1));
+        JsonNode newRelate = js.at("/relationships/0");
+        js=new JsonUtil.JsonNodeBuilder(js)
+                .remove("/relationships/1")
+                .remove("/relationships/0")
+                .ignoreMissing()
+                .build();
+
+        String uuid = js.get("uuid").asText();
+        SubstanceAPI.ValidationResponse validationResult = api.validateSubstance(js);
+        assertTrue(validationResult.isValid());
+        ensurePass(api.submitSubstance(js));
+        js =api.fetchSubstanceJsonByUuid(uuid);
+
+
+        //submit alternative
+        JsonNode jsA = SubstanceJsonUtil.prepareUnapprovedPublic(JsonUtil.parseJsonFile(invrelate2));
+        String uuidA = jsA.get("uuid").asText();
+        SubstanceAPI.ValidationResponse validationResultA = api.validateSubstance(js);
+        assertTrue(validationResultA.isValid());
+        ensurePass(api.submitSubstance(jsA));
+
+        //add relationship
+        JsonNode updated=new JsonUtil.JsonNodeBuilder(js)
+                .add("/relationships/-", newRelate)
+                .ignoreMissing().build();
+        ensurePass(api.updateSubstance(updated));
+        String type1=SubstanceJsonUtil.getTypeOnFirstRelationship(updated);
+        String[] parts=type1.split("->");
+
+        //check inverse relationship with primary
+        JsonNode fetchedA = api.fetchSubstanceJsonByUuid(uuid);
+        String refUuidA = SubstanceJsonUtil.getRefUuidOnFirstRelationship(fetchedA);
+        assertTrue(refUuidA.equals(uuidA));
+        assertEquals(parts[0] + "->" + parts[1],SubstanceJsonUtil.getTypeOnFirstRelationship(fetchedA));
+
+        JsonNode updatedA=new JsonUtil.JsonNodeBuilder(fetchedA)
+                .remove("/relationships/0")
+                .ignoreMissing().build();
+
+        ensurePass(api.updateSubstance(updatedA));
+
+
+
+
+        assertEquals(Collections.emptyList(),  SubstanceBuilder.from(api.fetchSubstanceJsonByUuid(uuid)).build().relationships);
+        assertEquals(Collections.emptyList(),  SubstanceBuilder.from(api.fetchSubstanceJsonByUuid(uuidA)).build().relationships);
     }
     
     @Test   

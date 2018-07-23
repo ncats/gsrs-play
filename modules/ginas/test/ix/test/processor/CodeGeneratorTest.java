@@ -40,10 +40,10 @@ public class CodeGeneratorTest extends AbstractGinasServerTest{
 
 				/*ts.addEntityProcessor(GinasTestServer.ConfigOptions.ALL_TESTS,
 				Substance.class, UniqueCodeGenerator.class, "{\n" +
-				"               \"codesystem\":\"BDNUM\",\n" +
-						"                       \"suffix\":\"AB\",\n" +
-						"                       \"length\":10,\n" +
-						"                       \"padding\":true\n" +
+					"               \"codesystem\":\"BDNUM\",\n" + 
+					"                       \"suffix\":\"AB\",\n" + 
+					"                       \"length\":10,\n" + 
+					"                       \"padding\":true\n" + 
 						"               }");*/
 
 
@@ -69,7 +69,7 @@ public class CodeGeneratorTest extends AbstractGinasServerTest{
 //
 //			return hm;
 //		});
-
+			
 		return ts;
 	}
 
@@ -94,7 +94,7 @@ public class CodeGeneratorTest extends AbstractGinasServerTest{
 						ensurePass(api.submitSubstance(jsn));
 						String code=api.fetchSubstanceJsonByUuid(jsn.at("/uuid").asText())
 								.at("/codes/0/code").asText();
-//						System.out.println("AND ..." + code);
+						//System.out.println("AND ..." + code);
 						assertTrue(!codes.contains(code));
 						codes.add(code);
 					}

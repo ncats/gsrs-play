@@ -190,10 +190,6 @@ public class RestSubstanceSearcher implements SubstanceSearcher{
             subUUIDs.add(s.get("uuid").asText());
         });
 
-//
-//        System.out.println("facets = " + facets);
-//        System.out.println("facetCounts = " + facetCounts);
-//        System.out.println("subUUIDs = " + subUUIDs);
 
         SearchResult sr= new SearchResult.Builder()
                 .searchKey(key)
@@ -275,10 +271,7 @@ public class RestSubstanceSearcher implements SubstanceSearcher{
 
         //TODO: move to new interface as well
         public Integer getTotal() {
-            Integer totalInt =  firstPage.at("/total").asInt();
-//            System.out.println("totalInt = " + totalInt);
-//            System.out.println("uuids count = "+ getUuids().size());
-            return totalInt;
+            return firstPage.at("/total").asInt();
         }
         
         //TODO: move to new interface also
@@ -305,7 +298,6 @@ public class RestSubstanceSearcher implements SubstanceSearcher{
         public FacetResult getFilteredFacet(String filter);
         
         default Integer getFacetCountForValue(String value){
-//            System.out.println("facet map = " + getFacetMap());
             return this.getFacetMap().get(value);
         }
         
@@ -328,17 +320,17 @@ public class RestSubstanceSearcher implements SubstanceSearcher{
 //                System.out.println("FACET RESPONSE IS " + facetResponse);
                 return extractValues(facetResponse.at("/values"));
             }else {
-                JsonNode facetWrap = facetResponse;
-                Set<Tuple<String, Integer>> values = new HashSet<>();
-                while (true) {
-                    values.addAll(extractValues(facetWrap.at("/content")));
-                    JsonNode nextPage = facetWrap.at("/nextPageUri");
-                    if (nextPage == null || nextPage.isMissingNode()) {
-                        break;
-                    }
-                    facetWrap = APIFacetResult.this.api.getSession().getAsJson(nextPage.asText());
+            JsonNode facetWrap=facetResponse;
+            Set<Tuple<String,Integer>> values = new HashSet<>();
+            while(true){
+                values.addAll(extractValues(facetWrap.at("/content")));
+                JsonNode nextPage = facetWrap.at("/nextPageUri");
+                if(nextPage==null || nextPage.isMissingNode()){
+                    break;
                 }
-                return values;
+                facetWrap=APIFacetResult.this.api.getSession().getAsJson(nextPage.asText());
+            }
+            return values;
             }
         });
         
@@ -377,7 +369,7 @@ public class RestSubstanceSearcher implements SubstanceSearcher{
                             return api.getSession().getAsJson(url);
                         }
                     })
-                    .get();
+                                .get();
 //                                .map(f->f.at("/_self").asText())
 //                                .map(u -> { int pos = u.indexOf("/@facets?=&");
 //                                            if(pos ==-1){
@@ -388,7 +380,7 @@ public class RestSubstanceSearcher implements SubstanceSearcher{
 //                                })
 //                                .map(u->{ System.out.println("url is \""+u+"\"");  return api.getSession().getAsJson(u);})
 //                                .get();
-            return new APIFacetResult(api, jsn);      
+            return new APIFacetResult(api, jsn);
         }
 
         @Override
@@ -497,12 +489,10 @@ public class RestSubstanceSearcher implements SubstanceSearcher{
             if(q!=null){
                 req=req.setQueryParameter("q", q);
             }
-//            System.out.println("req query paras = " + req.getQueryParameters());
-
+            
             JsonNode jsn = req.get()
                     .get(REST_TIMEOUT)
                     .asJson();
-//            System.out.println("returned json = "+ jsn);
             return searcher.resultsFromFirstResultNode(jsn, ""); //No search result key for text from rest
         }
 

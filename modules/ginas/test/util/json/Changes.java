@@ -2,6 +2,8 @@ package util.json;
 
 
 
+import org.scalatest.Entry;
+
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -56,6 +58,7 @@ public class Changes {
 
     }
 
+
     @Override
     public int hashCode() {
         return changes.hashCode();
@@ -75,20 +78,24 @@ public class Changes {
 
     @Override
     public String toString() {
-        return "Changes{" +
-                "changes=" + changes +
-                '}';
+        StringBuilder builder = new StringBuilder(2000);
+        builder.append("Changes{\n");
+        for(Map.Entry<String, Change> c : changes.entrySet()){
+            builder.append("\t").append(c).append('\n');
+        }
+        return builder.append("}").toString();
+
     }
 
-    public Changes missing(Changes actual) {
-        Set<Change> copy = new HashSet<>(actual.changes.values());
-        copy.removeAll(this.changes.values());
+    public Changes missingFrom(Changes other) {
+        Set<Change> copy = new HashSet<>(this.changes.values());
+        copy.removeAll(other.changes.values());
 
         return toChanges(copy);
     }
     
     public Changes extra(Changes actual) {
-       return actual.missing(this);
+       return actual.missingFrom(this);
     }
 
     
@@ -126,7 +133,7 @@ public class Changes {
     
     public void printDifferences(Changes other){
     	System.out.println("Missing:");
-    	System.out.println(this.missing(other));
+    	System.out.println(this.missingFrom(other));
     	System.out.println("Extra:");
     	System.out.println(this.extra(other));
     }

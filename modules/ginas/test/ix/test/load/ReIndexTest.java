@@ -36,7 +36,9 @@ public class ReIndexTest extends AbstractLoadDataSetTest{
 
             File home = ConfigUtil.getDefault().getValueAsFile("ix.home");
             //Delete the ginas.ix/text, ginas.ix/sequence and ginas.ix/structure folders
-            TestUtil.tryToDeleteRecursively(new File(home, "text"));
+
+            //TestUtil.tryToDeleteRecursively(new File(home, "text"));
+            TestUtil.tryToDeleteRecursively(ts.getStorageRootDir());
             TestUtil.tryToDeleteRecursively(new File(home, "sequence"));
             TestUtil.tryToDeleteRecursively(new File(home, "structure"));
 

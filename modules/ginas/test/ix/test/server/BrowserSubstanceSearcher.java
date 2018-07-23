@@ -348,7 +348,7 @@ public class BrowserSubstanceSearcher implements SubstanceSearcher {
 
 //                    System.out.println("counts = " + counts);
                     map.put(facetName, counts);
-                });
+    		});
 
         for(Map.Entry<String, Map<String, Integer>> next : map.entrySet()){
             if(!next.getValue().isEmpty()){
@@ -391,13 +391,12 @@ public class BrowserSubstanceSearcher implements SubstanceSearcher {
     private Set<String> getSpecialMatchesFrom(HtmlPage page){
         Set<String> set = new LinkedHashSet<>();
         DomNode dn = page.querySelector(".specialmatches");
-        
         if(dn!=null){
             set.addAll(getSubstanceMatchesIn(dn));
         }
         return set;
     }
-    
+
     public static Set<String> getStructureImagesFrom(HtmlPage page){
         Set<String> substances = page.querySelectorAll("img[src*=\"ginas/app/img\"]")
         .stream()
@@ -423,7 +422,7 @@ public class BrowserSubstanceSearcher implements SubstanceSearcher {
         
         return substances;
     }
-    
+
     public class WebExportRequest{
     	private String format;
     	private String key;
@@ -528,8 +527,8 @@ public class BrowserSubstanceSearcher implements SubstanceSearcher {
     		return getMeta().at("/isReady").asBoolean();
     	}
     }
-    
-    
+
+
     public WebExportRequest getExport(String format, String key){
     	return new WebExportRequest(key,format,BrowserSubstanceSearcher.this.session.timeout);
     }
