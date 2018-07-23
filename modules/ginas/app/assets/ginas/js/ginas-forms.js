@@ -1415,7 +1415,7 @@
 
                 scope.deleteUpload = function(obj){
                        
-                       if(confirm("Are you sure you want to remove this documet?")){
+                       if(confirm("Are you sure you want to remove this document?")){
                                obj.uploadedFile=null;
                        }
                 };
