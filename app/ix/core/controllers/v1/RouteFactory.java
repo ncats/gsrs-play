@@ -465,6 +465,22 @@ public class RouteFactory extends Controller {
             return _apiInternalServerError(ex);
         }
     }
+    
+    @Dynamic(value = IxDynamicResourceHandler.CAN_UPDATE, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
+    public static Result editsFlex (String context, String someid) {
+        try {
+        	InstantiatedNamedResource nr = _registry.get()
+                    .getResource(context);
+        	Object id = nr.resolveID(someid).orElse(null);
+        	
+            return _registry.get()
+                    .getResource(context)
+                    .edits(id);
+        }catch (Exception ex) {
+            Logger.trace("["+context+"]", ex);
+            return _apiInternalServerError (ex);
+        }
+    }
 
     public static Result getFlex (String context, String someid, String expand) {
         try {

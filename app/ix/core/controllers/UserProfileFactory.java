@@ -69,6 +69,7 @@ public class UserProfileFactory extends EntityFactory {
 	        			applyGroups.add(g);
 	        		}catch(Exception e){
 	        			System.err.println("Error adding group");
+	        			e.printStackTrace();
 	        		}
 	        	}
 	        }
