@@ -2047,6 +2047,40 @@
             }
         };
     });
+     ginasForms.directive('diversePlantForm', function (CVFields) {
+         return {
+             restrict: 'E',
+             replace: true,
+             scope: {
+                 parent: '='
+             },
+             templateUrl: baseurl + "assets/templates/forms/diverse-plant-form.html",
+             link: function (scope) {
+             }
+         };
+     });
+ 
+     ginasForms.directive('isolateForm', [function () {
+         return {
+             restrict: 'A',
+             require: '?form',
+             link: function link(scope, element, iAttrs, formController) {
+ 
+                 if (!formController) {
+                     return;
+                 }
+ 
+                 // Remove this form from parent controller
+                 formController.$$parentForm.$removeControl(formController);
+ 
+                 var _handler = formController.$setValidity;
+                 formController.$setValidity = function (validationErrorKey, isValid, cntrl) {
+                     _handler(validationErrorKey, isValid, cntrl);
+                     formController.$$parentForm.$setValidity(validationErrorKey, true, this);
+                 }
+             }
+         };
+     }]);
 
 
 })();
