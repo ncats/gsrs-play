@@ -1,7 +1,7 @@
 package ix.ginas.exporters;
 
 import gov.nih.ncgc.chemical.Chemical;
-import ix.core.GinasProcessingMessage;
+import ix.core.validator.GinasProcessingMessage;
 import ix.ginas.models.v1.Code;
 import ix.ginas.models.v1.Name;
 import ix.ginas.models.v1.Substance;

@@ -1,6 +1,6 @@
 package ix.ginas.models;
 
-import ix.core.GinasProcessingMessage;
+import ix.core.validator.GinasProcessingMessage;
 import ix.core.models.Group;
 
 import java.util.Collection;

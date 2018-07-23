@@ -41,8 +41,6 @@ public class LoadDefaultUsersInitializer implements Initializer {
                             Logger.error(username + "failed");
                             e.printStackTrace();
                         }
-                    } else {
-
                     }
                 }
             }

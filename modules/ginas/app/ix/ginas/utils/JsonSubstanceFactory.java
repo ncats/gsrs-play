@@ -6,7 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import gov.nih.ncgc.chemical.Chemical;
 import gov.nih.ncgc.chemical.ChemicalFactory;
-import ix.core.GinasProcessingMessage;
+import ix.core.validator.GinasProcessingMessage;
 import ix.core.models.Structure;
 import ix.ginas.models.v1.*;
 

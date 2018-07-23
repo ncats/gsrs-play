@@ -1,5 +1,6 @@
 package ix.ginas.utils;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -9,10 +10,12 @@ import chemaxon.struc.MolAtom;
 import chemaxon.struc.Molecule;
 import gov.nih.ncgc.chemical.Chemical;
 import gov.nih.ncgc.jchemical.Jchemical;
-import ix.core.GinasProcessingMessage;
+import ix.core.validator.GinasProcessingMessage;
 import ix.core.models.Structure;
 import ix.core.models.Structure.Optical;
 import ix.core.models.Structure.Stereo;
+import ix.core.validator.ValidatorCallback;
+import ix.utils.FortranLikeParserHelper.LineParser;
 
 
 //All of the code below should be changed to use
@@ -20,7 +23,25 @@ import ix.core.models.Structure.Stereo;
 
 public class ChemUtils {
 
+	private static LineParser MOLFILE_COUNT_LINE_PARSER=new LineParser("aaabbblllfffcccsssxxxrrrpppiiimmmvvvvvv");
 	private static Pattern NEW_LINE_PATTERN = Pattern.compile("\n");
+
+    /**
+     * Checks for basic valence problems on structure, adding warnings to the
+     * supplied list
+     *
+     * @param newstr the new Structure to check; can not be null.
+     * @param callback the validation callback to add the warning messages to.
+     */
+    public static void checkValance(Structure newstr, ValidatorCallback callback){
+        List<GinasProcessingMessage> list = new ArrayList<>();
+        //we can get away with delegating because there are no
+        //apply changes invocations
+        checkValance(newstr, list);
+        for(GinasProcessingMessage m : list){
+            callback.addMessage(m);
+        }
+    }
 	/**
 	 * Checks for basic valence problems on structure, adding warnings to the
 	 * supplied list
@@ -57,11 +78,24 @@ public class ChemUtils {
 			gpm.add(mes);
 		}
 	}
-	
+	/**
+	 * Checks for basic valence problems on structure, adding warnings to the
+	 * supplied list
+	 * 
+     * @param newstr
+     * @param callback
+     */
+    public static void fixChiralFlag(Structure newstr,  ValidatorCallback callback) {
+        List<GinasProcessingMessage> gpm = new ArrayList<>();
+        fixChiralFlag(newstr, gpm);
+        for(GinasProcessingMessage m : gpm){
+            callback.addMessage(m);
+        }
+    }
 	/**
 	 * Checks for basic chiral flag problems on structure, adding warnings to the
 	 * supplied list, and fix the flag.
-	 * 
+	 *
 	 * @param newstr
 	 * @param gpm
 	 */
@@ -100,8 +134,9 @@ public class ChemUtils {
 			}else{
 				gpm.add(GinasProcessingMessage.INFO_MESSAGE("Removing chiral flag based on structure information"));
 			}
-			newstr.molfile=Arrays.stream(lines).collect(Collectors.joining("\n"));
 		}
+		lines[3]=MOLFILE_COUNT_LINE_PARSER.standardize(lines[3]);
+			newstr.molfile=Arrays.stream(lines).collect(Collectors.joining("\n"));
 		
 	}
 

@@ -1,13 +1,10 @@
 package ix.ginas.controllers.v1;
 
 import java.util.*;
-import java.util.stream.Collectors;
 import java.io.*;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -15,14 +12,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.deser.DeserializationProblemHandler;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import ix.core.DefaultValidator;
-import ix.core.models.Payload;
-import ix.core.plugins.PayloadPlugin;
-import ix.ginas.utils.GinasProcessingStrategy;
 import play.*;
 import play.mvc.Http.MultipartFormData;
-import play.data.DynamicForm;
-import play.data.Form;
 import play.db.ebean.*;
 import play.mvc.*;
 import ix.ginas.models.v1.*;

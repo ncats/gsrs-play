@@ -1145,12 +1145,34 @@ public class PeptideInterpreter {
 		List<DisulfideBond> disulfideLinks = new ArrayList<DisulfideBond>();
 		Map<String,List<Map>> modifications= new HashMap<String,List<Map>>();
 		
+
+
+		public List<Subunit> getSubunits() {
+			return subunits;
+		}
+
+		public List<DisulfideBond> getDisulfideLinks() {
+			return disulfideLinks;
+		}
+
+		public Map<String, List<Map>> getModifications() {
+			return modifications;
+		}
+
 		public class Subunit{
 			int subunitIndex;
 			String sequence;
 			public Subunit(int subIndex,String seq){
 				this.subunitIndex=subIndex;
 				this.sequence=seq;
+			}
+
+			public int getSubunitIndex() {
+				return subunitIndex;
+			}
+
+			public String getSequence() {
+				return sequence;
 			}
 		}
 		public class DisulfideBond{

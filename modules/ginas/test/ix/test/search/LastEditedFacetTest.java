@@ -247,7 +247,6 @@ public class LastEditedFacetTest extends AbstractLoadDataSetTest {
         assertTrue(results.numberOfResults() > 0);
         assertTrue(!results.getAllFacets().isEmpty());
 
-        System.out.println("result facets = " + results.getAllFacets());
         lastEditMap = results.getFacet("Last Edited");
 
         int beforeCount = lastEditMap.get("Today");

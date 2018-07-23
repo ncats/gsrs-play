@@ -2,13 +2,14 @@ package ix.ginas.utils;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import ix.core.GinasProcessingMessage;
+import ix.core.validator.GinasProcessingMessage;
 import ix.core.models.Group;
 import ix.ginas.models.v1.Substance;
 
-public abstract class GinasProcessingStrategy {
+public abstract class GinasProcessingStrategy implements Predicate<GinasProcessingMessage>{
 	public static final String FAILED = "FAILED";
 	public static final String WARNING = "WARNING";
 	public static final String FAIL_REASON = "FAIL_REASON";
@@ -18,6 +19,10 @@ public abstract class GinasProcessingStrategy {
 	
 	public abstract void processMessage(GinasProcessingMessage gpm);
 	
+	public boolean test(GinasProcessingMessage gpm){
+		processMessage(gpm);
+		return gpm.actionType ==GinasProcessingMessage.ACTION_TYPE.APPLY_CHANGE;
+	}
 	public void addAndProcess(List<GinasProcessingMessage> source, List<GinasProcessingMessage> destination){
 		for(GinasProcessingMessage gpm: source){
 			this.processMessage(gpm);

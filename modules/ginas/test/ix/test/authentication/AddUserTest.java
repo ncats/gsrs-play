@@ -4,7 +4,9 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Stream;
 
 import org.junit.Test;
@@ -24,15 +26,15 @@ public class AddUserTest extends AbstractAddUserTest {
         //  /admin/users
         List<UserResult> actual = queryAllCurrentUsers();
 
-        assertEquals(DEFAULT_USERS, actual);
+        assertEquals(new HashSet<>(DEFAULT_USERS), new HashSet<>(actual));
     }
     @Test
     public void addNewUserShouldAppearInPrincipalsList() throws Exception{
         ts.createUser("newUser", "mypass", Role.DataEntry);
 
-        List<UserResult> actual = queryAllCurrentUsers();
+        Set<UserResult> actual = new HashSet<>(queryAllCurrentUsers());
 
-        List<UserResult> expected = new ArrayList(DEFAULT_USERS);
+        Set<UserResult> expected = new HashSet<>(DEFAULT_USERS);
         expected.add(new UserResult("newUser", true,null));
         assertEquals(expected, actual);
 
@@ -49,9 +51,9 @@ public class AddUserTest extends AbstractAddUserTest {
     public void callingPrincipalListShouldAutoPopulateMissingUserProfiles() throws Exception{
         createPrincipalWithoutUserProfile("fakeUser");
 
-        List<UserResult> actual = queryAllCurrentUsers();
+        Set<UserResult> actual = new HashSet<>(queryAllCurrentUsers());
 
-        List<UserResult> expected = new ArrayList(DEFAULT_USERS);
+        Set<UserResult> expected = new HashSet<>(DEFAULT_USERS);
         expected.add(new UserResult("fakeUser", false,null));
         assertEquals(expected, actual);
 

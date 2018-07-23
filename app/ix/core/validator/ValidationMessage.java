@@ -1,4 +1,4 @@
-package ix.core;
+package ix.core.validator;
 
 public interface ValidationMessage extends Comparable<ValidationMessage>{
 	public enum MESSAGE_TYPE{

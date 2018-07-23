@@ -6,6 +6,7 @@ import com.gargoylesoftware.htmlunit.html.HtmlTableRow;
 import ix.AbstractGinasServerTest;
 import ix.core.models.Principal;
 import ix.test.server.BrowserSession;
+import ix.test.server.GinasTestServer;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -27,6 +28,22 @@ public abstract class AbstractAddUserTest extends AbstractGinasServerTest {
             new UserResult("fakeuser3", true,null),
             new UserResult("fakeAdmin1", true,null));
     BrowserSession session;
+
+    @Override
+    public GinasTestServer createGinasTestServer() {
+        GinasTestServer ts =  super.createGinasTestServer();
+
+        ts.modifyConfig("ix.core.users = [{\n" +
+                "                \"username\":\"admin\",\n" +
+                "                \"email\":\"\",\n" +
+                "                \"password\":\"admin\",\n" +
+                "                \"roles\":[\"Query\", \"DataEntry\",\"SuperDataEntry\", \"Updater\",\"SuperUpdate\", \"Approver\", \"Admin\"]\n" +
+                "        }]",
+
+                GinasTestServer.ConfigOptions.ALL_TESTS);
+
+        return ts;
+    }
 
     @Before
     public void createBrowserSession(){

@@ -41,6 +41,8 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.github.fge.jsonpatch.JsonPatch;
 
 import ix.core.*;
+import ix.core.util.GinasPortalGun;
+import ix.core.validator.*;
 import ix.core.adapters.EntityPersistAdapter;
 import ix.core.adapters.InxightTransaction;
 import ix.core.controllers.v1.RouteFactory;
@@ -642,7 +644,7 @@ public class EntityFactory extends Controller {
             JsonNode node = request().body().asJson();
             T inst = mapper.treeToValue(node, type);
             if(validator!=null){
-		            ValidationResponse<T> vr=validator.validate(inst);
+		            ValidationResponse<T> vr=validator.validate(inst, null);
 		            if(!vr.isValid()){
 		            	return badRequest(validationResponse(vr));
 		            }
@@ -1021,12 +1023,46 @@ public class EntityFactory extends Controller {
             StagedChange stagedChange = new StagedChange(version, changes);
             
             //Forces all problems to be errors by default
-            ValidationResponse<T> resp = updateEntityValidated(changedJson,clonedWrapped.getEntityClass(),(t1,t2)->{
-                ValidationResponse<T> vr=validator.validate(t1, t2);
-                if(!force && vr.hasProblem()){
-                    vr.setInvalid();
+            ValidationResponse<T> resp = updateEntityValidated(changedJson,clonedWrapped.getEntityClass(),(t1,t2, callback)->{
+
+                ValidatorCallback wrapper = new ValidatorCallback(){
+                    @Override
+                    public void addMessage(ValidationMessage message) {
+                        callback.addMessage(message);
+                        intercept(message);
                 }
-                return vr;
+
+                    @Override
+                    public void addMessage(ValidationMessage message, Runnable appyAction) {
+                        callback.addMessage(message, appyAction);
+                        intercept(message);
+                    }
+
+                    @Override
+                    public void setValid() {
+                        callback.setValid();
+                    }
+
+                    @Override
+                    public void setInvalid() {
+                        callback.setInvalid();
+                    }
+
+                    @Override
+                    public void haltProcessing() {
+                        callback.haltProcessing();
+                    }
+                    private void intercept(ValidationMessage m){
+                        if(!force && m.getMessageType().isProblem()){
+                            setInvalid();
+                        }
+                    }
+                };
+
+
+                validator.validate(t1, t2, wrapper);
+
+
             });
             
             UpdateResponse<T> upResp;
@@ -1145,11 +1181,11 @@ public class EntityFactory extends Controller {
 
             Object rawOld = oldValue.getValue();
             Object rawNew = newValue.getValue();
-            System.out.println("=================");
-            System.out.println(EntityWrapper.of(rawOld).toInternalJson());
-            System.out.println("=================");
-            System.out.println(EntityWrapper.of(rawNew).toInternalJson());
-            System.out.println("=================");
+//            System.out.println("=================");
+//            System.out.println(EntityWrapper.of(rawOld).toInternalJson());
+//            System.out.println("=================");
+//            System.out.println(EntityWrapper.of(rawNew).toInternalJson());
+//            System.out.println("=================");
 
     	//Get the difference as a patch
         PojoPatch patch =PojoDiff.getDiff(rawOld, rawNew);
@@ -1228,7 +1264,15 @@ public class EntityFactory extends Controller {
         EntityWrapper<T> savedVersion = EntityPersistAdapter.performChange(eg.getKey(),ov->{
             EntityWrapper<T> og= EntityWrapper.of((T)ov);
 
-            ValidationResponse<T> vrr=validator.validate((T)newValue,(T)og.getValue());
+//            Validator.ValidationResponseBuilder validationBuilderCallback = Validator.newValidationResponseCallback((T) newValue);
+
+            ValidationResponseBuilder validationBuilderCallback = GinasPortalGun.createValidationResponseBuilderWithAcceptAllStrategy(newValue);
+
+
+            validator.validate((T)newValue,(T)og.getValue(), validationBuilderCallback);
+            ValidationResponse<T> vrr= validationBuilderCallback.buildResponse();
+
+
             vrlist.add(vrr);
             if(!vrr.isValid()){
                 return Optional.empty();
