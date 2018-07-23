@@ -1120,7 +1120,6 @@
             $scope.errorsArray = [];
             $http.post(baseurl + 'api/v1/substances/@validate', sub).then(
 	    function success(response) {
-            console.log(response);
                 $scope.validating = false;
                 $scope.errorsArray = $scope.parseErrorArray(response.data.validationMessages);
                 $scope.canSubmit = $scope.noErrors();
@@ -1290,7 +1289,6 @@
                         'Content-Type': 'application/json'
                     }
                 }).then(function (response) {
-                    console.log(response);
                     $scope.updateNav = false;
                     $scope.postRedirect = response.data.uuid;
                     var url = baseurl + "assets/templates/modals/submission-success.html";
