@@ -2232,7 +2232,6 @@
                 };
 
                 scope.cleanSequence = function () {
-                    //console.log("clean sequence");
                     scope.obj.sequence = subunitParser.cleanSequence(scope.obj.sequence);
                     scope.obj.$sequence = scope.preformatSeq(subunitParser.cleanSequence(scope.obj.$sequence));
                     scope.parseSubunit();
