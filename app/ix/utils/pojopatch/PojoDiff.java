@@ -1395,7 +1395,7 @@ public class PojoDiff {
 				setObjectAt(src,subPath,fetched,visited);
 				
 			}else{
-				System.out.println("not able to remove:" + fetched.getClass());
+				System.out.println("not able to remove:" + fetched.getClass() + " at [" + objPointer + "]");
 			}
 			changeChain.addAll(visited);
 			return oldValue;
