@@ -26,7 +26,6 @@ import ix.core.models.ProcessingRecord;
 import ix.core.models.XRef;
 import ix.core.plugins.GinasRecordProcessorPlugin.PayloadExtractedRecord;
 import ix.core.plugins.GinasRecordProcessorPlugin.TransformedRecord;
-import ix.core.plugins.SequenceIndexerPlugin;
 import ix.core.processing.RecordExtractor;
 import ix.core.processing.RecordPersister;
 import ix.core.processing.RecordTransformer;
@@ -34,9 +33,7 @@ import ix.core.util.CachedSupplier;
 import ix.core.util.ConfigHelper;
 import ix.ginas.models.v1.Substance;
 import ix.ginas.utils.validation.DefaultSubstanceValidator;
-import ix.seqaln.SequenceIndexer;
 import play.Logger;
-import play.Play;
 
 public class GinasUtils {
 	private static CachedSupplier<Boolean> validation=
