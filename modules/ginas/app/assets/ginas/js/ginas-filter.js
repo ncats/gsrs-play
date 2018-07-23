@@ -428,6 +428,12 @@ function getDisplayFacetName(name){
     if(name==="root_approved"){
         return "Last Validated";
     }
+    if(name==="root_approved"){
+        return "Last Validated";
+    }
+    if(name==="Approved By"){
+        return "Validated By";
+    } 
     if(name==="root_lastEditedBy"){
         return "Last Edited By";
     }
