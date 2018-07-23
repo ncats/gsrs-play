@@ -1,3 +1,5 @@
+
+
 @import ix.core.models.Structure
 @import ix.ginas.controllers.GinasApp
 @import ix.ginas.models.v1.ProteinSubstance
@@ -33,9 +35,9 @@
                                         <i class="fa fa-pencil fa-2x success"></i></a>
                                 </li>
 
-                                <li class = "col-md-3"> <a href="@routes.Assets.at("gsrs2/index.html")#/substance/@prot.getUuid()/names" target="_blank" uib-tooltip="Edit New Form" aria-label="Edit Protein Substance">
+                                <li class = "col-md-3"> <a href="@routes.Assets.at("gsrs2/index.html")#/substance/@prot.getUuid()/names" target="_blank" uib-tooltip="New Form" aria-label="Edit Protein Substance">
                                     <span class="sr-only">Edit New Form</span>
-                                    <i class="fa fa-pencil-square fa-2x" aria-hidden="true"></i></a></li>
+                                    <i class="fa fa-pencil-square fa-2x" aria-hidden="true" ></i></a></li>
                             }
                         </ul>
                         
@@ -51,14 +53,14 @@
                     </div>
                 </div>
 } {
-               <div class = "row">
-                    <div class = "col-md-3">
-                        <h5><strong>Subunits:</strong></h5>
-                    </div>
-                    <div class = "col-md-9">
-                        <span class = "badge">@prot.protein.getSubunits().size()</span>
-                    </div>
-                </div>
+<div class = "row">
+    <div class = "col-md-3">
+        <h5><strong>Subunits:</strong></h5>
+    </div>
+    <div class = "col-md-9">
+        <span class = "badge">@prot.protein.getSubunits().size()</span>
+    </div>
+</div>
 } {
 	@if(ctx != null) {
         <div class = "row">
@@ -76,12 +78,12 @@
 @r.alignments(0).alignment
 @{"Target Sites:" + GinasApp.siteShorthand(subunit.subunitIndex,r.alignments(0).targetSites())}
                     </pre>
-                    
-		      	  
-		      	  }
-		      }
-		  }
-              </div>
-            </div>
-	}
+
+
+        }
+        }
+        }
+    </div>
+</div>
+}
 }
