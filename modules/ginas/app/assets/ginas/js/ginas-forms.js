@@ -176,7 +176,6 @@
             });
         };
 
-
         factory.cleanSequence = function (sequence) {
             if(_.isUndefined(factoryResidues)) {
                 return factory.getResidues(subclass).then(function(){
@@ -313,8 +312,7 @@
                 return ret;
         };
 
-
-        /**
+     /**
           * Recalculates the subunit display chunks, used both as a rendering aid,
           * and in some other methods as a quick cache of what sites are modified
           * or otherwise enhanced.
@@ -336,7 +334,6 @@
 
             return deferred.all(promises);
         };
-
         /**
           * This method accepts a substance, a subunit, and an optional subunit index
           * and then computes a chunked display cache of the residue sites contained
@@ -345,16 +342,28 @@
           */
         factory.parseSubunit = function (parent, subunit, subunitIndex) {
             var subclass = parent.substanceClass;
+
             if(_.isUndefined(factoryResidues)) {
-                factory.getResidues(subclass);
+                return factory.getResidues(subclass).then( function(){
+
+                    return factory.parseSubunit(parent,subunit,subunitIndex);
+                });
             }
             var display = [];
             var modifiedSitesMap = factory.sitesAsMap(factory.getAllModifiedSites(parent));
 
-            _.forEach(subunit.sequence, function (aa, index) {
+            var mmap ={};
+
+            _.chain(factoryResidues)
+                .map(function(n){
+                    mmap[n.value]=n;
+                })
+                .value();
+
+            _.forEach(subunit.sequence.toUpperCase(), function (aa, index) {
                 var obj = {};
                 obj.value = aa;
-                var temp = (_.find(factoryResidues, ['value', aa.toUpperCase()]));
+                var temp = mmap[aa];
                 if (!_.isUndefined(temp)) {
                     obj = _.pickBy(temp, _.isString);
                     obj.value = aa;
@@ -368,7 +377,7 @@
                     obj.residueIndex = index - 0 + 1;
                      if (parent.substanceClass === 'protein') {
                         //parse out cysteines first
-                        if (aa.toUpperCase() == 'C') {
+                        if (aa == 'C') {
                             obj.cysteine = true;
                         }else{
                             obj.cysteine = false;
@@ -839,26 +848,26 @@
 
 
         this.applyAll = function (type, parent, obj) {
-            subunitParser.parseSubunits(parent);
-        
-            var plural = type + "s";
-            
+            subunitParser.parseSubunits(parent).then(function() {
 
-            if (parent.nucleicAcid[plural].length == 0) {
-                if (type == 'linkage') {
-                    obj.$$displayString = siteList.allSites(parent, 'nucleicAcid', type);
+                var plural = type + "s";
+
+
+                if (parent.nucleicAcid[plural].length == 0) {
+                    if (type == 'linkage') {
+                        obj.$$displayString = siteList.allSites(parent, 'nucleicAcid', type);
+                    } else {
+                        obj.$$displayString = siteList.allSites(parent, 'nucleicAcid');
+                    }
+                    obj.sites = siteList.siteList(obj.$$displayString);
+
                 } else {
-                    obj.$$displayString = siteList.allSites(parent, 'nucleicAcid');
+                    var sites2 = this.getAllSitesWithout(type, parent.nucleicAcid.subunits);
+                    obj.$$displayString = siteList.siteString(sites2);
+                    obj.sites = siteList.siteList(obj.$$displayString);
+                    obj.sites.$$displayString = obj.$$displayString;
                 }
-                obj.sites = siteList.siteList(obj.$$displayString);
-
-            } else {
-                var sites2=this.getAllSitesWithout(type, parent.nucleicAcid.subunits);
-                obj.$$displayString = siteList.siteString(sites2);
-                obj.sites = siteList.siteList(obj.$$displayString);                
-                obj.sites.$$displayString=obj.$$displayString;
-            }
-            subunitParser.parseSubunits(parent);
+            });
 
         };
 
@@ -1006,20 +1015,19 @@
                 parent: '='
             },
             link: function (scope, element, attrs) {
-
                 if (scope.parent._name) {
                     scope.formType = 'Editing';
                     scope.name = scope.parent._name;
                 } else {
                     scope.formType = 'Registering new';
-                    
+                }
                     var cDisplay=_.startCase(scope.parent.substanceClass);
+
                     if(cDisplay === "Specified Substance 1"){
                     	cDisplay = "Specified Substance Group 1";
                     }
-                    
-                    scope.name = cDisplay;
-                }
+
+                    scope.displaySubstanceClass = cDisplay;
             },
             templateUrl: baseurl + "assets/templates/forms/header-form.html"
         };
@@ -1118,7 +1126,6 @@
                     }
                     return errors;
                 };
-
             }
         };
     });
@@ -1220,9 +1227,9 @@
             replace: true,
             scope: {
                 parent: '='
-              //  iscollapsed: '=?'
+                //iscollapsed: '=?'
             },
-            templateUrl: baseurl + "assets/templates/forms/parent-form.html",
+            templateUrl: baseurl + "assets/templates/forms/parent-form.html"
         };
     });
 
@@ -1306,7 +1313,6 @@
             link: function (scope) {
                 scope.validateConnectivity = function (obj) {
                     var map = polymerUtils.sruDisplayToConnectivity(obj);
-                    
                     return map.$errors;
                 }
             }
@@ -1360,6 +1366,7 @@
             link: function (scope, element, attrs) {
 
                 console.log(scope);
+                
                 scope.addNewRef = function (mainform, list, begin) {
                     //passes a new uuid for reference tracking
                     var obj = {
@@ -1417,12 +1424,12 @@
                         }
                     });
                 };
-
+                
                 scope.deleteUpload = function(obj){
-                       
-                       if(confirm("Are you sure you want to remove this document?")){
-                               obj.uploadedFile=null;
-                       }
+                	
+                	if(confirm("Are you sure you want to remove this document?")){
+                		obj.uploadedFile=null;
+                	}
                 };
 
                 //actual method to delete the reference uuid from an object references array
@@ -2076,5 +2083,285 @@
             }
         };
     }]);
+
+    ginasForms.directive('productForm', function () {
+        return {
+            restrict: 'E',
+                replace: true,
+                templateUrl: baseurl + "assets/templates/forms/product-form.html"
+            };
+        });
+
+    ginasForms.directive('productNameForm', function () {
+        return {
+            restrict: 'E',
+            replace: true,
+            templateUrl: baseurl + "assets/templates/forms/product-name-form.html"
+        };
+    });
+
+    ginasForms.directive('productCodeForm', function () {
+        return {
+            restrict: 'E',
+            replace: true,
+            templateUrl: baseurl + "assets/templates/forms/product-code-form.html"
+        };
+    });
+
+    ginasForms.directive('productCompanyForm', function () {
+        return {
+            restrict: 'E',
+            replace: true,
+            templateUrl: baseurl + "assets/templates/forms/product-company-form.html"
+        };
+    });
+
+    ginasForms.directive('productComponentForm', function () {
+        return {
+            restrict: 'E',
+            replace: true,
+            templateUrl: baseurl + "assets/templates/forms/product-component-form.html"
+        };
+    });
+
+    ginasForms.directive('productLotForm', function () {
+        return {
+            restrict: 'E',
+            replace: true,
+            templateUrl: baseurl + "assets/templates/forms/product-lot-form.html"
+        };
+    });
+
+    ginasForms.directive('productIngredientForm', function () {
+        return {
+            restrict: 'E',
+            replace: true,
+            templateUrl: baseurl + "assets/templates/forms/product-ingredient-form.html"
+        };
+    });
+
+    ginasForms.directive('productJsonForm', function () {
+        return {
+            restrict: 'E',
+            replace: true,
+            templateUrl: baseurl + "assets/templates/forms/product-json-form.html"
+        };
+    });
+
+    ginasForms.directive('applicationForm', function () {
+        return {
+            restrict: 'E',
+            replace: true,
+            templateUrl: baseurl + "assets/templates/forms/application-form.html"
+        };
+    });
+
+    ginasForms.directive('applicationProdForm', function () {
+        return {
+            restrict: 'E',
+            replace: true,
+            templateUrl: baseurl + "assets/templates/forms/application-prod-form.html"
+        };
+    });
+
+    ginasForms.directive('applicationIngredientForm', function () {
+        return {
+            restrict: 'E',
+            replace: true,
+            templateUrl: baseurl + "assets/templates/forms/application-ingredient-form.html"
+        };
+    });
+
+    ginasForms.directive('applicationIndicationForm', function () {
+        return {
+            restrict: 'E',
+            replace: true,
+            templateUrl: baseurl + "assets/templates/forms/application-indication-form.html"
+        };
+    });
+
+    ginasForms.directive('definitionForm', function () {
+        return {
+            restrict: 'E',
+            replace: true,
+            templateUrl: baseurl + "assets/templates/forms/definition-form.html"
+        };
+    });
+
+    ginasForms.directive('identificationForm', function () {
+        return {
+            restrict: 'E',
+            replace: true,
+            templateUrl: baseurl + "assets/templates/forms/identification-form.html"
+        };
+    });
+
+        ginasForms.directive('assayForm', function () {
+            return {
+                restrict: 'E',
+                replace: true,
+                templateUrl: baseurl + "assets/templates/forms/assay-form.html"
+            };
+        });
+
+        ginasForms.directive('impuritiesForm', function () {
+            return {
+                restrict: 'E',
+                replace: true,
+                templateUrl: baseurl + "assets/templates/forms/impurities-form.html"
+            };
+        });
+
+        ginasForms.directive('impuritiesOrganicForm', function () {
+            return {
+                restrict: 'E',
+                replace: true,
+                templateUrl: baseurl + "assets/templates/forms/impurities-organic-form.html"
+            };
+        });
+
+        ginasForms.directive('specificTestsForm', function () {
+            return {
+                restrict: 'E',
+                replace: true,
+                templateUrl: baseurl + "assets/templates/forms/specific-tests-form.html"
+            };
+        });
+
+        ginasForms.directive('gradeForm', function () {
+            return {
+            restrict: 'E',
+            replace: true,
+            templateUrl: baseurl + "assets/templates/forms/grade-form.html"
+            };
+        });
+
+        ginasForms.directive('manufactureForm', function () {
+            return {
+            restrict: 'E',
+            replace: true,
+            templateUrl: baseurl + "assets/templates/forms/manufacture-form.html"
+            };
+        });
+
+        ginasForms.directive('parentFormG4', function () {
+            return {
+                restrict: 'E',
+                replace: true,
+                templateUrl: baseurl + "assets/templates/forms/parent-form-G4.html"
+            };
+        });
+
+        ginasForms.directive('indicationForm', function () {
+            return {
+                restrict: 'E',
+                replace: true,
+                templateUrl: baseurl + "assets/templates/forms/indication-form.html"
+            };
+        });
+
+        ginasForms.directive('indicationCauseofagentForm', function () {
+             return {
+                 restrict: 'E',
+                 replace: true,
+                 templateUrl: baseurl + "assets/templates/forms/indication-causeofagent-form.html"
+             };
+        });
+
+        ginasForms.directive('indicationDiseaseForm', function () {
+             return {
+                 restrict: 'E',
+                 replace: true,
+                 templateUrl: baseurl + "assets/templates/forms/indication-disease-form.html"
+             };
+        });
+
+        ginasForms.directive('indicationSourceForm', function () {
+             return {
+                 restrict: 'E',
+                 replace: true,
+                 templateUrl: baseurl + "assets/templates/forms/indication-source-form.html"
+             };
+        });
+
+    ginasForms.directive('indicationAnatomicalfeatureForm', function () {
+        return {
+            restrict: 'E',
+            replace: true,
+            templateUrl: baseurl + "assets/templates/forms/indication-Anatomicalfeature-form.html"
+        };
+    });
+
+    ginasForms.directive('indicationGeneticForm', function () {
+        return {
+            restrict: 'E',
+            replace: true,
+            templateUrl: baseurl + "assets/templates/forms/indication-genetic-form.html"
+        };
+    });
+
+    ginasForms.directive('indicationVerbatimForm', function () {
+        return {
+            restrict: 'E',
+            replace: true,
+            templateUrl: baseurl + "assets/templates/forms/indication-verbatim-form.html"
+        };
+    });
+
+    ginasForms.directive('indicationBiomarkerForm', function () {
+        return {
+            restrict: 'E',
+            replace: true,
+            templateUrl: baseurl + "assets/templates/forms/indication-biomarker-form.html"
+        };
+    });
+
+    ginasForms.directive('indicationInterventionForm', function () {
+        return {
+            restrict: 'E',
+            replace: true,
+            templateUrl: baseurl + "assets/templates/forms/indication-intervention-form.html"
+        };
+    });
+
+    ginasForms.directive('indicationJsonForm', function () {
+        return {
+            restrict: 'E',
+            replace: true,
+            templateUrl: baseurl + "assets/templates/forms/indication-json-form.html"
+        };
+    });
+
+    ginasForms.directive('indicationSearchForm', function () {
+        return {
+            restrict: 'E',
+            replace: true,
+            templateUrl: baseurl + "assets/templates/forms/indication-search-form.html"
+        };
+    });
+
+    ginasForms.directive('biomarkerForm', function () {
+        return {
+            restrict: 'E',
+            replace: true,
+            templateUrl: baseurl + "assets/templates/forms/biomarker-form.html"
+        };
+    });
+
+    ginasForms.directive('biomarkerSourceForm', function () {
+        return {
+            restrict: 'E',
+            replace: true,
+            templateUrl: baseurl + "assets/templates/forms/biomarker-source-form.html"
+        };
+    });
+
+    ginasForms.directive('biomarkerTestForm', function () {
+        return {
+            restrict: 'E',
+            replace: true,
+            templateUrl: baseurl + "assets/templates/forms/biomarker-test-form.html"
+        };
+    });
 
 })();
