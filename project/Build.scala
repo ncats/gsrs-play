@@ -169,6 +169,8 @@ public class BuildInfo {
 
 
 
+  val ginasTestOptions = "-Dconfig.file=" + Option(System.getProperty("config.file")).getOrElse("application.conf")
+
   val ginas = Project("ginas", file("modules/ginas"))
     .enablePlugins(PlayJava).settings(commonSettings:_*).settings(
       libraryDependencies ++= commonDependencies,
