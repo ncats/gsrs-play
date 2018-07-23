@@ -4,37 +4,19 @@
 
 @substancedetails(sub) {
 
-    @if(sub.mixture.getParentSubstance!= null) {
-        <li role="presentation"><a href="#parent" prevent-default="" ng-click="scrollTo('parent')" >
-            Source Material Parent</a></li>
-    }
-    @if(sub.mixture.components.length > 0) {
-        <li role="presentation"><a href="#components" prevent-default="" ng-click="scrollTo('components')" >
-            Components <span class="badge pull-right">@sub.mixture.components.length</span></a></li>
-    }
 }{
-    <div></div>
+    
     } {
     @if(sub.mixture.getReferences() != null && sub.mixture.getReferences().size() > 0) {
-        <tr><td>Definition References</td><td >
+        <tr>
+        <td>Definition References</td><td >
             <referencesmanager ref-count substance ="'@sub.getUuid()'" divid ="'@sub.getUuid()'" references = "@GinasApp.getAsJson(sub.mixture.getReferences())"></referencesmanager></td></tr>
-        <tr><td class ="'@sub.getUuid()'" colspan="2"></td></tr>
+        <tr>
+        <td class ="'@sub.getUuid()'" colspan="2"></td>
+        </tr>
     }
-    @if(sub.mixture.getParentSubstance!= null){
-        <button class="btn btn-primary label-offset det" ng-init = "sourcecollapse =true" ng-click = "sourcecollapse = !sourcecollapse">
-            <i ng-show="sourcecollapse" class="fa fa-caret-right"></i>
-            <i ng-hide="sourcecollapse" class="fa fa-caret-down"></i>
-            Source Material Parent</button>
-        <div class="col-md-12 table-responsive" uib-collapse = "sourcecollapse">
-            <br>
-        <div class="row">
-                @properties.subref(sub.mixture.getParentSubstance)
-        </div>
-            </div>
-        }
-    <div class="row info" id="components">
-    @properties.components(sub.mixture.components)
-    </div>
+}{
+	
 }
 
 

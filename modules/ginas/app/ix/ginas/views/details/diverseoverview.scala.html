@@ -1,0 +1,311 @@
+@import ix.ginas.controllers.GinasApp
+@import be.objectify.deadbolt.java.views.html._
+@import views.html._
+@import be.objectify.deadbolt.java.views.html._
+@import ix.ncats.controllers.security.IxDynamicResourceHandler
+
+@(sub: ix.ginas.models.v1.StructurallyDiverseSubstance)
+
+<div class="row">
+	<div class="col-md-7" >
+		<table class="table kv-table" id="moiety-table">
+			<tr>
+				<td>Substance Class</td>
+				<td class="monospace flexbox">
+					Structurally Diverse
+					<info-popup class="flexbox">
+						<div class="info-popup-container">
+							<div>
+							@if(sub.structurallyDiverse.getReferences() != null && sub.structurallyDiverse.getReferences().size > 0) {
+								<referencesmanager reftable 
+								hide-header="false"
+								@* order can be changed in reference-table.html template *@
+								show='["typ","tags","cit"]'
+								substance ="'@sub.getUuid()'" 
+								sreferences = "@GinasApp.getAsJson(sub.structurallyDiverse.getReferences())" >
+								</referencesmanager>
+							}
+							@auditdetails(sub.structurallyDiverse)
+							</div>
+							
+						</div>
+					</info-popup>
+				</td>
+			</tr>
+			
+			@if(sub.structurallyDiverse.sourceMaterialClass != null) {
+				<tr>
+					<td>Source Materials Class</td>
+					<td class="monospace"> @GinasApp.getCV.getDisplay("SOURCE_MATERIAL_CLASS", sub.structurallyDiverse.sourceMaterialClass)</td>
+				</tr>
+			}
+
+			@if(sub.structurallyDiverse.sourceMaterialType != null) {
+				<tr>
+					<td>Source Materials Type</td>
+					<td class="monospace"> @GinasApp.getCV.getDisplay("SOURCE_MATERIAL_TYPE", sub.structurallyDiverse.sourceMaterialType)</td>
+				</tr>
+			}
+
+			@if(sub.structurallyDiverse.sourceMaterialState != null) {
+				<tr>
+					<td>Source Materials State</td>
+					<td class="monospace"> @GinasApp.getCV.getDisplay("SOURCE_MATERIAL_STATE", sub.structurallyDiverse.sourceMaterialState)</td>
+				</tr>
+			}
+			
+			@if(sub.structurallyDiverse.parentSubstance != null) {
+				<tr>
+					<td>Source Materials Parent</td>
+					<td id="subref-record-details">@properties.subref(sub.structurallyDiverse.parentSubstance)</td>
+
+				</tr>
+			}
+			
+			@if(sub.structurallyDiverse.organismFamily != null){
+				<tr>
+					<td>Organism Family</td>
+					<td>
+						<a href="@{ix.ginas.controllers.routes.GinasApp.substances()}?facet=Family/@sub.structurallyDiverse.organismFamily" 
+						target="_self">@sub.structurallyDiverse.organismFamily
+						</a>
+					</td>
+				</tr>
+			}
+			@if(sub.structurallyDiverse.organismGenus != null) {
+				<tr>
+					<td>Organism Genus </td>
+					<td>
+						<a href="@{ix.ginas.controllers.routes.GinasApp.substances()}?facet=Genus/@sub.structurallyDiverse.organismGenus" 
+						target="_self">@sub.structurallyDiverse.organismGenus
+						</a>
+					</td>
+				</tr>
+			}
+			@if(sub.structurallyDiverse.organismSpecies != null) {
+				<tr>
+					<td>Organism Species</td>
+					<td>
+						<a href="@{ix.ginas.controllers.routes.GinasApp.substances()}?facet=Species/@sub.structurallyDiverse.organismSpecies" 
+						target="_self">@sub.structurallyDiverse.organismSpecies
+						</a>
+					</td>
+				</tr>
+			}
+			@if(sub.structurallyDiverse.organismAuthor != null) {
+				<tr>
+					<td>Author</td>
+					<td class="monospace">@sub.structurallyDiverse.organismAuthor</td>
+				</tr>
+			}
+			@if(sub.structurallyDiverse.infraSpecificType != null) {
+				<tr>
+					<td>Infraspecific Type</td>
+					<td class="monospace">@sub.structurallyDiverse.infraSpecificType</td>
+				</tr>
+			}
+			@if(sub.structurallyDiverse.infraSpecificName != null) {
+				<tr>
+					<td>Infraspecific Name</td>
+					<td class="monospace">@sub.structurallyDiverse.infraSpecificName</td></tr>
+			}
+			@if(sub.structurallyDiverse.developmentalStage != null) {
+				<tr>
+					<td>Development Stage</td>
+					<td class="monospace">@sub.structurallyDiverse.developmentalStage</td>
+				</tr>
+			}
+			@if(sub.structurallyDiverse.partLocation != null) {
+				<tr>
+					<td>Part Location</td>
+					<td class="monospace">@sub.structurallyDiverse.partLocation</td>
+				</tr>
+			}
+			@if(sub.structurallyDiverse.part != null && sub.structurallyDiverse.part.size() > 0) {
+				<tr>
+					<td>Part</td>
+					<td class="monospace">@sub.structurallyDiverse.getDisplayParts()</td>
+				</tr>
+			}
+			@if(sub.structurallyDiverse.fractionMaterialType != null) {
+				<tr>
+					<td>Fraction Material Type</td>
+					<td class="monospace">@sub.structurallyDiverse.fractionMaterialType</td>
+				</tr>
+			}
+			@if(sub.structurallyDiverse.fractionName != null) {
+				<tr>
+					<td>Fraction Name</td>
+					<td class="monospace">@sub.structurallyDiverse.fractionName</td>
+				</tr>
+			}
+			
+			@if(sub.structurallyDiverse.hybridSpeciesMaternalOrganism != null) {
+				<tr>
+					<td>Hybrid Maternal Organism</td>
+					<td>@properties.subref(sub.structurallyDiverse.hybridSpeciesMaternalOrganism)</td>
+				</tr>
+			}
+
+			@if(sub.structurallyDiverse.hybridSpeciesPaternalOrganism != null) {
+				<tr>
+					<td>Hybrid Paternal Organism</td>
+					<td>@properties.subref(sub.structurallyDiverse.hybridSpeciesPaternalOrganism)</td>
+				</tr>
+			}
+			
+			
+			@overview(sub)
+		</table>
+	</div>
+	@overviewexport(sub)
+</div>
+
+@*
+@overview(sub)
+<div class="row">
+	<div class="col-md-5" >
+		<table class="table table-striped keyvalue">
+			<tbody>
+			@if(sub.structurallyDiverse.sourceMaterialClass != null) {
+				<tr>
+					<td>Source Materials Class</td>
+					<td> @GinasApp.getCV.getDisplay("SOURCE_MATERIAL_CLASS", sub.structurallyDiverse.sourceMaterialClass)</td>
+				</tr>
+			}
+
+			@if(sub.structurallyDiverse.sourceMaterialType != null) {
+				<tr>
+					<td>Source Materials Type</td>
+					<td > @GinasApp.getCV.getDisplay("SOURCE_MATERIAL_TYPE", sub.structurallyDiverse.sourceMaterialType)</td>
+				</tr>
+			}
+
+			@if(sub.structurallyDiverse.sourceMaterialState != null) {
+				<tr>
+					<td>Source Materials State</td>
+					<td > @GinasApp.getCV.getDisplay("SOURCE_MATERIAL_STATE", sub.structurallyDiverse.sourceMaterialState)</td>
+				</tr>
+			}
+			@if(sub.structurallyDiverse.getReferences() != null && sub.structurallyDiverse.getReferences().size() > 0) {
+				<tr>
+					<td>Definition References</td>
+					<td>
+						<referencesmanager ref-count 
+						substance ="'@sub.getUuid()'" 
+						divid ="'@sub.getUuid()'" 
+						references = "@GinasApp.getAsJson(sub.structurallyDiverse.getReferences())">
+						</referencesmanager>
+					</td></tr>
+				<tr><td class ="'@sub.getUuid()'" colspan="2"></td></tr>
+			}
+			</tbody>
+		</table>
+	</div>
+	
+	@if(sub.structurallyDiverse.parentSubstance != null) {
+	<div class="row info" id="substances">
+		<div class="col-md-12">
+			Source Material Parent:<br>
+			@properties.subref(sub.structurallyDiverse.parentSubstance)
+		</div>
+	</div>
+	}
+	
+	<div class="col-md-12" >
+		<table class="table table-striped keyvalue">
+			@if(sub.structurallyDiverse.organismFamily != null){
+				<tr>
+					<td>Organism Family</td>
+					<td>
+						<a href="@{ix.ginas.controllers.routes.GinasApp.substances()}?facet=Family/@sub.structurallyDiverse.organismFamily" 
+						target="_self">@sub.structurallyDiverse.organismFamily
+						</a>
+					</td>
+				</tr>
+			}
+			@if(sub.structurallyDiverse.organismGenus != null) {
+				<tr>
+					<td>Organism Genus </td>
+					<td>
+						<a href="@{ix.ginas.controllers.routes.GinasApp.substances()}?facet=Genus/@sub.structurallyDiverse.organismGenus" 
+						target="_self">@sub.structurallyDiverse.organismGenus
+						</a>
+					</td>
+				</tr>
+			}
+			@if(sub.structurallyDiverse.organismSpecies != null) {
+				<tr>
+					<td>Organism Species</td>
+					<td>
+						<a href="@{ix.ginas.controllers.routes.GinasApp.substances()}?facet=Species/@sub.structurallyDiverse.organismSpecies" 
+						target="_self">@sub.structurallyDiverse.organismSpecies
+						</a>
+					</td>
+				</tr>
+			}
+			@if(sub.structurallyDiverse.organismAuthor != null) {
+				<tr>
+					<td>Author</td>
+					<td>@sub.structurallyDiverse.organismAuthor</td>
+				</tr>
+			}
+			@if(sub.structurallyDiverse.infraSpecificType != null) {
+				<tr>
+					<td>Infraspecific Type</td>
+					<td>@sub.structurallyDiverse.infraSpecificType</td>
+				</tr>
+			}
+			@if(sub.structurallyDiverse.infraSpecificName != null) {
+				<tr>
+					<td>Infraspecific Name</td>
+					<td>@sub.structurallyDiverse.infraSpecificName</td></tr>
+			}
+			@if(sub.structurallyDiverse.developmentalStage != null) {
+				<tr>
+					<td>Development Stage</td>
+					<td>@sub.structurallyDiverse.developmentalStage</td>
+				</tr>
+			}
+			@if(sub.structurallyDiverse.partLocation != null) {
+				<tr>
+					<td>Part Location</td>
+					<td>@sub.structurallyDiverse.partLocation</td>
+				</tr>
+			}
+			@if(sub.structurallyDiverse.part != null && sub.structurallyDiverse.part.size() > 0) {
+				<tr>
+					<td>Part</td>
+					<td>@sub.structurallyDiverse.getDisplayParts()</td>
+				</tr>
+			}
+			@if(sub.structurallyDiverse.fractionMaterialType != null) {
+				<tr>
+					<td>Fraction Material Type</td>
+					<td>@sub.structurallyDiverse.fractionMaterialType</td>
+				</tr>
+			}
+			@if(sub.structurallyDiverse.fractionName != null) {
+				<tr>
+					<td>Fraction Name</td>
+					<td>@sub.structurallyDiverse.fractionName</td>
+				</tr>
+			}
+		</table>
+		@if(sub.structurallyDiverse.hybridSpeciesMaternalOrganism != null) {
+			Hybrid Maternal Organism:
+			<div class="col-md-3">
+		   @properties.subref(sub.structurallyDiverse.hybridSpeciesMaternalOrganism)
+		   </div>
+		}
+
+		@if(sub.structurallyDiverse.hybridSpeciesPaternalOrganism != null) {
+			Hybrid Paternal Organism:
+			 <div class="col-md-3">
+		   @properties.subref(sub.structurallyDiverse.hybridSpeciesPaternalOrganism)
+		   </div>
+		}
+		@auditdetails(sub.structurallyDiverse)
+	</div>
+</div>
+*@

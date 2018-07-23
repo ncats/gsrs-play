@@ -1,0 +1,19 @@
+@import ix.ginas.controllers.GinasApp
+@import be.objectify.deadbolt.java.views.html._
+@import views.html._
+@import be.objectify.deadbolt.java.views.html._
+@import ix.ncats.controllers.security.IxDynamicResourceHandler
+@import ix.ginas.models.v1.Substance
+
+@(sub: Substance)
+
+	        <div class = "col-md-12">
+		        @if(sub.isNonSubstanceConcept()) {
+		            This is a non-substance concept
+		        } else {
+	            	This is a sub-concept of substance:<br>
+	            	<div class="col-md-3">
+				    	@properties.subref(sub.getParentSubstanceReference())
+				    </div>
+	            }
+	        </div>

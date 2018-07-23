@@ -1,0 +1,142 @@
+@import ix.ginas.controllers.GinasApp
+@import be.objectify.deadbolt.java.views.html._
+@import views.html._
+@import be.objectify.deadbolt.java.views.html._
+@import ix.ncats.controllers.security.IxDynamicResourceHandler
+
+@(sub: ix.ginas.models.v1.NucleicAcidSubstance)
+
+
+<div class="row">
+	<div class="col-md-7" >
+		<table class="table kv-table" id="moiety-table">
+			<tr>
+				<td>Substance Class</td>
+				<td class="monospace flexbox">
+					Nucleic Acid
+					<info-popup class="flexbox">
+						<div class="info-popup-container">
+							<div>
+							@if(sub.nucleicAcid.getReferences() != null && sub.nucleicAcid.getReferences().size > 0) {
+								<referencesmanager reftable 
+								hide-header="false"
+								@* order can be changed in reference-table.html template *@
+								show='["typ","tags","cit"]'
+								substance ="'@sub.getUuid()'" 
+								sreferences = "@GinasApp.getAsJson(sub.nucleicAcid.getReferences())" >
+								</referencesmanager>
+							}
+							@auditdetails(sub.nucleicAcid)
+							</div>
+							
+						</div>
+					</info-popup>
+				</td>
+			</tr>
+			
+			@defining(sub.nucleicAcid.getNucleicAcidType()) { natype =>
+			  @if(natype != null) {
+				<tr>
+					<td>Nucleic Acid Type</td>
+					<td class="monospace">@GinasApp.getCV.getDisplay("NUCLEIC_ACID_TYPE", natype)</td>
+				</tr>
+			  }
+			}
+			@defining(sub.nucleicAcid.getNucleicAcidSubType()) { nastype =>
+			    @if(nastype != null) {
+					<tr>
+						<td>Nucleic Acid Subtype</td>
+						<td class="monospace">
+							@for(st <- nastype) {
+							  @GinasApp.getCV.getDisplay("NUCLEIC_ACID_SUB_TYPE", st)
+							}
+						</td>
+					</tr>
+			    }
+			}
+			@defining(sub.nucleicAcid.getSequenceOrigin()) { seqo =>
+				@if(seqo != null) {
+					<tr>
+					  <td>Sequence Origin</td>
+					  <td class="monospace">@GinasApp.getCV.getDisplay("NUCLEIC_ACID_SEQUENCE_ORIGIN", seqo)</td>
+					</tr>
+				}
+			}
+			@defining(sub.nucleicAcid.getSequenceType()) { seqt =>
+				@if(seqt != null) {
+					<tr>
+					  <td>Sequence Type</td>
+					  <td class="monospace">@GinasApp.getCV.getDisplay("SEQUENCE_TYPE", seqt)</td>
+					</tr>
+				}
+			}
+			
+			@overview(sub)
+		</table>
+	</div>
+	@overviewexport(sub)
+</div>
+
+@*
+@overview(sub)
+<div class="row">
+	<div class="col-md-7" >
+		<table class="table table-striped kv-table">
+			<tbody>
+			@defining(sub.nucleicAcid.getNucleicAcidType()) { natype =>
+			  @if(natype != null) {
+				<tr><td>Nucleic Acid Type</td><td>@GinasApp.getCV.getDisplay("NUCLEIC_ACID_TYPE", natype)</td></tr>
+			  }
+			}
+			@defining(sub.nucleicAcid.getNucleicAcidSubType()) { nastype =>
+			  @if(nastype != null) {
+				<tr>
+				<td>Nucleic Acid Subtype</td>
+				<td>
+				@for(st <- nastype) {
+				  @GinasApp.getCV.getDisplay("NUCLEIC_ACID_SUB_TYPE", st)
+				}
+				</td>
+				</tr>
+			  }
+			}
+			
+			@defining(sub.nucleicAcid.getSequenceOrigin()) { seqo =>
+					@if(seqo != null) {
+						<tr>
+						  <td>Sequence Origin</td>
+						  <td>@GinasApp.getCV.getDisplay("NUCLEIC_ACID_SEQUENCE_ORIGIN", seqo)</td>
+						</tr>
+					}
+			}
+			@defining(sub.nucleicAcid.getSequenceType()) { seqt =>
+					 @if(seqt != null) {
+						<tr>
+						  <td>Sequence Type</td>
+						  <td>@GinasApp.getCV.getDisplay("SEQUENCE_TYPE", seqt)</td>
+						</tr>
+					 }
+			}
+			
+			
+			@if(sub.nucleicAcid.getReferences() != null && sub.nucleicAcid.getReferences().size() > 0) {
+				<tr>
+				   <td>Definition References</td>
+				   <td>
+					  <referencesmanager 
+					  ref-count substance ="'@sub.getUuid()'" 
+					  divid ="'@sub.getUuid()'" 
+					  references = "@GinasApp.getAsJson(sub.nucleicAcid.getReferences())"></referencesmanager>
+				   </td>
+				</tr>
+				NEED TO FIGURE THIS OUT
+				<tr>
+				   <td class ="'@sub.getUuid()'" colspan="2"></td>
+				</tr>
+			}
+			</tbody>
+		</table>
+		@auditdetails(sub.nucleicAcid)
+	</div>
+</div>
+*@

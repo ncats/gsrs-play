@@ -1,0 +1,69 @@
+@import ix.ginas.controllers.GinasApp
+@import be.objectify.deadbolt.java.views.html._
+@import views.html._
+@import be.objectify.deadbolt.java.views.html._
+@import ix.ncats.controllers.security.IxDynamicResourceHandler
+
+@(sub: ix.ginas.models.v1.MixtureSubstance)
+
+<div class="row">
+	<div class="col-md-7" >
+		<table class="table kv-table" id="moiety-table">
+			<tr>
+				<td>Substance Class</td>
+				<td class="monospace flexbox">
+					Mixture
+					<info-popup class="flexbox">
+						<div class="info-popup-container">
+							<div>
+							@if(sub.mixture.getReferences() != null && sub.mixture.getReferences().size > 0) {
+								<referencesmanager reftable 
+								hide-header="false"
+								@* order can be changed in reference-table.html template *@
+								show='["typ","tags","cit"]'
+								substance ="'@sub.getUuid()'" 
+								sreferences = "@GinasApp.getAsJson(sub.mixture.getReferences())" >
+								</referencesmanager>
+							}
+							@auditdetails(sub.mixture)
+							</div>
+							
+						</div>
+					</info-popup>
+				</td>
+			</tr>
+			@overview(sub)
+		</table>
+	</div>
+	@overviewexport(sub)
+</div>
+
+
+@*
+@overview(sub)
+<div class="row">
+	<div class="col-md-7" >
+		<table class="table table-striped kv-table">
+			<tbody>
+			@if(sub.mixture.getReferences() != null && sub.mixture.getReferences().size() > 0) {
+				<tr>
+				   <td>Definition References</td>
+				   <td>
+					  <referencesmanager 
+					  ref-count 
+					  substance ="'@sub.getUuid()'" 
+					  divid ="'@sub.getUuid()'" 
+					  references = "@GinasApp.getAsJson(sub.mixture.getReferences())"></referencesmanager>
+				   </td>
+				</tr>
+				NEED TO FIGURE THIS OUT
+				<tr>
+				   <td class ="'@sub.getUuid()'" colspan="2"></td>
+				</tr>
+			}
+			</tbody>
+		</table>
+		@auditdetails(sub.mixture)
+	</div>
+</div>
+*@

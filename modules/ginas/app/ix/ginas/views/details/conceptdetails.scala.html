@@ -1,20 +1,13 @@
+@import ix.ginas.controllers.GinasApp
+
 @(sub: ix.ginas.models.v1.Substance)
 
 @substancedetails(sub) {
-    <li role="presentation" class="active"><a href="#definition">Definition</a></li>
+	
 }{
-    <div></div>
+    
     } {
-    <div class="row info" id="definition">
-        <div class = "col-md-12">
-        @if(sub.isNonSubstanceConcept()) {
-            This is a non-substance concept
-        } else {
-            This is a sub-concept of substance:<br>
-            	<div class="col-md-3">
-			    	@properties.subref(sub.getParentSubstanceReference())
-			    </div>
-            }
-        </div>
-    </div>
+    
+}{
+	
 }
