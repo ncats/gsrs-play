@@ -11,6 +11,8 @@ import org.apache.lucene.store.DataInput;
 import org.apache.lucene.store.DataOutput;
 import org.apache.lucene.util.BytesRef;
 import org.apache.lucene.search.suggest.Lookup.LookupResult;
+
+import java.io.Closeable;
 import java.io.IOException;
 import java.util.*;
 import java.util.function.Function;
@@ -19,7 +21,7 @@ import java.util.function.Supplier;
 /**
  * Created by katzelda on 2/27/17.
  */
-public class ExactMatchSuggesterDecorator extends Lookup {
+public class ExactMatchSuggesterDecorator extends Lookup implements Closeable {
 
     private static final String TEXT_FIELD_NAME = "text";
     private final static String EXACT_TEXT_FIELD_NAME = "exacttext";
@@ -35,7 +37,7 @@ public class ExactMatchSuggesterDecorator extends Lookup {
 
     private final Lookup delegate;
 
-    private final  Supplier<SearcherManager> searcherMgr;
+    private final Supplier<SearcherManager> searcherMgr;
 
     private final Function<String, String> keyTransformationFunction;
 /*
@@ -227,4 +229,11 @@ public InxightInfixSuggester(Version matchVersion, Directory dir,
 
         return 0;
     }
+    
+	@Override
+	public void close() throws IOException {
+		if(this.delegate instanceof Closeable){
+			((Closeable)this.delegate).close();
+		}
+	}
 }
