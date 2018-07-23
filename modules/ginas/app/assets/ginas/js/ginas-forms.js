@@ -176,12 +176,12 @@
             });
         };
 
-        factory.cleanSequence = function (sequence, sequenceType) {
-            if(sequenceType){
-                subclass = sequenceType;
-            }
+
+        factory.cleanSequence = function (sequence) {
             if(_.isUndefined(factoryResidues)) {
-                factory.getResidues(subclass);
+                return factory.getResidues(subclass).then(function(){
+                    return factory.cleanSequence(sequence);
+                });
             }
             sequence = _.filter(sequence, function (aa) {
                 var temp = (_.find(factoryResidues, ['value', aa.toUpperCase()]));
