@@ -313,7 +313,8 @@
                 return ret;
         };
 
-     /**
+
+        /**
           * Recalculates the subunit display chunks, used both as a rendering aid,
           * and in some other methods as a quick cache of what sites are modified
           * or otherwise enhanced.
@@ -326,12 +327,16 @@
                 subunits=substance.protein.subunits;
             }else if(subclass === "nucleicAcid"){
                 subunits=substance.nucleicAcid.subunits;
-            }        
+            }
+            var deferred = scope.$q.defer();
+            var promises = [];
             _.forEach(subunits, function (su, index) {
-                factory.parseSubunit(substance,su,index+1);
+                promises.push(factory.parseSubunit(substance,su,index+1));
             });
-                
+
+            return deferred.all(promises);
         };
+
         /**
           * This method accepts a substance, a subunit, and an optional subunit index
           * and then computes a chunked display cache of the residue sites contained
