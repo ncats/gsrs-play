@@ -17,7 +17,8 @@ public class ChemCleaner {
 	 * @return
 	 */
 	public static String getCleanMolfile(String mfile) {
-		if(!mfile.contains("M  END"))return mfile;
+
+		if(mfile == null || !mfile.contains("M  END"))return mfile;
 		
 		// JSdraw adds this to some S-GROUPS
 		// that aren't always good
