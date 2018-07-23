@@ -813,9 +813,13 @@
             return $scope[facet];
         };
 
-        $scope.redirectVersion = function () {
+        $scope.redirectVersion = function (v) {
+                if(!v){
+                        v=$scope.versionNumber;
+                }
+       
             var base = $window.location.pathname.split('/v/')[0];
-            var newLocation = "/v/" + $scope.versionNumber;
+            var newLocation = "/v/" + v;
             $window.location.pathname = base + newLocation;
         };
 
