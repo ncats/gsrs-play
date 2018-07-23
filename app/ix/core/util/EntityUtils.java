@@ -2724,14 +2724,21 @@ public class EntityUtils {
 		LinkedReferenceSet<Object> prevEntities; // protect against infinite
 		// recursion
 		EntityWrapper estart; // seed
+		private static final Integer DEFAULT_MAX_DEPTH = 10; // should be good enough for anybody
 
 		public EntityTraverser() {
 			path = new PathStack();
+			path.setMaxDepth(DEFAULT_MAX_DEPTH);
 			prevEntities = new LinkedReferenceSet<Object>();
 		}
 
 		public EntityTraverser using(EntityWrapper e1) {
 			this.estart = e1;
+			return this;
+		}
+
+		public EntityTraverser maxDepth(Integer maxDepth){
+			path.setMaxDepth(maxDepth);
 			return this;
 		}
 
@@ -2750,6 +2757,13 @@ public class EntityUtils {
 				if (this.listens != null){
 					listens.accept(path, ew); // listener caller
 				}
+				//May 18, 2018, Clinical Trial Testing purpose
+				/*System.out.println(prevEntities.asStream()
+						.map(o->EntityWrapper.of(o))
+						.map(ew1 -> ew1.getOptionalKey())
+						.map(k -> k.toString())
+						.collect(Collectors.joining("->")));
+                  */
 
 				prevEntities.pushAndPopWith(ew.getValue(), () -> {
 					//ALL collections and arrays are recursed
