@@ -5,113 +5,117 @@
 @(names: List[Name], substance: Substance = null)
 @renderName(n: Name) = {
     <tr>
-                <td>
-                	<div>
-                		<input class="name-form form-control" style="width:100%; font-width:bold;" readonly value="@n.name" />
-                	</div>
-                	@if(n.getLocators(substance).size()>0){
-            				<div class="locators"><label>Locators:</label>
-		            		@for(l <- n.getLocators(substance)) {
-		                    	<span tooltip-append-to-body="true" uib-tooltip="@GinasApp.getCV.getDisplay("LOCATORS", l)" class="badge" >@l</span> &nbsp;
-		                    }
-		                    </div>
-                    }
-                </td>
-                <td class="name-type">
-                @GinasApp.getCV.getDisplay("NAME_TYPE",{n.`type`})
-                @if(n.preferred) {
-                    <div class="pref-name"><i class="fa fa-check" aria-hidden="true"></i>Preferred Name</div>
-                }
-                @if(n.isDisplayName()) {
-                    <div class="display-name"><i class="fa fa-check" aria-hidden="true"></i>Display Name</div>
-                }
-                </td>
-                <td class="name-details">
-            		
-	                @if(n.languages.size()>0){
-	                	<div class="table-responsive">
-			                <div><label>Language:</label>
-			                @for(l <- n.languages) {
-			                    @GinasApp.getCV.getDisplay("LANGUAGE", l.term) &nbsp;
-			                }
-			                </div>
-		                </div>
-	                }
-	                @if(n.domains.size()>0){
-	                	<div class="table-responsive">
-			                <div><label>Domain:</label>
-			                @for(d <- n.domains) {
-			                    @GinasApp.getCV.getDisplay("NAME_DOMAIN", d.term) &nbsp;
-			                }
-			                </div>
-		                </div>
-	                }
-	                @if(n.nameJurisdiction.size()>0){
-	                	<div class="table-responsive">
-			                <div><label>Jurisdiction:</label>
-			                @for(j <- n.nameJurisdiction) {
-		                    	@GinasApp.getCV.getDisplay("JURISDICTION",j.term) &nbsp;
-		                	}
-			                </div>
-		                </div>
-	                }
-	                @if(n.nameOrgs.size()>0){
-	               		<div class="table-responsive">
-			                <div><label>Naming Org:</label>
-			                @for(org <- n.nameOrgs) {
-		                    	@GinasApp.getCV.getDisplay("NAME_ORG", org.nameOrg) &nbsp;
-		               		}
-			                </div>
-		                </div>
-	                }
-                </td>
-                @if(n.getReferences.size > 0){
-                <td style="text-align:right;">
-                	<referencesmanager ref-count substance ="'@substance.getUuid'" divid ="'@n.getUuid'" references = "@GinasApp.getAsJson(n.getReferences())"></referencesmanager>
-                </td>
-                }else{
-                	<td>none</td>
-            	}
-            </tr>
-           
-            <tr><td class = "row-spacer '@n.getUuid'" colspan = "4"></td></tr>
-        	
-            <tr ng-if="audit == true"><td  colspan = "4">Created by <code>@n.createdBy</code> on <code>@n.created</code> , Edited by <code>@n.lastEditedBy</code> on <code>@n.lastEdited</code></td></tr>
+		<td>
+			@*<div style="width:100%;">*@
+			<table class="info-wrapper">
+				<tr>
+					<td style="width:100%;">
+						<span>@n.name</span>
+						@* preferred name checkmark*@
+						@if(n.preferred){
+							<span title="Preferred Name" class="pref-check">
+								<i class="fa fa-check" aria-hidden="true"></i>
+							</span>
+						}
+					</td>
+					<td>
+						@* info-popup contents *@
+						@if(n.getReferences.size > 0 || n.getLocators(substance).size()>0){   
+							<info-popup>
+							
+							<div class="info-popup-container">
+								@if(n.getLocators(substance).size()>0){
+										<div class="locators">
+											<div>
+												<label>Locators:</label>
+											</div>
+										@for(l <- n.getLocators(substance)) {
+											<span tooltip-append-to-body="true" 
+											uib-tooltip="@GinasApp.getCV.getDisplay("LOCATORS", l)" 
+											class="badge" >
+												@l
+											</span> &nbsp;
+										}
+										</div>
+								}
+							
+								@if(n.nameOrgs.size()>0){
+									<div class="table-responsive">
+										<div>
+											<label>Naming Organization:</label>
+											@for(org <- n.nameOrgs) {
+												@GinasApp.getCV.getDisplay("NAME_ORG", org.nameOrg) &nbsp;
+											}
+										</div>
+									</div>
+								}
+							
+								<div>
+									<label>Source@if(n.getReferences.size>1){s}else{}:</label>
+									@if(n.getReferences.size > 0){
+										<referencesmanager reftable 
+										hide-header="true" 
+										show='["cit"]' 
+										substance ="'@substance.uuid'" 
+										sreferences = "@GinasApp.getAsJson(n.getReferences())" >
+										</referencesmanager>
+									}
+								</div>
+							</div>
+							</info-popup>
+						}
+					</td>
+				</tr>
+			</table>
+			@*</div>*@
+			
+		 
+		</td>
+		
+		<td id="one-line">
+			@if(n.preferred) {
+				Preferred Name
+			}else{
+				@GinasApp.getCV.getDisplay("NAME_TYPE",{n.`type`})
+			} 
+		</td>
+		
+		<td >
+			@if(n.languages.size()>0){
+				<div class="table-responsive">
+					<div>
+						@for(l <- n.languages) {
+							@GinasApp.getCV.getDisplay("LANGUAGE", l.term) &nbsp;
+						}
+					</div>
+				</div>
+			}	                
+		</td>
+	</tr>
 }
 
-<button class="btn btn-primary label-offset det" ng-init = "namescollapse=true" ng-click = "namescollapse = !namescollapse">
-    <i ng-show="namescollapse" class="fa fa-caret-right"></i>
-    <i ng-hide="namescollapse" class="fa fa-caret-down"></i>
-    Names&nbsp;<span class="badge"> @names.length</span></button>
-<div class="col-md-12 table-responsive" uib-collapse = "namescollapse">
-    <table class="name-table table" id="namesTable">
-        <thead>
-            <tr>
-                <th>Name</th>
-                <th>Type</th>
-                <th>Details</th>
-                <th>References</th>
-            </tr>
-        </thead>
-        <tbody>
-        @*Show Display and Preferred Names First*@
-        @for(n <- names) {
-        	@if(n.isDisplayName() || n.preferred){
-            	@renderName(n)
-            }
-        }
-        </tbody>
-        <tbody ng-if="!allnames">
-        <tr><td colspan="4"> ... </td></tr>
-        </tbody>
-        <tbody ng-if="allnames">
-        @for(n <- names) {
-        	@if(!n.isDisplayName() && !n.preferred){
-            	@renderName(n)
-            }
-        }
-        </tbody>
-    </table>
-     <button class="btn btn-primary pull-right" ng-hide="allnames" ng-click="allnames = !allnames">Show All Names</button>
-     <button class="btn btn-primary pull-right" ng-show="allnames" ng-click="allnames = !allnames">Hide Names</button>
-</div>
+<table class="table gsrs-datatable" id="namesTable">
+	<thead>
+		<tr>
+			<th>Name</th>
+			<th>Type</th>
+			<th>Language</th>
+			
+		</tr>
+	</thead>
+	<tbody>
+	@*Show Display and Preferred Names First*@
+   
+	@for(n <- names) {
+	
+		@if(n.isDisplayName() || n.preferred){
+			@renderName(n)
+		}
+	}
+	@for(n <- names) {
+		@if(!n.isDisplayName() && !n.preferred){
+			@renderName(n)
+		}
+	}
+	</tbody>
+</table>

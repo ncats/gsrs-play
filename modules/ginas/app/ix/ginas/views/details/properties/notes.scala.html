@@ -4,11 +4,13 @@
 
 
 @(notes: List[Note], id:String)
+@*
 <button class="btn btn-primary label-offset det" ng-init = "notescollapse =true" ng-click = "notescollapse = !notescollapse">
   <i ng-show="notescollapse" class="fa fa-caret-right"></i>
   <i ng-hide="notescollapse" class="fa fa-caret-down"></i>
   Notes&nbsp;<span class="badge"> @notes.length</span></button>
 <div class="col-md-12 table-responsive" uib-collapse = "notescollapse">
+*@
   <table class="table" id="notesTable">
     <thead>
       <tr>
@@ -32,4 +34,6 @@
       </tr>
     }
   </table>
+@*
 </div>
+*@

@@ -2,38 +2,38 @@
 
 
 @(references: List[Reference])
-
-<button class="btn btn-primary label-offset det" ng-init="referencescollapse=true" ng-click = "referencescollapse = !referencescollapse">
-    <i ng-show="referencescollapse" class="fa fa-caret-right"></i>
-    <i ng-hide="referencescollapse" class="fa fa-caret-down"></i>
-    References&nbsp;<span class="badge"> @references.length</span></button>
-<div class="col-md-12 table-responsive" uib-collapse = "referencescollapse">
-    <table class="table table-striped" id="allReferencesTable">
-        <thead>
-            <tr>
-                <th>Source Text / Citation</th>
-                <th>Source Type</th>
-                <th>Date Accessed</th>
-
-            </tr>
-        </thead>
-        @for(r <- references) {
-            <tr>
-                <td>
-                @if(r.url != null) {
-                    <a href="@r.url" target ="_blank">@r.citation</a>
-                } else {
-                    @r.citation
+<table class="table gsrs-datatable" id="allReferencesTable">
+    <thead>
+        <tr>
+            <th>Source Text / Citation</th>
+            <th>Source Type</th>
+            <th>Tags</th>
+            <th>Date Accessed</th>
+        </tr>
+    </thead>
+    @for(r <- references) {
+        <tr>
+            <td>
+            @if(r.url != null) {
+                <a href="@r.url" target ="_blank">@r.citation</a>
+            } else {
+                @r.citation
+            }
+            </td>
+            <td>
+            @r.docType
+            </td>
+            <td>
+                @for( tag <- r.tags){
+                    <span class="badge">@tag.term</span>
                 }
-                </td>
-                <td>
-                @r.docType
-                </td>
-                <td>
-                @r.documentDate
-                </td>
-            </tr>
-        }
-    </table>
-</div>
+            </td>
+            <td>
+            <span class="hidden">@r.getDocumentSortPrefix()</span>@r.documentDate
+            </td>
+        </tr>
+    }
+
+</table>
+
 
