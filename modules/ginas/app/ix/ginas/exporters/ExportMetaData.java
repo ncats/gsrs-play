@@ -13,7 +13,7 @@ import ix.utils.Global;
  * Created by katzelda on 4/18/17.
  */
 @JSONEntity(name = "metadata")
-public class ExportMetaData {
+public class ExportMetaData implements Comparable<ExportMetaData>{
     private Consumer<Long> totalConsumer=(l)->{};
     
     public String id = UUID.randomUUID().toString();
@@ -215,5 +215,17 @@ public class ExportMetaData {
     public ExportMetaData onTotalChanged(Consumer<Long> total){
         this.totalConsumer=total;
         return this;
+    }
+
+    @Override
+    public int compareTo(ExportMetaData o) {
+        int v = Long.compare(finished, o.finished);
+        if( v!=0){
+            v= Long.compare(started, o.started);
+        }
+        if(v !=0){
+            v = getFilename().compareTo(o.getFilename());
+        }
+        return v;
     }
 }
