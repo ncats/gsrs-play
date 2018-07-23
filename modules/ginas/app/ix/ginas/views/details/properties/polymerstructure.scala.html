@@ -1,0 +1,110 @@
+
+@import ix.core.models.Structure
+@import ix.ginas.models.v1.GinasChemicalStructure
+@import ix.ginas.controllers.GinasApp
+@import ix.ginas.models.v1.PolymerSubstance
+
+
+@(sub: ix.ginas.models.v1.PolymerSubstance)
+
+@***************************@
+@* TODO: FIX THIS TEMPLATE *@
+
+@structureImage(s: Structure, size: Integer, showstereo: Boolean = false) = {
+    <img class="struc-thumb img-responsive" alt="Display Structure of @sub.getName" title="Display Structure of @sub.getName"
+    src='@ix.ginas.controllers.routes.GinasApp.structure(s.getId(), "svg", size)'>
+    @if(showstereo){
+     <table class="table">
+        <thead>
+            <tr>
+                    <th>Stereochemistry</th>
+                    <th>Optical Activity</th>
+                    <th>Additional Stereochemistry</th>
+            </tr>
+        </thead>
+    <tr>
+    <td><span class="badge">@s.stereoChemistry</span></td>
+            <td><span class="badge">
+            @if(s.opticalActivity!=null){
+                @s.opticalActivity.toValue()
+            }else{
+                @s.opticalActivity
+            }
+            </span></td>
+            <td><span class="badge">@s.atropisomerism</span></td>
+            </tr>
+         @if(sub.polymer.getReferences() != null && sub.polymer.getReferences().size() > 0) {
+             <tr><td>Definition References</td><td >
+                 <referencesmanager ref-count substance ="'@sub.getUuid()'" divid ="'@sub.getUuid()'" references = "@GinasApp.getAsJson(sub.polymer.getReferences())"></referencesmanager></td></tr>
+             <tr><td class ="'@sub.getUuid()'" colspan="2"></td></tr>
+         }
+            </table>
+    }
+    
+}
+
+@makeTable(s: GinasChemicalStructure, stype: String) = {
+    <div class="table-responsive">
+    <table class="table @stype-Table">
+        <thead>
+            <tr>
+                @if(stype == "monomer") {
+                    <th>Monomer Name</th>
+                    <th>Moiety Count</th>
+                    <th>Moiety Stereochemistry</th>
+                    <th>Moiety Optical Activity</th>
+                    <th>Moiety Additional Stereochemistry</th>
+                }
+                <th>Molecular Formula</th>
+                <th>Molecular Weight</th>
+                <th>Defined Stereocenters</th>
+                <th>EZ Centers</th>
+                <th>Charge</th>
+                @if(stype != "moiety") {
+                    <th>Reference</th>
+                }
+            </tr>
+        </thead>
+        @fillTable(s, stype)
+    </table>
+        </div>
+}
+
+
+@fillTable(s: GinasChemicalStructure, stype: String) = {
+	@if(stype == "structure") {
+	    <tr>
+	        <td>@s.formula</td>
+	        <td>@s.mwt</td>
+	        <td><span class="badge">@s.definedStereo / @s.stereoCenters</span></td>
+	        <td><span class="badge">@s.ezCenters</span></td>
+	        <td><span class="badge">@s.charge</span></td>
+	        @referencetable(GinasApp.getStructureReferences(s), "hi", 6)
+	    </tr>
+	}
+}
+
+
+
+@**********************************************************@
+@**********************************************************@
+@**********************************************************@
+@**********************************************************@
+
+
+        <div class="col-md-6">
+            <div class = "row">
+            @structureImage(sub.polymer.displayStructure, 400,false)
+            </div>
+            <div class = "row">
+                <div class = "col-md-6 col-md-offset-6">
+                    <ul class= "list-inline pull-right list-unstyled" id = "exportSave">
+                        <li  class = "padded"> 
+                        	<modal-button type= "export" structureid ="'@sub.polymer.getUuid'" format="mol" format2="sdf" ></modal-button>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        

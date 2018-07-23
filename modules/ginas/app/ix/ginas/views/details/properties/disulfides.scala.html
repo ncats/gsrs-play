@@ -1,0 +1,16 @@
+@(sub: ix.ginas.models.v1.ProteinSubstance)        
+                    <table class="table table-striped" id="disulfide-Table">
+                        <thead>
+                            <tr>
+                                <th>From</th>
+                                <th>To</th>
+                            </tr>
+                        </thead>
+                        @for(disLink <- sub.protein.getDisulfideLinks()) {
+                            <tr>
+                            @for(s <- disLink.getSites()) {
+                                <td>@{s.subunitIndex}_@{s.residueIndex}</td>
+                            }
+                            </tr>
+                        }
+                    </table>

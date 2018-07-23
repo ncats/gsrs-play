@@ -1,0 +1,24 @@
+
+@import ix.ginas.controllers.GinasApp
+@import ix.ginas.models.v1.Note
+@import ix.ginas.models.v1.NucleicAcidSubstance
+
+
+@(sub: NucleicAcidSubstance)
+<table class="table table-striped" >
+    <thead>
+        <tr><th>Linkage</th>
+            <th>Site Range</th>
+            <th>Site Count</th>
+        </tr>
+    </thead>
+    <tbody>
+    @for(linkage <- sub.nucleicAcid.getLinkages()) {
+        <tr>
+            <td>@GinasApp.getLinkageName(linkage)</td>
+            <td>@linkage.getSitesShorthand()</td>
+            <td>@linkage.getSites().size() / @GinasApp.totalSites(sub, false)</td>                            
+         </tr>
+    }
+    </tbody>
+</table>

@@ -1,0 +1,11 @@
+@(sub: ix.ginas.models.v1.Substance, subunits: List[ix.ginas.models.v1.Subunit], stype: String)        
+        <div style="float: right;margin-right: 20px;">
+              <switch id="numbers" name="numbers" ng-model="numbers" on='<i class="fa fa-list-ol fa-2x"></i>' off='<i class="fa fa-bars fa-2x"></i>'></switch>
+        </div>
+        
+        @*************************@
+        @* This should be redone *@
+        
+        @for(i <- 0 until subunits.size()) {
+            <subunit uuid="'@sub.getUuid'" index ='@i' version='@sub.version' view='subunits' numbers="numbers" subclass="@stype"></subunit>
+        }

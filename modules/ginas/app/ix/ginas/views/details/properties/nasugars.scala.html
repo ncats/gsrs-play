@@ -1,0 +1,24 @@
+
+@import ix.ginas.controllers.GinasApp
+@import ix.ginas.models.v1.Note
+@import ix.ginas.models.v1.NucleicAcidSubstance
+
+
+@(sub: NucleicAcidSubstance)
+<table class="table table-striped">
+    <thead>
+        <tr><th>Sugar</th>
+            <th>Site Range</th>
+            <th>Site Count</th>
+        </tr>
+    </thead>
+    <tbody>
+    @for(sugar <- sub.nucleicAcid.getSugars()) {
+        <tr>
+            <td>@GinasApp.getSugarName(sugar)</td>
+            <td>@sugar.getSitesShorthand()</td>
+            <td>@sugar.getSites().size() / @GinasApp.totalSites(sub)</td>                            
+         </tr>
+    }
+    </tbody>
+</table>

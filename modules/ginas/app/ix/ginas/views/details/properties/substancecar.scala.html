@@ -1,0 +1,15 @@
+@import ix.ginas.models.v1.{ChemicalSubstance, SubstanceReference}
+@import ix.utils.Tuple
+
+					
+@(tups:List[Tuple[String,SubstanceReference]])		
+    <div class="carousel" data-flickity='{ "groupCells": true }'>
+		       @for(sr <- tups) {
+		       			<div class="carousel-cell">
+		                	<div>
+		                		<center><div>@sr.k()</div></center>
+		                	    @subref(sr.v())
+		                	</div>
+		                </div>
+		       }
+	</div>          

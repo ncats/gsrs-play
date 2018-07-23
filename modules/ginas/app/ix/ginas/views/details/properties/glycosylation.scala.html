@@ -1,0 +1,45 @@
+@(sub: ix.ginas.models.v1.ProteinSubstance)        
+
+ 					@if(sub.protein.glycosylation.glycosylationType != null) {
+ 						<div class="row">
+ 						    <div class="col-md-6">
+		 						<table class="table kv-table">
+			 						<tbody>
+			 							<td>Glycosylation Type</td>
+			 							<td>@sub.protein.glycosylation.glycosylationType</td>
+			 						</tbody>
+		                        </table>
+	                        </div>
+                        </div>
+                        
+                    }
+                    <div class="row">
+ 						    <div class="col-md-12">
+			                    <table class="table table-striped" id="glycoC-Table">
+			                        <thead>
+			                            <tr>
+			                                <th>Glycosylation Link Type</th>
+			                                <th>Site</th>
+			                            </tr>
+			                        </thead>
+			                        @for(s <- sub.protein.glycosylation.getCGlycosylationSites()) {
+			                            <tr>
+			                                <td>C</td>
+			                                <td>@{s.subunitIndex}_@{s.residueIndex}</td>
+			                            </tr>
+			                        }
+			                        @for(s <- sub.protein.glycosylation.getNGlycosylationSites()) {
+			                            <tr>
+			                                <td>N</td>
+			                                <td>@{s.subunitIndex}_@{s.residueIndex}</td>
+			                            </tr>
+			                        }
+			                        @for(s <- sub.protein.glycosylation.getOGlycosylationSites()) {
+			                            <tr>
+			                                <td>O</td>
+			                                <td>@{s.subunitIndex}_@{s.residueIndex}</td>
+			                            </tr>
+			                        }
+			                    </table>
+                    		</div>
+                    </div>

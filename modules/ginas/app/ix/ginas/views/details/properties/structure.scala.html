@@ -1,0 +1,220 @@
+@import ix.core.models.Structure
+@import ix.core.models.Structure.NYU
+@import ix.ginas.models.v1.GinasChemicalStructure
+@import ix.ginas.controllers.GinasApp
+
+@(sub: ix.ginas.models.v1.ChemicalSubstance)        
+
+@structureImage(s: Structure, size: Integer, version: String) = {
+    <img class="struc-thumb img-responsive" alt="Structure of @sub.getName" title="Structure of @sub.getName"
+    ng-init="showStereo=false"
+    ng-src='@ix.ginas.controllers.routes.GinasApp.structure(s.getId(), "svg", size, null, version)&stereo={{showStereo}}'>
+    <button ng-click="showStereo=!showStereo">
+    <span ng-show="showStereo">Hide Stereo</span>
+    <span ng-hide="showStereo">Show Stereo</span>
+    </button>
+}
+
+<div class="col-md-5 col-sm-5 col-xs-5">
+	<div class="panel panel-default additional">
+		<div class="panel-heading"> 
+					<h3 class="panel-title flexbox">
+						Details
+						@if(sub.structure.getReferences() != null && sub.structure.getReferences().size > 0) {
+							<info-popup class="flexbox">
+								<div class="info-popup-container">
+									<div>
+									<referencesmanager reftable 
+									hide-header="false"
+									@* order can be changed in reference-table.html template *@
+									show='["typ","tags","cit"]'
+									substance ="'@sub.getUuid()'" 
+									sreferences = "@GinasApp.getAsJson(sub.structure.getReferences())" >
+									</referencesmanager>
+										
+									</div>
+									
+								</div>
+							</info-popup>
+						}
+					</h3>
+		</div>
+		
+		<div class="table-responsive">
+			<table class="table kv-table" id="moiety-table">
+				<tr>
+					<td>
+						<span>Stereochemistry</span>
+					</td>
+					
+					<td>
+						@if(sub.structure.stereoChemistry == Structure.Stereo.ACHIRAL) {
+							<span class="badge" id="badge-achiral">
+								@sub.structure.stereoChemistry
+							</span>
+						}
+						@if(sub.structure.stereoChemistry == Structure.Stereo.ABSOLUTE) {
+							<span class="badge" id="badge-absolute">
+								@sub.structure.stereoChemistry
+							</span>
+						}
+						@if(sub.structure.stereoChemistry == Structure.Stereo.RACEMIC) {
+							<span class="badge" id="badge-racemic">
+								@sub.structure.stereoChemistry
+							</span>
+						}
+						@if(sub.structure.stereoChemistry == Structure.Stereo.MIXED) {
+							<span class="badge" id="badge-mixed">
+								@sub.structure.stereoChemistry
+							</span>
+						}
+						@if(sub.structure.stereoChemistry == Structure.Stereo.EPIMERIC) {
+							<span class="badge" id="badge-epimeric">
+								@sub.structure.stereoChemistry
+							</span>
+						}
+						@if(sub.structure.stereoChemistry == Structure.Stereo.UNKNOWN) {
+							<span class="badge" id="badge-unknown">
+								@sub.structure.stereoChemistry
+							</span>
+						}
+					</td>
+				</tr>
+				
+				<tr>
+					<td><span>Molecular Formula</span></td>
+					<td class="monospace">@sub.structure.formula</td>
+				</tr>
+				
+				<tr>
+					<td><span>Molecular Weight</span></td>
+					<td class="monospace">@sub.structure.mwt</td>
+				</tr>
+				
+				<tr>
+					<td><span>Optical Activity</span></td>
+					<td><span class="badge">
+					@if(sub.structure.opticalActivity != null) {
+						@sub.structure.opticalActivity.toValue()
+					} else {
+						Unspecified
+					}
+					</span></td>
+				</tr>
+				
+				 @if(sub.structure.atropisomerism != NYU.No && sub.structure.atropisomerism !=null) {
+				<tr>
+					<td><span>Additional Stereochemistry</span></td>
+					<td><span class="badge">@sub.structure.atropisomerism</span></td>
+				</tr>
+				}
+			   
+				<tr>
+					<td><span>Defined Stereocenters</span></td>
+					<td><span class="badge">@sub.structure.definedStereo / @sub.structure.stereoCenters</span></td>
+				</tr>
+				
+				<tr>
+					<td><span>E/Z Centers</span></td>
+					<td><span class="badge">@sub.structure.ezCenters</span></td>
+				</tr>
+				
+				<tr>
+					<td><span>Charge</span></td>
+					<td><span class="badge">@sub.structure.charge</span></td>
+				</tr>
+				
+				@if(sub.structure.stereoComments != null && !sub.structure.stereoComments.equals("")) {
+					<tr>
+						<td><span>Stereo Comments</span></td>
+						<td>@sub.structure.stereoComments</td>
+					</tr>
+				}
+				
+			</table>
+		</div>
+	</div>	
+	<a href="#" class="show-smiles-inchi"><br>
+		<span class="smiles-inchi">Show SMILES / InChI<span class="smiles-inchi"><i class="fa fa-caret-down" aria-hidden="true"></i>
+	</a>
+</div>
+
+<div class="col-md-6 col-sm-6 col-xs-6">
+		<div class = "row">
+		@structureImage(sub.structure, 400, sub.version)
+		</div>
+		<div class = "row">
+			<div class = "col-md-6 col-md-offset-6">
+				
+			</div>
+		</div>
+</div>
+
+ <div class="col-md-1 col-sm-1 col-xs-1">
+		<div class = "row">
+			<ul class= "structure-tools list-unstyled">
+				<li class = "padded"> 
+					<modal-button type= "export" structureid ="'@sub.structure.id'" format="mol" format2="sdf" >
+					</modal-button>
+				</li>
+				<li class = "padded"><a ng-href="@ix.ginas.controllers.routes.GinasApp.structuresearch(sub.structure.id.toString())" tooltip-placement="auto right" uib-tooltip="Structure Search" target="_self" aria-label="Structure Search">
+					<span class="sr-only">Structure Search</span>
+					<span class="fa fa-2x fa-search success"></span></a>
+				</li>
+			</ul>
+		</div>
+</div>
+
+<div class="col-md-12 col-sm-12 col-xs-12" id="smiles-inchi">
+	<div class="panel panel-default additional">
+		<div class="panel-heading"> 
+					<h3 class="panel-title">
+						SMILES
+					</h3>
+		</div>
+	
+		<div class="panel-body additional-data">
+
+			<div class="monospace">
+				@sub.structure.smiles
+			</div>
+		</div>
+	</div>
+	
+	@defining(sub.structure.getInChIKey()) { inchikey =>
+		@defining(sub.structure.getInChI()) { inchi =>
+
+			<div class="panel panel-default additional">
+			
+				@if(inchikey!=null || inchi!=null){
+					<div class="panel-heading"> 
+								<h3 class="panel-title">
+									InChI
+								</h3>
+					</div>
+				}
+
+				@if(inchikey!=null){
+					<div class="panel-body additional-data">
+						<div class="monospace">
+									@inchikey
+						</div>
+					</div>
+				}
+				
+				@if(inchi!=null){
+					<div class="panel-body additional-data">
+						<div class="monospace">
+									@inchi
+						</div>
+					</div>
+				}
+					
+			</div>
+		}
+	}
+	<a href="#" class="hide-smiles-inchi"><br>
+		<span class="smiles-inchi">Hide SMILES / InChI<span class="smiles-inchi"><i class="fa fa-caret-up" aria-hidden="true"></i>
+	</a>
+			
+</div>   

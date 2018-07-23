@@ -1,0 +1,17 @@
+@(sub: ix.ginas.models.v1.ProteinSubstance)        
+                    <table class="table table-striped" id="otherLinks-Table">
+                        <thead>
+                            <tr><th>Linkage Type</th>
+                                <th>Residue Index</th>
+                            </tr>
+                        </thead>
+                        @for(otherLink <- sub.protein.otherLinks) {
+                            <tr>
+                                <td>@otherLink.linkageType</td>
+	                            @for(s <- otherLink.getSites()) {
+	                                <td>@{s.subunitIndex}_@{s.residueIndex}</td>
+	                            }
+                            </tr>
+                        }
+
+                    </table>
