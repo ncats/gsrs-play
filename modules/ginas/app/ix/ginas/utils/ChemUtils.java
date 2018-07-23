@@ -78,10 +78,10 @@ public class ChemUtils {
 			gpm.add(mes);
 		}
 	}
-	/**
-	 * Checks for basic valence problems on structure, adding warnings to the
-	 * supplied list
-	 * 
+    /**
+     * Checks for basic valence problems on structure, adding warnings to the
+     * supplied list
+     *
      * @param newstr
      * @param callback
      */
@@ -95,7 +95,7 @@ public class ChemUtils {
 	/**
 	 * Checks for basic chiral flag problems on structure, adding warnings to the
 	 * supplied list, and fix the flag.
-	 *
+	 * 
 	 * @param newstr
 	 * @param gpm
 	 */
@@ -136,7 +136,7 @@ public class ChemUtils {
 			}
 		}
 		lines[3]=MOLFILE_COUNT_LINE_PARSER.standardize(lines[3]);
-			newstr.molfile=Arrays.stream(lines).collect(Collectors.joining("\n"));
+		newstr.molfile=Arrays.stream(lines).collect(Collectors.joining("\n"));
 		
 	}
 
