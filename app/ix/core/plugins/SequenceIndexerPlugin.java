@@ -29,8 +29,10 @@ public class SequenceIndexerPlugin extends Plugin {
         try {
             File sequence = ctx.sequence();
             indexer = SequenceIndexer.open(sequence);
+
             int kmersize = app.configuration().getInt("ix.kmer.size", 3);
             indexer.setKmerSize(kmersize);
+
 
             Logger.info("Plugin "+getClass().getName()+" started!");        
         }
@@ -59,4 +61,9 @@ public class SequenceIndexerPlugin extends Plugin {
 
     public boolean enabled () { return !closed; }
     public SequenceIndexer getIndexer () { return indexer; }
+
+
+    public void add(String id, String sequence) throws IOException{
+        indexer.add(id, sequence);
+    }
 }

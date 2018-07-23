@@ -32,6 +32,7 @@ public class IxCache extends Plugin {
     public static final String CACHE_TIME_TO_LIVE = "ix.cache.timeToLive";
     public static final String CACHE_TIME_TO_IDLE = "ix.cache.timeToIdle";
 
+    public static final String CACHE_USE_FILEDB = "ix.cache.useFileDb";
     private final Application app;
 
     private GateKeeper gateKeeper;
@@ -66,12 +67,16 @@ public class IxCache extends Plugin {
         int timeToIdle = app.configuration()
                 .getInt(CACHE_TIME_TO_IDLE, DEFAULT_TIME_TO_IDLE);
 
-        GateKeeper gateKeeper = new GateKeeperFactory.Builder( maxElements, timeToLive, timeToIdle)
+        GateKeeperFactory.Builder builder = new GateKeeperFactory.Builder( maxElements, timeToLive, timeToIdle)
                 .debugLevel(debugLevel)
-                .useNonEvictableCache(notEvictableMaxElements,timeToLive,timeToIdle)
-                .cacheAdapter(new FileDbCache(context.cache(), "inMemCache"))
-                .build()
-                .create();
+                .useNonEvictableCache(notEvictableMaxElements,timeToLive,timeToIdle);
+
+        boolean useFileCache = app.configuration().getBoolean(CACHE_USE_FILEDB, true);
+        if(useFileCache){
+            builder.cacheAdapter(new FileDbCache(context.cache(), "inMemCache"));
+
+        }
+        GateKeeper gateKeeper = builder.build().create();
         _instance = new IxCache(gateKeeper);
     }
 
