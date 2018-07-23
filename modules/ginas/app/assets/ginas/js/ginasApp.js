@@ -1187,7 +1187,6 @@
                         'Content-Type': 'application/json'
                     }
                 }).then(function (response) {
-                    console.log(response);
                     $scope.updateNav = false;
                     $scope.postRedirect = response.data.uuid;
                     var url = baseurl + "assets/templates/modals/submission-success.html";
