@@ -206,9 +206,17 @@
                     _.forEach(sub.protein.otherLinks, function (value, key) {
                         var otherLink = {};
                         var sites = _.toArray(value.sites);
-                        if (sites.length % 2 != 0) {
-                            sites = _.dropRight(sites);
-                        }
+                        // TODO: Previously we would throw away odd-number 
+                        // sites, anticipating that other links typically connected 
+                        // sets of 2 residues. This was not a good idea as some
+                        // links are between odd numbers of sites. However, some
+                        // form of warning should probably be present which makes the
+                        // meaning of the sets of otherLinks more clear.
+                         
+                        //if (sites.length % 2 != 0) {
+                        //    sites = _.dropRight(sites);
+                        //}
+
                         sub.protein.otherLinks[key].sites = sites;
                     });
                 }
