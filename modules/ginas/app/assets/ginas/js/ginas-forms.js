@@ -1413,6 +1413,13 @@
                     });
                 };
 
+                scope.deleteUpload = function(obj){
+                       
+                       if(confirm("Are you sure you want to remove this documet?")){
+                               obj.uploadedFile=null;
+                       }
+                };
+
                 //actual method to delete the reference uuid from an object references array
                 scope.deleteObjectReferences = function (obj, id) {
                     var index;
