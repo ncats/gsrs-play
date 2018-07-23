@@ -2365,6 +2365,9 @@
                                     
                                     _.chain(scope.parent.polymer.structuralUnits)
                                      .map(function(sru){
+                                         if(sru.amount){
+                                                 sru.amount.uuid=null;
+                                         }
                                          amounts[sru.label]=sru.amount;
                                      })
                                      .value();
