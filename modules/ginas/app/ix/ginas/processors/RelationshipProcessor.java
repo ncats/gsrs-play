@@ -18,9 +18,9 @@ public class RelationshipProcessor implements EntityProcessor<Relationship>{
 	public Model.Finder<UUID, Relationship> finder;
 	
 	private static RelationshipProcessor _instance = null;
-	
-	private Set<String> deletedUuidsInProgress = Collections.newSetFromMap(new ConcurrentHashMap<>());
 
+	private Set<String> deletedUuidsInProgress = Collections.newSetFromMap(new ConcurrentHashMap<>());
+	
 	public RelationshipProcessor(){
 		finder = new Model.Finder(UUID.class, Relationship.class);
 		_instance=this;

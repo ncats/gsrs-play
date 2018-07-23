@@ -6,7 +6,6 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import ix.core.validator.GinasProcessingMessage;
-import ix.core.models.Group;
 import ix.ginas.models.v1.Substance;
 
 public abstract class GinasProcessingStrategy implements Predicate<GinasProcessingMessage>{
