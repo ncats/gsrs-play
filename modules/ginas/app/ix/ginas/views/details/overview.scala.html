@@ -5,7 +5,6 @@
 @import ix.ncats.controllers.security.IxDynamicResourceHandler
 @import ix.ginas.models.v1.Substance
 @import ix.ginas.controllers.v1.SubstanceFactory
-@import ix.ginas.controllers.GinasSrsApp
 @(sub: Substance)
 @* 
 this template is for part of the Record Details card 
@@ -28,14 +27,6 @@ deprecated early version
 		<div class= "monospace">@sub.getApprovalIDDisplay()</div>
 	</td>
 </tr>
-@if(GinasSrsApp.getBdNum(sub).isPresent()){
-		<tr>
-			<td>BDNUM</td>
-			<td>
-				<div class="monospace">@GinasSrsApp.getBdNum(sub).get()</div>
-			</td>
-		</tr>
-}
 
 
 <tr>

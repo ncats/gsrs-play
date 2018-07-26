@@ -17,7 +17,6 @@ import ix.ginas.models.v1.ProteinSubstance;
 import ix.ginas.models.v1.StructurallyDiverseSubstance;
 import ix.ginas.models.v1.Substance;
 import ix.ginas.models.v1.Substance.SubstanceClass;
-import ix.ginas.utils.views.cards.srs.FDADetailsCard;
 import ix.utils.Tuple;
 import play.twirl.api.Html;
 
@@ -84,7 +83,6 @@ Chemical Details
 		addAllAdditionalCards(cardView,s);
 
 		//FDADetails
-		cardView.add(new FDADetailsCard(s), ViewType.Substance);
 
 		cardView.add(new SubstanceOverviewCard(s), ViewType.Substance);
 		cardView.add(new PrimaryDefinitionCard(s), ViewType.Substance);
