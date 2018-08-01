@@ -1744,6 +1744,7 @@
                     temp = angular.copy(obj);
                     scope.referenceobj = obj;
                     scope.index = index;
+
                      modalInstance = $uibModal.open({
                         templateUrl: baseurl + "assets/templates/modals/cv-terms-modal.html",
                         size: 'xl',
