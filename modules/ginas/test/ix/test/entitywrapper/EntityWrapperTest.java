@@ -76,7 +76,7 @@ public class EntityWrapperTest extends AbstractGinasServerTest {
 		try {
 			Inception inc = new Inception();
 			Set<String> expectedVisited = new HashSet<String>();
-			expectedVisited.add("root_");
+			expectedVisited.add("root");
 			expectedVisited.add("root_realChild");
 			Set<String> pathsVisited = new HashSet<String>();
 

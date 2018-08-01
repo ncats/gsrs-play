@@ -2724,14 +2724,21 @@ public class EntityUtils {
 		LinkedReferenceSet<Object> prevEntities; // protect against infinite
 		// recursion
 		EntityWrapper estart; // seed
+		private static final Integer DEFAULT_MAX_DEPTH = 10; // should be good enough for anybody
 
 		public EntityTraverser() {
 			path = new PathStack();
+			path.setMaxDepth(DEFAULT_MAX_DEPTH);
 			prevEntities = new LinkedReferenceSet<Object>();
 		}
 
 		public EntityTraverser using(EntityWrapper e1) {
 			this.estart = e1;
+			return this;
+		}
+
+		public EntityTraverser maxDepth(Integer maxDepth){
+			path.setMaxDepth(maxDepth);
 			return this;
 		}
 

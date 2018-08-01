@@ -70,6 +70,7 @@ public class SequenceSearchAPI extends AbstractGinasTest{
                 String uuid = parsePartialUuidFrom(anchor);
                 String name = anchor.getTextContent();
 
+                System.out.println("found anchor " + name);
                 //TODO can we assume the order is the same as the order of the previous list?
                 float identity = Float.NaN;
                 if(identitiesIter.hasNext()) {
