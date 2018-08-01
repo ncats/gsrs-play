@@ -1,0 +1,27 @@
+@(size: Integer, anchor: String, title: String )
+	    <li role="presentation" id="sidebar-menu-item">
+			<a href="#@anchor" prevent-default=""
+			ng-click="parent.scrollTo('@anchor')">
+			   	<table>
+					<tr>
+						<td id="sidebar-menu-item-chevron">
+							<i class="fa fa-chevron-right" aria-hidden="true"></i>
+						</td>
+
+						<td id="sidebar-menu-item-name">
+							@title
+						</td>
+
+						<td id="sidebar-menu-item-count">
+							@if(size>0){
+								<span class="badge pull-right">@size</span>
+							}
+						</td>
+					</tr>
+				</table>
+	       </a>
+
+    	   <div id="sidebar-menu-separator">
+           </div>
+	    </li>
+  

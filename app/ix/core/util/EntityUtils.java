@@ -2757,6 +2757,13 @@ public class EntityUtils {
 				if (this.listens != null){
 					listens.accept(path, ew); // listener caller
 				}
+				//May 18, 2018, Clinical Trial Testing purpose
+				/*System.out.println(prevEntities.asStream()
+						.map(o->EntityWrapper.of(o))
+						.map(ew1 -> ew1.getOptionalKey())
+						.map(k -> k.toString())
+						.collect(Collectors.joining("->")));
+                  */
 
 				prevEntities.pushAndPopWith(ew.getValue(), () -> {
 					//ALL collections and arrays are recursed

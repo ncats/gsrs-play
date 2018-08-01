@@ -91,7 +91,11 @@ public interface IndexableValue {
 	default String[] splitPath(String path){
 		return getPathSepPattern().split(path);
 	}
-	
+
+	default int suggestWeight() {
+		return 1;
+	}
+
 	
 	default IndexableValue suggestable(){
 		IndexableValue me = this;

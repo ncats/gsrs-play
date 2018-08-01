@@ -41,4 +41,13 @@ public class Modifications extends GinasCommonSubData {
     public int getLength(){
         return this.agentModifications.size() + this.physicalModifications.size() + this.structuralModifications.size();
     }
+    
+    @JsonIgnore
+    public List<GinasCommonSubData> allModifications(){
+    	List<GinasCommonSubData> mods = new ArrayList<GinasCommonSubData>();
+    	mods.addAll(this.agentModifications);
+    	mods.addAll(this.physicalModifications);
+    	mods.addAll(this.structuralModifications);
+    	return mods;
+    }
 }

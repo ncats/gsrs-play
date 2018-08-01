@@ -68,13 +68,11 @@ public class EndToEndSequenceAlignmentTest extends AbstractGinasServerTest{
 
     @Test
     public void findLoadedSequence(){
-
-
         File jsonFile = new File(folder, "peptide.json");
         submitSubstance(jsonFile);
 
         SequenceSearchAPI api = new SequenceSearchAPI(session);
-                                                                                     //"CYIQNCPLG"
+                                                               //"CYIQNCPLG"
         List<SequenceSearchAPI.SearchResult> actual = api.searchProteins("CYIQXCPLG", .5);
         //we can't guess the uuid at the moment because it's randomly generated
 

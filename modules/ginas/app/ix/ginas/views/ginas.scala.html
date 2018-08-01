@@ -1,5 +1,5 @@
 @import play.api.Play.current
-@(title: String, kind: String, showSketcher: Boolean = false, includeJsTree: Boolean = false)(menu: Html)(content: Html)
+@(title: String, kind: String, showSketcher: Boolean = false, includeJsTree: Boolean = false, showMenuCss: Boolean = true)(menu: Html)(content: Html)
 
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en" ng-app ="ginas">
@@ -34,6 +34,11 @@
     <link rel="stylesheet" href='@routes.Assets.at("ginas/css/ng-tags-input.bootstrap.css")'>
     <link rel="stylesheet" href='@routes.Assets.at("ginas/css/json-formatter.css")'>
     <link rel="stylesheet" href='@routes.Assets.at("ginas/css/ginas.css")'>
+    
+    @if(showMenuCss){
+    <link rel="stylesheet" href='@routes.Assets.at("ginas/css/menu-style.css")'>
+    }
+    <link rel="stylesheet" href='@routes.Assets.at("ginas/css/jquery.dataTables.css")'>
     
     
     
@@ -74,6 +79,7 @@
     <script src='@routes.Assets.at("ginas/js/ng-tags-input.js")' type='text/javascript'></script>
     <script src='@routes.Assets.at("ginas/js/screengrabber.js")' type='text/javascript'></script>
     <script src='@routes.Assets.at("ginas/js/filereader.js")' type='text/javascript'></script>
+    <script src='@routes.Assets.at("ginas/js/jquery.dataTables.js")' type='text/javascript'></script>
     <script src='@routes.Assets.at("ginas/js/polyfill.js")' type='text/javascript'></script>
     
     <script src='@routes.Assets.at("gsrs2/assets/js/gsrsapi.0.1.js")' type='text/javascript'></script>
@@ -117,16 +123,36 @@
         <mol-export></mol-export>
     </div>
 <script>
-  $(document).ready(function(){
-	  $('body').scrollspy({
-	    offset:300
-	  });
-	  $('#affix').affix({
-		  offset: {
-		    top: 50
-		  }
-	  })
-  });
+$(document).ready(function(){
+  
+  
+           try{
+               $("table.gsrs-datatable").DataTable( {
+                       "lengthMenu": [[5, 20, 100, -1], [5, 20, 100, "All"]],
+                       language: {
+                               search: "",
+                               searchPlaceholder: "Search ..."
+                       },
+                       "aaSorting": []
+               });
+               }catch(e){
+                console.log(e);
+               }
+               $('.unloaded').removeClass("unloaded");
+	 
+               $('body').scrollspy({
+                       offset:300,
+                       target:".sidebar-inner"
+               });
+	 
+
+               $('#affix').affix({
+                       offset: {
+                       top: 50
+                       }
+               });
+       });
+
 
 
 
@@ -143,15 +169,110 @@
 	  onResize();
 	});
 </script>
-			<div class="modal export" id="loading">
-                <div class="modal-dialog">
-                    <div class="modal-content">
-                        <div class="modal-body">
-                            <div id="loading-progress"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>   
+<script>
+               $(function () {
+                       if($('.fixedpos').length>0){
+                               var fixmeTop = $('.fixedpos').offset().top;       // get initial position of the element
+
+                               $(window).scroll(function() {                  // assign scroll event listener
+       
+                                       var currentScroll = $(window).scrollTop(); // get current position
+                               
+                                       if (currentScroll >= fixmeTop) {           // apply position: fixed if you
+                                               $('.fixedpos').css({                      // scroll to that element or below it
+                                                       position: 'fixed',
+                                                       top: '0'
+                                               });
+                                       } else {                                   // apply position: static
+                                               $('.fixedpos').css({                      // if you scroll above it
+                                                       position: 'absolute',
+                                                       top: 'inherit'
+                                               });
+                                       }
+                               });
+                       }
+                       var resetBindings = function(){
+                       
+                               $('[data-toggle="popover"]:not(.toggle-force)').off();
+                               $('.toggle-on').off();
+                               
+                               
+                               $('[data-toggle="popover"]:not(.toggle-on)').unbind( "click" );
+                               $('.toggle-on').unbind( "click" );
+                               
+                               $('[data-toggle="popover"]:not(.toggle-on)').click(function(){
+                                       $(this).addClass("toggle-on");
+                                       var _this=this;
+                                       console.log("not toggle on");
+                                       setTimeout(function(){
+                                               $(_this).popover("show");
+                                       },10);
+                                       resetBindings();
+                               });
+                               
+                               $('.toggle-on').click(function(){
+                                       $(this).removeClass("toggle-on");
+                                       $(this).popover('hide');
+                                       resetBindings();
+                               });     
+                               
+                               $('[data-toggle="popover"]:not(.toggle-force)')
+                       .popover({ trigger: "manual" , html: true, animation:false})
+                       .on("mouseenter", function () {
+                               
+                               if(false){
+                               var _this = this;
+                               var t=Math.random() + "";
+                               $(_this).attr("fade_id",t);
+                               $(this).popover("show");
+                               $(".popover").on("mouseleave", function () {
+                                       setTimeout(function () {
+                                               if(!$(_this).hasClass("toggle-on")){
+                                                       $(_this).popover('hide');
+                                               }
+                                       },800);
+                               });
+                               }
+                       })
+                       .on("mouseleave", function () {
+                       if(false){
+                               var _this = this;
+                               if(!$(_this).hasClass("toggle-on")){
+                               var t=Math.random() + "";
+                               $(_this).attr("fade_id",t);
+                               
+                               setTimeout(function () {
+                                               if (!$(".popover:hover").length) {
+                                                       if($(_this).attr("fade_id") == t){
+                                                               $(_this).popover("hide");
+                                                       }
+                                               }
+                               }, 800);
+                               }
+                               }
+                       });
+                       };
+                       resetBindings();
+                       
+                       document.body.addEventListener("click", function(e){
+                               if(!$(e.target).parents(".popover").length){
+                                       $('[data-toggle="popover"]').popover('hide');
+                               }
+                       
+                       });
+               });
+       </script>
+
+<div class="modal export" id="loading">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-body">
+                <div id="loading-progress"></div>
+            </div>
+        </div>
+    </div>
+</div>
+  
 </body>
 </html>
 

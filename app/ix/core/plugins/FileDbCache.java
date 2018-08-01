@@ -104,7 +104,7 @@ public class FileDbCache implements GinasFileBasedCacheAdapter {
 	        try{
 	        	env.removeDatabase(null, cacheName);
 	        }catch(Exception e){
-	        	Logger.error("No persist cache to delete", e);
+	        	Logger.warn("No persist cache to delete", e);
 	        }
         }
         DatabaseConfig dbconf = new DatabaseConfig ();

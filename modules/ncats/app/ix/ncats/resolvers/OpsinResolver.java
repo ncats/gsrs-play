@@ -7,7 +7,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
-import ix.ncats.resolvers.AbstractStructureResolver.UrlAndFormat;
+
 /**
  * Created by katzelda on 3/29/18.
  */
@@ -19,8 +19,8 @@ public class OpsinResolver extends AbstractStructureResolver{
     }
 
     @Override
-    protected UrlAndFormat[] resolvers(String name) throws MalformedURLException {
-        return new UrlAndFormat[0]; // unused
+    protected AbstractStructureResolver.UrlAndFormat[] resolvers(String name) throws MalformedURLException {
+        return new AbstractStructureResolver.UrlAndFormat[0]; // unused
     }
 
     @Override

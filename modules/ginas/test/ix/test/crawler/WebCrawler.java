@@ -21,7 +21,7 @@ import javax.swing.text.html.parser.DTD;
  */
 public class WebCrawler {
     static final Logger logger = Logger.getLogger(WebCrawler.class.getName());
-   
+
 
     public enum UserAgent {
 
@@ -87,13 +87,13 @@ public class WebCrawler {
         public void handleStartTag (HTML.Tag t,
                                     MutableAttributeSet attr, int pos) {
         }
-        
+
         @Override
         public void handleEndTag (HTML.Tag t, int pos) {
         }
-        
+
         @Override
-        public void handleSimpleTag 
+        public void handleSimpleTag
             (HTML.Tag t, MutableAttributeSet a, int pos) {
             MutableAttributeSet attr = new SimpleAttributeSet (a);
             //logger.info("simpletag: "+t);
@@ -104,7 +104,7 @@ public class WebCrawler {
                         URL u;
                         if (url.startsWith("?")) {
                             url = url.replaceAll("\\s", "%20");
-                            
+
                             pos = this.url.toString().indexOf('?');
                             if (pos > 0) {
                                 u = new URL (this.url.toString()
@@ -117,7 +117,7 @@ public class WebCrawler {
                         else {
                             u =new URL (this.url, url);
                         }
-                        
+
                         // no linkout.. keep with within the same site
                         if (u.getHost().equals(this.url.getHost()))
                             hrefs.add(u);
@@ -126,7 +126,7 @@ public class WebCrawler {
                         logger.log(Level.SEVERE, "Bogus url: "+url, ex);
                     }
                 }
-            }                   
+            }
         }
 
         public List<URL> getLinks () { return hrefs; }
@@ -205,7 +205,7 @@ public class WebCrawler {
         }
         else {
             visited.add(url);
-            
+
             try {
                 long start = System.currentTimeMillis();
                 String s = url.toString().replaceAll("\\s", "+");
@@ -213,16 +213,16 @@ public class WebCrawler {
               //  System.out.println(u);
 
                 if(visitor.shouldVisit(url)){
-	                    
+
 	                Callable<HtmlParser> c = new Callable<HtmlParser>(){
-	
+
 						@Override
 						public HtmlParser call() throws Exception {
 							HtmlParser parser = new HtmlParser (url, session, visitor, path);
 							
 							return parser;
 						}
-	                	
+
 	                };
 
 	                Future<HtmlParser> futureParse =  ForkJoinPool.commonPool().submit(c);
@@ -237,7 +237,7 @@ public class WebCrawler {
                 }
             }
             catch (TimeoutException ex) {
-            	
+
                 logger.severe(path.toString()+": "+ex.getMessage());
                 System.out.println("Timeout in path: " + path.toString()+": "+ex.getMessage());
 

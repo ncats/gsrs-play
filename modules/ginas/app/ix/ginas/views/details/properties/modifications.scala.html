@@ -1,0 +1,11 @@
+					
+@(sub:ix.ginas.models.v1.Substance)
+    @if(sub.getModifications().agentModifications.size > 0) {
+        @agentmodifications(sub.getModifications().agentModifications)
+    }
+    @if(sub.getModifications().physicalModifications.size > 0) {
+        @physicalmodifications(sub.getModifications().physicalModifications)
+    }
+    @if(sub.getModifications().structuralModifications.size > 0) {
+        @structuralmodifications(sub.getModifications().structuralModifications)
+    }

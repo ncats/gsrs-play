@@ -111,6 +111,18 @@ public class Glycosylation extends GinasCommonSubData {
     public Glycosylation () {}
     
     @JsonIgnore
+    public List<Site> getAllSites(){
+    	List<Site> allSites=new ArrayList<Site>();
+    	
+    	allSites.addAll(this.getOGlycosylationSites());
+    	allSites.addAll(this.getNGlycosylationSites());
+    	allSites.addAll(this.getCGlycosylationSites());
+    	
+        return allSites;
+    }
+    
+    
+    @JsonIgnore
     @Indexable(facet=true,name="Glycosylation Site Count")
     public int getSiteCount(){
     	int count = 0;

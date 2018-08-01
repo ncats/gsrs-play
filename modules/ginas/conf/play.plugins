@@ -3,3 +3,4 @@
 # ~~~~~~~
 500:ix.ginas.controllers.plugins.GinasSubstanceExporterFactoryPlugin
 501:ix.core.plugins.Workers
+505:ix.ginas.controllers.plugins.CardViewPlugin

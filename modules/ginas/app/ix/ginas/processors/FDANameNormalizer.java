@@ -9,9 +9,9 @@ import ix.core.EntityProcessor;
 import ix.ginas.models.v1.Name;
 
 public class FDANameNormalizer implements EntityProcessor<Name>{
+	
 
-
-
+	
 	private static final Map<String, String> toFdaMap, fromFdaMap;
 	static{
 		fromFdaMap = new HashMap<>();
@@ -90,29 +90,29 @@ public class FDANameNormalizer implements EntityProcessor<Name>{
 		}
 		return sb.toString();
 	}
-
+	
 	public static String toFDA(String name){
 		return replaceFromMap(name, toFdaMap).toUpperCase();
 
 	}
-
+	
 	public static String fromFDA(String name){
 		return replaceFromMap(name, fromFdaMap);
 
 	}
+	
 
-
-
+	
 
 	@Override
 	public void prePersist(Name obj) {
 		String name = obj.getName();
 		obj.stdName=fromFDA(name);
 	}
-
+	
 	@Override
 	public void preUpdate(Name obj) {
 		prePersist(obj);
 	}
-
+	
 }

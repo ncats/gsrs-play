@@ -13,21 +13,21 @@ public class FunctionalTest  extends AbstractGinasServerTest {
     @Test
     public void loggedInUserHasLogout()   throws Exception {
         try(RestSession session = ts.newRestSession(ts.getFakeUser1())){
-             String content = session.get("ginas/app").getBody();
-             assertContains(content,"logout");
-         }
+            String content = session.get("ginas/app").getBody();
+            assertContains(content,"logout");
+        }
     }
 
-   @Test
+    @Test
     public void testRouteSubstance() throws Exception {
-	   System.out.println("Starting route to substance");
-       try(RestSession session = ts.newRestSession(ts.getFakeUser1())){
-    	   System.out.println("Fetching list");
-           String content = session.get("ginas/app/substances").getBody();
+        System.out.println("Starting route to substance");
+        try(RestSession session = ts.newRestSession(ts.getFakeUser1())){
+            System.out.println("Fetching list");
+            String content = session.get("ginas/app/substances").getBody();
 
-           assertContains(content,"substances");
+            assertContains(content,"substances");
 
-       }
+        }
     }
     @Test
     public void testRouteLogin() throws Exception {
@@ -45,8 +45,8 @@ public class FunctionalTest  extends AbstractGinasServerTest {
             assertContains(content,"moiety-form");
             testCommonWizardElements(content);
         }catch(Throwable t){
-        	t.printStackTrace();
-        	throw t;
+            t.printStackTrace();
+            throw t;
         }
     }
     @Test
@@ -78,7 +78,7 @@ public class FunctionalTest  extends AbstractGinasServerTest {
             testCommonWizardElements(content);
         }
     }
-    
+
     //@Ignore("waiting on login rewrite")
     @Test
     public void testRoutePolymerWizard()  throws Exception {
@@ -89,9 +89,9 @@ public class FunctionalTest  extends AbstractGinasServerTest {
             assertContains(content,"polymer-sru-form");
             //assertThat(content).contains("Structural Units");
             testCommonWizardElements(content);
-       }
+        }
     }
-   
+
     @Test
     public void testRouteNucleicAcidWizard() throws Exception {
         try(RestSession session = ts.newRestSession(ts.getFakeUser1())){
@@ -107,22 +107,22 @@ public class FunctionalTest  extends AbstractGinasServerTest {
 
     @Test
     public void testRouteConceptWizard() throws Exception {
-    	
+
         try(RestSession session = ts.newRestSession(ts.getFakeUser1())){
             String content = session.get("ginas/app/wizard?kind=concept").getBody();
-            
+
             testCommonWizardElements(content);
         }
     }
 
     public void testCommonWizardElements(String content){
-    	assertContains(content,"name-form");
-    	assertContains(content,"code-form");
-    	assertContains(content,"relationship-form");
-    	assertContains(content,"note-form");
-    	assertContains(content,"property-form");
-    	assertContains(content,"reference-form");
+        assertContains(content,"name-form");
+        assertContains(content,"code-form");
+        assertContains(content,"relationship-form");
+        assertContains(content,"note-form");
+        assertContains(content,"property-form");
+        assertContains(content,"reference-form");
     }
-    
+
 
 }

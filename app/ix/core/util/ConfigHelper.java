@@ -78,7 +78,7 @@ public class ConfigHelper {
 
         return getOrDefault(path,def,cls);
     }
-
+    
     public static <T> T getOrDefault(String path, T def, Class<?> cls) {
         return (T) configVars.get().computeIfAbsent(path, p -> {
             return resolver.apply(Tuple.of(path, cls), def);
@@ -92,9 +92,9 @@ public class ConfigHelper {
         return mapper.convertValue(maps, cls);
     }
     private static class SList extends ArrayList<String>{}
-
-
-
+    
+    
+    
 
     /**
      * Explicitly set a configuration variable
@@ -129,8 +129,8 @@ public class ConfigHelper {
             if (SList.class.isAssignableFrom(cls)) {
                 return Play.application().configuration().getStringList(key, (List<String>) d);
             }
-
-
+           
+    
             return EntityWrapper.of(Play.application().configuration().asMap())
                     .at(PojoPointer.fromURIPath(key.replace(".", "/"))) // This is a
                                                                         // silly way
@@ -142,5 +142,6 @@ public class ConfigHelper {
 
     });
     public static BiFunction<Tuple<String, Class<?>>, Object, Object> resolver = PLAY_CONFIG_RESOLVER;
+
 
 }

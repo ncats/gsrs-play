@@ -32,6 +32,7 @@ public class Subunit extends GinasCommonSubData {
     	}
     }
     
+    
 //    public List<char[]> getCharArr(){
 //    	List<char[]> returnArr = new ArrayList<char[]>();
 //    	int index = 0;

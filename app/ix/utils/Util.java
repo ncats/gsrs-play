@@ -925,6 +925,7 @@ public class Util {
 
 	
 	
+    
 	
 	/**
 	 * Represent a GinasChemicalStructure as a GinasCommonData element
@@ -948,5 +949,6 @@ public class Util {
 		dat.lastEditedBy=struc.lastEditedBy;
 		return dat;
 	}	
+	
 	
 }

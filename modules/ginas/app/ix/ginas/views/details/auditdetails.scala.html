@@ -1,0 +1,19 @@
+@import ix.ginas.models.GinasCommonData
+
+@(dat: GinasCommonData)
+<div class="col-md-12">
+	<strong>Created</strong>
+	<div id="one-line">
+		by <code>@dat.createdBy</code>
+	</div>
+	<div id="one-line">
+		on <code>@dat.created</code>
+	</div>
+	<strong>Edited</strong>
+	<div id="one-line">
+		by <code>@dat.lastEditedBy</code> 
+	</div>
+	<div id="one-line">
+		on <code>@dat.lastEdited</code>
+	</div>
+</div>

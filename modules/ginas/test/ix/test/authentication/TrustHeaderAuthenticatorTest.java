@@ -131,12 +131,12 @@ public class TrustHeaderAuthenticatorTest extends AbstractGinasClassServerTest{
 		public Config getServerConfigMap(){
 			return ConfigFactory.parseMap(
 							 Util.MapBuilder
-							.putNew("ix.authentication.trustheader", (Object) trustHeaders)
-							.put("ix.authentication.usernameheader", HEADER_NAME)
-							.put("ix.authentication.useremailheader", HEADER_EMAIL)
-							.put("ix.authentication.allownonauthenticated", allownonauthenticated)
-							.put("ix.authentication.autoregister", autoregister)
-							.put("ix.authentication.autoregisteractive", this.autoregisteractive)
+			.putNew("ix.authentication.trustheader", (Object) trustHeaders)
+			.put("ix.authentication.usernameheader", HEADER_NAME)
+			.put("ix.authentication.useremailheader", HEADER_EMAIL)
+			.put("ix.authentication.allownonauthenticated", allownonauthenticated)
+			.put("ix.authentication.autoregister", autoregister)
+			.put("ix.authentication.autoregisteractive", this.autoregisteractive)
 							.build());
 		}
 		int getExpectedStatusWithHeaderAndCreated() {

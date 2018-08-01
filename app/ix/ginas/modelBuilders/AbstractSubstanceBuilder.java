@@ -346,4 +346,16 @@ public abstract class AbstractSubstanceBuilder<S extends Substance, T extends Ab
         });
     }
 
+    public T modifyNames(Consumer<List<Name>> namesConsumer){
+        Objects.requireNonNull(namesConsumer);
+        return andThen( s-> {namesConsumer.accept(s.names);});
+    }
+
+    public T setAccess(Set<Group> groups){
+        return andThen( s-> {s.setAccess(groups);});
+    }
+
+    public T setToPublic(){
+        return setAccess(Collections.emptySet());
+    }
 }

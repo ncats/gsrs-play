@@ -1,5 +1,6 @@
 package ix.ncats.resolvers;
 
+import chemaxon.formats.MolExporter;
 import gov.nih.ncgc.chemical.Chemical;
 import ix.core.util.ConfigHelper;
 import play.Logger;
@@ -108,15 +109,15 @@ public abstract class AbstractStructureResolver implements Resolver<Structure> {
             UrlAndFormat[] urls = resolvers (name);
             for (UrlAndFormat url : urls) {
 
-            for (int tries = 0; tries < maxtries; ++tries) {
-                try {
+                for (int tries = 0; tries < maxtries; ++tries) {
+                    try {
 
                         // If the Proxy flag is enabled in the Config file, it connects to proxy or it wouldn't
                         Proxy proxy = null;
-                        if(PROXY_ENABLED) {
+                        if (PROXY_ENABLED) {
                             proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress(PROXY_NAME, PORT_NUMBER));
                             System.out.println("Checking for Config file values");
-                            System.out.println("Proxy Name is :"+PROXY_NAME+"\n"+"Port Number is :"+PORT_NUMBER);
+                            System.out.println("Proxy Name is :" + PROXY_NAME + "\n" + "Port Number is :" + PORT_NUMBER);
                         } else {
                             proxy = Proxy.NO_PROXY;
                         }
@@ -127,25 +128,25 @@ public abstract class AbstractStructureResolver implements Resolver<Structure> {
                         con.setConnectTimeout(connTimeout);
 
                         int status = con.getResponseCode();
-                        Logger.debug("Resolving "+url+"..."+status);
+                        Logger.debug("Resolving " + url + "..." + status);
                         if (status == HttpURLConnection.HTTP_NOT_FOUND) {
                             break;
-                    }
+                        }
                         Structure s = resolve(con.getInputStream(), url.format);
                         if (s != null) {
                             return s;
-                }
+                        }
                         //if we get this far something worked
                         break;
 
                     } catch (Exception ex) {
                         ex.printStackTrace();
-                    Logger.warn("Fail to resolve \""+name+"\"; "
-                                +tries+"/"+maxtries+" attempts");
-                    Thread.sleep(500); // 
+                        Logger.warn("Fail to resolve \"" + name + "\"; "
+                                + tries + "/" + maxtries + " attempts");
+                        Thread.sleep(500); //
+                    }
                 }
             }
-        }
         }
         catch (Exception ex) {
             Logger.error("Fail to resolve \""+name+"\"", ex);

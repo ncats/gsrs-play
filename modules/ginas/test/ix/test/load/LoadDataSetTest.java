@@ -10,6 +10,7 @@ import java.util.Collections;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 
+import ix.core.util.RunOnly;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -39,8 +40,8 @@ public class LoadDataSetTest extends AbstractLoadDataSetTest{
 
 
 	public static final String TEST_TESTDUMPS_REP90_GINAS = "test/testdumps/rep90.ginas";
-    
-    
+
+
 	@Rule
     public ExpectedException expectedException = ExpectedException.none();
 
@@ -62,8 +63,7 @@ public class LoadDataSetTest extends AbstractLoadDataSetTest{
         TestFacetUtil.assertFacetsMatch(TestFacetUtil.createExpectedRep90Facets(), results);
         
     }
-    
-    
+
     private void substructureSearchShouldWait(BrowserSession session) throws IOException, AssertionError{
     	BrowserSubstanceSearcher searcher = new BrowserSubstanceSearcher(session);
     	searcher.setSearchOrder("Name Count");
@@ -91,7 +91,7 @@ public class LoadDataSetTest extends AbstractLoadDataSetTest{
 						.getUuids().contains(findUUID));
         assertTrue("15th page of substructure search should have no other substances",results2.getUuids().size()==1);
     }
-    
+
     private void substructureSearchShouldWaitAndLaterPagesShouldReturn(BrowserSession session) throws IOException, AssertionError{
     	BrowserSubstanceSearcher searcher = new BrowserSubstanceSearcher(session);
     	SearchResult resultsFirst =searcher.getSubstructureSearch("CC1=CC=CC=C1", 2, 3,true);
@@ -153,7 +153,8 @@ public class LoadDataSetTest extends AbstractLoadDataSetTest{
     }
 
     
-    @Test 
+    @Test
+    @RunOnly
     public void loadAsAdmin() throws IOException {
         try(BrowserSession session = ts.newBrowserSession(admin)){
             SubstanceLoader loader = new SubstanceLoader(session);

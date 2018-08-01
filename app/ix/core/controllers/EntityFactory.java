@@ -17,7 +17,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Stack;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -41,14 +40,11 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.github.fge.jsonpatch.JsonPatch;
 
 import ix.core.*;
-import ix.core.util.GinasPortalGun;
 import ix.core.validator.*;
 import ix.core.adapters.EntityPersistAdapter;
 import ix.core.adapters.InxightTransaction;
 import ix.core.controllers.v1.RouteFactory;
-import ix.core.models.BeanViews;
-import ix.core.models.ETag;
-import ix.core.models.Edit;
+import ix.core.models.*;
 import ix.core.plugins.IxCache;
 import ix.core.plugins.TextIndexerPlugin;
 import ix.core.search.ArgumentAdapter;
@@ -56,6 +52,7 @@ import ix.core.search.text.TextIndexer;
 import ix.core.util.CachedSupplier;
 import ix.core.util.EntityUtils.EntityWrapper;
 import ix.core.util.EntityUtils.Key;
+import ix.core.util.GinasPortalGun;
 import ix.core.util.Java8Util;
 import ix.core.util.pojopointer.PojoPointer;
 import ix.utils.Util;
@@ -1150,7 +1147,7 @@ public class EntityFactory extends Controller {
          if(oWrap.getEntityClass().equals(nWrap.getEntityClass())){ //only use POJO patch if the entities are the same type
          	usePojoPatch=true;
          }
-         
+
          if(usePojoPatch){
          	doPojoPatch(oWrap,nWrap); //saves too!
          	return (EntityWrapper<T>)oWrap; //Mutated
@@ -1292,22 +1289,23 @@ public class EntityFactory extends Controller {
 
                 EntityPersistAdapter.getInstance().deepreindex(entityThatWasSaved);
             }catch(Exception e){
-                String errorID=UUID.randomUUID().toString().split("-")[0];
+            	
+            	String errorID=UUID.randomUUID().toString().split("-")[0];
                 Logger.error("Error updating entity [Error ID:" + errorID + "]", e);
 
-                vrlist.get(0).setInvalid();
+                    vrlist.get(0).setInvalid();
                 vrlist.get(0).addValidationMessage(new ValidationMessage(){
 
-                    @Override
-                    public String getMessage() {
-                        return "Error updating entity [Error ID:" + errorID + "]:" + e.getMessage() +  ". See applicaiton log for more details.";
-                    }
+					@Override
+					public String getMessage() {
+						return "Error updating entity [Error ID:" + errorID + "]:" + e.getMessage() +  ". See applicaiton log for more details.";
+					}
 
-                    @Override
-                    public MESSAGE_TYPE getMessageType() {
-                        return MESSAGE_TYPE.ERROR;
-                    }
-
+					@Override
+					public MESSAGE_TYPE getMessageType() {
+						return MESSAGE_TYPE.ERROR;
+					}
+                	
                 });
             }finally{
                 tx.end();

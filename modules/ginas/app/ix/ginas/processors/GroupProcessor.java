@@ -13,8 +13,12 @@ public class GroupProcessor implements EntityProcessor<Group>{
 	public void prePersist(Group obj) {
 		Logger.debug("Adding a group to CV");
 		ControlledVocabulary cvv = ControlledVocabularyFactory.getControlledVocabulary("ACCESS_GROUP");
-		VocabularyTerm vt=cvv.getTermWithValue(obj.name);
-		Logger.debug("The domain is:" + cvv.domain + " with " + cvv.terms.size() + " terms");
+		VocabularyTerm vt=null;
+		if(cvv !=null){
+			vt = cvv.getTermWithValue(obj.name);
+			Logger.debug("The domain is:" + cvv.domain + " with " + cvv.terms.size() + " terms");
+		}
+
 		if(vt==null){
 			Logger.debug("Group didn't exist before");
 			vt = new VocabularyTerm();

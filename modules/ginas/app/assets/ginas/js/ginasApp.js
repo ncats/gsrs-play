@@ -206,9 +206,17 @@
                     _.forEach(sub.protein.otherLinks, function (value, key) {
                         var otherLink = {};
                         var sites = _.toArray(value.sites);
-                        if (sites.length % 2 != 0) {
-                            sites = _.dropRight(sites);
-                        }
+                        // TODO: Previously we would throw away odd-number 
+                        // sites, anticipating that other links typically connected 
+                        // sets of 2 residues. This was not a good idea as some
+                        // links are between odd numbers of sites. However, some
+                        // form of warning should probably be present which makes the
+                        // meaning of the sets of otherLinks more clear.
+                         
+                        //if (sites.length % 2 != 0) {
+                        //    sites = _.dropRight(sites);
+                        //}
+
                         sub.protein.otherLinks[key].sites = sites;
                     });
                 }
@@ -805,9 +813,13 @@
             return $scope[facet];
         };
 
-        $scope.redirectVersion = function () {
+        $scope.redirectVersion = function (v) {
+                if(!v){
+                        v=$scope.versionNumber;
+                }
+       
             var base = $window.location.pathname.split('/v/')[0];
-            var newLocation = "/v/" + $scope.versionNumber;
+            var newLocation = "/v/" + v;
             $window.location.pathname = base + newLocation;
         };
 
@@ -1108,7 +1120,6 @@
             $scope.errorsArray = [];
             $http.post(baseurl + 'api/v1/substances/@validate', sub).then(
 	    function success(response) {
-            console.log(response);
                 $scope.validating = false;
                 $scope.errorsArray = $scope.parseErrorArray(response.data.validationMessages);
                 $scope.canSubmit = $scope.noErrors();
@@ -1175,7 +1186,6 @@
                         'Content-Type': 'application/json'
                     }
                 }).then(function (response) {
-                    console.log(response);
                     $scope.updateNav = false;
                     $scope.postRedirect = response.data.uuid;
                     var url = baseurl + "assets/templates/modals/submission-success.html";
@@ -1279,7 +1289,6 @@
                         'Content-Type': 'application/json'
                     }
                 }).then(function (response) {
-                    console.log(response);
                     $scope.updateNav = false;
                     $scope.postRedirect = response.data.uuid;
                     var url = baseurl + "assets/templates/modals/submission-success.html";
@@ -2220,7 +2229,6 @@
                 };
 
                 scope.cleanSequence = function () {
-                    //console.log("clean sequence");
                     scope.obj.sequence = subunitParser.cleanSequence(scope.obj.sequence);
                     scope.obj.$sequence = scope.preformatSeq(subunitParser.cleanSequence(scope.obj.$sequence));
                     scope.parseSubunit();
@@ -2355,6 +2363,9 @@
                                     
                                     _.chain(scope.parent.polymer.structuralUnits)
                                      .map(function(sru){
+                                         if(sru.amount){
+                                                 sru.amount.uuid=null;
+                                         }
                                          amounts[sru.label]=sru.amount;
                                      })
                                      .value();
@@ -2420,9 +2431,71 @@
 
 			return mol;
 		};
-		scope.getMol = function(){
-			return scope.clean(scope.sketcher.getMolfile());
-		}
+                // Extract information about charges from jsdraw XML.
+                // This is only needed due to a bug in jsdraw where molfiles don't
+                // produce the right charge components when charges are over 3.
+                // Returns null if no charges found.
+                
+                scope.getMChargeFromXML = function(xml){
+                    var rep = function(v, n){
+                        var t="";
+                        for(var i=0;i<n;i++){
+                            t=t+v;
+                        }
+                        return t;
+                    };
+                
+                    var leftPad = function(v, p){
+                        return rep(" ", p-v.length) + v;
+                    };
+                
+                    var charges=_.chain($(xml).find("a[c]"))
+                     .map(function(a){
+                          var ai = $(a).attr("i");
+                          var ac = $(a).attr("c");
+                          var o  = {"i":ai-0, 
+                                  "c":ac-0};
+                          o.toString=function(){
+                                return leftPad(o.i+"",4) + leftPad(o.c+"",4);
+                          };
+                          return o;
+                     })
+                     .value();
+                
+                    if(charges.length>0){
+                        var mCharge = "M  CHG" + leftPad(charges.length + "", 3) 
+                                    + _.chain(charges)
+                                       .map(function(c){return c.toString();})
+                                       .join("");
+                        return mCharge;
+                    }
+                    return null;
+                };
+
+                scope.getMol = function(){
+
+                        var chargeLine = scope.getMChargeFromXML(scope.sketcher.getXml());
+                        var mfile = scope.sketcher.getMolfile();
+
+                        //can't find charge section
+                        if(mfile.indexOf("M  CHG")<0){
+
+                                if(chargeLine!==null){
+                                        var lines = mfile.split("\n");
+                                        for(var i=lines.length-1;i>=3;i--){
+                                                if(lines[i]==="M  END"){
+                                                        var old=lines[i];
+                                                        lines[i]=chargeLine;
+                                                        lines[i+1]=old;
+                                                        mfile=lines.join("\n");
+                                                        break;
+                                                }
+                                        }
+                                }
+                        }
+                        //alert("using:" + mfile);
+                        return scope.clean(mfile);
+                };
 
                 scope.sketcher.options.ondatachange = function () {
                     scope.mol = scope.getMol();

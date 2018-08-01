@@ -1,0 +1,45 @@
+@import ix.ginas.controllers.GinasApp
+
+@(sub: ix.ginas.models.v1.Substance)
+			                	<div>
+		                            <div class="row">
+		                            		<div class="col-md-1">
+		                            			<h4>Version</h4>
+		                            		</div>
+		                            		<div class="col-md-3">
+		                            			<h4>Change Reason</h4>
+		                            		</div>
+		                            		<div class="col-md-2">
+		                            			<h4>Editor</h4>
+		                            		</div>
+		                            		<div class="col-md-3">
+		                            			<h4>Change Date</h4>
+		                            		</div>
+		                            		<div class="col-md-1">
+		                            		</div>
+	                                       @* <div class="col-md-1">
+	                                        </div>*@
+		                            </div>
+		                            @for(edit<-sub.getEdits()){
+		                            	<div class="row striped">
+		                            		<div class="col-md-1">
+		                            			@edit.version
+		                            		</div>
+		                            		<div class="col-md-3">
+		                            			@edit.comments
+		                            		</div>
+		                            		<div class="col-md-2">
+		                            			@edit.editor
+		                            		</div>
+		                            		<div class="col-md-3">
+		                            			@edit.getCreatedDate()
+		                            		</div>
+		                            		<div class="col-md-1">
+		                            			<div><a href="@ix.ginas.controllers.routes.GinasApp.substanceVersion(GinasApp.getId(sub), edit.version)" target="_self">View</a></div>
+		                            		</div>
+	                                       @* <div class="col-md-1">
+	                                            <div><a href="@edit.getDiffLink()" target="_blank">Compare</a></div>
+	                                        </div>*@
+		                            	</div>
+		                            }
+	                            </div>

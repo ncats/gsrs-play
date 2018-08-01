@@ -79,6 +79,7 @@ PATCH   /$context<[a-z0-9_]+>($id<[a-fA-F0-9\-]+>)             ix.core.controlle
 ## Flexible ID version
 ##
 GET     /$context<[a-z0-9_]+>($id<[^)]+>)         ix.core.controllers.v1.RouteFactory.getFlex(context: String, id: String, field:String ?= null)
+GET     /$context<[a-z0-9_]+>($id<[^)]+>)/@edits      ix.core.controllers.v1.RouteFactory.editsFlex(context: String, id:String)
 GET     /$context<[a-z0-9_]+>($id<[^)]+>)/*field  ix.core.controllers.v1.RouteFactory.fieldFlex(context: String, id: String, field: String)
 
 

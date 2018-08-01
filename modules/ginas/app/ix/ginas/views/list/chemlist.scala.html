@@ -1,3 +1,5 @@
+
+
 @import ix.core.models.Structure
 @import ix.ginas.controllers.GinasApp
 @import ix.ginas.models.v1.ChemicalSubstance
@@ -8,28 +10,28 @@
 
 
 @commonlist(chem) {
-				<div class="badge-wrapper">
-				@if(chem.structure.stereoChemistry == Structure.Stereo.ACHIRAL) {
-                    <span class="label label-primary label-offset list-view-badge">@chem.structure.stereoChemistry</span>
-                }
-                @if(chem.structure.stereoChemistry == Structure.Stereo.ABSOLUTE) {
-                    <span class="label label-success label-offset list-view-badge">@chem.structure.stereoChemistry</span>
-                }
-                @if(chem.structure.stereoChemistry == Structure.Stereo.RACEMIC) {
-                    <span class="label label-info label-offset list-view-badge">@chem.structure.stereoChemistry</span>
-                }
-                @if(chem.structure.stereoChemistry == Structure.Stereo.MIXED) {
-                    <span class="label label-default label-offset list-view-badge">@chem.structure.stereoChemistry</span>
-                }
-                @if(chem.structure.stereoChemistry == Structure.Stereo.EPIMERIC) {
-                    <span class="label label-warning label-offset list-view-badge">@chem.structure.stereoChemistry</span>
-                }
-                @if(chem.structure.stereoChemistry == Structure.Stereo.UNKNOWN) {
-                    <span class="label label-danger label-offset list-view-badge">@chem.structure.stereoChemistry</span>
-                }
-                </div>
+<div class="badge-wrapper">
+    @if(chem.structure.stereoChemistry == Structure.Stereo.ACHIRAL) {
+    <span class="label label-primary label-offset list-view-badge">@chem.structure.stereoChemistry</span>
+    }
+    @if(chem.structure.stereoChemistry == Structure.Stereo.ABSOLUTE) {
+    <span class="label label-success label-offset list-view-badge">@chem.structure.stereoChemistry</span>
+    }
+    @if(chem.structure.stereoChemistry == Structure.Stereo.RACEMIC) {
+    <span class="label label-info label-offset list-view-badge">@chem.structure.stereoChemistry</span>
+    }
+    @if(chem.structure.stereoChemistry == Structure.Stereo.MIXED) {
+    <span class="label label-default label-offset list-view-badge">@chem.structure.stereoChemistry</span>
+    }
+    @if(chem.structure.stereoChemistry == Structure.Stereo.EPIMERIC) {
+    <span class="label label-warning label-offset list-view-badge">@chem.structure.stereoChemistry</span>
+    }
+    @if(chem.structure.stereoChemistry == Structure.Stereo.UNKNOWN) {
+    <span class="label label-danger label-offset list-view-badge">@chem.structure.stereoChemistry</span>
+    }
+</div>
 
-                <div class = "magnify" ng-click = "showLarge('@chem.structure.id', '@chem.uuid', '@ctx');">
+                <div class = "magnify" ng-click = "showLarge=!showLarge">
                     <rendered id = '@chem.structure.id' ctx='@ctx' title="click to enlarge" ></rendered>
                 </div>
                 <div>
@@ -49,42 +51,44 @@
                 <div class = "row">
                     <div class = "col-md-12 text-center">
                         <ul class= "list-inline list-unstyled tools">
-                            <li class = "col-md-3">
+                            <li class = "col-md-2">
                                 <modal-button type= "export" structureid ="'@chem.uuid'" format="mol"  format2="sdf" ></modal-button>
                             </li>
-                            <li class = "col-md-3">
+                            <li class = "col-md-2">
                                 <a ng-href="@ix.ginas.controllers.routes.GinasApp.structuresearch(chem.structure.id.toString())" target="_self" uib-tooltip="Structure Search" aria-label="Structure Search"><span class="sr-only">
                                     Search for Structure</span><span class="fa fa-search fa-2x success"></span></a>
                             </li>
-                            @dynamic(name = IxDynamicResourceHandler.CAN_UPDATE, handler = new ix.ncats.controllers.security.IxDeadboltHandler()) {
-                                <li class = "col-md-3">
-                                    <a href="@ix.ginas.controllers.routes.GinasFactory.edit(GinasApp.getId(chem))" uib-tooltip="Edit" target="_self" aria-label="Edit Chemical Substance"><span class="sr-only">
+            @dynamic(name = IxDynamicResourceHandler.CAN_UPDATE, handler = new ix.ncats.controllers.security.IxDeadboltHandler()) {
+                                <li class = "col-md-2">
+                <a href="@ix.ginas.controllers.routes.GinasFactory.edit(GinasApp.getId(chem))" uib-tooltip="Edit" target="_self" aria-label="Edit Chemical Substance"><span class="sr-only">
                                         Edit Chemical</span><span class="fa fa-pencil fa-2x success"></span></a>
-                                </li>
-                                <li class = "col-md-3"> <a href='@routes.Assets.at("gsrs2/index.html")#/substance/@chem.getUuid()/names' target="_blank" uib-tooltip="Edit New Form" aria-label="Edit Chemical Substance">
+            </li>
+                                <li class = "col-md-2"> <a href="@routes.Assets.at("gsrs2/index.html")#/substance/@chem.getUuid()/names" target="_blank" uib-tooltip="New Form" aria-label="Edit Chemical Substance">
                                     <span class="sr-only">Edit New Form</span>
-                                    <i class="fa fa-pencil-square fa-2x" aria-hidden="true"></i></a></li>
-                            }
-                        </ul>
-                    </div>
-                </div>
+                                    <i class="fa fa-pencil-square fa-2x" aria-hidden="true" ></i></a></li>
+            }
+        </ul>
+    </div>
+</div>
 }{
-                <div class = "row">
-                    <div class = "col-md-4">
-                        <h5><strong>Formula:</strong></h5>
-                    </div>
-                    <div class = "col-md-8">
-                        <h5>@chem.structure.formula</h5>
-                    </div>
-                </div>
-                <div class = "row">
-                    <div class = "col-md-4">
-                        <h5><strong>Mol Weight:</strong></h5>
-                    </div>
-                    <div class = "col-md-8">
-                        <h5>@{"%.2f".format(chem.structure.mwt)}</h5>
-                    </div>
-                </div>
+<div class = "row">
+    <div class = "col-md-4">
+        <h5><strong>Formula:</strong></h5>
+    </div>
+    <div class = "col-md-8">
+        <h5>@chem.structure.formula</h5>
+    </div>
+</div>
+<div class = "row">
+    <div class = "col-md-4">
+        <h5><strong>Mol Weight:</strong></h5>
+    </div>
+    <div class = "col-md-8">
+        <h5>@{"%.2f".format(chem.structure.mwt)}</h5>
+    </div>
+</div>
 }{
-        <div class="@chem.uuid" ng-click="showLarge('@chem.structure.id', '@chem.uuid')"></div>
+        <div ng-if="showLarge" ng-click="showLarge!=showLarge">
+            <rendered size="500" id = '@chem.structure.id' ctx='@ctx' title="click to enlarge" ></rendered>
+        </div>
 }

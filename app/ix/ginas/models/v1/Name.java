@@ -86,7 +86,13 @@ public class Name extends CommonDataElementOfCollection {
 				}
 				return -o2.name.compareTo(o1.name);
 			}
-		}
+		},
+		BY_CREATION_DATE{
+            @Override
+            public int compare(Name o1, Name o2) {
+                return o1.getCreated().compareTo(o2.getCreated());
+            }
+        }
 	}
 
 
@@ -275,8 +281,20 @@ public class Name extends CommonDataElementOfCollection {
 		this.nameJurisdiction= new EmbeddedKeywordList(this.nameJurisdiction);
 	}
 	
+	@Override
 	public String toString(){
-		return "Name:\"" +this.getName()  +"\"";
+		return "Name{" +
+				"name='" + name + '\'' +
+				", fullName='" + fullName + '\'' +
+				", stdName='" + stdName + '\'' +
+				", type='" + type + '\'' +
+				", domains=" + domains +
+				", languages=" + languages +
+				", nameJurisdiction=" + nameJurisdiction +
+				", nameOrgs=" + nameOrgs +
+				", preferred=" + preferred +
+				", displayName=" + displayName +
+				'}';
 	}
 
 	public void setName(String name) {

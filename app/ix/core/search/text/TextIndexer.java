@@ -36,6 +36,7 @@ import java.util.stream.Stream;
 
 import ix.core.search.*;
 import ix.core.util.*;
+import ix.core.util.CachedSupplier.CachedThrowingSupplier;
 import net.sf.ehcache.search.impl.SearchManager;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.core.KeywordAnalyzer;
@@ -523,6 +524,8 @@ public class TextIndexer implements Closeable, ProcessListener {
 		private Facet container;
 		String label;
 		Integer count;
+		
+		
 
 		FV(Facet container, String label, Integer count) {
 			this.container=container;
@@ -560,7 +563,6 @@ public class TextIndexer implements Closeable, ProcessListener {
 		
 		public boolean enhanced=true;
 		
-		
 		//TODO: This is a bad way to do this,
 		//need to fix
 		private String prefix="";
@@ -580,7 +582,7 @@ public class TextIndexer implements Closeable, ProcessListener {
 		 * @param label
 		 */
 		public void setSelectedLabel(String ... label){
-			this.setSelectedLabels(Arrays.stream(label).collect(Collectors.toList())); 
+			this.setSelectedLabels(Arrays.stream(label).collect(Collectors.toList()));
 		}
 		
 		public void setPrefix(String prefix){
@@ -780,7 +782,41 @@ public class TextIndexer implements Closeable, ProcessListener {
 		String name;
 		File dir;
 		AtomicBoolean dirty = new AtomicBoolean(false);
-        ExactMatchSuggesterDecorator lookup;
+		CachedThrowingSupplier<ExactMatchSuggesterDecorator> lookup = CachedSupplier.ofThrowing(()->{
+			boolean isNew = false;
+			if (!dir.exists()) {
+				dir.mkdirs();
+				isNew = true;
+			} else if (!dir.isDirectory())
+				throw new IllegalArgumentException("Not a directory: " + dir);
+
+
+			AnalyzingInfixSuggester suggester = new AnalyzingInfixSuggester(LUCENE_VERSION,
+					new NIOFSDirectory(dir, NoLockFactory.getNoLockFactory()), indexAnalyzer);
+
+
+			ExactMatchSuggesterDecorator lookupt = new ExactMatchSuggesterDecorator(suggester,()-> ReflectionUtil.getFieldValue(suggester, "searcherMgr"));
+
+			// If there's an error getting the index count, it probably wasn't
+			// saved properly. Treat it as new if an error is thrown.
+			if (!isNew) {
+				try {
+					lookupt.getCount();
+				} catch (Exception e) {
+					isNew = true;
+					Logger.warn("Error building lookup " + dir.getName() + " will reinitialize");
+				}
+			}
+
+			if (isNew) {
+				Logger.debug("Initializing lookup " + dir.getName());
+				build(lookupt);
+			} else {
+				Logger.debug(lookupt.getCount() + " entries loaded for " + dir.getName());
+			}		
+			return lookupt;
+		});
+
 		long lastRefresh;
 
 		ConcurrentHashMap<String, Addition> additions = new ConcurrentHashMap<String, Addition>();
@@ -803,58 +839,43 @@ public class TextIndexer implements Closeable, ProcessListener {
 			}
 		}
 
-		SuggestLookup(File dir) throws IOException {
-			boolean isNew = false;
-			if (!dir.exists()) {
-				dir.mkdirs();
-				isNew = true;
-			} else if (!dir.isDirectory())
-				throw new IllegalArgumentException("Not a directory: " + dir);
 
 
-            AnalyzingInfixSuggester suggester = new AnalyzingInfixSuggester(LUCENE_VERSION,
-                    new NIOFSDirectory(dir, NoLockFactory.getNoLockFactory()), indexAnalyzer);
-
-
-//			lookup = new InxightInfixSuggester(LUCENE_VERSION,
-//					new NIOFSDirectory(dir, NoLockFactory.getNoLockFactory()), indexAnalyzer);
-
-            lookup = new ExactMatchSuggesterDecorator(suggester,()-> ReflectionUtil.getFieldValue(suggester, "searcherMgr"));
-
-			// If there's an error getting the index count, it probably wasn't
-			// saved properly. Treat it as new if an error is thrown.
-			if (!isNew) {
-				try {
-					lookup.getCount();
-				} catch (Exception e) {
-					isNew = true;
-					Logger.warn("Error building lookup " + dir.getName() + " will reinitialize");
-				}
-			}
-
-			if (isNew) {
-				Logger.debug("Initializing lookup " + dir.getName());
-				build();
-			} else {
-				Logger.debug(lookup.getCount() + " entries loaded for " + dir.getName());
-			}
-
-			this.dir = dir;
-			this.name = dir.getName();
+		/**
+		 * Not an ideal mechanism for flushing, but lucene does not provide
+		 * a way to do this short of closing/opening in the version we use.
+		 */
+		private synchronized void flush() throws IOException{
+			this.close();
+			lookup.resetCache();
 		}
 
-		SuggestLookup(String name) throws IOException {
+		private SuggestLookup(File dir) throws IOException {
+			this.dir = dir;
+			this.name = dir.getName();
+			//store for cache
+			Optional<Throwable> ot=lookup.getThrown();
+			if(ot.isPresent()){
+				throw new IOException(ot.get());
+			}
+		}
+
+		private SuggestLookup(String name) throws IOException {
 			this(new File(suggestDir, name));
 		}
 
 
-		void add(String text) throws IOException {
+		public void add(String text) throws IOException {
+			addSuggest(text,1);
+		}
+		
+		public void addSuggest(String text, int weight) throws IOException {
 			Addition add = additions.computeIfAbsent(text, t -> new Addition(t, 0));
-			add.incrementWeight();
+			add.addToWeight(weight);
 			incr();
 		}
 
-		void incr() {
+		private void incr() {
 			dirty.compareAndSet(false, true);
 		}
 
@@ -871,34 +892,38 @@ public class TextIndexer implements Closeable, ProcessListener {
 
 		private synchronized void refresh() throws IOException {
 			Iterator<Addition> additionIterator = additions.values().iterator();
-			
+			ExactMatchSuggesterDecorator emd = lookup.get();
+
 			while (additionIterator.hasNext()) {
 				Addition add = additionIterator.next();
 				BytesRef ref = new BytesRef(add.text);
-				add.addToWeight(lookup.getWeightFor(ref));
+				add.addToWeight(emd.getWeightFor(ref));
 				//lookup.
-                ((AnalyzingInfixSuggester)lookup.getDelegate()).update(ref, null, add.weight.get(), ref);
+				((AnalyzingInfixSuggester)emd.getDelegate()).update(ref, null, add.weight.get(), ref);
 				additionIterator.remove();
 			}
 
 			long start = System.currentTimeMillis();
-            ((AnalyzingInfixSuggester)lookup.getDelegate()).refresh();
+			((AnalyzingInfixSuggester)emd.getDelegate()).refresh();
 			lastRefresh = System.currentTimeMillis();
-			Logger.debug(lookup.getClass().getName() + " refreshs " + lookup.getCount() + " entries in "
+			Logger.debug(emd.getClass().getName() + " refreshs " + emd.getCount() + " entries in "
 					+ String.format("%1$.2fs", 1e-3 * (lastRefresh - start)));
 			dirty.set(false);
-
+			flush();
 		}
 
 		@Override
 		public void close() throws IOException {
 			refreshIfDirty();
-            ((AnalyzingInfixSuggester)lookup.getDelegate()).close();
+			//This needs to be run for it to persist. Weird.
+			if(lookup.hasRun()){
+				lookup.get().close();
+			}
 		}
 
-		long build() throws IOException {
+		long build(ExactMatchSuggesterDecorator lookup) throws IOException {
 			try(IndexReader reader = DirectoryReader.open(indexWriter, true)){
-				
+
 				// now weight field
 				long start = System.currentTimeMillis();
 				lookup.build(new DocumentDictionary(reader, name, null));
@@ -911,12 +936,9 @@ public class TextIndexer implements Closeable, ProcessListener {
 
 		List<SuggestResult> suggest(CharSequence key, int max) throws IOException {
 			refreshIfDirty();
-            return lookup.lookup(key, null, false, max).stream()
-//                    .peek(l -> System.out.println(l.key))
+			return lookup.get().lookup(key, null, false, max).stream()
 					.map(r -> new SuggestResult(r.payload.utf8ToString(), r.key, r.value))
 					.collect(Collectors.toList());
-
-
 		}
 	}
 
@@ -936,14 +958,16 @@ public class TextIndexer implements Closeable, ProcessListener {
 
 		public void run() {
 
-            if(!latch.tryLock()){
-                //someone else has the lock
-                //we won't wait the schedule deamon
-                //will re-run us soon anyay
-                return;
-            }
+			if(!latch.tryLock()){
+				//someone else has the lock
+				//we won't wait the schedule deamon
+				//will re-run us soon anyway
+				return; 
+			}
+
+
 			try {
-                // Don't execute if already shutdown
+				// Don't execute if already shutdown
 				if(isShutDown || isReindexing){
 					return;
 				}
@@ -1208,8 +1232,8 @@ public class TextIndexer implements Closeable, ProcessListener {
 		Map<String, Analyzer> fields = new HashMap<String, Analyzer>();
 		fields.put(FIELD_ID, new KeywordAnalyzer());
 		fields.put(FIELD_KIND, new KeywordAnalyzer());
-        //dkatzel 2017-08 no stop words
-        return new PerFieldAnalyzerWrapper(new StandardAnalyzer(LUCENE_VERSION, CharArraySet.EMPTY_SET), fields);
+		//dkatzel 2017-08 no stop words
+		return new PerFieldAnalyzerWrapper(new StandardAnalyzer(LUCENE_VERSION, CharArraySet.EMPTY_SET), fields);
 	}
 
 	/**
@@ -1293,17 +1317,15 @@ public class TextIndexer implements Closeable, ProcessListener {
 		
 		public IxQueryParser(String def) {
             super(def, createIndexAnalyzer());
-
-//            setDefaultOperator(QueryParser.AND_OPERATOR);
+//			setDefaultOperator(QueryParser.AND_OPERATOR);
         }
 		
 		public IxQueryParser(String string, Analyzer indexAnalyzer) {
 			super(string, indexAnalyzer);
-
-//            setDefaultOperator(QueryParser.AND_OPERATOR);
+//			setDefaultOperator(QueryParser.AND_OPERATOR);
 		}
-
-        @Override
+		
+		@Override
         protected Query getRangeQuery(String field, String part1, String part2, boolean startInclusive, boolean endInclusive) throws ParseException {
             Query q= super.getRangeQuery(field, part1, part2, startInclusive, endInclusive);
             //katzelda 4/14/2018
@@ -1329,8 +1351,7 @@ public class TextIndexer implements Closeable, ProcessListener {
 
             return q;
         }
-
-        @Override
+		@Override
 		public Query parse(String qtext) throws ParseException {
 			if (qtext != null) {
 				qtext = transformQueryForExactMatch(qtext);
@@ -1339,17 +1360,19 @@ public class TextIndexer implements Closeable, ProcessListener {
 			// otherwise specified
 			qtext = ROOT_CONTEXT_ADDER.matcher(qtext).replaceAll(ROOT + "_$1");
 			
+			
+			
 			//If there's an error parsing, it probably needs to have
 			//quotes. Likely this happens from ":" chars
-			
+
 			Query q = null;
-			try {
+			try{
 				q = super.parse(qtext);
-			} catch (Exception e) {
+			}catch(Exception e){
 				q = super.parse("\"" + qtext + "\"");
 			}
-
 			return q;
+
 		}
 	}
 
@@ -1544,58 +1567,58 @@ public class TextIndexer implements Closeable, ProcessListener {
 		}
 		
 		//Convert FacetResult -> Facet, and add to 
-				//search result
-				facetResults.stream()
-					.filter(Objects::nonNull)
-					.map(result -> {
-						Facet fac = new Facet(result.dim, sr);
-						
-						// make sure the facet value is returned
-						// for selected value
-						
-						List<DrillAndPath> dp = providedDrills.get(result.dim);
-						if (dp != null) {
-							
-						    List<String> selected=dp.stream()
-						                        .map(l->l.asLabel())
-						                        .collect(Collectors.toList());
-						    
-						    dp.stream()
-			                        .map(l->l.getPrefix())
-			                        .filter(p->!"".equals(p))
-			                        .sorted()
-			                        .distinct()
-			                        .findFirst()
-			                        .ifPresent(pre->{
-			                        	fac.setPrefix(pre);        	
-			                        });
-						    
-						    
-							fac.setSelectedLabels(selected);
-						}
-						
-						for(LabelAndValue lv:result.labelValues){
-						    fac.add(lv.label, lv.value.intValue());
-						}
-						
-						fac.getMissingSelections().stream().forEach(l->{
-						    try {
-		                        Number value = facets.getSpecificValue(result.dim, l);
-		                        if (value != null && value.intValue() >= 0) {
-		                            fac.add(l, value.intValue());
-		                        } else {
-		                            Logger.warn("Facet \"" + result.dim + "\" doesn't have any " + "value for label \""
-		                                    + l + "\"!");
-		                        }
-		                    } catch (Exception e) {
-		                       Logger.warn("error collecting facets", e);
-		                    }
-						});
-						
-						fac.sort();
-						return fac;
-					})
-					.forEach(f -> sr.addFacet(f));
+		//search result
+		facetResults.stream()
+			.filter(Objects::nonNull)
+			.map(result -> {
+				Facet fac = new Facet(result.dim, sr);
+				
+				// make sure the facet value is returned
+				// for selected value
+				
+				List<DrillAndPath> dp = providedDrills.get(result.dim);
+				if (dp != null) {
+					
+				    List<String> selected=dp.stream()
+				                        .map(l->l.asLabel())
+				                        .collect(Collectors.toList());
+				    
+				    dp.stream()
+	                        .map(l->l.getPrefix())
+	                        .filter(p->!"".equals(p))
+	                        .sorted()
+	                        .distinct()
+	                        .findFirst()
+	                        .ifPresent(pre->{
+	                        	fac.setPrefix(pre);        	
+	                        });
+				    
+				    
+					fac.setSelectedLabels(selected);
+				}
+				
+				for(LabelAndValue lv:result.labelValues){
+				    fac.add(lv.label, lv.value.intValue());
+				}
+				
+				fac.getMissingSelections().stream().forEach(l->{
+				    try {
+                        Number value = facets.getSpecificValue(result.dim, l);
+                        if (value != null && value.intValue() >= 0) {
+                            fac.add(l, value.intValue());
+                        } else {
+                            Logger.warn("Facet \"" + result.dim + "\" doesn't have any " + "value for label \""
+                                    + l + "\"!");
+                        }
+                    } catch (Exception e) {
+                       Logger.warn("error collecting facets", e);
+                    }
+				});
+				
+				fac.sort();
+				return fac;
+			})
+			.forEach(f -> sr.addFacet(f));
 	}
 	
 	
@@ -1876,7 +1899,11 @@ public class TextIndexer implements Closeable, ProcessListener {
 				filter = new ChainedFilter(nonStandardFacets.toArray(new Filter[0])
 						                  ,ChainedFilter.AND);
 			}
+			
+			
+			
 			qactual=ddq;
+
 			// sideways
 			if (options.isSideway()) {
 				lsp = new DrillSidewaysLuceneSearchProvider(sorter, filter, options);
@@ -2231,24 +2258,23 @@ public class TextIndexer implements Closeable, ProcessListener {
 			Facets facets = new LongRangeFacetCounts(flr.field, fc, range);
 			FacetResult result = facets.getTopChildren(options.getFdim(), flr.field);
 			Facet f = new Facet(result.dim, searchResult);
+			
 			f.enhanced=false;
 			if (DEBUG(1)) {
 				Logger.info(" + [" + result.dim + "]");
 			}
-			
-			
-					
 			
 			Arrays.stream(result.labelValues)
 				.forEach(lv->f.add(lv.label, lv.value.intValue()));
 			
 			List<DrillAndPath> dp = providedDrills.get(f.name);
 			if (dp != null) {
-			    List<String> selected=dp.stream()
-			                        .map(l->l.asLabel())
-			                        .collect(Collectors.toList());
+				List<String> selected=dp.stream()
+						                .map(l->l.asLabel())
+						                .collect(Collectors.toList());
 				f.setSelectedLabels(selected);
 			}
+
 			
 			searchResult.addFacet(f);
 		}
@@ -2417,7 +2443,6 @@ public class TextIndexer implements Closeable, ProcessListener {
 			fieldCollector.accept(new StringField(FIELD_KIND, ew.getKind(), YES));
 			
 			
-			//System.out.println("Adding index for:" + ew.getKind());
 			// now index
 			addDoc(doc);
 			
@@ -2427,7 +2452,6 @@ public class TextIndexer implements Closeable, ProcessListener {
 			e.printStackTrace();
 			Logger.error("Error indexing record [" + ew.toString() + "] This may cause consistency problems", e);
 		}finally{
-			//System.out.println("||| " + ew.getKey());
 		}
 	}
 	
@@ -2861,15 +2885,22 @@ public class TextIndexer implements Closeable, ProcessListener {
 		facetsConfig.setRequireDimCount(iv.name(), true);
 		fieldTaker.accept(new FacetField(iv.name(), iv.value().toString()));
 		fieldTaker.accept(new TextField(iv.path(), TextIndexer.START_WORD + iv.value().toString() + TextIndexer.STOP_WORD, NO));
+		
 		if(iv.suggest()){
-			addSuggestedField(iv.name(),iv.value().toString());
+			addSuggestedField(iv.name(),iv.value().toString(),1);
 		}
+
 	}
 
 	//make the fields for the primitive fields
 
 	public void instrumentIndexableValue(Consumer<IndexableField> fields, IndexableValue indexableValue) {
 
+
+		// Used to be configurable, now just always NO
+		// for all cases we use.
+		org.apache.lucene.document.Field.Store store = Store.NO;
+		
 		if(indexableValue.isDirectIndexField()){
 			fields.accept(indexableValue.getDirectIndexableField());
 			return;
@@ -2877,13 +2908,15 @@ public class TextIndexer implements Closeable, ProcessListener {
 
 		if(indexableValue.isDynamicFacet()){
 			createDynamicField(fields,indexableValue);
+			if(indexableValue.sortable()){
+				//System.out.println("Dynamic sortable");
+				sorters.put(SORT_PREFIX + indexableValue.name(), SortField.Type.STRING);
+				fields.accept(new StringField(SORT_PREFIX + indexableValue.name(), indexableValue.value().toString(), store));
+			}
 			return;
 		}
 
-		// Used to be configurable, now just always NO
-		// for all cases we use.
-		org.apache.lucene.document.Field.Store store = Store.NO;
-
+		
 		String fname = indexableValue.name();
 		String name = indexableValue.rawName();
 
@@ -2891,10 +2924,10 @@ public class TextIndexer implements Closeable, ProcessListener {
 		Object value = indexableValue.value();
 		boolean sorterAdded = false;
 		boolean asText = true;
-
+		
 		Object nvalue = value;
-
-        org.apache.lucene.document.Field.Store shouldStoreLong= NO;
+		
+		org.apache.lucene.document.Field.Store shouldStoreLong= NO;
 
 		if (value instanceof java.util.Date) {
 			long date = ((Date) value).getTime();
@@ -2917,19 +2950,19 @@ public class TextIndexer implements Closeable, ProcessListener {
 				fields.accept(new LongField(full, lval, shouldStoreLong));
 				asText = indexableValue.facet();
 				if (!asText && !name.equals(full)) {
-                    fields.accept(new LongField(name, lval, store));
-                }
+				fields.accept(new LongField(name, lval, store));
+			}
 				if(indexableValue.facet()){
 					FacetField ffl = getRangeFacet(fname, indexableValue.ranges(), lval);
 					if (ffl != null) {
-						facetsConfig.setMultiValued(fname, true);
-						facetsConfig.setRequireDimCount(fname, true);
+				facetsConfig.setMultiValued(fname, true);
+				facetsConfig.setRequireDimCount(fname, true);
 						fields.accept(ffl);
-						asText = false;
+				asText = false;
 						addedFacet=true;
-					}
+			}
 
-				}
+			}
 			}
 
 
@@ -2945,15 +2978,15 @@ public class TextIndexer implements Closeable, ProcessListener {
 			}
 			if(indexableValue.facet() && !addedFacet){
 				FacetField ff = getRangeFacet(fname, indexableValue.dranges(), dval.doubleValue(), indexableValue.format());
-				if (ff != null) {
-					facetsConfig.setMultiValued(fname, true);
-					facetsConfig.setRequireDimCount(fname, true);
-					fields.accept(ff);
-				}
+			if (ff != null) {
+				facetsConfig.setMultiValued(fname, true);
+				facetsConfig.setRequireDimCount(fname, true);
+				fields.accept(ff);
+			}
 			}
 			asText = false;
 
-		}
+			}
 
 
 
@@ -2968,11 +3001,11 @@ public class TextIndexer implements Closeable, ProcessListener {
 				}
 			}
 			String dim = indexableValue.name();
-
+			
 			if("".equals(dim)){
 				dim = full;
 			}
-
+			
 			if (indexableValue.facet() || indexableValue.taxonomy()) {
 
 
@@ -3000,7 +3033,7 @@ public class TextIndexer implements Closeable, ProcessListener {
 				// also index the corresponding text field with the
 				// dimension name
 				fields.accept(new TextField(dim, text, NO));
-				addSuggestedField(dim, text);
+				addSuggestedField(dim, text, indexableValue.suggestWeight());
 			}
 
 			String exactMatchStr = toExactMatchString(text);
@@ -3070,7 +3103,7 @@ public class TextIndexer implements Closeable, ProcessListener {
 	 * @param name
 	 * @param value
 	 */
-	void addSuggestedField(String name, String value) {
+	void addSuggestedField(String name, String value, int weight) {
 		name = SUGGESTION_WHITESPACE_PATTERN.matcher(name).replaceAll("_");
 		try {
 			SuggestLookup lookup = lookups.computeIfAbsent(name, n -> {
@@ -3083,7 +3116,7 @@ public class TextIndexer implements Closeable, ProcessListener {
 				}
 			});
 			if (lookup != null) {
-				lookup.add(value);
+				lookup.addSuggest(value, weight);
 			}
 
 		} catch (Exception ex) {

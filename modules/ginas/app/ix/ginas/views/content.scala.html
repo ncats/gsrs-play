@@ -20,7 +20,7 @@ facets: Array[FacetDecorator],
 ctx: SearchResultContext = null
 )(header: Html)(content: Html)
 
-@ginas(title, kind, false, true) {
+@ginas(title, kind,false, true) {
 @header
 } {
 @defining(ctx != null &&
@@ -182,18 +182,19 @@ request().getQueryString("q") != null) { searchFlag =>
             @if(total >= 1) {
             @defining(if (ctx!=null) ctx.getId() else null) { ctxId =>
             @if(ctxId!=null){
-            @if(ctx.hasExactMatches()){
+            @if(ctx.hasExactMatches() && current==1){
             <div class="specialmatches" ng-init="hideall=true" ng-show="hideall">
                 @if(ctx.getExactMatches().size()==1){
                 <h4>There is one exact (name or code) match for <em>@request().getQueryString("q")</em></h4>
                 }else{
                 <h4>Here are the exact (name or code) matches for <em>@request().getQueryString("q")</em></h4>
                 }
+                <button class="btn btn-primary" ng-click="hideall=false">Show All Records Matching Search</button>
+                <div>&nbsp;</div>
                 @for(sub <- ctx.getExactMatches()) {
                 @GinasApp.getListContentFor(sub,ctx)
                 }
-                <div>&nbsp;</div>
-                <button class="btn btn-primary" ng-click="hideall=false">Show All Records Matching Search</button>
+               
             </div>
             }
             }

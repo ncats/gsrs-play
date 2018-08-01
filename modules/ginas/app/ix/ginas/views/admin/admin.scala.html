@@ -34,7 +34,20 @@
 
                     }
 
-                } });
+                },
+                'sort' : function(a,b){
+                        //this should sort by folder (icon) then by name
+                    a1 = this.get_node(a);
+                    b1 = this.get_node(b);
+                    if (a1.icon == b1.icon){
+                        return (a1.text > b1.text) ? 1 : -1;
+                    } else {
+                        return (a1.icon > b1.icon) ? 1 : -1;
+                    }
+                    }
+
+
+                });
 
                 $('#jstree_demo_div').on("changed.jstree", function (e, data) {
 
@@ -77,6 +90,7 @@
             });
 
     </script>
+    <div class="admin-tabs">
     <uib-tabset>
         <uib-tab>
             <uib-tab-heading>
@@ -126,13 +140,13 @@
                           	<div ng-if="state.enabled">
                           		  <i class="fa fa-clock-o fa-5x"></i>
 								  <div><div><strong>Next Run Time</strong></div>
-								  <i>{{moment(state.nextRun)}}</i></div>
+								  <i uib-tooltip="{{formatDate(state.nextRun)}}">{{moment(state.nextRun)}}</i></div>
 					         </div>
 					         <div ng-if="!state.enabled">
 					         	  <i class="fa fa-pause fa-5x"></i>
 					         	  <div>
 					         	  <div><strong><i>Schedule Disabled</i></strong></div>
-					         	  <i><s>{{moment(state.nextRun)}}</s></i>
+					         	  <i uib-tooltip="{{formatDate(state.nextRun)}}"><s>{{moment(state.nextRun)}}</s></i>
 					         	  
 					         	  </div>
 					         </div>
@@ -192,12 +206,12 @@
             <div class = "col-md-2">
                 <div ng-if="state.lastStarted" class = "row">
                     <div class = "col-md-12">
-                        Last started: <h6>{{moment(state.lastStarted)}}</h6>
+                        Last started: <h6 uib-tooltip="{{formatDate(state.lastStarted)}}">{{moment(state.lastStarted)}}</h6>
                     </div>
                 </div>
                 <div ng-if="state.lastFinished" class = "row">
                     <div class = "col-md-12">
-                        Last ended: <h6>{{moment(state.lastFinished)}}</h6>
+                        Last ended: <h6 uib-tooltip="{{formatDate(state.lastFinished)}}">{{moment(state.lastFinished)}}</h6>
                     </div>
                 </div>
                
@@ -247,6 +261,6 @@
             @ix.ncats.views.html.cachestatscontent(IxCache.getStatistics())
         </uib-tab>
     </uib-tabset>
-
+</div>
 
 }

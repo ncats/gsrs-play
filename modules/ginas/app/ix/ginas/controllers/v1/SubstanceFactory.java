@@ -100,9 +100,7 @@ public class SubstanceFactory extends EntityFactory {
 			return OptionalInt.empty();
 		}
 		String subVersion = s.version;
-		if(s !=null){
-			System.out.println("substance version = " + s.version);
-		}
+
 		List<Edit> edits = getEdits(uuid);
 		if(edits ==null){
 			return OptionalInt.of(Integer.parseInt(subVersion));
@@ -170,12 +168,12 @@ public class SubstanceFactory extends EntityFactory {
 	}
 	
 	public static Optional<UUID> resolveID(String s){
-		System.out.println("Trying to resolve:" + s);
+//		System.out.println("Trying to resolve:" + s);
 		List<UUID> uuidlist=resolve(s)
 		      .stream()
 		      .map(sub->sub.uuid)
 		      .collect(Collectors.toList());
-		System.out.println("Found:" + uuidlist.size());
+//		System.out.println("Found:" + uuidlist.size());
 		if(uuidlist.size()==1)return Optional.of(uuidlist.get(0));
 		
 		return Optional.empty();
@@ -448,7 +446,7 @@ public class SubstanceFactory extends EntityFactory {
 	public static List<Substance> getCollsionChemicalSubstances(int top, int skip, ChemicalSubstance cs) {
 		return ChemicalDuplicateFinder.instance().findPossibleDuplicatesFor(cs);
 	}
-	
+
 
 	public static List<Substance> getNearCollsionProteinSubstancesToSubunit(int top, int skip, Subunit subunit) {
 		Set<Substance> dupes = new LinkedHashSet<Substance>();

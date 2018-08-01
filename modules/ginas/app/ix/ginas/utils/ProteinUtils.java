@@ -1,21 +1,57 @@
 package ix.ginas.utils;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import ix.core.search.text.TextIndexer.Facet.Comparators;
+import ix.core.util.CachedSupplier;
 import ix.ginas.models.v1.Amount;
+import ix.ginas.models.v1.DisulfideLink;
 import ix.ginas.models.v1.Property;
+import ix.ginas.models.v1.Protein;
 import ix.ginas.models.v1.ProteinSubstance;
+import ix.ginas.models.v1.Site;
 import ix.ginas.models.v1.Subunit;
+import ix.utils.Tuple;
+import ix.utils.Util;
 
 public class ProteinUtils {
+
+	//Based on analysis from existing MAB entries
+	private static final CachedSupplier<Map<String,List<int[]>>> KNOWN_DISULFIDE_PATTERNS = CachedSupplier.of(()->{
+		Map<String,List<int[]>> dstypes=Arrays.stream((
+				"IGG4	0-1,11-12,13-31,14-15,18-19,2-26,20-21,22-23,24-25,27-28,29-30,3-4,5-16,6-17,7-8,9-10\n" + 
+				"IGG2	0-1,11-12,13-14,15-35,16-17,2-30,22-23,24-25,26-27,28-29,3-4,31-32,33-34,5-18,6-19,7-20,8-21,9-10\n" + 
+				"IGG1	0-1,11-12,13-14,15-31,18-19,2-3,20-21,22-23,24-25,27-28,29-30,4-26,5-16,6-17,7-8,9-10")
+				.split("\n"))
+				.map(s->s.split("\t"))
+				.map(s->Tuple.of(s[0],s[1]))
+				.map(Tuple.vmap(v->v.split(",")))
+				.map(Tuple.vmap(v->Arrays.stream(v)
+						.map(ds->{
+							String[] idx=ds.split("-");
+							return new int[]{Integer.parseInt(idx[0]),Integer.parseInt(idx[1])};
+						})
+						.collect(Collectors.toList())
+						
+						))
+				.collect(Tuple.toMap());
+		return dstypes;
+	});
+	
+	
 	//from
 	//http://www.seas.upenn.edu/~cis535/Fall2004/HW/GCB535HW6b.pdf
 	private static String lookup=
@@ -114,7 +150,77 @@ public class ProteinUtils {
 		p.setValue(amt);
 		
 		return p;
-		
-		
 	}
+	
+	/**
+	 * Return a stream of the sites for a protein, labeled by their residue
+	 * @param su
+	 * @return
+	 */
+	public static Stream<Tuple<String,Site>> extractSites(Subunit su){
+		if(su.sequence==null)return Stream.empty();
+		
+		return su.sequence.chars()
+		      .mapToObj(i->Character.toString((char)i))
+		      .map(Util.toIndexedTuple())
+		      .map(t->t.swap())
+		      .map(Tuple.vmap(i->{
+		    	  Site s = new Site();
+		    	  s.residueIndex=i+1;
+		    	  s.subunitIndex=su.subunitIndex;
+		    	  return s;
+		      }));
+	}
+	
+	
+	
+	/**
+	 * Attempts to predict a list of the disulfide links based on the protein subtype.
+	 * <p>
+	 * Specifically, at present, this will look at the subtype of the protein, and determine if it
+	 * is one of the known types. If it is, it uses the most common disulfide pattern found for that
+	 * subtype, based on the sequence of cysteine residues found in the subunits, sorted by size, largest
+	 * first. So, for example, IGG1 monoclonal antibodies tend to have a disulfide pattern specific to the
+	 * order of cyteines, where the first C is linked to the second, the third is linked to the forth, etc ...
+	 * </p>
+	 * 
+	 * <p>
+	 * If the subtype does not have a known pattern, then an empty optional is returned.
+	 * </p>
+	 * 
+	 * @param p
+	 * @return
+	 */
+	public static Optional<List<DisulfideLink>> predictDisulfideLinks(Protein p){
+		String subtype = p.proteinSubType;
+		
+		
+		
+		List<int[]> predicted=KNOWN_DISULFIDE_PATTERNS.get().get(subtype);
+		if(predicted==null)return Optional.empty();
+		
+		
+		//First, get out the cystiene sites, in order.
+		
+		List<Tuple<Integer,Site>> cSites=p.subunits.stream()
+		           .sorted(Comparator.comparing(su->-su.getLength()))
+		           .flatMap(su->extractSites(su))
+		           .filter(t->"C".equalsIgnoreCase(t.k()))
+		           .map(Util.toIndexedTuple())
+		           .map(Tuple.vmap(t->t.v()))
+		           .collect(Collectors.toList());
+		
+		return Optional.of(predicted.stream()
+		         .map(s->{
+		        	 DisulfideLink dl=new DisulfideLink();
+		        	 List<Site> sites = new ArrayList<Site>();
+		        	 sites.add( cSites.get(s[0]).v());
+		        	 sites.add( cSites.get(s[1]).v());
+		        	
+		        	 dl.setSites(sites);
+		        	 return dl;
+		         })
+		         .collect(Collectors.toList()));
+	}
+	
 }

@@ -52,7 +52,7 @@ public class Code extends CommonDataElementOfCollection{
     public String codeText;
     
     @JSONEntity(title = "Code Type", format = JSONConstants.CV_CODE_TYPE)
-    public String type = "PRIMARY";
+    public String type ="PRIMARY";
     
     @JSONEntity(title = "Code URL", format = "uri")
     @Lob
@@ -90,6 +90,17 @@ public class Code extends CommonDataElementOfCollection{
 	public boolean hasSpecialDisplay(){
 		if(this.codeText!=null ||this.comments!=null){
 			return true;
+		}
+		return false;
+	}
+	
+	@JsonIgnore
+	public boolean isClassification(){
+		if(this.codeText!=null){
+			if(this.codeText.contains("|"))return true;
+		}
+		if(this.comments!=null){
+			if(this.comments.contains("|"))return true;
 		}
 		return false;
 	}

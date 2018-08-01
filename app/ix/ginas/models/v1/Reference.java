@@ -1,5 +1,8 @@
 package ix.ginas.models.v1;
 
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.UUID;
 
@@ -159,5 +162,18 @@ public class Reference extends GinasCommonData {
 				", id='" + id + '\'' +
 				", url='" + url + '\'' +
 				'}';
+	}
+
+	/**
+	 * DO NOT USE. - ONLY USED FOR SORTING IN HIDDEN ELEMENT IN HTML.
+	 * @return the document date as a sortable String.
+	 */
+	@JsonIgnore
+	public String getDocumentSortPrefix(){
+		if(documentDate ==null){
+			return "";
+		}
+		return LocalDateTime.ofInstant(documentDate.toInstant(), ZoneId.systemDefault())
+							.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME);
 	}
 }

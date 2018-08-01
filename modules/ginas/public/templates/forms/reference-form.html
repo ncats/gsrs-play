@@ -87,9 +87,16 @@
                                         <div class="col-md-3">
                                             <ng-form class="form" enctype="multipart/form-data" ng-submit="submitFile()">
                                                 <label id="upload">Upload a Document</label><br>
+                                                <span>
                                                 <a ng-href={{obj.uploadedFile}} target ="_blank" ng-if="obj.uploadedFile">
-                                                    <i class="fa fa-file-text fa-stack-2x success"></i>
+                                                    <i class="fa fa-2x fa-file-text success"></i>
                                                 </a>
+                                                </span>
+                                                <span>
+                                                <a ng-click="deleteUpload(obj)" target ="_blank" ng-if="obj.uploadedFile">
+                                                    <i class="fa fa-2x fa-trash danger"></i>
+                                                </a>
+                                                </span>
                                                 <file-field ng-show="!obj.uploadedFile && !obj.$$uploadFile"
                                                             ng-change="submitFile(obj)" ng-model="obj.$$uploadFile"
                                                             id="upload"><i class="fa fa-folder-open fa-lg"></i> Browse

@@ -1,0 +1,43 @@
+@import ix.ginas.controllers.GinasApp
+@import be.objectify.deadbolt.java.views.html._
+@import views.html._
+@import be.objectify.deadbolt.java.views.html._
+@import ix.ncats.controllers.security.IxDynamicResourceHandler
+@import ix.ginas.models.v1.Substance
+
+@(sub: Substance)
+@* 
+this template is for part of the record details card 
+it is used by *name*overview.scala.html files, where *name* is chemical, mixture, etc.
+it contains export button information
+*@
+
+	 
+<div class = "col-md-5 pull-right">
+	<ul class= "list-inline pull-right list-unstyled">
+		@dynamic(name = IxDynamicResourceHandler.CAN_UPDATE, handler = new ix.ncats.controllers.security.IxDeadboltHandler()) {
+			<li>
+				<a href="@ix.ginas.controllers.routes.GinasFactory.edit(GinasApp.getId(sub))" 
+				target="_self" 
+				uib-tooltip="Edit Substance" 
+				aria-label="Edit Substance">
+					<span class="sr-only">Edit Substance</span>
+					<span class="fa fa-pencil fa-2x success"></span>
+				</a>
+			</li>
+			<li> <a href="@routes.Assets.at("gsrs2/index.html")#/substance/@sub.getUuid()/names"
+					target="_blank"
+				uib-tooltip="New Form"
+				aria-label="Edit Substance">
+					<span class="sr-only">Edit New Form</span>
+				<i class="fa fa-pencil-square fa-2x" aria-hidden="true" ></i>
+			</a>
+			</li>
+							@*<i class="fa fa-pencil-square fa-2x" aria-hidden="true" ></i></a> </li>*@
+		}
+		<li> 
+			<download-button uuid="@sub.getUuid" format=format>Download</download-button>
+		</li>
+	</ul>
+</div>
+                       

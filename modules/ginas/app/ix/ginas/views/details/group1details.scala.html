@@ -11,19 +11,16 @@
                                 Constituents<span class="badge pull-right">@sub.specifiedSubstance.size()</span></a></li>
                         }
 }{
-   <div class="col-md-5" >
-            <br>
-            <table class="table table-striped keyvalue">
+    <div></div>
+    }{
     @if(sub.specifiedSubstance.getReferences() != null && sub.specifiedSubstance.getReferences().size() > 0) {
         <tr><td>Definition References</td><td >
             <referencesmanager ref-count substance ="'@sub.getUuid()'" divid ="'@sub.getUuid()'" references = "@GinasApp.getAsJson(sub.specifiedSubstance.getReferences())"></referencesmanager></td></tr>
         <tr><td class ="'@sub.getUuid()'" colspan="2"></td></tr>
     }
-       </table>
+  <div class="row info" id="components">
+      @properties.specsubcomponents(sub.specifiedSubstance.constituents)
     </div>
-    }{
-     <div class="row info" id="components">
-        @properties.specsubcomponents(sub.specifiedSubstance.constituents)
-    </div>
+}{
+	
 }
-

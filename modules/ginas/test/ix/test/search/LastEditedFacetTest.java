@@ -11,13 +11,12 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import ix.core.util.RunOnly;
 import ix.ginas.controllers.GinasApp;
 import ix.ginas.models.v1.Code;
 import ix.ginas.processors.UniqueCodeGenerator;
 import ix.test.server.*;
-import org.junit.After;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.*;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
@@ -38,6 +37,7 @@ public class LastEditedFacetTest extends AbstractLoadDataSetTest {
     SubstanceLoader loader;
     BrowserSession session;
 
+    String Last_Edited_Facet = "Last Edited";
 
     @Rule
     public TemporaryFolder tmpDir = new TemporaryFolder();
@@ -74,7 +74,7 @@ public class LastEditedFacetTest extends AbstractLoadDataSetTest {
 
     private Substance setLastEditedByAndBuild(SubstanceBuilder builder, GinasTestServer.User user){
         return builder.setLastEditedBy(user.asPrincipal())
-                        .build();
+                .build();
     }
 
     @Test
@@ -84,8 +84,8 @@ public class LastEditedFacetTest extends AbstractLoadDataSetTest {
 
         File loadFile = tmpDir.newFile();
         try (JsonSubstanceWriter writer = new JsonSubstanceWriter(loadFile)) {
-            writer.write(setLastEditedByAndBuild(new SubstanceBuilder().addName("nameA"), otherUser));
-            writer.write(setLastEditedByAndBuild(new SubstanceBuilder().addName("nameB"), otherUser));
+            writer.write(setLastEditedByAndBuild( new SubstanceBuilder().addName("nameA"),otherUser));
+            writer.write(setLastEditedByAndBuild( new SubstanceBuilder().addName("nameB"), otherUser));
         }
 
 
@@ -121,8 +121,8 @@ public class LastEditedFacetTest extends AbstractLoadDataSetTest {
 
         File loadFile = tmpDir.newFile();
         try (JsonSubstanceWriter writer = new JsonSubstanceWriter(loadFile)) {
-            writer.write(setLastEditedByAndBuild(new SubstanceBuilder().addName("nameA"),otherUser));
-            writer.write(setLastEditedByAndBuild(new SubstanceBuilder().addName("nameB"),otherUser));
+            writer.write(setLastEditedByAndBuild( new SubstanceBuilder().addName("nameA"), otherUser));
+            writer.write(setLastEditedByAndBuild( new SubstanceBuilder().addName("nameB"),otherUser));
         }
 
 
@@ -164,13 +164,16 @@ public class LastEditedFacetTest extends AbstractLoadDataSetTest {
             codeA.setLastEditedBy(user3.asPrincipal());
 
 
-            writer.write(setLastEditedByAndBuild(new SubstanceBuilder().addName("nameA").addCode(codeA), otherUser));
+            writer.write(setLastEditedByAndBuild( new SubstanceBuilder().addName("nameA")
+                        .addCode(codeA),
+                    otherUser));
 
             Code codeB = new Code("codeB", "codesystem");
             //codeB does not set last Edited by so the loader will set it to whoever is loading the record (admin)
 
-            writer.write(setLastEditedByAndBuild( new SubstanceBuilder().addName("nameB").addCode(codeB), otherUser));
-
+            writer.write(setLastEditedByAndBuild( new SubstanceBuilder().addName("nameB")
+                    .addCode(codeB),
+                    otherUser));
         }
 
 
@@ -182,6 +185,9 @@ public class LastEditedFacetTest extends AbstractLoadDataSetTest {
                 .preserveAuditInfo(true)
         );
 
+        //here we have loaded 2 substances by user other user
+        //codeA was last edited by user 3
+        //so last edited by should be otheruser=2, user3= 1 ?
 
         searcher = new BrowserSubstanceSearcher(session);
         SearchResult results = searcher.all();
@@ -247,7 +253,8 @@ public class LastEditedFacetTest extends AbstractLoadDataSetTest {
         assertTrue(results.numberOfResults() > 0);
         assertTrue(!results.getAllFacets().isEmpty());
 
-        lastEditMap = results.getFacet("Last Edited");
+
+        lastEditMap = results.getFacet(Last_Edited_Facet);
 
         int beforeCount = lastEditMap.get("Today");
         assertEquals(45,  beforeCount);
@@ -260,7 +267,7 @@ public class LastEditedFacetTest extends AbstractLoadDataSetTest {
             SearchResult results2 = searcher2.all();
 
 
-            lastEditMap = results2.getFacet("Last Edited");
+            lastEditMap = results2.getFacet(Last_Edited_Facet);
 
             int afterCount = lastEditMap.get("Today");
             assertEquals(0, afterCount);
@@ -269,8 +276,54 @@ public class LastEditedFacetTest extends AbstractLoadDataSetTest {
         }
     }
 
+    //Test the change made to the Last Edited Period Facet to add a new filter "Older than 2 years"
+
     @Test
-//    @RunOnly
+    @Ignore
+    public void lastEditedFacetManyYearsAgo() throws IOException {
+
+        session = ts.newBrowserSession(admin);
+
+        loader = new SubstanceLoader(session);
+        File f = new File(TEST_TESTDUMPS_REP90_PART1_GINAS);
+        loader.loadJson(f);
+
+
+        searcher = new BrowserSubstanceSearcher(session);
+        Map<String, Integer> lastEditMap;
+        SearchResult results = searcher.all();
+
+
+        assertTrue(results.numberOfResults() > 0);
+        assertTrue(!results.getAllFacets().isEmpty());
+
+        System.out.println("all facets = " + results.getAllFacets());
+
+        lastEditMap = results.getFacet(Last_Edited_Facet);
+
+        int beforeCount = lastEditMap.get("Today");
+        System.out.println("Last Edited "+lastEditMap);
+        assertEquals(45,  beforeCount);
+        assertEquals(0, lastEditMap.get("Older than 2 years").intValue());
+
+        timeTraveller.jumpAhead(5, ChronoUnit.YEARS);
+
+        try( BrowserSession session2 = ts.notLoggedInBrowserSession()) {
+            BrowserSubstanceSearcher searcher2 = session2.newSubstanceSearcher();
+
+            SearchResult results2 = searcher2.all();
+
+
+            lastEditMap = results2.getFacet(Last_Edited_Facet);
+
+            int afterCount = lastEditMap.get("Today");
+            assertEquals(0, afterCount);
+            assertEquals(45, lastEditMap.get("Older than 2 years").intValue());
+
+        }
+    }
+
+    @Test
     public void directReindex() throws IOException {
         session = ts.newBrowserSession(admin);
 
@@ -287,7 +340,7 @@ public class LastEditedFacetTest extends AbstractLoadDataSetTest {
 
         assertTrue(results.numberOfResults() > 0);
         assertTrue(!results.getAllFacets().isEmpty());
-        lastEditMap = results.getFacet("Last Edited");
+        lastEditMap = results.getFacet(Last_Edited_Facet);
 
         int beforeCount = lastEditMap.get("Today");
         assertEquals(20,  beforeCount);
@@ -315,7 +368,7 @@ public class LastEditedFacetTest extends AbstractLoadDataSetTest {
 
             System.out.println(TimeUtil.getCurrentDate());
             results = searcher2.all();
-            lastEditMap = results.getFacet("Last Edited");
+            lastEditMap = results.getFacet(Last_Edited_Facet);
 
             int afterCount = lastEditMap.get("Today");
 
@@ -324,11 +377,7 @@ public class LastEditedFacetTest extends AbstractLoadDataSetTest {
     }
 
     @Test
-//    @RunOnly
-//    @RepeatTest(times = 5)
     public void LastEditedFacetChangeAfterSubstanceEdit() throws IOException {
-
-
 
         TimeUtil.setCurrentTime(TimeUtil.toMillis(TimeUtil.getCurrentLocalDateTime().plusYears(5)));
 
@@ -347,8 +396,9 @@ public class LastEditedFacetTest extends AbstractLoadDataSetTest {
 
         assertTrue(results.numberOfResults() > 0);
         assertTrue(!results.getAllFacets().isEmpty());
-        lastEditMap = results.getFacet("Last Edited");
-//        lastEditMap = results.getFacet("Last Validated");
+
+        lastEditMap = results.getFacet(Last_Edited_Facet);
+
         int beforeCount = lastEditMap.get("Today");
 
         assertEquals(20,  beforeCount);
@@ -381,7 +431,7 @@ public class LastEditedFacetTest extends AbstractLoadDataSetTest {
             BrowserSubstanceSearcher searcher2 = session2.newSubstanceSearcher();
 
             results = searcher2.all();
-            lastEditMap = results.getFacet("Last Edited");
+            lastEditMap = results.getFacet(Last_Edited_Facet);
 
             int afterCount = lastEditMap.get("Today");
 
@@ -400,8 +450,7 @@ public class LastEditedFacetTest extends AbstractLoadDataSetTest {
         loader = new SubstanceLoader(session);
         File f = new File(TEST_TESTDUMPS_REP90_PART1_GINAS);
         loader.loadJson(f, new SubstanceLoader.LoadOptions()
-                                             .numRecordsToLoad(20)
-        .sleepAmount(5_000));
+                                             .numRecordsToLoad(20));
 
         searcher = new BrowserSubstanceSearcher(session);
 
@@ -412,7 +461,7 @@ public class LastEditedFacetTest extends AbstractLoadDataSetTest {
         assertTrue(results.numberOfResults() > 0);
         assertTrue(!results.getAllFacets().isEmpty());
 
-        lastEditMap = results.getFacet("Last Edited");
+        lastEditMap = results.getFacet(Last_Edited_Facet);
 
         int beforeCount = lastEditMap.get("Today");
         assertEquals(20,  beforeCount);
@@ -451,7 +500,7 @@ public class LastEditedFacetTest extends AbstractLoadDataSetTest {
 
             results = searcher2.all();
 
-            lastEditMap = results.getFacet("Last Edited");
+            lastEditMap = results.getFacet(Last_Edited_Facet);
 
 
             assertEquals(1, lastEditMap.get("Today").intValue());

@@ -4,7 +4,7 @@ nowrap
 body {
     position: relative;
     background-color: #F8F8F8;
-    padding-top: 75px;
+    /*padding-top: 75px;*/
 }
 
 body, html {
@@ -48,7 +48,7 @@ body, html {
 }
 
 #content {
-    padding-top: 20px;
+    padding-top: 0px;
 }
 
 .sidebar {

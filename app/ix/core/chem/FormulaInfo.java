@@ -67,7 +67,7 @@ public class FormulaInfo implements Comparable<FormulaInfo>{
 		public int getCount(String atom){
 			ElementInfo ei=this.elementInfo.get(atom);
 			if(ei==null)return 0;
-			return ei.count;
+			return ei.getCount();
 		}
 		
 		public boolean hasOnly(String atom){

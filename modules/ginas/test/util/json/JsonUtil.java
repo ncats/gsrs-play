@@ -11,11 +11,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Created by katzelda on 2/25/16.
@@ -77,14 +73,30 @@ public class JsonUtil {
                 //System.out.println("Error:" + jn + " was:" + before.at(jn.get("path").textValue()));
             }else if("add".equals(op)){
                 String key = jn.get("path").asText();
-                JsonNode jsAfter=after.at(normalizePath(op,key,before));
-                change= new Change(key, null, toString(jsAfter), Change.ChangeType.ADDED);
+                String normalizedPath = normalizePath(op,key,before);
+				JsonNode jsAfter=after.at(normalizePath(op,key,before));
+                if(key.endsWith("/-")){
+                	//this will make jsAfter an entire object
+					//break this down into its parts
+					Iterator<String> iter = jsAfter.fieldNames();
+					while(iter.hasNext()){
+						String fieldName = iter.next();
+						String newKey = normalizedPath + "/" + fieldName;
+						changes.put(newKey, new Change(newKey, null, toString(jsAfter.get(fieldName)), Change.ChangeType.ADDED));
+					}
+					//we keep change null so we don't add anything but the child parts
+				}else {
+
+					change = new Change(key, null, toString(jsAfter), Change.ChangeType.ADDED);
+				}
             }else if("replace".equals(op)){
             	
                 String key = jn.get("path").asText();
                 String vold=toString(before.at(key));
                 String vnew=toString(after.at(key));
-                change= new Change(key, vold, vnew, Change.ChangeType.REPLACED);
+                if(!(vold.equals(vnew))) {
+					change = new Change(key, vold, vnew, Change.ChangeType.REPLACED);
+				}
             }
 
 
@@ -108,8 +120,7 @@ public class JsonUtil {
     // off a little. May need more thought, so for now just return
     // the path again.
     public static String normalizePath(String op, String path, JsonNode refObj){
-    	return path;
-    	/*
+    	//return path;
     	if(path.endsWith("/-")){
     		JsonNode nodeArray=refObj.at(path.replaceAll("[/]-$", ""));
     		int len=nodeArray.size();
@@ -117,7 +128,7 @@ public class JsonUtil {
     			return path.replaceAll("[/]-$", "/" + (len));
     		}
     	}
-    	return path;*/
+    	return path;
     }
 
     public static class JsonNodeBuilder{

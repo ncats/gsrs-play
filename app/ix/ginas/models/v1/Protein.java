@@ -100,7 +100,7 @@ public class Protein extends GinasCommonSubData {
 			try {
 				ObjectNode n = mapper.createObjectNode();
 				n.put("count", links.size());
-				n.put("href", Global.getRef(proteinSubstance.getClass(), proteinSubstance.getUuid())
+				n.put("href", Global.getRef(getProteinSubstance().getClass(), getProteinSubstance().getUuid())
 						+ "/protein/disulfideLinks");
 				n.put("shorthand", ModelUtils.shorthandNotationForLinks(links));
 
@@ -127,7 +127,7 @@ public class Protein extends GinasCommonSubData {
 				n.put("nsites", glyc._NGlycosylationSiteContainer.siteCount);
 				n.put("osites", glyc._OGlycosylationSiteContainer.siteCount);
 				n.put("csites", glyc._CGlycosylationSiteContainer.siteCount);
-				n.put("href", Global.getRef(proteinSubstance.getClass(), proteinSubstance.getUuid())
+				n.put("href", Global.getRef(getProteinSubstance().getClass(), getProteinSubstance().getUuid())
 						+ "/protein/glycosylation");
 				node = n;
 			} catch (Exception ex) {
@@ -148,9 +148,9 @@ public class Protein extends GinasCommonSubData {
 	@OneToOne(cascade = CascadeType.ALL)
 	public Glycosylation glycosylation;
 
-	@JsonIgnore
-	@OneToOne(cascade = CascadeType.ALL)
-	public Modifications modifications;
+	//@JsonIgnore
+	//@OneToOne(cascade = CascadeType.ALL)
+	//public Modifications modifications;
 
 	@ManyToMany(cascade = CascadeType.ALL)
 	@JoinTable(name = "ix_ginas_protein_subunit")
@@ -163,11 +163,32 @@ public class Protein extends GinasCommonSubData {
 	public Protein() {
 	}
 
+	@JsonIgnore
+	@Transient
+	private List<Runnable> onParentSet = new ArrayList<>();
+	
+	
 	public void setModifications(Modifications mod) {
 		if (mod == null) {
 			return;
 		}
-		this.modifications = mod;
+		Runnable r=new Runnable(){
+
+			@Override
+			public void run() {
+				if(mod!=getProteinSubstance().modifications){
+					getProteinSubstance().setModifications(mod);
+				}
+			}
+			
+		};
+		if(this.proteinSubstance==null){
+			onParentSet.add(r);
+		}else{
+			r.run();
+		}
+		
+		//this.modifications = mod;
 	}
 
 	@JsonIgnore
@@ -199,9 +220,10 @@ public class Protein extends GinasCommonSubData {
 				_modifiedCache.put(s.toString(), "cglycosylation");
 			}
 		}
-		if (modifications != null) {
+		Modifications m=getProteinSubstance().getModifications();
+		if (m != null) {
 			//modifications
-			for (StructuralModification sm : this.modifications.structuralModifications) {
+			for (StructuralModification sm : m.structuralModifications) {
 				if (sm.getSites() != null) {
 					for (Site s : sm.getSites()) {
 						_modifiedCache.put(s.toString(), "structuralModification");
@@ -270,5 +292,19 @@ public class Protein extends GinasCommonSubData {
 			e.printStackTrace();
 		}
 		return null;
+	}
+
+	@JsonIgnore
+	public void setProteinSubstance(ProteinSubstance proteinSubstance) {
+		this.proteinSubstance = proteinSubstance;
+		for(Runnable r:onParentSet){
+			r.run();
+		}
+		onParentSet.clear();
+	}
+	
+	@JsonIgnore
+	public ProteinSubstance getProteinSubstance() {
+		return this.proteinSubstance;
 	}
 }

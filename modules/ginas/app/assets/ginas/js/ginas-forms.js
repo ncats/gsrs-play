@@ -176,12 +176,11 @@
             });
         };
 
-        factory.cleanSequence = function (sequence, sequenceType) {
-            if(sequenceType){
-                subclass = sequenceType;
-            }
+        factory.cleanSequence = function (sequence) {
             if(_.isUndefined(factoryResidues)) {
-                factory.getResidues(subclass);
+                return factory.getResidues(subclass).then(function(){
+                    return factory.cleanSequence(sequence);
+                });
             }
             sequence = _.filter(sequence, function (aa) {
                 var temp = (_.find(factoryResidues, ['value', aa.toUpperCase()]));
@@ -326,11 +325,14 @@
                 subunits=substance.protein.subunits;
             }else if(subclass === "nucleicAcid"){
                 subunits=substance.nucleicAcid.subunits;
-            }        
+            }
+            var deferred = scope.$q.defer();
+            var promises = [];
             _.forEach(subunits, function (su, index) {
-                factory.parseSubunit(substance,su,index+1);
+                promises.push(factory.parseSubunit(substance,su,index+1));
             });
-                
+
+            return deferred.all(promises);
         };
         /**
           * This method accepts a substance, a subunit, and an optional subunit index
@@ -340,16 +342,28 @@
           */
         factory.parseSubunit = function (parent, subunit, subunitIndex) {
             var subclass = parent.substanceClass;
+
             if(_.isUndefined(factoryResidues)) {
-                factory.getResidues(subclass);
+                return factory.getResidues(subclass).then( function(){
+
+                    return factory.parseSubunit(parent,subunit,subunitIndex);
+                });
             }
             var display = [];
             var modifiedSitesMap = factory.sitesAsMap(factory.getAllModifiedSites(parent));
 
-            _.forEach(subunit.sequence, function (aa, index) {
+            var mmap ={};
+
+            _.chain(factoryResidues)
+                .map(function(n){
+                    mmap[n.value]=n;
+                })
+                .value();
+
+            _.forEach(subunit.sequence.toUpperCase(), function (aa, index) {
                 var obj = {};
                 obj.value = aa;
-                var temp = (_.find(factoryResidues, ['value', aa.toUpperCase()]));
+                var temp = mmap[aa];
                 if (!_.isUndefined(temp)) {
                     obj = _.pickBy(temp, _.isString);
                     obj.value = aa;
@@ -363,7 +377,7 @@
                     obj.residueIndex = index - 0 + 1;
                      if (parent.substanceClass === 'protein') {
                         //parse out cysteines first
-                        if (aa.toUpperCase() == 'C') {
+                        if (aa == 'C') {
                             obj.cysteine = true;
                         }else{
                             obj.cysteine = false;
@@ -834,26 +848,26 @@
 
 
         this.applyAll = function (type, parent, obj) {
-            subunitParser.parseSubunits(parent);
-        
-            var plural = type + "s";
-            
+            subunitParser.parseSubunits(parent).then(function() {
 
-            if (parent.nucleicAcid[plural].length == 0) {
-                if (type == 'linkage') {
-                    obj.$$displayString = siteList.allSites(parent, 'nucleicAcid', type);
+                var plural = type + "s";
+
+
+                if (parent.nucleicAcid[plural].length == 0) {
+                    if (type == 'linkage') {
+                        obj.$$displayString = siteList.allSites(parent, 'nucleicAcid', type);
+                    } else {
+                        obj.$$displayString = siteList.allSites(parent, 'nucleicAcid');
+                    }
+                    obj.sites = siteList.siteList(obj.$$displayString);
+
                 } else {
-                    obj.$$displayString = siteList.allSites(parent, 'nucleicAcid');
+                    var sites2 = this.getAllSitesWithout(type, parent.nucleicAcid.subunits);
+                    obj.$$displayString = siteList.siteString(sites2);
+                    obj.sites = siteList.siteList(obj.$$displayString);
+                    obj.sites.$$displayString = obj.$$displayString;
                 }
-                obj.sites = siteList.siteList(obj.$$displayString);
-
-            } else {
-                var sites2=this.getAllSitesWithout(type, parent.nucleicAcid.subunits);
-                obj.$$displayString = siteList.siteString(sites2);
-                obj.sites = siteList.siteList(obj.$$displayString);                
-                obj.sites.$$displayString=obj.$$displayString;
-            }
-            subunitParser.parseSubunits(parent);
+            });
 
         };
 
@@ -1001,20 +1015,19 @@
                 parent: '='
             },
             link: function (scope, element, attrs) {
-
                 if (scope.parent._name) {
                     scope.formType = 'Editing';
                     scope.name = scope.parent._name;
                 } else {
                     scope.formType = 'Registering new';
-                    
+                }
                     var cDisplay=_.startCase(scope.parent.substanceClass);
+
                     if(cDisplay === "Specified Substance 1"){
                     	cDisplay = "Specified Substance Group 1";
                     }
-                    
-                    scope.name = cDisplay;
-                }
+
+                    scope.displaySubstanceClass = cDisplay;
             },
             templateUrl: baseurl + "assets/templates/forms/header-form.html"
         };
@@ -1113,7 +1126,6 @@
                     }
                     return errors;
                 };
-
             }
         };
     });
@@ -1215,9 +1227,9 @@
             replace: true,
             scope: {
                 parent: '='
-              //  iscollapsed: '=?'
+                //iscollapsed: '=?'
             },
-            templateUrl: baseurl + "assets/templates/forms/parent-form.html",
+            templateUrl: baseurl + "assets/templates/forms/parent-form.html"
         };
     });
 
@@ -1301,7 +1313,6 @@
             link: function (scope) {
                 scope.validateConnectivity = function (obj) {
                     var map = polymerUtils.sruDisplayToConnectivity(obj);
-                    
                     return map.$errors;
                 }
             }
@@ -1355,6 +1366,7 @@
             link: function (scope, element, attrs) {
 
                 console.log(scope);
+                
                 scope.addNewRef = function (mainform, list, begin) {
                     //passes a new uuid for reference tracking
                     var obj = {
@@ -1411,6 +1423,13 @@
                             }
                         }
                     });
+                };
+                
+                scope.deleteUpload = function(obj){
+                	
+                	if(confirm("Are you sure you want to remove this document?")){
+                		obj.uploadedFile=null;
+                	}
                 };
 
                 //actual method to delete the reference uuid from an object references array
@@ -2028,41 +2047,40 @@
             }
         };
     });
+     ginasForms.directive('diversePlantForm', function (CVFields) {
+         return {
+             restrict: 'E',
+             replace: true,
+             scope: {
+                 parent: '='
+             },
+             templateUrl: baseurl + "assets/templates/forms/diverse-plant-form.html",
+             link: function (scope) {
+             }
+         };
+     });
+ 
+     ginasForms.directive('isolateForm', [function () {
+         return {
+             restrict: 'A',
+             require: '?form',
+             link: function link(scope, element, iAttrs, formController) {
+ 
+                 if (!formController) {
+                     return;
+                 }
+ 
+                 // Remove this form from parent controller
+                 formController.$$parentForm.$removeControl(formController);
+ 
+                 var _handler = formController.$setValidity;
+                 formController.$setValidity = function (validationErrorKey, isValid, cntrl) {
+                     _handler(validationErrorKey, isValid, cntrl);
+                     formController.$$parentForm.$setValidity(validationErrorKey, true, this);
+                 }
+             }
+         };
+     }]);
 
-
-    ginasForms.directive('diversePlantForm', function (CVFields) {
-        return {
-            restrict: 'E',
-            replace: true,
-            scope: {
-                parent: '='
-            },
-            templateUrl: baseurl + "assets/templates/forms/diverse-plant-form.html",
-            link: function (scope) {
-            }
-        };
-    });
-
-    ginasForms.directive('isolateForm', [function () {
-        return {
-            restrict: 'A',
-            require: '?form',
-            link: function link(scope, element, iAttrs, formController) {
-
-                if (!formController) {
-                    return;
-                }
-
-                // Remove this form from parent controller
-                formController.$$parentForm.$removeControl(formController);
-
-                var _handler = formController.$setValidity;
-                formController.$setValidity = function (validationErrorKey, isValid, cntrl) {
-                    _handler(validationErrorKey, isValid, cntrl);
-                    formController.$$parentForm.$setValidity(validationErrorKey, true, this);
-                }
-            }
-        };
-    }]);
 
 })();

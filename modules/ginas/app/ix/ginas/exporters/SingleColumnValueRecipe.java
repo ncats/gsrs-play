@@ -13,7 +13,11 @@ public interface SingleColumnValueRecipe<T> extends ColumnValueRecipe<T> {
 
     @Override
     default int writeValuesFor(Spreadsheet.SpreadsheetRow row, int currentOffset, T obj){
-        writeValue(obj, row.getCell(currentOffset));
+        try{
+            writeValue(obj, row.getCell(currentOffset));
+        }catch(Exception e){
+            e.printStackTrace();
+        }
         return 1;
     }
 

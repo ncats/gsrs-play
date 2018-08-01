@@ -19,6 +19,12 @@ import ix.ginas.models.GinasCommonSubData;
 @SingleParent
 public class Component extends GinasCommonSubData {
 	
+	//MAY_BE_PRESENT_ONE_OF
+	// or
+	//MUST_BE_PRESENT
+	// or
+	//MAY_BE_PRESENT_ANY_OF
+	
 	//@NotNull
     public String type;
     

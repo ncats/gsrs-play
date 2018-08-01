@@ -23,7 +23,9 @@
                             			<i>Record not yet imported</i> <br />
                         			</div>
 		                    		<div class = "panel-footer">
-		                    			@sref.refPname
+										@if(sref.refPname !=null) {
+											@sref.refPname
+										}
 		                    		</div>
                          		</div>
                             </div>

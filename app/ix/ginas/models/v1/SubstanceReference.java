@@ -49,4 +49,14 @@ public class SubstanceReference extends GinasCommonSubData {
     	}
     	return rep;
     }
+
+    @Override
+    public String toString() {
+        return "SubstanceReference{" +
+                "refPname='" + refPname + '\'' +
+                ", refuuid='" + refuuid + '\'' +
+                ", substanceClass='" + substanceClass + '\'' +
+                ", approvalID='" + approvalID + '\'' +
+                '}';
+    }
 }

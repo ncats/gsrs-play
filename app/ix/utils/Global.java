@@ -114,6 +114,7 @@ public class Global extends GlobalSettings {
 					String password = (String) m.get("password");
 					List roles = (List) m.get("roles");
 					List groups = (List) m.get("groups");
+
 					Principal p = new Principal(username, email);
 					
 					Principal p2 = PrincipalFactory.byUserName(username);
