@@ -39,7 +39,7 @@
             
             
             var responsePromise = $http.get(baseurl + "api/v1/scheduledjobs(" + $scope.state.id +")");
-            console.log("response Promise url = " + responsePromise);
+
             responsePromise.success(function (data, status, headers, config) {
             	if(JSON.stringify(data)!==JSON.stringify($scope.state)){
             		$scope.set(data);
