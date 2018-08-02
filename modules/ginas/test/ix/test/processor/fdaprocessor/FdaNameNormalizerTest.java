@@ -5,12 +5,14 @@ import ix.AbstractGinasServerTest;
 import ix.core.util.EntityUtils;
 import ix.ginas.controllers.v1.SubstanceFactory;
 import ix.ginas.modelBuilders.SubstanceBuilder;
+import ix.ginas.models.v1.Name;
 import ix.ginas.models.v1.Substance;
 import ix.ginas.processors.FDANameNormalizer;
 import ix.test.SubstanceJsonUtil;
 import ix.test.server.GinasTestServer;
 import ix.test.server.RestSession;
 import ix.test.server.SubstanceAPI;
+import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
@@ -60,6 +62,7 @@ public class FdaNameNormalizerTest {
         data.add(new Object[]{"OMEGA", "bar .OMEGA.baz", "bar \u03c9baz"});
         data.add(new Object[]{"+/-", "bar +/-baz", "bar \u00b1baz"});
 
+
         return data;
         /*
 
@@ -81,7 +84,13 @@ public class FdaNameNormalizerTest {
     private final String stdName;
 
     @ClassRule
-    public static GinasTestServer ts = new GinasTestServer();
+    public static GinasTestServer ts = createTestServerWithProcessor();
+
+    public static GinasTestServer createTestServerWithProcessor(){
+        GinasTestServer ts = new GinasTestServer();
+        ts.addEntityProcessor(GinasTestServer.ConfigOptions.ALL_TESTS, Name.class, FDANameNormalizer.class);
+        return ts;
+    }
 
     public FdaNameNormalizerTest( String ignored, String inputName, String stdName){
         this.inputName = inputName;

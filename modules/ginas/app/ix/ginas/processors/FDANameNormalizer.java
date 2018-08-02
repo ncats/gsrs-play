@@ -106,6 +106,7 @@ public class FDANameNormalizer implements EntityProcessor<Name>{
 
 	@Override
 	public void prePersist(Name obj) {
+		System.out.println("here!!!!");
 		String name = obj.getName();
 		obj.stdName=fromFDA(name);
 	}
