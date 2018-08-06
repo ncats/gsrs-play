@@ -1,9 +1,12 @@
 package ix.core.validator;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonView;
 
 import ix.core.validator.ValidationMessage.MESSAGE_TYPE;
@@ -14,6 +17,13 @@ public class ValidationResponse<T> {
 	private boolean valid;
 	private T newObject;
 	
+
+	@JsonCreator
+	public ValidationResponse(@JsonProperty("validationMessages") List<ValidationMessage> validationMessages,
+	@JsonProperty("valid") boolean valid){
+		this.valid = valid;
+		this.validationMessages.addAll(validationMessages == null? Collections.emptyList() : validationMessages);
+	}
 	public ValidationResponse(T obj){
 		setNewObject(obj);
 	}
