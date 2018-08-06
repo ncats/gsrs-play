@@ -5,8 +5,10 @@ import java.util.Collection;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import ix.core.util.InheritanceTypeIdResolver;
 import play.Logger;
 
+@InheritanceTypeIdResolver.DefaultInstance
 public class GinasProcessingMessage implements ValidationMessage {
 	public enum ACTION_TYPE{IGNORE, APPLY_CHANGE, FAIL, DO_NOTHING};
 

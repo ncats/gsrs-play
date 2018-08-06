@@ -14,6 +14,16 @@ import ix.ginas.models.GinasCommonSubData;
 @Table(name="ix_ginas_substanceref")
 @JSONEntity(name = "substanceReference", isFinal = true)
 public class SubstanceReference extends GinasCommonSubData {
+
+    public static SubstanceReference newReferenceFor(Substance s){
+        SubstanceReference ref = new SubstanceReference();
+        ref.refuuid = s.getUuid().toString();
+        ref.refPname = s.getName();
+        ref.approvalID = s.approvalID;
+        ref.substanceClass = Substance.SubstanceClass.reference.toString();
+
+        return ref;
+    }
     @JSONEntity(title = "Substance Name")
     @Column(length=1024)
     public String refPname;

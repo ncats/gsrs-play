@@ -1,7 +1,13 @@
 package ix.core.validator;
 
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.databind.annotation.JsonTypeIdResolver;
+import ix.core.util.InheritanceTypeIdResolver;
+
+@JsonTypeInfo(use = JsonTypeInfo.Id.CUSTOM, include = JsonTypeInfo.As.PROPERTY, property = "_discriminator")
+@JsonTypeIdResolver(InheritanceTypeIdResolver.class)
 public interface ValidationMessage extends Comparable<ValidationMessage>{
-	public enum MESSAGE_TYPE{
+	 enum MESSAGE_TYPE{
 	    ERROR(0),
 	    WARNING(1), 
 	    SUCCESS(2), 
@@ -22,8 +28,8 @@ public interface ValidationMessage extends Comparable<ValidationMessage>{
 	default boolean isError(){
 	    return this.getMessageType()==MESSAGE_TYPE.ERROR;
 	}
-	public String getMessage();
-	public ValidationMessage.MESSAGE_TYPE getMessageType();
+	String getMessage();
+	 ValidationMessage.MESSAGE_TYPE getMessageType();
 	
 	default int compareTo(ValidationMessage vm){
 	    return Integer.compare(this.getMessageType().getPriority(), vm.getMessageType().getPriority());
