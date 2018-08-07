@@ -5,6 +5,8 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.Optional;
 
+import ix.core.util.RunOnly;
+import ix.ginas.modelBuilders.ProteinSubstanceBuilder;
 import org.junit.Test;
 
 import ix.AbstractGinasServerTest;
@@ -68,7 +70,44 @@ public class ProteinValidationTest extends AbstractGinasServerTest{
         			});
         }
    	}
-    
-   
+
+   	@Test
+	public void duplicateSequenceShouldWarn() {
+		try (RestSession session = ts.newRestSession(ts.getFakeUser1())) {
+			SubstanceAPI api = new SubstanceAPI(session);
+
+
+			new ProteinSubstanceBuilder()
+					.addName("aName")
+					.addSubUnit("AQPAMAQMQLVQSGAEVKKPGASVKLSCKASGYTFSSYWMHWVRQAPGQRLEWMGEINPGNGHTNYNEKFKSRV" +
+							"TITVDKSASTAYMELSSLRSEDTAVYYCAKIWGPSLTSPFDYWGQGTLVTVSSGLGGLASTKGPSVFPLAPSSKSTSG" +
+							"GTAALGCLVKDYFPEPVTVSWNSGALTSGVHTFPAVLQSSGLYSLSSVVTVPSSSLGTQTYICNVNHKPSNTKVDKRV" +
+							"EPKSCDKTHTCPPCPAPELLGGPSVFLFPPKPKDTLMISRTPEVTCVVVDVSHEDPEVKFNWYVDGVEVHNAKTKPRE" +
+							"EQYNSTYRVVSVLTVLHQDWLNGKEYKCKVSNKALPAPIEKTISKAKGQPREPQVYTLPPSREEMTKNQVSLTCLVKG" +
+							"FYPSDIAVEWESNGQPENNYKTTPPVLDSDGSFFLYSKLTVDKSRWQQGNVFSCSVMHEALHNHYTQKSLSLSPGK")
+					.buildJsonAnd(js -> SubstanceJsonUtil.ensurePass(api.submitSubstance(js)));
+
+
+			new ProteinSubstanceBuilder()
+					.addName("duplicateName")
+					.addSubUnit("AQPAMAQMQLVQSGAEVKKPGASVKLSCKASGYTFSSYWMHWVRQAPGQRLEWMGEINPGNGHTNYNEKFKSRV" +
+							"TITVDKSASTAYMELSSLRSEDTAVYYCAKIWGPSLTSPFDYWGQGTLVTVSSGLGGLASTKGPSVFPLAPSSKSTSG" +
+							"GTAALGCLVKDYFPEPVTVSWNSGALTSGVHTFPAVLQSSGLYSLSSVVTVPSSSLGTQTYICNVNHKPSNTKVDKRV" +
+							"EPKSCDKTHTCPPCPAPELLGGPSVFLFPPKPKDTLMISRTPEVTCVVVDVSHEDPEVKFNWYVDGVEVHNAKTKPRE" +
+							"EQYNSTYRVVSVLTVLHQDWLNGKEYKCKVSNKALPAPIEKTISKAKGQPREPQVYTLPPSREEMTKNQVSLTCLVKG" +
+							"FYPSDIAVEWESNGQPENNYKTTPPVLDSDGSFFLYSKLTVDKSRWQQGNVFSCSVMHEALHNHYTQKSLSLSPGK")
+					.buildJsonAnd(js -> {
+						ValidationResponse vr = api.validateSubstance(js);
+
+						assertTrue(vr.getMessages().stream()
+										.filter(m-> m.getMessageType() == MESSAGE_TYPE.WARNING && m.getMessage().contains("similar sequence"))
+								.findAny().isPresent());
+
+						assertTrue(vr.getMessages().toString(), vr.isValid());
+
+
+					});
+		}
+	}
     
 }

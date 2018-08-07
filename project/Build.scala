@@ -40,6 +40,8 @@ object ApplicationBuild extends Build {
     "org.apache.httpcomponents" % "httpcore" %"4.4.4",
     "org.apache.httpcomponents" % "httpclient" %"4.3.1", //required for Ivy bug?
     "commons-io" % "commons-io" % "2.4",
+    "com.fasterxml.jackson.core" % "jackson-core" % "2.5.3",
+    "com.fasterxml.jackson.core" % "jackson-databind" % "2.5.3",
 
     "net.sourceforge.htmlunit" % "htmlunit" % "2.27" % Test,
     "com.zaxxer" % "HikariCP" % "2.4.6"

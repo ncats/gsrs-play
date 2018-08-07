@@ -6,6 +6,7 @@ import java.util.*;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import ix.ginas.models.v1.Reference;
@@ -159,14 +160,18 @@ public final class SubstanceJsonUtil {
 		
 	}
 
-	public static void ensureFailure(WSResponse response){
+	public static JsonNode ensureFailure(WSResponse response){
 		int status = response.getStatus();
 //		System.out.println("Response is:");
-//		System.out.println(response.getBody());
 		assertTrue("Expected failure code, got:" + status, status != 200 && status != 201);
+		try{
+			return response.asJson();
+		}catch(Exception e){
+				return new ObjectMapper().createObjectNode();
+		}
 	}
 
-	public static void ensurePass(WSResponse response){
+	public static JsonNode ensurePass(WSResponse response){
 		int status = response.getStatus();
 		try{
 			assertTrue("Expected pass code, got:" + status +" message = " + response.getStatusText(), status == 200 || status == 201);
@@ -174,6 +179,7 @@ public final class SubstanceJsonUtil {
 			System.err.println(response.getBody());
 			throw e;
 		}
+		return response.asJson();
 	}
 
 
