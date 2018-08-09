@@ -259,7 +259,7 @@ public class RouteFactory extends Controller {
                     .getResource(context)
                     .count();
         }catch (Exception ex) {
-            Logger.trace("["+context+"]", ex);
+            Logger.error("["+context+"]", ex);
             return _apiInternalServerError (ex);
         }
     }
@@ -271,7 +271,7 @@ public class RouteFactory extends Controller {
                     .getResource(context)
                     .search(q, top, skip, fdim);
         }catch (Exception ex) {
-            Logger.trace("["+context+"]", ex);
+            Logger.error("["+context+"]", ex);
             return _apiInternalServerError (ex);
         }
     }
@@ -441,7 +441,7 @@ public class RouteFactory extends Controller {
                     .getResource(context)
                     .structureSearch(struc.molfile, type, cutoff, top, skip, fdim, field);
         } catch (Exception ex) {
-            Logger.trace("[" + context + "]", ex);
+            Logger.error("[" + context + "]", ex);
             return _apiInternalServerError(ex);
         }
     }
@@ -461,7 +461,7 @@ public class RouteFactory extends Controller {
                     .getResource(context)
                     .sequenceSearch(sub.sequence,  CutoffType.valueOfOrDefault(type), cutoff, top, skip, fdim, field);
         } catch (Exception ex) {
-            Logger.trace("[" + context + "]", ex);
+            Logger.error("[" + context + "]", ex);
             return _apiInternalServerError(ex);
         }
     }
@@ -477,7 +477,7 @@ public class RouteFactory extends Controller {
                     .getResource(context)
                     .edits(id);
         }catch (Exception ex) {
-            Logger.trace("["+context+"]", ex);
+            Logger.error("["+context+"]", ex);
             return _apiInternalServerError (ex);
         }
     }
@@ -490,7 +490,7 @@ public class RouteFactory extends Controller {
         	Object id = nr.resolveID(someid).orElse(null);        	
             return nr.get(id, expand);
         }catch (Exception ex) {
-            Logger.trace("["+context+"]", ex);
+            Logger.error("["+context+"]", ex);
             return _apiInternalServerError (ex);
         }
     }
@@ -503,7 +503,7 @@ public class RouteFactory extends Controller {
           	  Object id = nr.resolveID(someid).orElse(null);        	
               return nr.field(id, field);
           }catch (Exception ex) {
-              Logger.trace("["+context+"]", ex);
+              Logger.error("["+context+"]", ex);
               return _apiInternalServerError (ex);
           }
     }
@@ -515,7 +515,7 @@ public class RouteFactory extends Controller {
                     .getResource(context)
                     .get(id,expand);
         }catch (Exception ex) {
-            Logger.trace("["+context+"]", ex);
+            Logger.error("["+context+"]", ex);
             return _apiInternalServerError (ex);
         }
     }
@@ -526,7 +526,7 @@ public class RouteFactory extends Controller {
                     .getResource(context)
                     .doc(id);
         }catch (Exception ex) {
-            Logger.trace("["+context+"]", ex);
+            Logger.error("["+context+"]", ex);
             return _apiInternalServerError (ex);
         }
     }
@@ -538,7 +538,7 @@ public class RouteFactory extends Controller {
                     .getResource(context)
                     .get(EntityFactory.toUUID(uuid), expand);
         }catch (Exception ex) {
-            Logger.trace("["+context+"]", ex);
+            Logger.error("["+context+"]", ex);
             return _apiInternalServerError (ex);
         }
     }
@@ -549,7 +549,7 @@ public class RouteFactory extends Controller {
                     .getResource(context)
                     .edits(id);
         }catch (Exception ex) {
-            Logger.trace("["+context+"]", ex);
+            Logger.error("["+context+"]", ex);
             return _apiInternalServerError (ex);
         }
     }
@@ -561,7 +561,7 @@ public class RouteFactory extends Controller {
                     .getResource(context)
                     .edits(EntityFactory.toUUID(id));
         }catch (Exception ex) {
-            Logger.trace("["+context+"]", ex);
+            Logger.error("["+context+"]", ex);
             return _apiInternalServerError (ex);
         }
     }
@@ -573,7 +573,7 @@ public class RouteFactory extends Controller {
                     .getResource(context)
                     .approve(EntityFactory.toUUID(id));
         }catch (Exception ex) {
-            Logger.trace("["+context+"]", ex);
+            Logger.error("["+context+"]", ex);
             return _apiInternalServerError (ex);
         }
     }
@@ -584,7 +584,7 @@ public class RouteFactory extends Controller {
                     .getResource(context)
                     .field(id, field);
         }catch (Exception ex) {
-            Logger.trace("["+context+"]", ex);
+            Logger.error("["+context+"]", ex);
             return _apiInternalServerError (ex);
         }
     }
@@ -595,7 +595,7 @@ public class RouteFactory extends Controller {
                     .getResource(context)
                     .field(EntityFactory.toUUID(uuid), field);
         }catch (Exception ex) {
-            Logger.trace("["+context+"]", ex);
+            Logger.error("["+context+"]", ex);
             return _apiInternalServerError (ex);
         }
     }
@@ -609,7 +609,7 @@ public class RouteFactory extends Controller {
                     .page(top, skip, filter);
         }catch (Exception ex) {
 
-            Logger.trace("["+context+"]", ex);
+            Logger.error("["+context+"]", ex);
             return _apiInternalServerError (ex);
         }
     }
@@ -622,7 +622,7 @@ public class RouteFactory extends Controller {
                     .getResource(context)
                     .stream(field, top, skip);
         }catch (Exception ex) {
-            Logger.trace("["+context+"]", ex);
+            Logger.error("["+context+"]", ex);
             return _apiInternalServerError (ex);
         }
     }
@@ -635,7 +635,7 @@ public class RouteFactory extends Controller {
                     .getResource(context)
                     .create();
         }catch (Exception ex) {
-            Logger.trace("["+context+"]", ex);
+            Logger.error("["+context+"]", ex);
             return _apiInternalServerError (ex);
         }
     }
@@ -648,7 +648,7 @@ public class RouteFactory extends Controller {
                     .getResource(context)
                     .validate();
         }catch (Exception ex) {
-            Logger.trace("["+context+"]", ex);
+            Logger.error("["+context+"]", ex);
             return _apiInternalServerError (ex);
         }
     }
@@ -661,7 +661,7 @@ public class RouteFactory extends Controller {
                     .getResource(context)
                     .update(id, field);
         }catch (Exception ex) {
-            Logger.trace("["+context+"]", ex);
+            Logger.error("["+context+"]", ex);
             return _apiInternalServerError (ex);
         }
     }
@@ -674,7 +674,7 @@ public class RouteFactory extends Controller {
                     .getResource(context)
                     .updateEntity();
         }catch (Exception ex) {
-            Logger.trace("["+context+"]", ex);
+            Logger.error("["+context+"]", ex);
             return _apiInternalServerError (ex);
         }
     }
@@ -688,7 +688,7 @@ public class RouteFactory extends Controller {
                     .getResource(context)
                     .update(EntityFactory.toUUID(id), field);
         }catch (Exception ex) {
-            Logger.trace("["+context+"]", ex);
+            Logger.error("["+context+"]", ex);
             return _apiInternalServerError (ex);
         }
     }
@@ -701,7 +701,7 @@ public class RouteFactory extends Controller {
                     .getResource(context)
                     .patch(EntityFactory.toUUID(id));
         }catch (Exception ex) {
-            Logger.trace("["+context+"]", ex);
+            Logger.error("["+context+"]", ex);
             return _apiInternalServerError (ex);
         }
     }
@@ -717,7 +717,7 @@ public class RouteFactory extends Controller {
             return SearchFactory.searchRESTFacets(kind, q, field, fdim, fskip, ffilter);
             
         }catch (Exception ex) {
-            Logger.trace("["+context+"]", ex);
+            Logger.error("["+context+"]", ex);
             return _apiInternalServerError (ex);
         }
     }
@@ -749,7 +749,7 @@ public class RouteFactory extends Controller {
             return Java8Util.ok(em.valueToTree(fm));
             
         }catch (Exception ex) {
-            Logger.trace("["+context+"]", ex);
+            Logger.error("["+context+"]", ex);
             return _apiInternalServerError (ex);
         }
     }
