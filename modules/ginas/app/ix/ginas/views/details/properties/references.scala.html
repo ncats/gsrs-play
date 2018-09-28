@@ -5,14 +5,18 @@
 <table class="table gsrs-datatable" id="allReferencesTable">
     <thead>
         <tr>
+            <th>Index</th>
             <th>Source Text / Citation</th>
             <th>Source Type</th>
             <th>Tags</th>
             <th>Date Accessed</th>
         </tr>
     </thead>
-    @for(r <- references) {
+    @for((r,i) <- references.view.zipWithIndex) {
         <tr>
+            <td>
+            @{i+1}
+            </td>
             <td>
             @if(r.url != null) {
                 <a href="@r.url" target ="_blank">@r.citation</a>
@@ -24,12 +28,12 @@
             @r.docType
             </td>
             <td>
-                @for( tag <- r.tags){
-                    <span class="badge">@tag.term</span>
-                }
+            @for( tag <- r.tags){
+                <span class="badge">@tag.term</span>
+            }
             </td>
             <td>
-            <span class="hidden">@r.getDocumentSortPrefix()</span>@r.documentDate
+                <span class="hidden">@r.getDocumentSortPrefix()</span>@r.documentDate
             </td>
         </tr>
     }

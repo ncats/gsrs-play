@@ -4,7 +4,7 @@
 
 @(names: List[Name], substance: Substance = null)
 @renderName(n: Name) = {
-    <tr>
+	<tr id = "names-row-@n.uuid">
 		<td>
 			@*<div style="width:100%;">*@
 			<table class="info-wrapper">
@@ -20,77 +20,79 @@
 					</td>
 					<td>
 						@* info-popup contents *@
-						@if(n.getReferences.size > 0 || n.getLocators(substance).size()>0){   
-							<info-popup>
-							
-							<div class="info-popup-container">
-								@if(n.getLocators(substance).size()>0){
+						@if(n.getReferences.size > 0 || n.getLocators(substance).size()>0){
+							<div style = "display:none">
+
+								<div class="info-popup-container" id = "names-ref-@n.uuid">
+									@if(n.getLocators(substance).size()>0){
 										<div class="locators">
 											<div>
 												<label>Locators:</label>
 											</div>
-										@for(l <- n.getLocators(substance)) {
-											<span tooltip-append-to-body="true" 
-											uib-tooltip="@GinasApp.getCV.getDisplay("LOCATORS", l)" 
-											class="badge" >
+											@for(l <- n.getLocators(substance)) {
+												<span tooltip-append-to-body="true"
+												uib-tooltip="@GinasApp.getCV.getDisplay("LOCATORS", l)"
+												class="badge" >
 												@l
-											</span> &nbsp;
-										}
-										</div>
-								}
-							
-								@if(n.nameOrgs.size()>0){
-									<div class="table-responsive">
-										<div>
-											<label>Naming Organization:</label>
-											@for(org <- n.nameOrgs) {
-												@GinasApp.getCV.getDisplay("NAME_ORG", org.nameOrg) &nbsp;
+												</span> &nbsp;
 											}
 										</div>
-									</div>
-								}
-							
-								<div>
-									<label>Source@if(n.getReferences.size>1){s}else{}:</label>
-									@if(n.getReferences.size > 0){
-										<referencesmanager reftable 
-										hide-header="true" 
-										show='["cit"]' 
-										substance ="'@substance.uuid'" 
-										sreferences = "@GinasApp.getAsJson(n.getReferences())" >
-										</referencesmanager>
 									}
+
+									@if(n.nameOrgs.size()>0){
+										<div class="table-responsive">
+											<div>
+												<label>Naming Organization:</label>
+												@for(org <- n.nameOrgs) {
+													@GinasApp.getCV.getDisplay("NAME_ORG", org.nameOrg) &nbsp;
+												}
+											</div>
+										</div>
+									}
+
+									<div>
+										<label>Source@if(n.getReferences.size>1){s}else{}:</label>
+										@if(n.getReferences.size > 0){
+											<referencesmanager reftable
+											hide-header="true"
+											show='["cit"]'
+											substance ="'@substance.uuid'"
+											version ="'@substance.version'"
+											sreferences = "@GinasApp.getAsJson(n.getReferences())" >
+											</referencesmanager>
+										}
+									</div>
 								</div>
 							</div>
-							</info-popup>
 						}
 					</td>
 				</tr>
 			</table>
 			@*</div>*@
-			
-		 
+
+
 		</td>
-		
+
 		<td id="one-line">
-			@if(n.preferred) {
-				Preferred Name
-			}else{
-				@GinasApp.getCV.getDisplay("NAME_TYPE",{n.`type`})
-			} 
+		@if(n.preferred) {
+			Preferred Name
+		}else{
+			@GinasApp.getCV.getDisplay("NAME_TYPE",{n.`type`})
+		}
 		</td>
-		
+
 		<td >
-			@if(n.languages.size()>0){
-				<div class="table-responsive">
-					<div>
-						@for(l <- n.languages) {
-							@GinasApp.getCV.getDisplay("LANGUAGE", l.term) &nbsp;
-						}
-					</div>
+		@if(n.languages.size()>0){
+			<div class="table-responsive">
+				<div>
+				@for(l <- n.languages) {
+					@GinasApp.getCV.getDisplay("LANGUAGE", l.term) &nbsp;
+				}
 				</div>
-			}	                
+			</div>
+		}
 		</td>
+		<td><button onclick = "addRef('@n.uuid',this,'names');" class = "btn btn-primary reference-button" >view</button></td>
 	</tr>
 }
 
@@ -100,22 +102,24 @@
 			<th>Name</th>
 			<th>Type</th>
 			<th>Language</th>
-			
+			<th class = "no-sort">References</th>
+
 		</tr>
 	</thead>
 	<tbody>
-	@*Show Display and Preferred Names First*@
-   
-	@for(n <- names) {
-	
-		@if(n.isDisplayName() || n.preferred){
-			@renderName(n)
+		@*Show Display and Preferred Names First*@
+
+		@for(n <- names) {
+
+			@if(n.isDisplayName() || n.preferred){
+				@renderName(n)
+			}
 		}
-	}
-	@for(n <- names) {
-		@if(!n.isDisplayName() && !n.preferred){
-			@renderName(n)
+		@for(n <- names) {
+			@if(!n.isDisplayName() && !n.preferred){
+				@renderName(n)
+			}
 		}
-	}
 	</tbody>
 </table>
+
