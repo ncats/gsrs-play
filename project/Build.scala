@@ -12,7 +12,7 @@ object ApplicationBuild extends Build {
     .format(new java.util.Date())
   val appVersion = "%s-%s-%s".format(branch, buildDate, commit)
 
-  val displayVersion = "version 2.1 beta"
+  val displayVersion = "version 2.3 beta"
   val commonSettings = Seq(
     version := appVersion,    
     scalaVersion := "2.11.7",
