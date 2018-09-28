@@ -66,12 +66,19 @@ public class Administration extends App {
 
     @Dynamic(value = IxDynamicResourceHandler.IS_ADMIN, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
     public static Result addPrincipal() {
+    	try{
+    		System.out.println("Adding");
         DynamicForm requestData = Form.form().bindFromRequest();
         if (requestData.hasErrors()) {
-            return ok();//badRequest(createForm.render(userForm));
+	            throw new IllegalStateException("Malformed User data");
         }
 
         addUser(requestData);
+    	}catch(Exception e){
+    		e.printStackTrace();
+    		flash("error", e.getMessage());
+    		return create();
+    	}
         return index();
     }
 
@@ -91,7 +98,7 @@ public class Administration extends App {
         
         
         if(olduser !=null){
-        	throw new IllegalStateException("That username already exists");
+        	throw new IllegalStateException("The username \"" + newUser.username + "\" already exists");
         }
         
         

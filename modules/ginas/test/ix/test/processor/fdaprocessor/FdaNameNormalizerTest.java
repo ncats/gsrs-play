@@ -62,7 +62,6 @@ public class FdaNameNormalizerTest {
         data.add(new Object[]{"OMEGA", "bar .OMEGA.baz", "bar \u03c9baz"});
         data.add(new Object[]{"+/-", "bar +/-baz", "bar \u00b1baz"});
 
-
         return data;
         /*
 

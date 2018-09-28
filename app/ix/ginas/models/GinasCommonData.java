@@ -1,10 +1,11 @@
 package ix.ginas.models;
 
 import java.util.Date;
-import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Consumer;
+import java.util.stream.Stream;
 
 import javax.persistence.Basic;
 import javax.persistence.FetchType;
@@ -24,7 +25,12 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import ix.core.UserFetcher;
 import ix.core.controllers.AdminFactory;
 import ix.core.controllers.EntityFactory.EntityMapper;
-import ix.core.models.*;
+import ix.core.models.BaseModel;
+import ix.core.models.ForceUpdatableModel;
+import ix.core.models.Group;
+import ix.core.models.Indexable;
+import ix.core.models.Principal;
+import ix.core.util.StreamUtil;
 import ix.core.util.TimeUtil;
 import ix.ginas.models.serialization.GroupDeserializer;
 import ix.ginas.models.serialization.GroupSerializer;
@@ -268,13 +274,16 @@ public class GinasCommonData extends BaseModel implements GinasAccessControlled,
     	EntityMapper om = EntityMapper.FULL_ENTITY_MAPPER();
     	JsonNode jsn=om.valueToTree(this);
     	
-    	Iterator<String> fields=jsn.fieldNames();
+    	Stream<String> fields=StreamUtil.forIterator(jsn.fieldNames())
+    			                          .sorted();
     	
-    	while(fields.hasNext()){
-    		String f=fields.next();
+    	fields.forEach(new Consumer<String>(){
+			@Override
+			public void accept(String f) {
     		sb.append(f  +":" +  jsn.get(f).toString() + "\n");
     	}
-    	
+    	});
+
     	
         return Util.sha1(sb.toString());
     }
@@ -303,9 +312,6 @@ public class GinasCommonData extends BaseModel implements GinasAccessControlled,
     	this.uuid=UUID.randomUUID();
     	return uuid;
     }
-    
-
-
 
 	@Override
 	public void forceUpdate() {

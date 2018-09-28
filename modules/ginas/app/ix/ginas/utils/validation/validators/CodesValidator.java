@@ -68,7 +68,8 @@ public class CodesValidator extends AbstractValidatorPlugin<Substance> {
                     //TODO we only check the first hit?
                     //would be nice to say instead of possible duplciate hit say we got X hits
                     Substance s2 = sr.iterator().next();
-                    if (!s2.getUuid().toString().equals(s.getUuid().toString())) {
+
+                    if (s2.getUuid() != null && !s2.getUuid().equals(s.getUuid())) {
                         GinasProcessingMessage mes = GinasProcessingMessage
                                 .WARNING_MESSAGE(
                                         "Code '"

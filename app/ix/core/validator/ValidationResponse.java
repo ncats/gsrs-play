@@ -14,7 +14,7 @@ import ix.core.models.BeanViews;
 
 public class ValidationResponse<T> {
 	private final List<ValidationMessage> validationMessages = new ArrayList<>();
-	private boolean valid;
+	private boolean valid = true;
 	private T newObject;
 	
 

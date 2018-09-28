@@ -36,8 +36,9 @@ public class BrowserSession extends AbstractSession<WSResponse>{
     private String sessionCookie;
     private AuthenticationStrategy authenticationStrategy = NullAuthenticationStrategy.INSTANCE;
 
-    public BrowserSession(int port) {
-        super(port);
+
+    public BrowserSession(GinasTestServer ts, int port) {
+        super(ts, port);
         
         webClient = new WebClient();
         
@@ -50,11 +51,11 @@ public class BrowserSession extends AbstractSession<WSResponse>{
         });
       //  webClient.getOptions().setThrowExceptionOnFailingStatusCode(false);
     }
-    public BrowserSession(GinasTestServer.User user, int port) {
-        this(user, port, AuthenticationStrategyFactory.getDefault());
+    public BrowserSession(GinasTestServer ts, GinasTestServer.User user, int port) {
+        this(ts, user, port, AuthenticationStrategyFactory.getDefault());
     }
-    public BrowserSession(GinasTestServer.User user, int port, AuthenticationStrategyFactory authenticationStrategyFactory) {
-        super(user, port);
+    public BrowserSession(GinasTestServer ts, GinasTestServer.User user, int port, AuthenticationStrategyFactory authenticationStrategyFactory) {
+        super(ts, user, port);
 		webClient = new WebClient();
 		authenticationStrategy = authenticationStrategyFactory.newInstance(this, webClient);
 
@@ -70,6 +71,21 @@ public class BrowserSession extends AbstractSession<WSResponse>{
 
     }
 
+    public GinasHttpResolver getHttpResolver(){
+        return getTestSever().getHttpResolver();
+    }
+    public RestSession newRestSession(){
+        return new RestSession(getTestSever(), getUser(), getPort());
+    }
+    @Override
+    public RestSession getRestSession() {
+        return newRestSession();
+    }
+
+    @Override
+    public BrowserSession getBrowserSession() {
+        return this;
+    }
 
     @Override
     public void close() {

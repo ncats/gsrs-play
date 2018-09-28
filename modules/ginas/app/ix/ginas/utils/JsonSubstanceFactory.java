@@ -88,7 +88,14 @@ public class JsonSubstanceFactory {
                 throw new IllegalStateException("JSON parse error:" + e.getMessage());
             }
         } else {
-            throw new IllegalStateException("Not a valid JSON substance! \"substanceClass\" cannot be null!");
+            try {
+                return mapper.treeToValue(tree, Substance.class);
+            } catch (JsonProcessingException e) {
+                e.printStackTrace();
+                throw new IllegalStateException("JSON parse error:" + e.getMessage());
+
+            }
+//            throw new IllegalStateException("Not a valid JSON substance! \"substanceClass\" cannot be null!");
         }
     }
 

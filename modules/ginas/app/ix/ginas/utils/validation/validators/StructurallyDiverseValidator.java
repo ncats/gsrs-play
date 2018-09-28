@@ -4,6 +4,7 @@ import ix.core.validator.GinasProcessingMessage;
 import ix.core.validator.ValidatorCallback;
 import ix.ginas.models.v1.StructurallyDiverseSubstance;
 import ix.ginas.models.v1.Substance;
+import ix.ginas.utils.validation.ValidationUtils;
 
 /**
  * Created by katzelda on 5/14/18.
@@ -15,7 +16,9 @@ public class StructurallyDiverseValidator extends AbstractValidatorPlugin<Substa
         if (cs.structurallyDiverse == null) {
             callback.addMessage(GinasProcessingMessage
                     .ERROR_MESSAGE("Structurally diverse substance must have a structurally diverse element"));
-        } else {
+            return;
+        }
+
             if (cs.structurallyDiverse.sourceMaterialClass == null
                     || cs.structurallyDiverse.sourceMaterialClass.equals("")) {
 
@@ -55,7 +58,10 @@ public class StructurallyDiverseValidator extends AbstractValidatorPlugin<Substa
                 callback.addMessage(GinasProcessingMessage
                         .ERROR_MESSAGE("Structurally diverse substance must specify a sourceMaterialType"));
             }
-
+        if(!cs.structurallyDiverse.part.isEmpty()) {
+            ValidationUtils.validateReference(cs, cs.structurallyDiverse, callback, ValidationUtils.ReferenceAction.FAIL);
         }
+
+
     }
 }

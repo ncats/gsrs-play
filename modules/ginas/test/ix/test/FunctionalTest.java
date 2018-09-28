@@ -13,17 +13,15 @@ public class FunctionalTest  extends AbstractGinasServerTest {
     @Test
     public void loggedInUserHasLogout()   throws Exception {
         try(RestSession session = ts.newRestSession(ts.getFakeUser1())){
-            String content = session.get("ginas/app").getBody();
+            String content = session.get(ts.getHttpResolver().get("")).getBody();
             assertContains(content,"logout");
         }
     }
 
     @Test
     public void testRouteSubstance() throws Exception {
-        System.out.println("Starting route to substance");
         try(RestSession session = ts.newRestSession(ts.getFakeUser1())){
-            System.out.println("Fetching list");
-            String content = session.get("ginas/app/substances").getBody();
+            String content = session.get(ts.getHttpResolver().get("substances")).getBody();
 
             assertContains(content,"substances");
 
@@ -32,7 +30,7 @@ public class FunctionalTest  extends AbstractGinasServerTest {
     @Test
     public void testRouteLogin() throws Exception {
         try(RestSession session = ts.newRestSession(ts.getFakeUser1())){
-            String content = session.get("ginas/app/login").getBody();
+            String content = session.get(ts.getHttpResolver().get("login")).getBody();
 
             assertContains(content,"ginas");
         }
@@ -40,7 +38,7 @@ public class FunctionalTest  extends AbstractGinasServerTest {
     @Test
     public void testRouteChemicalWizard() throws Exception {
         try(RestSession session = ts.newRestSession(ts.getFakeUser1())){
-            String content = session.get("ginas/app/wizard?kind=chemical").getBody();
+            String content = session.get(ts.getHttpResolver().get("wizard?kind=chemical")).getBody();
             assertContains(content,"structure-form");
             assertContains(content,"moiety-form");
             testCommonWizardElements(content);
@@ -52,7 +50,7 @@ public class FunctionalTest  extends AbstractGinasServerTest {
     @Test
     public void testRouteProteinWizard() throws Exception {
         try(RestSession session = ts.newRestSession(ts.getFakeUser1())){
-            String content = session.get("ginas/app/wizard?kind=protein").getBody();
+            String content = session.get(ts.getHttpResolver().get("/wizard?kind=protein")).getBody();
 
             assertContains(content,"other-links-form");
             assertContains(content,"protein-details-form");
@@ -69,7 +67,7 @@ public class FunctionalTest  extends AbstractGinasServerTest {
     public void testRouteStructurallyDiverseWizard() throws Exception {
         try(RestSession session = ts.newRestSession(ts.getFakeUser1())){
 
-            String content = session.get("ginas/app/wizard?kind=structurallyDiverse").getBody();
+            String content = session.get(ts.getHttpResolver().get("wizard?kind=structurallyDiverse")).getBody();
             assertContains(content,"diverse-type-form");
             assertContains(content,"diverse-source-form");
             assertContains(content,"diverse-organism-form");
@@ -79,11 +77,10 @@ public class FunctionalTest  extends AbstractGinasServerTest {
         }
     }
 
-    //@Ignore("waiting on login rewrite")
     @Test
     public void testRoutePolymerWizard()  throws Exception {
         try(RestSession session = ts.newRestSession(ts.getFakeUser1())){
-            String content = session.get("ginas/app/wizard?kind=polymer").getBody();
+            String content = session.get(ts.getHttpResolver().get("wizard?kind=polymer")).getBody();
             assertContains(content,"polymer-classification-form");
             assertContains(content,"polymer-monomer-form");
             assertContains(content,"polymer-sru-form");
@@ -96,7 +93,7 @@ public class FunctionalTest  extends AbstractGinasServerTest {
     public void testRouteNucleicAcidWizard() throws Exception {
         try(RestSession session = ts.newRestSession(ts.getFakeUser1())){
 
-            String content = session.get("ginas/app/wizard?kind=nucleicAcid").getBody();
+            String content = session.get(ts.getHttpResolver().get("wizard?kind=nucleicAcid")).getBody();
             assertContains(content,"nucleic-acid-details-form");
             assertContains(content,"subunit-form");
             assertContains(content,"nucleic-acid-sugar-form");
@@ -109,7 +106,7 @@ public class FunctionalTest  extends AbstractGinasServerTest {
     public void testRouteConceptWizard() throws Exception {
 
         try(RestSession session = ts.newRestSession(ts.getFakeUser1())){
-            String content = session.get("ginas/app/wizard?kind=concept").getBody();
+            String content = session.get(ts.getHttpResolver().get("wizard?kind=concept")).getBody();
 
             testCommonWizardElements(content);
         }

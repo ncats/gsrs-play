@@ -1,5 +1,6 @@
 package ix.ginas.exporters;
 
+import ix.core.util.IOUtil;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
@@ -53,7 +54,13 @@ public class ExcelSpreadsheet implements Spreadsheet {
         try{
             workbook.write(out);
         }finally{
-            out.close();
+            IOUtil.closeQuietly(out);
+
+            workbook.close();
+            //deletes tmp files
+            if(workbook instanceof  SXSSFWorkbook){
+                ((SXSSFWorkbook)workbook).dispose();
+            }
         }
 
     }

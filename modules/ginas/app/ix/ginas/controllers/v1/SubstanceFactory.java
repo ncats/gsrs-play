@@ -1,19 +1,28 @@
 package ix.ginas.controllers.v1;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.OptionalInt;
+import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
-import java.util.*;
-import java.util.stream.Collectors;
-
 import com.fasterxml.jackson.databind.JsonNode;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
+
 import ix.core.NamedResource;
 import ix.core.UserFetcher;
 import ix.core.adapters.EntityPersistAdapter;
@@ -35,7 +44,7 @@ import ix.core.util.CachedSupplier;
 import ix.core.util.EntityUtils;
 import ix.core.util.EntityUtils.EntityWrapper;
 import ix.core.util.EntityUtils.Key;
-import ix.core.util.Java8Util;
+import ix.core.util.StreamUtil;
 import ix.core.util.TimeUtil;
 import ix.core.util.pojopointer.PojoPointer;
 import ix.ginas.controllers.GinasApp.StructureSearchResultProcessor;
@@ -62,7 +71,9 @@ import ix.ncats.controllers.App.SearcherTask;
 import ix.seqaln.SequenceIndexer;
 import ix.seqaln.SequenceIndexer.CutoffType;
 import ix.seqaln.SequenceIndexer.ResultEnumeration;
+import ix.utils.Tuple;
 import ix.utils.Util;
+import org.jcvi.jillion.core.residue.nt.NucleotideSequenceBuilder;
 import play.Logger;
 import play.Play;
 import play.db.ebean.Model;
@@ -71,7 +82,7 @@ import play.mvc.Result;
 @NamedResource(name = "substances", type = Substance.class, description = "Resource for handling of GInAS substances")
 public class SubstanceFactory extends EntityFactory {
 	private static final String CODE_TYPE_PRIMARY = "PRIMARY";
-	private static final double SEQUENCE_IDENTITY_CUTOFF = 0.85;
+	public static final double SEQUENCE_IDENTITY_CUTOFF = 0.85;
 	static public CachedSupplier<Model.Finder<UUID, Substance>> finder = Util.finderFor(UUID.class, Substance.class);
 
 	// Do we still need this?
@@ -111,6 +122,19 @@ public class SubstanceFactory extends EntityFactory {
 		)
 				.max();
 	}
+
+	/**
+	 * Get the most current form of a {@link SubstanceReference} by fetching the substance
+	 * in question and converting it to a new {@link SubstanceReference}. This is returned
+	 * as an {@link Optional} which is empty if the corresponding substance was not found.
+	 * @param sr1
+	 * @return
+	 */
+	public static Optional<SubstanceReference> getUpdatedVersionOfSubstanceReference(SubstanceReference sr1){
+		return Optional.ofNullable(SubstanceFactory.getFullSubstance(sr1))
+				.map(s->s.asSubstanceReference());
+	}
+
 	public static Substance getSubstanceVersion(String id, String version) {
 		if (id == null)
 			return null;
@@ -147,6 +171,58 @@ public class SubstanceFactory extends EntityFactory {
 					
 				}).orElse(null);
 	}
+
+	public static Optional<ProteinSubstance> getProteinSubstancesFromSubunitID(String suid){
+
+		return SubstanceFactory.protfinder.get()
+		                .where()
+                        .eq("protein.subunits.uuid", suid)
+                        .findList()
+                        .stream()
+                        .findFirst();
+	}
+
+	public static Optional<NucleicAcidSubstance> getNucleicAcidSubstancesFromSubunitID(String suid){
+
+		return SubstanceFactory.nucfinder.get()
+		                .where()
+                        .eq("nucleicAcid.subunits.uuid", suid)
+                        .findList()
+                        .stream()
+                        .findFirst();
+	}
+
+	public static Optional<Tuple<Substance, Subunit>> getSubstanceAndSubunitFromSubunitID(String suid){
+
+		UUID suUUID = UUID.fromString(suid);
+
+		Tuple<Substance,Subunit> tuple= getProteinSubstancesFromSubunitID(suid)
+							.map(s->{
+								//Need to use the getter or it won't lazy-load
+								Subunit sunit = s.protein.getSubunits()
+								        .stream()
+										.peek(su->System.out.println(su.uuid + "?=" + suUUID))
+								        .filter(su->su.uuid.equals(suUUID))
+										.findFirst()
+										.orElse(null);
+								return Tuple.of((Substance)s,sunit);
+							})
+							.orElse(getNucleicAcidSubstancesFromSubunitID(suid)
+									.map(s->{
+										Subunit sunit = s.nucleicAcid.getSubunits()
+										        .stream()
+												.filter(su->su.uuid.equals(suUUID))
+												.findFirst()
+												.orElse(null);
+										return Tuple.of((Substance)s,sunit);
+									})
+									.orElse(null)
+									);
+		return Optional.ofNullable(tuple);
+	}
+
+
+
 
 	public static Substance getSubstance(UUID uuid) {
 		return getEntity(uuid, finder.get());
@@ -509,8 +585,8 @@ public class SubstanceFactory extends EntityFactory {
 			}
 			throw new IllegalStateException("More than one substance matches that term");
 		} catch (Exception ex) {
-			ex.printStackTrace();
-			throw new IllegalStateException();
+//			ex.printStackTrace();
+			return RouteFactory._apiBadRequest(ex.getCause().getMessage());
 		}
 	}
 
@@ -679,11 +755,24 @@ public class SubstanceFactory extends EntityFactory {
         return detailedSearch(context);
 	}
 	
-	
+	private static boolean isDna(String seq){
+		try{
+			new NucleotideSequenceBuilder(seq);
+			return true;
+		}catch(Exception e){
+			return false;
+		}
+	}
     public static Result sequenceSearch(String q, CutoffType type, double cutoff, int top, int skip, int fdim,
-            String field) throws Exception {
+            String field, String seqType) throws Exception {
         SearchResultContext context;
-        context =App.sequence(q, cutoff,type, 1, new ix.ginas.controllers.GinasApp.GinasSequenceResultProcessor())
+        ResultProcessor processor;
+        if("Protein".equalsIgnoreCase(seqType)){
+			processor = new ix.ginas.controllers.GinasApp.GinasSequenceResultProcessor();
+		}else{
+			processor = new ix.ginas.controllers.GinasApp.GinasNucleicSequenceResultProcessor();
+		}
+        context =App.sequence(q, cutoff,type, 1, processor)
                     .getFocused(top, skip, fdim, field);
         
         return detailedSearch(context);
@@ -691,6 +780,125 @@ public class SubstanceFactory extends EntityFactory {
     
     private static Result detailedSearch(SearchResultContext context) throws InterruptedException, ExecutionException{
     	return Java8FactoryHelper.substanceFactoryDetailedSearch(context);
+    }
+
+
+    /**
+     * <p>Fetch a list of {@link Tuple}s of {@link ProteinSubstance}s and {@link Subunit}s
+     * which exactly match the supplied {@link Subunit} on sequence (case insensitive)
+     * using the lucene index. This is not a very rigorous search, in that it won't find
+     * matches that are approximately the same (e.g. minor sequence change), but it will
+     * find those matches that are exactly the same much faster than the {@link SequenceIndexer}
+     * will. </p>
+     *
+     * <p>
+     * Note: This uses a {@link Future} from {@link SearchResult#getMatchesFuture()}, with a defualt value
+     * of 10 seconds. It will throw an Exception any time such a search would throw an exception.
+     * </p>
+     *
+     *
+     *
+     * @param su
+     *   The {@link Subunit} to search for. The only element used of the {@link Subunit} is
+     *   the sequence.
+     * @return
+     *   A list of {@link ProteinSubstance} and {@link Subunit} {@link Tuple}s which match the supplied
+     *   {@link Subunit}. Returns an empty list otherwise.
+     * @throws TimeoutException
+     * @throws ExecutionException
+     * @throws InterruptedException
+     * @throws IOException
+     */
+
+
+    public static List<Tuple<ProteinSubstance, Subunit>> executeSimpleExactProteinSubunitSearch(Subunit su) throws InterruptedException, ExecutionException, TimeoutException, IOException {
+		String q = "root_protein_subunits_sequence:" + su.sequence;
+		SearchRequest request = new SearchRequest.Builder()
+				.kind(ProteinSubstance.class)
+				.fdim(0)
+				.query(q)
+				.top(Integer.MAX_VALUE)
+				.build();
+
+		SearchResult sr=request.execute();
+    	Future<List> fut=sr.getMatchesFuture();
+
+
+    	Stream<Tuple<ProteinSubstance, Subunit>> presults =	fut.get(10_000, TimeUnit.MILLISECONDS)
+    										   .stream()
+    										   .map(s->(ProteinSubstance)s)
+    										   .flatMap(sub->{
+    						                		  ProteinSubstance ps = (ProteinSubstance)sub;
+    						                		  return ps.protein.getSubunits()
+    							                                 .stream()
+    							                                 .filter(sur->sur.sequence.equalsIgnoreCase(su.sequence))
+    							                                 .map(sur->Tuple.of(sub,sur));
+    						                      });
+    	presults=presults.map(t->Tuple.of(t.v().uuid,t).withKEquality())
+    							    	         .distinct()
+    							    	         .map(t->t.v());
+
+    	return presults.collect(Collectors.toList());
+
+    }
+
+    /**
+     * <p>Fetch a list of {@link Tuple}s of {@link NucleicAcidSubstance}s and {@link Subunit}s
+     * which exactly match the supplied {@link Subunit} on sequence (case insensitive)
+     * using the lucene index. This is not a very rigorous search, in that it won't find
+     * matches that are approximately the same (e.g. minor sequence change), but it will
+     * find those matches that are exactly the same much faster than the {@link SequenceIndexer}
+     * will. </p>
+     *
+     * <p>
+     * Note: This uses a {@link Future} from {@link SearchResult#getMatchesFuture()}, with a defualt value
+     * of 10 seconds. It will throw an Exception any time such a search would throw an exception.
+     * </p>
+     *
+     *
+     *
+     * @param su
+     *   The {@link Subunit} to search for. The only element used of the {@link Subunit} is
+     *   the sequence.
+     * @return
+     *   A list of {@link NucleicAcidSubstance} and {@link Subunit} {@link Tuple}s which match the supplied
+     *   {@link Subunit}. Returns an empty list otherwise.
+     * @throws TimeoutException
+     * @throws ExecutionException
+     * @throws InterruptedException
+     * @throws IOException
+     */
+
+
+    public static List<Tuple<NucleicAcidSubstance, Subunit>> executeSimpleExactNucleicAcidSubunitSearch(Subunit su) throws InterruptedException, ExecutionException, TimeoutException, IOException {
+		String q = "root_nucleicAcid_subunits_sequence:" + su.sequence;
+		SearchRequest request = new SearchRequest.Builder()
+				.kind(ProteinSubstance.class)
+				.fdim(0)
+				.query(q)
+				.top(Integer.MAX_VALUE)
+				.build();
+
+		SearchResult sr=request.execute();
+    	Future<List> fut=sr.getMatchesFuture();
+
+
+    	Stream<Tuple<NucleicAcidSubstance, Subunit>> presults =	fut.get(10_000, TimeUnit.MILLISECONDS)
+    										   .stream()
+    										   .map(s->(NucleicAcidSubstance)s)
+    										   .flatMap(sub->{
+    											   NucleicAcidSubstance ps = (NucleicAcidSubstance)sub;
+    						                		  return ps.nucleicAcid.getSubunits()
+    							                                 .stream()
+    							                                 .filter(sur->sur.sequence.equalsIgnoreCase(su.sequence))
+    							                                 .map(sur->Tuple.of(sub,sur));
+    						                      });
+    	presults=presults.map(t->Tuple.of(t.v().uuid,t).withKEquality())
+    							    	         .distinct()
+    							    	         .map(t->t.v());
+
+    	return presults.collect(Collectors.toList());
+
     }
 
     private static class TextSearchTask implements SearcherTask{
@@ -731,6 +939,8 @@ public class SubstanceFactory extends EntityFactory {
         }
     }
     
+
+
     private static class SearchResultWrappingResultProcessor implements ResultProcessor<Object, Object>{
         private CachedSupplier<SearchResultContext> result;
         

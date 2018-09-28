@@ -49,6 +49,12 @@ public class UpdateSubstanceNonBatchLoaderValidator extends AbstractValidatorPlu
             if (!objold.approvalID.equals(objnew.approvalID)) {
                 // Can't change approvalID!!! (unless admin)
                 if (up.hasRole(Role.Admin)) {
+                    //GSRS-638 removing an approval ID makes the new id null
+                    if (objnew.approvalID == null) {
+                        callback.addMessage(GinasProcessingMessage
+                                .WARNING_MESSAGE("The approvalID for the record has been removed. Was ('" + objold.approvalID
+                                        + "'). This is strongly discouraged."));
+                    } else {
                     if(!GinasUtils.getAPPROVAL_ID_GEN().isValidId(objnew.approvalID)){
                         callback.addMessage(GinasProcessingMessage
                                 .ERROR_MESSAGE("The approvalID for the record has changed. Was ('" + objold.approvalID
@@ -58,11 +64,13 @@ public class UpdateSubstanceNonBatchLoaderValidator extends AbstractValidatorPlu
                                 .WARNING_MESSAGE("The approvalID for the record has changed. Was ('" + objold.approvalID
                                         + "') but now is ('" + objnew.approvalID + "'). This is strongly discouraged."));
                     }
+                    }
                 } else {
                     callback.addMessage(GinasProcessingMessage.ERROR_MESSAGE(
                             "The approvalID for the record has changed. Was ('" + objold.approvalID + "') but now is ('"
                                     + objnew.approvalID + "'). This is not allowed, except by an admin."));
                 }
+
             }
         }
     }

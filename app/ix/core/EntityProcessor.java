@@ -3,7 +3,23 @@ package ix.core;
 import play.Logger;
 
 public interface EntityProcessor<K>{
-	public static class FailProcessingException extends Exception{}
+	class FailProcessingException extends Exception{
+		public FailProcessingException() {
+			super();
+		}
+
+		public FailProcessingException(String message) {
+			super(message);
+		}
+
+		public FailProcessingException(String message, Throwable cause) {
+			super(message, cause);
+		}
+
+		public FailProcessingException(Throwable cause) {
+			super(cause);
+		}
+	}
 	
 	default void prePersist(K obj) throws FailProcessingException{};
 	default void postPersist(K obj) throws FailProcessingException{};

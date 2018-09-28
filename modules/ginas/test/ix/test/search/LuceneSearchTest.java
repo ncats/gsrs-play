@@ -33,7 +33,7 @@ public class LuceneSearchTest extends AbstractGinasServerTest {
 	BrowserSession browserSession;
 	User u;
 	SubstanceAPI api;
-	BrowserSubstanceSearcher searcher;
+	RestSubstanceSubstanceSearcher searcher;
 
 	String aspirinCalcium = "ASPIRIN CACLIUM";
 	String aspirin = "ASPIRIN";
@@ -47,7 +47,7 @@ public class LuceneSearchTest extends AbstractGinasServerTest {
 		session = ts.newRestSession(u);
 		browserSession = ts.newBrowserSession(u);
 		api = new SubstanceAPI(session);
-		searcher= new BrowserSubstanceSearcher(browserSession);
+		searcher= new RestSubstanceSubstanceSearcher(session);
 	}
 	
 	
@@ -560,7 +560,7 @@ public class LuceneSearchTest extends AbstractGinasServerTest {
 					.addName(name1 + " " + ai.incrementAndGet())
 					.addName(name2 + " " + ai.incrementAndGet())
 					.generateNewUUID()
-					.andThenMutate(s->uuids.add(s.getUuid().toString().split("-")[0]))
+					.andThenMutate(s->uuids.add(s.getUuid().toString()))
 					.buildJsonAnd(j -> ensurePass(api.submitSubstance(j)));
 			
 			
@@ -594,20 +594,20 @@ public class LuceneSearchTest extends AbstractGinasServerTest {
 					.addName(name1 + " " + ai.incrementAndGet())
 					.addName(name2 + " " + ai.incrementAndGet())
 					.generateNewUUID()
-					.andThenMutate(s->uuids.add(s.getUuid().toString().split("-")[0]))
+					.andThenMutate(s->uuids.add(s.getUuid().toString()))
 					.buildJsonAnd(j -> ensurePass(api.submitSubstance(j)));
 			
 			
 			new SubstanceBuilder()
 					.addName(name1 + " " + ai.incrementAndGet())
 					.generateNewUUID()
-					.andThenMutate(s->uuids.add(s.getUuid().toString().split("-")[0]))
+					.andThenMutate(s->uuids.add(s.getUuid().toString()))
 					.buildJsonAnd(j -> ensurePass(api.submitSubstance(j)));
 			
 			new SubstanceBuilder()
 					.addName(name2 + " " + ai.incrementAndGet())
 					.generateNewUUID()
-					.andThenMutate(s->uuids.add(s.getUuid().toString().split("-")[0]))
+					.andThenMutate(s->uuids.add(s.getUuid().toString()))
 					.buildJsonAnd(j -> ensurePass(api.submitSubstance(j)));
 
 			assertEquals(uuids,searcher.query(q).getUuids());
@@ -644,17 +644,19 @@ public class LuceneSearchTest extends AbstractGinasServerTest {
 			List<String> uuids = new ArrayList<>();
 				IntStream.range('A', 'Z').mapToObj(i -> ((char) i) + prefix).forEach(n -> {
 
-				new SubstanceBuilder().addName(n)
-						.buildJsonAnd(j -> {
-					WSResponse response = api.submitSubstance(j);
-					ensurePass(response);
-					String uuid = response.asJson().get("uuid").asText();
-					uuids.add(uuid.substring(0,8));
+					Substance builder = new SubstanceBuilder().addName(n)
+											.generateNewUUID()
+							.build();
+
+					api.submitSubstance(builder);
+
+
+					uuids.add(builder.getUuid().toString());
 					//this sleep is just to make sure
 					//the timestamps for each created substance are different
 					//since we will sort by create time.
 					timeTraveller.jumpAhead(1, TimeUnit.DAYS);
-				});
+
 
 			});
 

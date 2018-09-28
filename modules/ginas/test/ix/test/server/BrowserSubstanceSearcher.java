@@ -3,26 +3,19 @@ package ix.test.server;
 
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.*;
-import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.gargoylesoftware.htmlunit.FailingHttpStatusCodeException;
 import com.gargoylesoftware.htmlunit.html.DomNode;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
 
-import ix.core.util.EntityUtils;
-import ix.core.util.TimeUtil;
-import ix.ginas.exporters.ExportMetaData;
-import ix.ginas.exporters.ExportProcessFactory;
 import ix.test.server.BrowserSession.WrappedWebRequest;
-import ix.test.util.WaitChecker;
 import ix.utils.Tuple;
 import ix.utils.Util;
+import play.libs.ws.WSRequest;
 import play.libs.ws.WSResponse;
 
 /**
@@ -36,17 +29,27 @@ public class BrowserSubstanceSearcher implements SubstanceSearcher {
 
     
     private final BrowserSession session;
-    private static final Pattern SUBSTANCE_LINK_HREF_PATTERN = Pattern.compile("/ginas/app/substance/([a-z0-9\\-]+)");
+    private  final Pattern SUBSTANCE_LINK_HREF_PATTERN;
     private static final Pattern TOTAL_PATTERN = Pattern.compile("[^0-9]([0-9][0-9]*)[^0-9]*h3[^0-9]*pagination");
    
-    private static final Pattern  SEARCH_KEY_PATTERN = Pattern.compile("ginas/app/api/v1/status\\(([0-9a-f]+)\\)");
+    private final Pattern  SEARCH_KEY_PATTERN;
 
     private String defaultSearchOrder =null;
-    
+    private final String applicationContext;
+
     public BrowserSubstanceSearcher(BrowserSession session) {
         Objects.requireNonNull(session);
 
         this.session = session;
+
+        applicationContext = session.getTestSever().getApplicationContext();
+        SUBSTANCE_LINK_HREF_PATTERN = Pattern.compile("/"+applicationContext + "/substance/([a-z0-9\\-]+)");
+        SEARCH_KEY_PATTERN = Pattern.compile(applicationContext + "/api/v1/status\\(([0-9a-f]+)\\)");
+    }
+
+    @Override
+    public AbstractSession getSession() {
+        return session;
     }
     
     /* (non-Javadoc)
@@ -160,7 +163,7 @@ public class BrowserSubstanceSearcher implements SubstanceSearcher {
         
         
         // This may be a problem, as URLEncoder may over encode some smiles strings
-        WrappedWebRequest root=session.newGetRequest("ginas/app/substances")
+        WrappedWebRequest root=session.newGetRequest(session.getHttpResolver().get("substances"))
             .addQueryParameter("type", type)
             .addQueryParameter("q", smiles)
             .addQueryParameter("cutoff", cutoff +"")
@@ -272,7 +275,7 @@ public class BrowserSubstanceSearcher implements SubstanceSearcher {
      */
     private SearchResult performSearch(String queryOrNull) throws IOException {
 
-        WrappedWebRequest req=session.newGetRequest("ginas/app/substances")
+        WrappedWebRequest req=session.newGetRequest(session.getHttpResolver().get("/substances"))
         	.addQueryParameter("wait", "true");
         	
         if(queryOrNull !=null){
@@ -328,6 +331,7 @@ public class BrowserSubstanceSearcher implements SubstanceSearcher {
                             c.querySelectorAll("ul.list-group div[ng-hide]") //Each facet value
                                     .stream()
                                     .map(d->new List[]{
+                                            //<span class ="badge pull-right ng-binding">
                                             d.querySelectorAll("div label.ng-binding").stream().map(n-> n.asText().trim()).collect(Collectors.toList()),
                                             d.querySelectorAll("div span.pull-right.ng-binding").stream().map(n-> n.asText().trim()).collect(Collectors.toList())
                                     })
@@ -365,7 +369,7 @@ public class BrowserSubstanceSearcher implements SubstanceSearcher {
      * @return
      */
     private Set<String> getSubstanceMatchesIn(DomNode dn){
-        return dn.querySelectorAll("a[href*=\"ginas/app/substance/\"]")
+        return dn.querySelectorAll("a[href*=\""+session.getTestSever().getApplicationContext() + "/substance/\"]")
                 .stream()
                 .map(a->a.getAttributes().getNamedItem("href").getNodeValue())
                 .map(Util.getMatchingGroup(SUBSTANCE_LINK_HREF_PATTERN, 1))
@@ -375,6 +379,7 @@ public class BrowserSubstanceSearcher implements SubstanceSearcher {
     }
     
     private Tuple<String,Set<String>> getSubstancesFrom(HtmlPage page){
+        System.out.println(page.asXml());
         Set<String> substances =  getSubstanceMatchesIn(page);
         String htmlText = page.asXml();
         return Tuple.of(getKeyFrom(htmlText), substances);
@@ -397,8 +402,8 @@ public class BrowserSubstanceSearcher implements SubstanceSearcher {
         return set;
     }
 
-    public static Set<String> getStructureImagesFrom(HtmlPage page){
-        Set<String> substances = page.querySelectorAll("img[src*=\"ginas/app/img\"]")
+    public Set<String> getStructureImagesFrom(HtmlPage page){
+        Set<String> substances = page.querySelectorAll("img[src*=\"" + applicationContext + "/img\"]")
         .stream()
         .map(m->m.getAttributes().getNamedItem("src").getNodeValue())
         .collect(Collectors.toCollection(LinkedHashSet::new));
@@ -415,7 +420,7 @@ public class BrowserSubstanceSearcher implements SubstanceSearcher {
                     
                 })
                 .forEach(s->{
-                    substances.add("ginas/app/img/" + s[0] + ".svg?context=" + s[1]);
+                    substances.add(applicationContext + "/img/" + s[0] + ".svg?context=" + s[1]);
                 });     
         }
         
@@ -423,114 +428,9 @@ public class BrowserSubstanceSearcher implements SubstanceSearcher {
         return substances;
     }
 
-    public class WebExportRequest{
-    	private String format;
-    	private String key;
-    	private long timeout;
-        private boolean publicOnly=true;
-
-
-    	public WebExportRequest(String key, String format, long timeout){
-    		this.format=format;
-    		this.key=key;
-    		this.timeout=timeout;
-    	}
-
-        public WebExportRequest setPublicOnly(boolean publicOnly){
-            this.publicOnly = publicOnly;
-            return this;
-        }
-    	
-    	public WebExportRequest setTimeout(long t){
-    		this.timeout=t;
-    		return this;
-    	}
-    	public WebExportRequest setKey(String key){
-    		this.key=key;
-    		return this;
-    	}
-    	public WebExportRequest setFormat(String format){
-    		this.format=format;
-    		return this;
-    	}
-    	
-    	public InputStream getInputStream(){
-    		return getInputStream(true);
-    	}
-        public InputStream getInputStream(boolean forceReDownload){
-            if(!forceReDownload){
-                JsonNode metaData = getMeta();
-                if(metaData.at("/isCached").asBoolean()){
-                    try {
-                        ExportMetaData cached = EntityUtils.getEntityInfoFor(ExportMetaData.class).fromJson(metaData.at("/cached").toString());
-                        return ExportProcessFactory.download(cached.username, cached.getFilename());
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
-            //if we get here either we ar forcing a redownload or something went wrong getting the cached version.
-            return getWSResponse()
-                        .getBodyAsStream();
-
-
-        }
-
-    	public WSResponse getWSResponse(){
-    		String url=getMeta().at("/url").asText();
-    		
-    		WSResponse osess = BrowserSubstanceSearcher.this.session.get(url, timeout);
-
-    		if(osess.getStatus()>=400){
-    			return osess;
-    		}
-
-    		JsonNode status =  osess.asJson();
-    		
-    		String pingUrl = status.at("/self").asText();
-    		/*
-    		long timeoutTime = System.currentTimeMillis()+10_000;
-    		while(System.currentTimeMillis()<timeoutTime){
-    			if(status.at("/complete").asBoolean()){
-    				String dl=status.at("/downloadUrl").asText();
-    				return BrowserSubstanceSearcher.this.session.get(dl, timeout);
-    			}
-    			status = BrowserSubstanceSearcher.this.session.get(pingUrl, timeout).asJson();
-    			
-    		}  		
-    		*/
-            try {
-                Optional<WSResponse> resp =new WaitChecker<>(
-                        ()->BrowserSubstanceSearcher.this.session.get(pingUrl, timeout).asJson(),
-                        n -> n.at("/complete").asBoolean(),
-                        n -> BrowserSubstanceSearcher.this.session.get(n.at("/downloadUrl").asText(), timeout)
-                        ).setMaxNumTries(10)
-//                        .setAwaitTime(1, TimeUnit.SECONDS)  //default is 1 sec
-                        .execute();
-
-                 return resp.orElseThrow( () -> new IllegalStateException("Export timed out"));
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
-
-    		
-    	}
-    	
-    	public JsonNode getMeta(){
-        	WSResponse resp = BrowserSubstanceSearcher.this.session.get("ginas/app/setExport?id="+key
-                    + "&format="+format + "&publicOnly=" + (publicOnly?1:0)
-                    , timeout);
-            return resp.asJson();
-        }
-    	
-    	public boolean isReady(){
-    		return getMeta().at("/isReady").asBoolean();
-    	}
-    }
-
 
     public WebExportRequest getExport(String format, String key){
-    	return new WebExportRequest(key,format,BrowserSubstanceSearcher.this.session.timeout);
+    	return new WebExportRequest(key,format,BrowserSubstanceSearcher.this.session);
     }
     
 
@@ -580,7 +480,7 @@ public class BrowserSubstanceSearcher implements SubstanceSearcher {
 
     @Override
     public SearchResult facet(String name, String value) throws IOException {
-        WrappedWebRequest req=session.newGetRequest("ginas/app/substances")
+        WrappedWebRequest req=session.newGetRequest(session.getHttpResolver().get("substances"))
                 .addQueryParameter("wait", "true");
                
         req=req.addQueryParameter("facet", name  + "/" + value);

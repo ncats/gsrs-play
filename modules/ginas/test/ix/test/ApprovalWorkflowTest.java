@@ -1,11 +1,15 @@
 package ix.test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
+import org.apache.poi.ss.formula.functions.T;
 import org.junit.Test;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -14,6 +18,7 @@ import com.github.fge.jsonpatch.diff.JsonDiff;
 
 import ix.AbstractGinasServerTest;
 import ix.core.models.Role;
+import ix.core.util.RunOnly;
 import ix.ginas.models.v1.Substance;
 import ix.test.server.RestSession;
 import ix.test.server.SubstanceAPI;
@@ -196,6 +201,54 @@ public class ApprovalWorkflowTest  extends AbstractGinasServerTest {
         }
 	}
 	
+    @Test
+    public void testAdminCanUnapproveSubstance() throws Exception {
+        String uuid;
+        final File resource=new File("test/testJSON/toapprove.json");
+        try(RestSession session = ts.newRestSession(ts.getFakeUser1());
+            InputStream is = new FileInputStream(resource)){
+
+
+            JsonNode js = SubstanceJsonUtil.prepareUnapprovedPublic(new ObjectMapper().readTree(is));
+            uuid = js.get("uuid").asText();
+            SubstanceAPI api = new SubstanceAPI(session);
+            JsonNode jsonNode2 = api.submitSubstanceJson(js);
+            assertEquals(Substance.STATUS_PENDING, SubstanceJsonUtil.getApprovalStatus(jsonNode2));
+        }
+
+
+        try(RestSession session2 = ts.newRestSession(ts.createUser(Role.Approver, Role.SuperUpdate))){
+            String approvalID;
+            JsonNode before = null;
+            JsonNode after = null;
+
+            SubstanceAPI api2 = new SubstanceAPI(session2);
+            //approval, CAN approve if different user
+
+            before = api2.approveSubstanceJson(uuid);
+            approvalID = SubstanceJsonUtil.getApprovalId(before);
+
+
+
+            after = api2.fetchSubstanceJsonByUuid(uuid);
+            assertEquals(Substance.STATUS_APPROVED, SubstanceJsonUtil.getApprovalStatus(after));
+            assertEquals(approvalID, SubstanceJsonUtil.getApprovalId(after));
+
+            JsonNode withChangedApprovalID= new JsonNodeBuilder(after).set("/approvalID", VALID_APPROVAL_ID).build();
+            SubstanceJsonUtil.ensureFailure(api2.updateSubstance(withChangedApprovalID));
+        }
+        try(RestSession session3 = ts.newRestSession(ts.createAdmin("adminguy", "nonsense"))){
+
+            SubstanceAPI api3 = new SubstanceAPI(session3);
+            //approval, CAN approve if different user
+            JsonNode after = api3.fetchSubstanceJsonByUuid(uuid);
+            JsonNode unapproved= SubstanceJsonUtil.prepareUnapprovedPublic(after);
+            SubstanceJsonUtil.ensurePass(api3.updateSubstance(unapproved));
+            JsonNode changed = api3.fetchSubstanceJsonByUuid(uuid);
+            assertTrue(changed.at("/approvalID").isMissingNode());
+        }
+    }
+
 	@Test
 	public void testFailNonLoggedApprover() throws Exception {
         final File resource=new File("test/testJSON/toapprove.json");
@@ -210,7 +263,7 @@ public class ApprovalWorkflowTest  extends AbstractGinasServerTest {
             JsonNode jsonNode2 = api.submitSubstanceJson(js);
             assertEquals(Substance.STATUS_PENDING, SubstanceJsonUtil.getApprovalStatus(jsonNode2));
 
-            SubstanceJsonUtil.ensureFailure(api.approveSubstance(uuid));
+            JsonNode failResponse = SubstanceJsonUtil.ensureFailure(api.approveSubstance(uuid));
 
 
             session.logout();
@@ -238,7 +291,11 @@ public class ApprovalWorkflowTest  extends AbstractGinasServerTest {
             String approvalID1 = SubstanceJsonUtil.getApprovalId(before);
             assertNotNull("Approval ID should not be null", approvalID1);
 
-            SubstanceJsonUtil.ensureFailure(api2.approveSubstance(uuid));
+            JsonNode failResponse = SubstanceJsonUtil.ensureFailure(api2.approveSubstance(uuid));
+
+            System.out.println(failResponse.toString());
+            assertTrue("Expected to find JSON with a message for not approving", failResponse.at("/message").asText().contains("approve an approved substance"));
+
 
             SubstanceJsonUtil.ensureFailure(api.approveSubstance(uuid));
             JsonNode sub = api.fetchSubstanceJsonByUuid(uuid);

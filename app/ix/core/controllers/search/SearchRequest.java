@@ -58,6 +58,7 @@ public class SearchRequest {
 		this.query = query;
 	}
 	
+
 	public static class Builder {
 		private Collection<?> subset;
 		private String query = "*:*"; //defaults to "all" query

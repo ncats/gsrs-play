@@ -1,8 +1,6 @@
 package ix.ginas.models.utils;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
 import ix.core.models.Keyword;
 import ix.core.util.EntityUtils;
 import ix.ginas.models.v1.Relationship;
@@ -94,7 +92,7 @@ Exception Details:
      * Returns true if this relationship is invertible
      * @return
      */
-    public static boolean isAutomaticInvertable(Relationship r){
+    public static boolean isAutomaticInvertible(Relationship r){
         if(r.type==null){
             return false;
         }
@@ -102,7 +100,9 @@ Exception Details:
         if(r.type.equals(Substance.ALTERNATE_SUBSTANCE_REL) || r.type.equals(Substance.PRIMARY_SUBSTANCE_REL)){
             return false;
         }
-        if(r.fetchOwner().getOrGenerateUUID().toString().equals(r.relatedSubstance.refuuid)){
+
+        //Test if the related substance is the same as its owner (self-referencing)
+        if(r.relatedSubstance.isReferencingSubstance(r.fetchOwner())){
             return false;
         }
 
@@ -114,13 +114,14 @@ Exception Details:
 
 
     public static Relationship createInverseRelationshipFor(Relationship other){
-        if(!other.isAutomaticInvertable()){
+        if(!other.isAutomaticInvertible()){
             throw new IllegalStateException("Relationship :" + other.type + " is not invertable");
         }
         Relationship r=new Relationship();
         r.type=reverseRelationship(other.type);
         r.setAccess(other.getAccess());
 
+        r.comments = other.comments;
         Set<Keyword> keywords = new LinkedHashSet<>();
         for(Keyword k : other.getReferences()){
             try {

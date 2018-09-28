@@ -11,6 +11,20 @@ import java.util.function.Supplier;
 public class MixtureSubstanceBuilder extends AbstractSubstanceBuilder<MixtureSubstance, MixtureSubstanceBuilder>{
 
 
+    public MixtureSubstanceBuilder(Substance copy) {
+        super(copy);
+        if(copy instanceof  MixtureSubstance){
+            Mixture mix = ((MixtureSubstance)copy).mixture;
+            if(mix !=null){
+                setMixture(mix);
+            }
+        }
+    }
+
+
+    public MixtureSubstanceBuilder() {
+        super();
+    }
 
     @Override
     public Supplier<MixtureSubstance> getSupplier() {
@@ -46,12 +60,15 @@ public class MixtureSubstanceBuilder extends AbstractSubstanceBuilder<MixtureSub
     }
 
     public MixtureSubstanceBuilder addComponents(String type, Substance... refs){
+        return andThen( s-> {
         for(Substance ref : refs) {
             Component c = new Component();
             c.type = type;
-            c.substance = SubstanceReference.newReferenceFor(ref);
-            addComponent(c);
+                c.substance = ref.asSubstanceReference();
+                s.mixture.components.add(c);
         }
-        return getThis();
+            Reference ref = AbstractSubstanceBuilder.createNewPublicDomainRef();
+            s.mixture.addReference(ref, s);
+        });
     }
 }

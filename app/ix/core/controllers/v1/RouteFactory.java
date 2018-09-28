@@ -18,6 +18,7 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
+import ix.core.controllers.search.SearchRequest;
 import org.reflections.Reflections;
 
 import com.avaje.ebean.Expr;
@@ -329,7 +330,7 @@ public class RouteFactory extends Controller {
         Integer skip=   getLastIntegerOrElse(params.get("skip"), 0);
         Integer fdim =  getLastIntegerOrElse(params.get("fdim"), 10);
         String field =  getLastStringOrElse(params.get("field"), "");
-
+        String seqType = getLastStringOrElse(params.get("seqType"), "Protein");
         
         Subunit sub= SequenceFactory.getStructureFrom(q,true);
 
@@ -344,7 +345,8 @@ public class RouteFactory extends Controller {
                                     top,
                                     skip,
                                     fdim,
-                                    field);
+                                    field,
+                            seqType);
             return redirect(call);
         } catch (Exception ex) {
             Logger.error("Sequence search call error", ex);
@@ -454,12 +456,12 @@ public class RouteFactory extends Controller {
             int top, 
             int skip, 
             int fdim,
-            String field) {
+            String field, String seqType) {
         try {
             Subunit sub = SequenceFactory.getStructureFrom(q, false);
             return _registry.get()
                     .getResource(context)
-                    .sequenceSearch(sub.sequence,  CutoffType.valueOfOrDefault(type), cutoff, top, skip, fdim, field);
+                    .sequenceSearch(sub.sequence,  CutoffType.valueOfOrDefault(type), cutoff, top, skip, fdim, field, seqType);
         } catch (Exception ex) {
             Logger.trace("[" + context + "]", ex);
             return _apiInternalServerError(ex);
@@ -710,11 +712,12 @@ public class RouteFactory extends Controller {
     @Dynamic(value = IxDynamicResourceHandler.CAN_SEARCH, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
     public static Result searchFacets (String context, String q, String field, int fdim, int fskip, String ffilter) {
         try {
-            Class kind = _registry.get()
-                    .getResource(context)
-                    .getTypeKind();
+            InstantiatedNamedResource<Object, Object> resource = _registry.get()
+                    .getResource(context);
             
-            return SearchFactory.searchRESTFacets(kind, q, field, fdim, fskip, ffilter);
+            Class kind = resource.getTypeKind();
+            Class<SearchRequest.Builder> requestBuilderClass = resource.searchRequestBuilderClass();
+            return SearchFactory.searchRESTFacets(requestBuilderClass, kind, q, field, fdim, fskip, ffilter);
             
         }catch (Exception ex) {
             Logger.trace("["+context+"]", ex);
@@ -813,7 +816,7 @@ public class RouteFactory extends Controller {
 
     public static Result checkPreFlight(String path) {
         response().setHeader("Access-Control-Allow-Origin", "*");      			  // Need to add the correct domain in here!!
-        response().setHeader("Access-Control-Allow-Methods", "POST, PUT, GET");   // Only allow POST, PUT, GET
+        response().setHeader("Access-Control-Allow-Methods", "POST, PUT, GET, PATCH");   // Only allow POST, PUT, GET, PATCH
         response().setHeader("Access-Control-Max-Age", "300");         			  // Cache response for 5 minutes
         response().setHeader("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");         // Ensure this header is also allowed!  
         return ok();

@@ -117,7 +117,7 @@ public class ExportDir<T> {
             return new File(new File(file.getParentFile(), "meta"), file.getName() +".metadata");
         }
         public InputStream getInputStreamOutputStream(){
-            System.out.println("DOWNLOADING FILE" + file.getAbsolutePath());
+//            System.out.println("DOWNLOADING FILE" + file.getAbsolutePath());
             try {
                 return new BufferedInputStream(new FileInputStream(file));
             } catch (FileNotFoundException e) {

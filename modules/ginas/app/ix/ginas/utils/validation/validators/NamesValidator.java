@@ -140,6 +140,7 @@ public class NamesValidator extends AbstractValidatorPlugin<Substance> {
                     boolean hasPublicReference = n.getReferences().stream()
                             .map(r->r.getValue())
                             .map(r->s.getReferenceByUUID(r))
+                            .filter(Objects::nonNull)
                             .filter(r->r.isPublic())
                             .filter(r->r.isPublicDomain())
                             .findAny()

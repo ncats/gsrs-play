@@ -20,6 +20,6 @@ public class ClassificationsCard extends CollectionDetailCard<Code>{
 
 	@Override
 	public Html innerContent() {
-		return ix.ginas.views.html.details.properties.classifications.render(c, s.uuid.toString());
+		return ix.ginas.views.html.details.properties.classifications.render(c, s);
 	}
 }

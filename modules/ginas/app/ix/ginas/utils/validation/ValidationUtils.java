@@ -13,14 +13,12 @@ import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 
 import ix.core.UserFetcher;
-import ix.core.validator.ValidationResponse;
-import ix.core.validator.ValidationResponseBuilder;
+import ix.core.validator.*;
 import ix.core.chem.StructureProcessor;
 import ix.core.controllers.AdminFactory;
 import ix.core.models.*;
 import ix.core.plugins.PayloadPlugin;
 import ix.core.util.CachedSupplier;
-import ix.core.validator.ValidatorCallback;
 import ix.ginas.controllers.v1.SubstanceFactory;
 import ix.ginas.models.EmbeddedKeywordList;
 import ix.ginas.models.GinasAccessReferenceControlled;
@@ -29,7 +27,6 @@ import ix.ginas.models.v1.Substance.SubstanceClass;
 import ix.ginas.models.v1.Substance.SubstanceDefinitionLevel;
 import ix.ginas.models.v1.Substance.SubstanceDefinitionType;
 import ix.ginas.utils.*;
-import ix.core.validator.GinasProcessingMessage;
 import ix.core.validator.GinasProcessingMessage.Link;
 import play.Application;
 import play.Configuration;
@@ -429,6 +426,7 @@ public class ValidationUtils {
 						.appliableChange(true);
 				worked.set(false);
 			}
+
 			//this extra reference is so it's effectively final
 			//and we can reference it in the lambda
 			GinasProcessingMessage gpmerr2 = gpmerr;
@@ -1513,7 +1511,6 @@ public class ValidationUtils {
 		List<GinasProcessingMessage> gpm = new ArrayList<GinasProcessingMessage>();
 		if (cs.structure == null) {
 			gpm.add(GinasProcessingMessage.ERROR_MESSAGE("Chemical substance must have a chemical structure"));
-			System.out.println("This shold not be possible");
 			return gpm;
 		}
 
@@ -1716,6 +1713,8 @@ public class ValidationUtils {
 						.map(m -> (GinasProcessingMessage) m)
 						.collect(Collectors.toList());
 				messages.stream().forEach(_strategy::processMessage);
+
+
 				if (_strategy.handleMessages(objnew, messages)) {
 					resp.setValid();
 				}
@@ -1724,6 +1723,12 @@ public class ValidationUtils {
 
 				if (GinasProcessingMessage.ALL_VALID(messages)) {
 					resp.addValidationMessage(GinasProcessingMessage.SUCCESS_MESSAGE("Substance is valid"));
+				}else{
+					//check if anything even after processing is still an error,
+					//if so force to invalid
+					if(resp.getValidationMessages().stream().filter(ValidationMessage::isError).findAny().isPresent()){
+						resp.setInvalid();
+					}
 				}
 			}
 			return resp;

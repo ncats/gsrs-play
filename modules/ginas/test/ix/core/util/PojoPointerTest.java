@@ -32,9 +32,6 @@ import ix.core.util.pojopointer.PojoPointer;
 
 @RunWith(Parameterized.class)
 public class PojoPointerTest extends AbstractGinasTest{
-	static{
-	    System.out.println("Found this at least");
-	}
     
 	public static class SerializableObject{
 		public String stringField;

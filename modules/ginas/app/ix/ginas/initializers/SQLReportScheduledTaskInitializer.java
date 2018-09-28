@@ -35,6 +35,7 @@ public class SQLReportScheduledTaskInitializer
 	private String sql;
 	private String path;
 	private DateTimeFormatter formatter = DateTimeFormatter.ISO_LOCAL_DATE;
+	private DateTimeFormatter formatterTime = DateTimeFormatter.ofPattern("HHmmss");
 
 	private Lock lock = new ReentrantLock();
 
@@ -45,8 +46,10 @@ public class SQLReportScheduledTaskInitializer
 	 */
 	public File getWriteFile() {
 		String date = formatter.format(TimeUtil.getCurrentLocalDateTime());
+		String time = formatterTime.format(TimeUtil.getCurrentLocalDateTime());
 
-		String fpath = path.replace("%DATE%", date);
+		String fpath = path.replace("%DATE%", date)
+				           .replace("%TIME%", time);
 
 		return new File(fpath);
 	}

@@ -1,12 +1,9 @@
 package ix.test.load;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Set;
 
 import ix.ginas.controllers.GinasApp;
 import ix.test.server.SearchResult;
@@ -24,17 +21,30 @@ public final class TestFacetUtil {
         Map<String, Map<String, Integer>> actual = actualResults.getAllFacets();
         Map<String, Map<String, Integer>> filteredExpected = filterVisibleFacets(expectedFacets);
 
+
+        Map<String, Map<String, Integer>> copyOfFilteredExpected = new HashMap<>(filteredExpected);
+        Iterator<Entry<String, Map<String, Integer>>> iter= copyOfFilteredExpected.entrySet().iterator();
+       while(iter.hasNext()){
+            Entry<String, Map<String, Integer>> entry = iter.next();
+            String key = entry.getKey();
+            Map<String, Integer> actualValue = actual.get(key);
+            if(entry.getValue() ==null || Objects.equals(entry.getValue(), actualValue)){
+                iter.remove();
+            }
+        }
+
+        assertTrue("missing : " + copyOfFilteredExpected, copyOfFilteredExpected.isEmpty() );
         //Note: we no longer assert that the facets are the same. If we assumed that, then adding
         //a facet would not be allowed without some deeper changes. Instead, we say
         //that the filtered set must be a subset
         
-        Set<Entry<String,Map<String, Integer>>> missing=new HashSet<>(filteredExpected.entrySet());
-        missing.removeAll(actual.entrySet());
-        missing.removeIf(f->f.getValue()==null);
-        
-        
-        Map<String, Map<String, Integer>> empty=new HashMap<>();
-        assertEquals("actual facet set is missing", empty.entrySet(),missing);
+//        Set<Entry<String,Map<String, Integer>>> missing=new HashSet<>(filteredExpected.entrySet());
+//        missing.removeAll(actual.entrySet());
+//        missing.removeIf(f->f.getValue()==null);
+//
+//
+//        Map<String, Map<String, Integer>> empty=new HashMap<>();
+//        assertEquals("actual facet set is missing", empty.entrySet(),missing);
     }
 
     /**
@@ -62,18 +72,18 @@ public final class TestFacetUtil {
         Map<String, Map<String, Integer>> expectedFacets = new HashMap<>();
 
         expectedFacets.put("Record Status", new HashMap<String, Integer>(){{
-            put("Validated (UNII)", 17);
+            put("approved", 17);
         }});
-        expectedFacets.put("Substance Type", new HashMap<String, Integer>(){{
-            put("Chemical", 17);
+        expectedFacets.put("Substance Class", new HashMap<String, Integer>(){{
+            put("chemical", 17);
         }});
-        expectedFacets.put("Molecular Weight", new HashMap<String, Integer>(){{
-            put("200:400", 10);
-            put("0:200", 9);
-            put("400:600", 2);
-            put(">1000", 2);
-            put("800:1000", 1);
-        }});
+//        expectedFacets.put("Molecular Weight", new HashMap<String, Integer>(){{
+//            put("200:400", 10);
+//            put("0:200", 9);
+//            put("400:600", 2);
+//            put(">1000", 2);
+//            put("800:1000", 1);
+//        }});
         expectedFacets.put( "GInAS Tag", new HashMap<String, Integer>(){{
 //            put("NOMEN", 17); //Note, this was removed, as it was only in the tags by accident
 //            put("WARNING", 17);
@@ -88,7 +98,7 @@ public final class TestFacetUtil {
         }});
 
         //Stereochemistry={ACHIRAL=13, ABSOLUTE=3, RACEMIC=1},
-        expectedFacets.put("Stereochemistry", new HashMap<String, Integer>(){{
+        expectedFacets.put("SubstanceStereochemistry", new HashMap<String, Integer>(){{
 
             put("ACHIRAL", 13);
             put("ABSOLUTE", 3);

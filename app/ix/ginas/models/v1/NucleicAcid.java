@@ -7,6 +7,8 @@ import ix.ginas.models.utils.JSONConstants;
 import ix.ginas.models.utils.JSONEntity;
 
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -17,6 +19,7 @@ import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
+import javax.persistence.OrderBy;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 
@@ -38,7 +41,7 @@ public class NucleicAcid extends GinasCommonSubData {
 	
 	@JsonIgnore
 	@OneToOne(cascade=CascadeType.ALL)
-	Modifications modifications;
+	Modifications modifications = new Modifications();
 	
 	@JSONEntity(title = "Nucleic Acid Type", format = JSONConstants.CV_NUCLEIC_ACID_TYPE)
 	String nucleicAcidType;
@@ -58,6 +61,7 @@ public class NucleicAcid extends GinasCommonSubData {
 	@JSONEntity(name = "subunits", title = "Subunits")
 	@ManyToMany(cascade=CascadeType.ALL)
     @JoinTable(name="ix_ginas_nucleicacid_subunits")
+	@OrderBy("subunitIndex asc")
 	public List<Subunit> subunits;
 	
 	@JSONEntity(title = "Sugars", isRequired = true)
@@ -132,7 +136,13 @@ public class NucleicAcid extends GinasCommonSubData {
 	}
 
 	public List<Subunit> getSubunits() {
-		return subunits;
+		Collections.sort(subunits, new Comparator<Subunit>() {
+			@Override
+			public int compare(Subunit o1, Subunit o2) {
+				return o1.subunitIndex - o2.subunitIndex;
+			}
+		});
+		return this.subunits;
 	}
 
 	public void setSubunits(List<Subunit> subunits) {

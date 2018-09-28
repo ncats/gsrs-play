@@ -1,6 +1,7 @@
 package ix.core.controllers.search;
 
 import java.io.IOException;
+import java.lang.reflect.Constructor;
 import java.util.*;
 import java.util.function.Supplier;
 
@@ -51,6 +52,7 @@ public class SearchFactory extends EntityFactory {
         return textIndexerPlugin.get().getIndexer();
     }
     
+
     public static SearchResult search(TextIndexer indexer, SearchRequest searchRequest) throws IOException{
     	String q = searchRequest.getQuery();
     	
@@ -128,11 +130,17 @@ public class SearchFactory extends EntityFactory {
     }
         
     public static F.Promise<Result> searchREST (String q, int top, int skip, int fdim) {
-        return searchREST (null, q, top, skip, fdim);
+        return searchREST (SearchRequest.Builder.class, null, q, top, skip, fdim);
     }
     
-    private static SearchRequest getSearchRequest(Class<?> kind, String q, int top, int skip, int fdim) throws IOException {
-        SearchRequest req = new SearchRequest.Builder()
+    private static SearchRequest getSearchRequest(Class<SearchRequest.Builder> requestBuilderClass, Class<?> kind, String q, int top, int skip, int fdim) throws IOException {
+        SearchRequest.Builder builder;
+        try {
+            builder = requestBuilderClass.newInstance();
+        }catch(Exception e){
+            throw new IOException("error instantiating new request builder", e);
+        }
+        SearchRequest req = builder
                 .top(top)
                 .skip(skip)
                 .fdim(fdim)
@@ -146,14 +154,14 @@ public class SearchFactory extends EntityFactory {
     }
     
     
-    public static SearchResult search (Class<?> kind, String q, int top, int skip, int fdim) throws IOException {
-        SearchRequest req = getSearchRequest(kind,q,top,skip,fdim);
+    public static SearchResult search (Class<SearchRequest.Builder> requestBuilderClass, Class<?> kind, String q, int top, int skip, int fdim) throws IOException {
+        SearchRequest req = getSearchRequest(requestBuilderClass, kind,q,top,skip,fdim);
         SearchResult result = search(req);
         return result;
 
     }
         
-    public static F.Promise<Result> searchREST (Class<?> kind, String q, int top, int skip, int fdim) {
+    public static F.Promise<Result> searchREST (Class<SearchRequest.Builder> requestBuilderClass, Class<?> kind, String q, int top, int skip, int fdim) {
         if (Global.DEBUG(1)) {
             Logger.debug("SearchFactory.search: kind="
                          +(kind != null ? kind.getName():"")+" q="
@@ -164,7 +172,7 @@ public class SearchFactory extends EntityFactory {
             public SearchResultPair apply() {
                 SearchResult result = null;
                 try {
-                    result = search(kind,q,top,skip,fdim);
+                    result = search(requestBuilderClass, kind,q,top,skip,fdim);
                 } catch (IOException e) {
                    return new SearchResultPair(SearchResult.createErrorResult(e), Collections.emptyList() );
                 }
@@ -256,11 +264,11 @@ public class SearchFactory extends EntityFactory {
         return Java8Util.ok(mapper.valueToTree(etag));
     }
 
-    public static Result searchRESTFacets (Class<?> kind, String q, String facetField, int fdim, int fskip, String ffilter) {
+    public static Result searchRESTFacets (Class<SearchRequest.Builder> searchRequestBuilderClass, Class<?> kind, String q, String facetField, int fdim, int fskip, String ffilter) {
       
         try {
              
-            SearchRequest sq = getSearchRequest(kind, q, Integer.MAX_VALUE, 0,fdim);
+            SearchRequest sq = getSearchRequest(searchRequestBuilderClass, kind, q, Integer.MAX_VALUE, 0,fdim);
             
             
             String fkey = sq.getDefiningSetSha1() + "/" + "facet/" + facetField;

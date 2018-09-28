@@ -62,7 +62,8 @@ public abstract class AbstractAddUserTest extends AbstractGinasServerTest {
         return queryAllCurrentUsers(session);
     }
     protected List<UserResult> queryAllCurrentUsers(BrowserSession aSession) throws IOException {
-        HtmlPage response = aSession.submit(aSession.newGetRequest("ginas/app/admin/users").get()).getPage();
+        final String path = ts.getHttpResolver().get("/admin/users");
+        HtmlPage response = aSession.submit(aSession.newGetRequest(path).get()).getPage();
 
         return parseResponse(response);
     }
@@ -111,7 +112,10 @@ public abstract class AbstractAddUserTest extends AbstractGinasServerTest {
 
          */
         List<UserResult> list = new ArrayList<>();
-        for(Object a :responseHtml.getByXPath("//td/a[starts-with(@href, '/ginas/app/admin/user')]")){
+        String appContext = ts.getApplicationContext();
+        String xpathExpr = "//td/a[starts-with(@href, '" + appContext + "/admin/user')]";
+
+        for(Object a :responseHtml.getByXPath(xpathExpr)){
             //these ar the anchor tags
             HtmlAnchor anchor = (HtmlAnchor)a;
             HtmlTableRow tr = (HtmlTableRow) anchor.getParentNode() // td

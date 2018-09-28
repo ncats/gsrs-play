@@ -334,6 +334,9 @@ public class LastEditedFacetTest extends AbstractLoadDataSetTest {
 
         searcher = new BrowserSubstanceSearcher(session);
 
+        SearchResult searchResult = session.newRestSession().searcher().all();
+        System.out.println("REST FACETS=\n" + searchResult.getAllFacets());
+        System.out.println("REST LastEdtied FACETS=\n" + searchResult.getLastEditedFacets());
         Map<String, Integer> lastEditMap;
 
         SearchResult results = searcher.all();

@@ -6,6 +6,7 @@ import ix.ginas.controllers.v1.SubstanceFactory;
 import ix.ginas.models.v1.Component;
 import ix.ginas.models.v1.MixtureSubstance;
 import ix.ginas.models.v1.Substance;
+import ix.ginas.utils.validation.ValidationUtils;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -64,6 +65,9 @@ public class MixtureValidator extends AbstractValidatorPlugin<Substance> {
                 callback.addMessage(GinasProcessingMessage
                         .ERROR_MESSAGE("Should have at least two \"One of\" components in the mixture record"));
             }
+
+            ValidationUtils.validateReference(cs, cs.mixture, callback, ValidationUtils.ReferenceAction.FAIL);
+
         }
 
     }

@@ -177,6 +177,9 @@ public abstract class AbstractSubstanceBuilder<S extends Substance, T extends Ab
         return andThen(s -> {s.references.add(r);});
     }
 
+    public T onSubstanceClass(BiConsumer<Substance.SubstanceClass, S> consumer){
+        return andThen( s-> {consumer.accept(s.substanceClass, s);});
+    }
     public T addRelationship(Relationship r) {
         return andThen(s -> {s.relationships.add(r);});
     }
@@ -195,6 +198,15 @@ public abstract class AbstractSubstanceBuilder<S extends Substance, T extends Ab
         });
     }
 
+    protected static Reference createNewPublicDomainRef(){
+        Reference r = new Reference();
+        r.publicDomain = true;
+        r.setAccess(Collections.emptySet());
+        r.addTag(Reference.PUBLIC_DOMAIN_REF);
+
+        return r;
+    }
+
     private <T> List<T> addToNewList(List<T> oldList, T newElement){
         List<T> newList;
         if(oldList ==null){
@@ -209,7 +221,7 @@ public abstract class AbstractSubstanceBuilder<S extends Substance, T extends Ab
     public T addCode(Code code) {
         return andThen(s ->{
             if(code.getReferences().isEmpty()) {
-                code.addReference(getOrAddFirstReference(s));
+                code.addReference(getOrAddFirstReference(s) ,s);
             }
             s.codes.add(code);
         });
@@ -234,7 +246,7 @@ public abstract class AbstractSubstanceBuilder<S extends Substance, T extends Ab
 		return (()->afterCreate().apply(getSupplier().get()));
 	}
 	
-	public Function<S, S> afterCreate(){
+	public final Function<S, S> afterCreate(){
 		return andThen;
 	}
 
@@ -246,7 +258,7 @@ public abstract class AbstractSubstanceBuilder<S extends Substance, T extends Ab
     private Name createName(Substance s, String name){
         Name n=new Name(name);
 //        n.addLanguage("en");
-        n.addReference(getOrAddFirstReference(s));
+        n.addReference(getOrAddFirstReference(s), s);
         return n;
     }
     private T createAndAddBasicName(String name){
@@ -278,29 +290,32 @@ public abstract class AbstractSubstanceBuilder<S extends Substance, T extends Ab
 	public T addCode(String codeSystem, String code){
 		return andThen(s->{
 			Code c=new Code(codeSystem,code);
-			c.addReference(getOrAddFirstReference(s));
+			c.addReference(getOrAddFirstReference(s), s);
 			s.codes.add(c);
 		});
 	}
 	
 	//Helper internal thing
 	public static Reference getOrAddFirstReference(Substance s){
-		if(s.references.size()>0){
-			return s.references.get(0);
-		}else{
+
 			Reference rr= Reference.SYSTEM_GENERATED();
 			rr.publicDomain=true;
 			rr.addTag(Reference.PUBLIC_DOMAIN_REF);
-			s.references.add(rr);
+			rr.getOrGenerateUUID();
+//			s.references.add(rr);
 			return rr;
-		}
+
 	}
 
 	public S build(){
 
 	    S s = getSupplier().get();
 	    s.substanceClass = getSubstanceClass();
-	    return afterCreate().apply(s);
+	    return additionalSetup().apply(afterCreate().apply(s));
+	}
+
+	public  Function<S, S> additionalSetup(){
+	    return Function.identity();
 	}
 	
 	public JsonNode buildJson(){
@@ -357,5 +372,23 @@ public abstract class AbstractSubstanceBuilder<S extends Substance, T extends Ab
 
     public T setToPublic(){
         return setAccess(Collections.emptySet());
+    }
+
+    public T addRelationshipTo(Substance relatedSubstance, String type){
+        Relationship rel = new Relationship();
+        rel.type = type;
+        rel.relatedSubstance = relatedSubstance.asSubstanceReference();
+        return addRelationship(rel);
+
+    }
+
+    public T addActiveMoiety(){
+        return andThen( s->{
+            Relationship rel = new Relationship();
+            rel.type = Relationship.ACTIVE_MOIETY_RELATIONSHIP_TYPE;
+            rel.relatedSubstance = s.asSubstanceReference();
+
+            s.relationships.add(rel);
+        });
     }
 }

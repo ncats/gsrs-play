@@ -148,7 +148,6 @@ public class MixtureValidationTest extends AbstractGinasServerTest{
                     .buildJson();
 
             JsonNode result = SubstanceJsonUtil.ensureFailure(api.submitSubstance(toSubmit));
-            System.out.println(result);
             ValidationResponse response = new ObjectMapper().treeToValue(
                     result, ValidationResponse.class);
 

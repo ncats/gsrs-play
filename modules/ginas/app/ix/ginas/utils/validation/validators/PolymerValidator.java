@@ -6,6 +6,7 @@ import ix.ginas.models.v1.GinasChemicalStructure;
 import ix.ginas.models.v1.PolymerSubstance;
 import ix.ginas.models.v1.Substance;
 import ix.ginas.models.v1.Unit;
+import ix.ginas.utils.validation.ValidationUtils;
 
 import java.util.*;
 
@@ -158,6 +159,8 @@ public class PolymerValidator extends AbstractValidatorPlugin<Substance>{
                 callback.addMessage(GinasProcessingMessage
                         .WARNING_MESSAGE("Polymer substance has no properties, typically expected at least a molecular weight"));
             }
+
+            ValidationUtils.validateReference(cs, cs.polymer, callback, ValidationUtils.ReferenceAction.FAIL);
         }
         
     }

@@ -5,6 +5,7 @@ import ix.ginas.models.v1.*;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 /**
@@ -29,7 +30,9 @@ public class NucleicAcidSubstanceBuilder extends AbstractSubstanceBuilder<Nuclei
     }
 
     public NucleicAcidSubstanceBuilder setNucleicAcid(NucleicAcid na){
-        return andThen(s ->{ s.setNucleicAcid(na);});
+        return andThen(s ->{
+            s.setNucleicAcid(na);
+        });
     }
 
     public NucleicAcidSubstanceBuilder() {
@@ -42,10 +45,16 @@ public class NucleicAcidSubstanceBuilder extends AbstractSubstanceBuilder<Nuclei
     }
 
     private NucleicAcidSubstanceBuilder setNucleicAcid(String dna, String sugarType) {
+        return andThen( s-> {
         NucleicAcid na = new NucleicAcid();
         Subunit seq = new Subunit();
 
+            Reference r = AbstractSubstanceBuilder.createNewPublicDomainRef();
+
+            na.addReference(r, s);
+
         seq.sequence = dna;
+            seq.subunitIndex = 1;
         na.setSubunits(Arrays.asList(seq));
 
 
@@ -60,7 +69,9 @@ public class NucleicAcidSubstanceBuilder extends AbstractSubstanceBuilder<Nuclei
         lin.setLinkage("P");
         lin.setSitesShorthand("1_1-1_" + ( seq.sequence.length() -1));
         na.setLinkages(Collections.singletonList(lin));
-        return setNucleicAcid(na);
+
+            s.setNucleicAcid(na);
+        });
     }
 
     public NucleicAcidSubstanceBuilder(Substance copy) {
@@ -71,5 +82,15 @@ public class NucleicAcidSubstanceBuilder extends AbstractSubstanceBuilder<Nuclei
                 setNucleicAcid(na);
             }
         }
+    }
+
+    @Override
+    public Function<NucleicAcidSubstance, NucleicAcidSubstance> additionalSetup() {
+        return s->{
+            if(s.nucleicAcid ==null){
+                s.nucleicAcid = new NucleicAcid();
+            }
+            return s;
+        };
     }
 }

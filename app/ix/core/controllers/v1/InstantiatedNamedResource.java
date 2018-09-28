@@ -16,6 +16,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import ix.core.Experimental;
 import ix.core.controllers.EntityFactory;
+import ix.core.controllers.search.SearchRequest;
 import ix.core.models.Role;
 import ix.core.util.EntityUtils;
 import ix.seqaln.SequenceIndexer.CutoffType;
@@ -81,7 +82,8 @@ public interface InstantiatedNamedResource<I,V> {
                 Argument.of(0, int.class, "top"),
                 Argument.of(0, int.class, "skip"),
                 Argument.of(0, int.class, "fdim"),
-                Argument.of("", String.class, "field")));
+                Argument.of("", String.class, "field"),
+                Argument.of("", String.class, "seqType")));
         
         private final Operation op;
         public Operation op(){
@@ -142,7 +144,11 @@ public interface InstantiatedNamedResource<I,V> {
 		return operate(Operations.STREAM_OPERATION.with(field,top,skip));
 	}
 	
-	default Result search(String q, 
+	default Class<SearchRequest.Builder> searchRequestBuilderClass(){
+		return SearchRequest.Builder.class;
+	}
+
+	default Result search(String q,
             int top, int skip, int fdim){
 		return operate(Operations.SEARCH_OPERATION.with(q,top,skip, fdim));
 	}
@@ -181,8 +187,8 @@ public interface InstantiatedNamedResource<I,V> {
 		return operate(Operations.STRUCTURE_SEARCH_OPERATION.with(q,type,cutoff,top,skip,fdim,field));
 	}
 	
-	default Result sequenceSearch(String q, CutoffType type, double cutoff, int top, int skip, int fdim, String field){
-        return operate(Operations.SEQUENCE_SEARCH_OPERATION.with(q,type,cutoff,top,skip,fdim,field));
+	default Result sequenceSearch(String q, CutoffType type, double cutoff, int top, int skip, int fdim, String field, String seqType){
+        return operate(Operations.SEQUENCE_SEARCH_OPERATION.with(q,type,cutoff,top,skip,fdim,field, seqType));
     }
 	
 	default Result validate(){

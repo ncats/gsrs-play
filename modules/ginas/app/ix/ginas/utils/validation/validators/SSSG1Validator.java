@@ -4,6 +4,7 @@ import ix.core.validator.GinasProcessingMessage;
 import ix.core.validator.ValidatorCallback;
 import ix.ginas.models.v1.SpecifiedSubstanceGroup1Substance;
 import ix.ginas.models.v1.Substance;
+import ix.ginas.utils.validation.ValidationUtils;
 
 /**
  * Created by katzelda on 5/14/18.
@@ -15,7 +16,9 @@ public class SSSG1Validator extends AbstractValidatorPlugin<Substance> {
         if (cs.specifiedSubstance == null) {
             callback.addMessage(GinasProcessingMessage
                     .ERROR_MESSAGE("Specified substance must have a specified substance component"));
-        } else {
+            return;
+        }
+
             if (cs.specifiedSubstance.constituents== null || cs.specifiedSubstance.constituents.isEmpty()) {
                 callback.addMessage(GinasProcessingMessage
                         .ERROR_MESSAGE("Specified substance must have at least 1 constituent"));
@@ -27,9 +30,10 @@ public class SSSG1Validator extends AbstractValidatorPlugin<Substance> {
                             callback.addMessage(GinasProcessingMessage
                                     .ERROR_MESSAGE("Specified substance constituents must have an associated substance record"));
                         });
+            ValidationUtils.validateReference(cs, cs.specifiedSubstance, callback, ValidationUtils.ReferenceAction.FAIL);
 
             }
 
-        }
+
     }
 }

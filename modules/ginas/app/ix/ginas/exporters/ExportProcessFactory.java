@@ -48,7 +48,7 @@ public class ExportProcessFactory {
     
     public static InputStream download(String username, String fname) throws IOException{
         Optional<ExportDir.ExportFile<ExportMetaData>> downloadFile = new ExportDir<>(getExportDirFor(username), ExportMetaData.class).getFile(fname);
-        System.out.println("trying to download " + downloadFile);
+//        System.out.println("trying to download " + downloadFile);
         return downloadFile.orElseThrow(()->new FileNotFoundException("could not find file for user "+ username + ":" +  fname))
                     .getInputStreamOutputStream();
 //        File[] files = getFiles(getExportDirFor(username), fname);
@@ -159,6 +159,7 @@ public class ExportProcessFactory {
                              return em2;
                          }
                      })
+                    .filter(m-> m.started !=null) // this shouldn't happen anymore but just incase...
                      .sorted((m1,m2)->{
                     	 //Newest first
                     	return (int) (m2.started-m1.started);

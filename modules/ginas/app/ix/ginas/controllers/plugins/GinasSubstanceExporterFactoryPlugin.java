@@ -1,5 +1,8 @@
 package ix.ginas.controllers.plugins;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -15,6 +18,9 @@ import java.util.concurrent.Future;
 import java.util.concurrent.ThreadPoolExecutor;
 
 import ix.ginas.exporters.SubstanceExporterFactory;
+import org.apache.poi.util.DefaultTempFileCreationStrategy;
+import org.apache.poi.util.TempFile;
+import org.apache.poi.util.TempFileCreationStrategy;
 import play.Application;
 import play.Logger;
 import play.api.Plugin;
@@ -50,6 +56,17 @@ public class GinasSubstanceExporterFactoryPlugin implements Plugin {
         extensionMap.clear();
 
         executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(8);
+
+        String tmpDirPath = app.configuration().getString("ix.ginas.export.tmpDir");
+        File tmpDir = tmpDirPath ==null ? null : new File(tmpDirPath);
+
+        if(tmpDir !=null){
+
+            if(tmpDir.exists() && ! Files.isWritable(tmpDir.toPath())){
+                throw new IllegalStateException("export temp directory is not writable " + tmpDir.getAbsolutePath());
+            }
+        }
+        TempFile.setTempFileCreationStrategy(new DefaultTempFileCreationStrategy(tmpDir));
 
         for(String clazz :app.configuration().getStringList("ix.ginas.exportFactories",new ArrayList<String>())){
             try{
@@ -162,4 +179,7 @@ public class GinasSubstanceExporterFactoryPlugin implements Plugin {
     public boolean isReady() {
         return executor.getActiveCount()<executor.getMaximumPoolSize();
     }
+
+
+
 }

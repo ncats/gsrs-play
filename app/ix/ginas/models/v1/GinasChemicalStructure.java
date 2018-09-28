@@ -193,7 +193,7 @@ public class GinasChemicalStructure extends Structure implements GinasAccessRefe
 	public void addReference(Reference r){
 		addReference(r.getOrGenerateUUID().toString());
 	}
-	
+	@Override
 	public void addReference(Reference r, Substance s){
 		s.references.add(r);
 		this.addReference(r);

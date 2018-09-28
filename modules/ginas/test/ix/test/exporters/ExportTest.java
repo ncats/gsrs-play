@@ -23,10 +23,9 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import ix.core.util.RunOnly;
+import ix.test.server.*;
+import org.junit.*;
 
 import ix.AbstractGinasClassServerTest;
 import ix.core.CacheStrategy;
@@ -36,13 +35,8 @@ import ix.core.util.StopWatch;
 import ix.ginas.controllers.GinasApp;
 import ix.ginas.modelBuilders.SubstanceBuilder;
 import ix.test.query.builder.SimpleQueryBuilder;
-import ix.test.server.BrowserSession;
-import ix.test.server.BrowserSubstanceSearcher;
-import ix.test.server.BrowserSubstanceSearcher.WebExportRequest;
+import ix.test.server.WebExportRequest;
 import ix.test.server.GinasTestServer.User;
-import ix.test.server.RestSession;
-import ix.test.server.SearchResult;
-import ix.test.server.SubstanceLoader;
 import ix.test.util.TestUtil;
 import play.mvc.Http;
 
@@ -59,11 +53,11 @@ public class ExportTest  extends AbstractGinasClassServerTest {
 		IxCache.clearCache();
 		restSession = ts.newRestSession(u);
 		session = ts.newBrowserSession(u);
-		searcher = new BrowserSubstanceSearcher(session);
+		searcher = new RestSubstanceSubstanceSearcher(restSession);
 	}
 
 	static BrowserSession session;
-	static BrowserSubstanceSearcher searcher;
+	static RestSubstanceSubstanceSearcher searcher;
 	static RestSession restSession;
 
 	@BeforeClass
@@ -74,12 +68,13 @@ public class ExportTest  extends AbstractGinasClassServerTest {
 		SubstanceLoader loader = new SubstanceLoader(session);
 		File f = new File("test/testdumps/rep90.ginas");
 		loader.loadJson(f);
-		searcher = new BrowserSubstanceSearcher(session);
+		searcher = new RestSubstanceSubstanceSearcher(restSession);
 	}
 
 	@After
 	public void tearDown() {
 		session.close();
+		restSession.close();
 	}
 
 	@Test 
@@ -91,7 +86,7 @@ public class ExportTest  extends AbstractGinasClassServerTest {
 
 			List<String> lines = reader.lines().collect(Collectors.toList());
 			
-			assertEquals(90, lines.size() - 1); // 1 line of header
+			assertEquals(lines.toString(), 90, lines.size() - 1); // 1 line of header
 
 			Set<String> uuids = parseUUids(lines);
 
@@ -129,14 +124,15 @@ public class ExportTest  extends AbstractGinasClassServerTest {
 		Iterator<String> iter = lines.iterator();
 		// skip header
 		iter.next();
-		Pattern p = Pattern.compile("\"([0-9a-f\\-]+)\"");
+		Pattern p = Pattern.compile("([a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12})");
 		while (iter.hasNext()) {
 			String line = iter.next();
+//			System.out.println(line);
 			Matcher m = p.matcher(line);
 			if (m.find()) {
-				// TODO the urls in the webpages only show the first 8 chars!
-				uuids.add(m.group(1).substring(0, 8));
+				//uuids.add(m.group(1).substring(0, 8));
 				// System.out.println( m.group(1));
+				 uuids.add(m.group(1));
 			}
 		}
 		return uuids;
@@ -223,6 +219,7 @@ public class ExportTest  extends AbstractGinasClassServerTest {
 	}
 	
 	@Test
+	@Ignore
 	public void execute2000VerySlowExportsStillAllowsBasicTraffic() throws Exception {
 		int numberSlowExports=2000;
 		String givenName="THE NAME";
@@ -259,8 +256,8 @@ public class ExportTest  extends AbstractGinasClassServerTest {
 					long l = StopWatch.timeElapsed(() -> {
 						try(RestSession rs=ts.newRestSession(ts.createUser(Role.Query))){
 							String sha1 = rs
-								.getSha1For("ginas/app/assets/javascripts/JSDraw4.0.7/Scilligence.JSDraw2.Pro.js");
-							assertEquals("acc721331eba0826e4133b472c4f349c78566d19", sha1);
+								.getSha1For("ginas/app/assets/javascripts/JSDraw5.2.0/Scilligence.JSDraw2.Pro.js");
+							assertEquals("6c1fb589e84e74ce861575e9f039571a85f20ee6", sha1);
 						}
 						return null;
 					});

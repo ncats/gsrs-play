@@ -3,10 +3,7 @@ package ix.ginas.modelBuilders;
 import java.util.Arrays;
 import java.util.function.Supplier;
 
-import ix.ginas.models.v1.ChemicalSubstance;
-import ix.ginas.models.v1.GinasChemicalStructure;
-import ix.ginas.models.v1.Moiety;
-import ix.ginas.models.v1.Substance;
+import ix.ginas.models.v1.*;
 
 public class ChemicalSubstanceBuilder extends AbstractSubstanceBuilder<ChemicalSubstance, ChemicalSubstanceBuilder>{
 
@@ -29,7 +26,8 @@ public class ChemicalSubstanceBuilder extends AbstractSubstanceBuilder<ChemicalS
 		return andThen(cs->{
 			cs.structure=new GinasChemicalStructure();
 			cs.structure.molfile=smiles;//not really right, but we know it works
-			cs.structure.addReference(getOrAddFirstReference(cs));
+            Reference orAddFirstReference = getOrAddFirstReference(cs);
+            cs.structure.addReference( orAddFirstReference,cs);
 		});
 	}
 

@@ -318,6 +318,9 @@ public class SequenceIndexer {
         public final String id;
         public final CharSequence target;
         public final List<Alignment> alignments = new ArrayList<Alignment>();
+        public double score;
+        public CutoffType scoreType;
+
 
         Result () {
             query = null;
@@ -328,6 +331,12 @@ public class SequenceIndexer {
             this.id = id;
             this.query = query;
             this.target = target;
+        }
+
+        public Result setScore(double score, CutoffType cot){
+        	this.score=score;
+        	this.scoreType=cot;
+        	return this;
         }
 
         @Override
@@ -540,7 +549,6 @@ public class SequenceIndexer {
             throw new RuntimeException ("Index is read-only!");
 
         try {
-            //System.err.println(id+": indexing "+seq+"...");
             Document doc = new Document ();
             StringField idf = new StringField (FIELD_ID, id, YES);
             doc.add(idf);
@@ -764,6 +772,9 @@ public class SequenceIndexer {
 
             //System.err.println("** ALIGNMENTS for "+me.getKey()+" **");
             int max = 0;
+
+
+
             Alignment maxaln = null;
             for (SEG seg : segments) {
                 //System.err.println(seg);
@@ -779,7 +790,11 @@ public class SequenceIndexer {
                 double score =0;
                 switch(rt){
                 case GLOBAL:
-                    score=maxaln.global;
+                	int totalMatch = result.alignments.stream()
+                	                 .mapToInt(t->t.bsq.cardinality())
+                	                 .sum();
+
+                    score=(totalMatch +0.0)/Math.max(seq.length(),query.length()) ;
                     break;
                 case LOCAL:
                     score=maxaln.iden;
@@ -790,6 +805,7 @@ public class SequenceIndexer {
                 default:
                     break;
                 }
+                result.setScore(score, rt);
                 if (score >= identity) {
                     results.put(result);
                 }

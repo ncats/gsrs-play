@@ -22,6 +22,10 @@ import play.libs.ws.WSResponse;
  */
 public abstract class AbstractSession<T> implements Closeable{
 
+    public static long getDefaultTimeout(){
+        return timeout;
+    }
+
     protected static long timeout= 10000L;
     private boolean loggedIn = true;
 
@@ -31,7 +35,10 @@ public abstract class AbstractSession<T> implements Closeable{
 
     private final GinasTestServer.User user;
 
-    public AbstractSession(int port){
+    private final GinasTestServer ts;
+
+    public AbstractSession(GinasTestServer ts, int port){
+        this.ts = Objects.requireNonNull(ts);
         //null values for defaults
         this.port = port;
         this.user = null;
@@ -39,15 +46,25 @@ public abstract class AbstractSession<T> implements Closeable{
         this.neverLogout = true;
     }
 
-    public AbstractSession(GinasTestServer.User user, int port){
-        Objects.requireNonNull(user);
+
+
+    public AbstractSession(GinasTestServer ts, GinasTestServer.User user, int port){
+        this.ts = Objects.requireNonNull(ts);
+
         if(port <1){
             throw new IllegalArgumentException("port can not be < 1");
         }
         this.port = port;
-        this.user = user;
+        this.user = Objects.requireNonNull(user);;
         this.neverLogout = false;
     }
+
+    protected GinasTestServer getTestSever() {
+        return ts;
+    }
+
+    public abstract RestSession getRestSession();
+    public abstract BrowserSession getBrowserSession();
     public int getPort() {
         return port;
     }
@@ -76,7 +93,9 @@ public abstract class AbstractSession<T> implements Closeable{
     }
 
     public String getUserName(){
-        WSResponse wsResponse1 = get("ginas/app/api/v1/whoami");
+        String path = getTestSever().getHttpResolver().apiV1("whoami", true);
+        System.out.println("path = " + path);
+        WSResponse wsResponse1 = get(path);
 
         if(wsResponse1.getStatus() != 200){
             return null;

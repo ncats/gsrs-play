@@ -21,7 +21,7 @@ public class HotFixIssue871 extends AbstractLoadDataSetTest{
 
 	                loader.loadJson(f);
 	                
-	                assertEquals(200,session.get("ginas/app/substance/8a184573").getStatus());
+	                assertEquals(200,session.get(ts.getHttpResolver().substance("8a184573")).getStatus());
 	                
 	            }
 

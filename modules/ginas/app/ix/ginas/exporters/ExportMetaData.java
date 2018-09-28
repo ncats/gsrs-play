@@ -6,6 +6,7 @@ import java.util.function.Consumer;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import ix.core.models.Principal;
+import ix.core.util.TimeUtil;
 import ix.ginas.models.utils.JSONEntity;
 import ix.utils.Global;
 
@@ -73,7 +74,7 @@ public class ExportMetaData implements Comparable<ExportMetaData>{
 
 
 
-    public Long started,finished;
+    public Long started = TimeUtil.getCurrentTimeMillis(),finished;
 
     public ExportMetaData(){}
 

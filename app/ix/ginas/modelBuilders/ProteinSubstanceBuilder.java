@@ -1,13 +1,11 @@
 package ix.ginas.modelBuilders;
 
-import java.util.ArrayList;
 import java.util.Objects;
+import java.util.Set;
 import java.util.function.Supplier;
 
-import ix.ginas.models.v1.Protein;
-import ix.ginas.models.v1.ProteinSubstance;
-import ix.ginas.models.v1.Substance;
-import ix.ginas.models.v1.Subunit;
+import ix.core.models.Keyword;
+import ix.ginas.models.v1.*;
 
 public class ProteinSubstanceBuilder  extends AbstractSubstanceBuilder<ProteinSubstance, ProteinSubstanceBuilder>{
 
@@ -43,6 +41,15 @@ public class ProteinSubstanceBuilder  extends AbstractSubstanceBuilder<ProteinSu
         }
     }
 
+    /**
+     * Add a new subunit with the given sequence and
+     * add/set all the needed additonal fields like subunit index
+     * and adding a public reference etc to pass validation.
+     * @param sequence the sequence to use as a new subunit
+     *                 can not be null.
+     * @return this builder
+     * @throws NullPointerException if sequence is null
+     */
     public ProteinSubstanceBuilder addSubUnit(String sequence){
         Objects.requireNonNull(sequence);
         return andThen( s->{
@@ -53,7 +60,13 @@ public class ProteinSubstanceBuilder  extends AbstractSubstanceBuilder<ProteinSu
             Subunit subunit = new Subunit();
             subunit.sequence = sequence;
             subunit.subunitIndex = index;
+
+            Reference r = AbstractSubstanceBuilder.createNewPublicDomainRef();
+            s.protein.addReference(r, s);
+
             s.protein.getSubunits().add(subunit);
+
+
         });
     }
     public ProteinSubstanceBuilder addSubUnit(Subunit subunit){
@@ -63,6 +76,7 @@ public class ProteinSubstanceBuilder  extends AbstractSubstanceBuilder<ProteinSu
                 s.protein = new Protein();
             }
             s.protein.getSubunits().add(subunit);
+
         });
     }
 }

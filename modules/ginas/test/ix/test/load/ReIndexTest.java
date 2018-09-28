@@ -5,14 +5,9 @@ import static org.junit.Assert.assertEquals;
 import java.io.File;
 import java.io.IOException;
 
+import ix.test.server.*;
 import org.junit.Test;
 
-import ix.test.server.BrowserSession;
-import ix.test.server.ConfigUtil;
-import ix.test.server.SearchResult;
-import ix.test.server.SubstanceLoader;
-import ix.test.server.SubstanceReIndexer;
-import ix.test.server.BrowserSubstanceSearcher;
 import ix.test.util.TestUtil;
 
 /**
@@ -43,13 +38,15 @@ public class ReIndexTest extends AbstractLoadDataSetTest{
             TestUtil.tryToDeleteRecursively(new File(home, "structure"));
 
             ts.start();
-            try(BrowserSession session = ts.newBrowserSession(admin)){
+            try(BrowserSession session = ts.newBrowserSession(admin);
+                RestSession restSession = session.newRestSession();
+            ){
 
                 SubstanceReIndexer reIndexer = new SubstanceReIndexer(session);
 
                 reIndexer.reindex();
 
-                BrowserSubstanceSearcher searcher = new BrowserSubstanceSearcher(session);
+                RestSubstanceSubstanceSearcher searcher = new RestSubstanceSubstanceSearcher(restSession);
 
                 SearchResult results = searcher.substructure("C1=CC=CC=C1");
 

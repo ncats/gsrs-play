@@ -1,16 +1,17 @@
 package ix.test.server;
 
 import java.io.IOException;
-import java.io.InputStream;
+import java.io.UncheckedIOException;
+import java.net.URLEncoder;
 import java.util.*;
-
-import chemaxon.sss.search.Search;
-import com.fasterxml.jackson.databind.JsonNode;
 
 import ix.test.query.builder.SimpleQueryBuilder;
 import ix.test.query.builder.SubstanceCondition;
-import ix.test.server.BrowserSubstanceSearcher.WebExportRequest;
+import ix.test.query.builder.SuppliedQueryBuilder;
 import ix.utils.Tuple;
+import ix.utils.Util;
+import play.libs.ws.WSRequest;
+import play.libs.ws.WSRequestHolder;
 import play.libs.ws.WSResponse;
 
 public interface SubstanceSearcher {
@@ -142,7 +143,11 @@ public interface SubstanceSearcher {
     SearchResult exact(String smiles) throws IOException;
 
     
-    
+    AbstractSession getSession();
+
+    default WebExportRequest getExport(String format, String key){
+        return new WebExportRequest(key,format,getSession());
+    }
     /**
      * Performs an name search, where some name must contain
      * the "words" in the provided query string, in that order.
@@ -208,8 +213,15 @@ public interface SubstanceSearcher {
                 .build();
         return query(q);
     }
-    
-    
+    /**
+    Performs a term search using the given query builder.
+
+    @apiNote this is the same as {@code query(queryBuilder.build())}.
+     */
+    default SearchResult query(SuppliedQueryBuilder queryBuilder) throws IOException{
+        return query(queryBuilder.build());
+    }
+
     /**
      * Performs an exact term search, where some value must match
      * the provided query string, allowing for case-insensitive
@@ -219,11 +231,10 @@ public interface SubstanceSearcher {
      * @throws IOException
      */
     default SearchResult exactSearch(String query) throws IOException{
-        String q = new SimpleQueryBuilder()
+
+        return query( new SimpleQueryBuilder()
                 .where()
-                .globalMatchesExact(query)
-                .build();
-        return query(q);
+                .globalMatchesExact(query));
     }
     
 
@@ -297,13 +308,195 @@ public interface SubstanceSearcher {
     
     
     
-    public static interface SubstanceSearchRequest{
-        public SearchResult submit() throws IOException;
-        public SubstanceSearchRequest addFacet(String name, String value);
-        public SubstanceSearchRequest setQuery(String q);
-        public SubstanceSearchRequest setFacetType(FacetType ft);
+    interface SubstanceSearchRequest{
+        SearchResult submit() throws IOException;
+        SubstanceSearchRequest addFacet(String name, String value);
+        SubstanceSearchRequest setQuery(String q);
+        SubstanceSearchRequest setFacetType(FacetType ft);
+
+        String getQuery();
     }
     
     
+
+    public static class SearchRequestOptions{
+        /*
+          .addQueryParameter("type", type)
+            .addQueryParameter("q", smiles)
+            .addQueryParameter("cutoff", cutoff +"")
+            .addQueryParameter("wait", wait+"")
+            .addQueryParameter("rows", rows+"");
+
+        if(defaultSearchOrder!=null){
+            root=root.addQueryParameter("order",defaultSearchOrder);
+        }
+         */
+
+        private String query;
+
+        private Boolean wait;
+        private Double cutoff;
+        private Integer rows;
+        private String type;
+        private String order;
+        private Integer page;
+
+        public enum SearchType{
+            SUBSTRUCTURE("Substructure"),
+            SIMILARITY("Similarity"),
+            FLEX("Flex")
+            ;
+
+            private final String value;
+
+            SearchType(String value) {
+                this.value = value;
+            }
+        }
+
+        public SearchRequestOptions(){
+            this(null);
+        }
+        public SearchRequestOptions(String query) {
+            this.query = query;
+        }
+
+        public boolean isWait() {
+            return wait;
+
+        }
+
+        public String getQuery() {
+            return query;
+        }
+
+        public void setQuery(String query) {
+            this.query = query;
+        }
+
+        public Integer getPage() {
+            return page;
+        }
+
+        public void setPage(Integer page) {
+            this.page = page;
+        }
+
+        public void setWait(boolean wait) {
+            this.wait = wait;
+        }
+
+        public double getCutoff() {
+            return cutoff;
+        }
+
+        public void setCutoff(double cutoff) {
+            this.cutoff = cutoff;
+        }
+
+        public int getRows() {
+            return rows;
+        }
+
+        public void setRows(int rows) {
+            this.rows = rows;
+        }
+
+        public String getType() {
+            return type;
+        }
+
+        public void setType(SearchType type){
+            setType(type.value);
+        }
+        public void setType(String type) {
+            this.type = type;
+        }
+
+        public String getOrder() {
+            return order;
+        }
+
+        public void setOrder(String order) {
+            this.order = order;
+        }
+
+
+        public void populate(WSRequestHolder holder) throws IOException{
+            if(query !=null){
+//                holder.setQueryParameter("q", URLEncoder.encode(query, "UTF-8"));
+                holder.setQueryParameter("q", query);
+            }
+            if(type !=null) {
+               holder.setQueryParameter("type", type);
+            }
+            if(order !=null) {
+                holder.setQueryParameter("order", order);
+            }
+            if(rows !=null) {
+                holder.setQueryParameter("rows", rows.toString());
+            }
+            if(cutoff !=null) {
+                holder.setQueryParameter("cutoff", cutoff.toString());
+            }
+            if(wait !=null) {
+                holder.setQueryParameter("wait", wait.toString());
+            }
+            if(page !=null){
+                holder.setQueryParameter("page", page.toString());
+            }
+
+
+        }
+
+        private String urlEncode(String s){
+            try {
+                return URLEncoder.encode(s, "UTF-8");
+            }catch(IOException e){
+               throw new UncheckedIOException(e);
+            }
+        }
+
+        public String generatePostBody() throws IOException{
+            return new Util.QueryStringManipulator(getQueryParams())
+
+                    .toQueryString();
+//            return getQueryParams().entrySet().stream()
+//                                        .map(e-> urlEncode(e.getKey()) + "=" + urlEncode(e.getValue()))
+//                                        .collect(Collectors.joining("&"));
+
+
+        }
+
+        private Map<String, String[]> getQueryParams(){
+
+            Map<String, String[]> holder = new LinkedHashMap<>();
+            if(query !=null){
+//                holder.setQueryParameter("q", URLEncoder.encode(query, "UTF-8"));
+                holder.put("q", new String[]{query});
+            }
+            if(type !=null) {
+                holder.put("type", new String[]{type});
+            }
+            if(order !=null) {
+                holder.put("order",  new String[]{order});
+            }
+            if(rows !=null) {
+                holder.put("rows",  new String[]{rows.toString()});
+            }
+            if(cutoff !=null) {
+                holder.put("cutoff", new String[]{ cutoff.toString()});
+            }
+            if(wait !=null) {
+                holder.put("wait",  new String[]{wait.toString()});
+            }
+            if(page !=null){
+                holder.put("page",  new String[]{page.toString()});
+            }
+
+            return holder;
+        }
+    }
+
 
 }
