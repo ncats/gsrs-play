@@ -1189,7 +1189,9 @@ public class TextIndexer implements Closeable, ProcessListener {
 		// load saved lookups
 		lookups = new ConcurrentHashMap<String, SuggestLookup>();
 		
-		for (File f : suggestDir.listFiles()) {
+        File[] suggestFiles = suggestDir.listFiles();
+        if(suggestFiles !=null) {
+            for (File f : suggestFiles) {
 			if (f.isDirectory()) {
 				try {
 					lookups.put(f.getName(), new SuggestLookup(f));
@@ -1199,7 +1201,8 @@ public class TextIndexer implements Closeable, ProcessListener {
 				}
 			}
 		}
-		
+        }
+
 		Logger.info("## " + suggestDir + ": " + lookups.size() + " lookups loaded!");
 
 		sorters = loadSorters(new File(dir, SORTER_CONFIG_FILE));

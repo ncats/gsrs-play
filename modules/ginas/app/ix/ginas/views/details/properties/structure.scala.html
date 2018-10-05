@@ -20,23 +20,6 @@
 		<div class="panel-heading"> 
 					<h3 class="panel-title flexbox">
 						Details
-						@if(sub.structure.getReferences() != null && sub.structure.getReferences().size > 0) {
-							<info-popup class="flexbox">
-								<div class="info-popup-container">
-									<div>
-									<referencesmanager reftable 
-									hide-header="false"
-									@* order can be changed in reference-table.html template *@
-									show='["typ","tags","cit"]'
-									substance ="'@sub.getUuid()'" 
-									sreferences = "@GinasApp.getAsJson(sub.structure.getReferences())" >
-									</referencesmanager>
-										
-									</div>
-									
-								</div>
-							</info-popup>
-						}
 					</h3>
 		</div>
 		
@@ -130,12 +113,45 @@
 						<td>@sub.structure.stereoComments</td>
 					</tr>
 				}
-				
+				@if(sub.structure.getReferences() != null && sub.structure.getReferences().size > 0) {
+				<tr>
+					<td colspan = "2">
+						<a href="#" class="show-overview-audit" style="display: inline;"><br>
+							<span class="overview-audit">Show Audit Info <span class="overview-audit"><i class="fa fa-caret-down" aria-hidden="true"></i>
+							</span></span>
+						</a>
+						<a href="#" class="hide-overview-audit" style="display:none"><br>
+							<span class="overview-audit">Hide Audit Info <span class="overview-audit"><i class="fa fa-caret-up" aria-hidden="true"></i>
+							</span></span>
+						</a>
+					</td>
+				</tr>
+				}
+
+			</table>
+
+			@if(sub.structure.getReferences() != null && sub.structure.getReferences().size > 0) {
+			<div id = "overview-audit" style = "display:none">
+
+				<table class = "table kv-table" id = "overview-audit-table">
+					<tr>
+						<td>Created by</td>
+						<td>@sub.structure.createdBy</td>
+						<td>on @sub.structure.created</td>
+					</tr>
+					<tr>
+						<td>Edited by</td>
+						<td>@sub.structure.lastEditedBy</td>
+						<td>on @sub.structure.lastEdited</td>
+					</tr>
 			</table>
 		</div>
-	</div>	
+			}
+		</div>
+	</div>
 	<a href="#" class="show-smiles-inchi"><br>
-		<span class="smiles-inchi">Show SMILES / InChI<span class="smiles-inchi"><i class="fa fa-caret-down" aria-hidden="true"></i>
+		<span class="smiles-inchi">Show SMILES / InChI</span>
+		<span class="smiles-inchi"><i class="fa fa-caret-down" aria-hidden="true"></i></span>
 	</a>
 </div>
 
@@ -214,7 +230,8 @@
 		}
 	}
 	<a href="#" class="hide-smiles-inchi"><br>
-		<span class="smiles-inchi">Hide SMILES / InChI<span class="smiles-inchi"><i class="fa fa-caret-up" aria-hidden="true"></i>
+		<span class="smiles-inchi">Hide SMILES / InChI</span>
+		<span class="smiles-inchi"><i class="fa fa-caret-up" aria-hidden="true"></i></span>
 	</a>
 			
 </div>   

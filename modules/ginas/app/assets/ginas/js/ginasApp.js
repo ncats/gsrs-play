@@ -4,8 +4,9 @@
         'LocalStorageModule', 'ngTagsInput', 'jsonFormatter', 'ginasForms', 'ginasFormElements', 'ginasAdmin','ginasDownloads','ginasScheduled', 'diff-match-patch',
         'angularSpinners', 'filterListener', 'validatorListener', 'ginasFilter'
 
-    ]).run(function($anchorScroll, $location, $window) {
+    ]).run(function ($rootScope, $anchorScroll) {
             $anchorScroll.yOffset = 150;   // always scroll by 100 extra pixels
+        $rootScope.isGlobalLoading = false;
      })
         .config(function (localStorageServiceProvider, $locationProvider) {
             localStorageServiceProvider
@@ -16,6 +17,9 @@
                 requireBase: true
             });
         });
+
+
+
 
     ginasApp.factory('Substance', function ($q, CVFields, UUID, polymerUtils, siteList) {
 
@@ -206,7 +210,9 @@
                     _.forEach(sub.protein.otherLinks, function (value, key) {
                         var otherLink = {};
                         var sites = _.toArray(value.sites);
-                        // TODO: Previously we would throw away odd-number 
+
+
+                        // TODO: Previously we would throw away odd-number
                         // sites, anticipating that other links typically connected 
                         // sets of 2 residues. This was not a good idea as some
                         // links are between odd numbers of sites. However, some
@@ -249,6 +255,7 @@
                 		delete sru.attachmentMap["$errors"];
                 	}
                 });
+
             }
 
 
@@ -621,6 +628,7 @@
         $scope.searchLimit = "global";
         $scope.loadingSuggest = false;
         $scope.noResults = false;
+        $scope.show = false;
         $scope.sequence = "";
         $scope.cleanSequence = function (seqType){
             $scope.sequence = subunitParser.cleanSequence($scope.sequence, _.lowerCase(seqType));
@@ -632,9 +640,7 @@
         }
 
 
-
         $window.SDFFields = {};
-
 
         $scope.getClass = function (path) {
             var t = $location.path().split('/');
@@ -649,11 +655,13 @@
         };
         
         $scope.submitq= function(query, action) {
-            if (query.indexOf("\"") < 0 && query.indexOf("*") < 0 && query.indexOf(":") < 0 && query.indexOf(" AND ") < 0 && query.indexOf(" OR ") < 0) {
-                $scope.q = "\"" + query + "\"";
-            }else{
+            // if (query.indexOf("\"") < 0 && query.indexOf("*") < 0 && query.indexOf(":") < 0 && query.indexOf(" AND ") < 0 && query.indexOf(" OR ") < 0) {
+            //     $scope.q = "\"" + query + "\"";
+            // } else {
+            //     $scope.q = query;
+            // }
                 $scope.q = query;
-            }
+
             switch ($scope.searchLimit){
                 case "global":
                 break;
@@ -704,7 +712,6 @@
             $scope.substance=Substance;
             
             Substance.$$setSubstance($window.loadjson).then(function(data){
-            	
             	if(data.names){
             		data.names.sort(function(a,b){
 	            		if(a.displayName && !b.displayName)return -1;
@@ -764,7 +771,15 @@
             $anchorScroll();
         };
         $scope.viewToggle = function () {
+            $scope.show = !$scope.show;
+            if ($scope.show) {
             $scope.submitSubstanceView = angular.fromJson(angular.toJson($scope.substance.$$flattenSubstance()));
+                if ($location.hash() !== 'json-area') {
+                    $location.hash('json-area');
+                } else {
+                    $anchorScroll();
+                }
+            }
         };
 
         $scope.resolveName = function(name, div){
@@ -822,6 +837,7 @@
             var newLocation = "/v/" + v;
             $window.location.pathname = base + newLocation;
         };
+
 
 		//We can put this here, but it makes it difficult to expand in the future.
 		//The server knows how things can be sorted, we need to either ajax
@@ -900,7 +916,6 @@
 					$scope.exportData={};
 					
 					if(dl.isCached){
-						console.log(dl.cached);
 						$scope.exportData.cached=dl.cached;
 						$scope.baseurl=baseurl;
 					}
@@ -909,8 +924,7 @@
 						
 						
 						var nurl=dl.url + "&genUrl=" + encodeURIComponent(window.location.href) + "&filename="+ encodeURIComponent(fname);
-						
-						console.log(nurl);
+
 						//alert(nurl);
 						$http.get(nurl).then(function(rep){
 							var meta=rep.data;
@@ -952,9 +966,6 @@
         };
 	};
 
-
-
-
         $scope.compare = function () {
             //$scope.left = angular.toJson(Substance.$$flattenSubstance(angular.copy($scope.substance)));
             $scope.left = angular.toJson($scope.substance.$$flattenSubstance());
@@ -963,6 +974,7 @@
         };
 
         $scope.canApprove = function () {
+
             var lastEdit = $scope.substance.lastEditedBy;
             if (!lastEdit){
                 return false;
@@ -1052,12 +1064,14 @@
         };
 
         $scope.submitSubstanceConfirm = function () {
+            $scope.isLoading = true;
             $scope.validating =true;
            // var f = function () {
                 var url = baseurl + "assets/templates/modals/substance-submission.html";
                 $scope.open(url);
            // };
-            $scope.validateSubstance();
+            var noGlogalLoading = true;
+            $scope.validateSubstance(noGlogalLoading);
         };
 
         $scope.dismissAll = function () {
@@ -1096,8 +1110,8 @@
             return errorArr;
         };
 
-          $scope.validateSubstance = function (callback) {
-
+        $scope.validateSubstance = function (noGlobalLoading) {
+            $rootScope.isGlobalLoading = !noGlobalLoading;
             //this should cascade to all forms to check and see if validation is ok
             $scope.$broadcast('show-errors-check-validity');
             //this is the api error checking
@@ -1115,7 +1129,6 @@
 			               
 			//**************************
 
-
             var sub = angular.toJson($scope.substance.$$flattenSubstance());
             $scope.errorsArray = [];
             $http.post(baseurl + 'api/v1/substances/@validate', sub).then(
@@ -1126,6 +1139,13 @@
                 // if (callback) {
                 //     callback();
                 // }
+                    if ($scope.errorsArray && $scope.errorsArray.length) {
+                        if ($location.hash() !== 'errors-area') {
+                            $location.hash('errors-area');
+                        } else {
+                            $anchorScroll();
+                        }
+                    }
             },
 	    function failure(response) {
 		var msg = {
@@ -1138,6 +1158,8 @@
                 $scope.canSubmit = $scope.noErrors();
             }
 	    ).finally(function () {
+                $rootScope.isGlobalLoading = false;
+                $scope.isLoading = false;
                 $scope.validating = false;
             });
         };
@@ -1238,9 +1260,28 @@
                     $scope.postRedirect = response.data.uuid;
                     $scope.open(url);
                 }, function (response) {
-                    if(response.data && response.data.validationMessages){
-                        $scope.errorsArray = $scope.parseErrorArray(response.data.validationMessages);
+            	var messages=[];
+            	var msg = {
+                        message: "Unknown error",
+                        messageType: "ERROR",
+                        error: true
+                    };
+            	if(response.data && typeof response.data === "object"){
+            		if(response.data.validationMessages){
+            			messages=response.data.validationMessages;
+            		}else{
+            			if(response.data.message){
+            				msg.message=response.data.message;
                     }
+            			messages.push(msg);
+            		}
+            	}else{
+            		if(response.data){
+            			msg.message=response.data;
+            		}
+            		messages.push(msg);
+            	}
+                $scope.errorsArray = $scope.parseErrorArray(messages);
                     url = baseurl + "assets/templates/modals/submission-failure.html";
                     $scope.submitting = false;
                     $scope.open(url);
@@ -1304,41 +1345,6 @@
                 });
             }
         };
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
         $scope.removeItem = function (list, item) {
             _.remove(list, function (someItem) {
@@ -1426,7 +1432,124 @@
                 toggler.toggle($scope, divid, template);
         };
 
+        //------------------------------------------------
+        // GSRS Functions Begin
+        //------------------------------------------------
+
+        //************************************************/
+        //Flatten CV and Expand CV
+        //************************************************/
+
+        function isCV2(ob) {
+            if (typeof ob !== "object") return false;
+            if (ob === null) return false;
+            if (typeof ob.display !== "undefined") {
+                return true;
+            }
+            return false;
+        }
+        function flattenCV2(sub) {
+            for (var v in sub) {
+                if (isCV2(sub[v])) {
+                    if (sub[v].value) {
+                        sub[v] = sub[v].value;
+                    } else {
+                        sub[v] = _.replace(sub[v].display, ' (not in CV)', '');
+                    }
+                } else {
+                    if (typeof sub[v] === "object") {
+                        flattenCV2(sub[v]);
+                    }
+                }
+            }
+            return sub;
+        }
+
+        function expandCV2(sub, path) {
+            _.forEach(_.keysIn(sub), function (field) {
+                if (path) {
+                    var newpath = path + "." + field;
+                } else {
+                    var newpath = field;
+                }
+
+                if (_.isObject(sub[field])) {
+
+                    if (_.isArray(sub[field])) {
+                        _.forEach((sub[field]), function (value, key) {
+                            if (_.isObject(value)) {
+                                expandCV2(value, newpath);
+                            } else {
+                                CVFields.getByField(newpath).then(function (response) {
+                                    if (response.data.count > 0) {
+                                        var cv = response.data.content[0].terms;
+                                        var newcv = _.find(cv, ['value', value]);
+                                        if (_.isUndefined(newcv)) {
+                                            newcv = {};
+                                            _.set(newcv, 'display', value + ' (not in CV)');
+                                            //  _.set(newcv, 'value', value + ' (not in CV)');
+                                        }
+                                        sub[field][key] = newcv;
+
+                                    }
+                                });
+                            }
+                        });
+                    } else {
+                        if (!_.isNull(sub[field])) {
+                            expandCV2(sub[field], newpath);
+                            //});
+                        }
+                    }
+                } else {
+
+                    if (!_.isNull(sub[field])) {
+
+                        CVFields.getByField(newpath).then(function (response) {
+
+                            if (response.data.content.length > 0) {
+                                var cv = response.data.content[0].terms;
+                                var newcv = _.find(cv, ['value', sub[field]]);
+                                if (_.isUndefined(newcv)) {
+                                    newcv = {};
+                                    _.set(newcv, 'display', sub[field] + ' (not in CV)');
+                                    //  _.set(newcv, 'value', sub[field] + ' (not in CV)');
+
+                                }
+                                sub[field] = newcv;
+                            }
+                        });
+                    }
+                }
+            });
+            return sub;
+        }
+
     }); //controller
+    /**** controller GinasController ENDS **************************************/
+
+    /***** GSRS Functions ENDS *************************************************/
+
+    ginasApp.directive('escKey', function () {
+    	  return function (scope, element, attrs) {
+
+    		var elm=element;
+    		console.log(attrs);
+    		if(attrs.escGlobal !== 'undefined'){
+    			elm=angular.element(document).find('body');
+    		}
+
+    	    elm.bind('keydown keypress', function (event) {
+    	      if(event.which === 27) { // 27 = esc key
+    	        scope.$apply(function (){
+    	          scope.$eval(attrs.escKey);
+    	        });
+    	        event.preventDefault();
+    	      }
+    	    });
+    	  };
+    	})
+
 
     ginasApp.directive('loading', function ($http) {
         return {
@@ -1614,23 +1737,89 @@
         };
     });
 
-    ginasApp.factory('referenceRetriever', function ($http) {
+    ginasApp.factory('referenceRetriever', function ($http,$q) {
         var url = baseurl + "api/v1/substances(";
         var references = {};
         var refFinder = {
-            getAll: function (uuid) {
-                return $http.get(url + uuid + ")/references", {cache: true}, {
+            getAll: function (uuid, version) {
+            	if(references[uuid+"_"+version]){
+            		return $q(function(resolve, reject) {
+            			resolve(references[uuid+"_"+version]);
+            		});
+            	}
+
+            	var processReferences=function(refs){
+            		_.forEach(refs, function (ref, index) {
+                        _.set(ref, '$$index', index + 1);
+                    });
+            		return refs;
+            	};
+
+            	var httpDoer=function(burl){
+            		return $http.get(burl, { cache: true }, {
                     headers: {
                         'Content-Type': 'text/plain'
                     }
-                }).then(function (response) {
-                    _.forEach(response.data, function (ref, index) {
-                        _.set(ref, '$$index', index + 1);
                     });
-                    return response.data;
+            	};
+
+            	var getVersion =function(){
+            		return $q(function(resolve, reject){
+
+            			var onWrongVersion=function(e){
+          				  httpDoer(url + uuid + ")/@edits")
+            			  .then(function(response){
+	            			var edits = response.data;
+	            			var mversion=_.chain(edits)
+					            		  .filter(function(e){
+					            			 return e.version === version;
+					            		   })
+					            		  .value();
+	            			var ovalURL = mversion[0].oldValue;
+	            			return httpDoer(ovalURL)
+	            			 .then(function(response){
+	                			references[uuid+"_"+version] = processReferences(response.data.references);
+	                			resolve(references[uuid+"_"+version]);
+	                		 }).catch(function(e){
+	                			reject(e);
+	                		 });
+	            		})
+	            		.catch(function(e){
+	                			reject(e);
+	                	});
+        			  };
+
+
+            			httpDoer(url + uuid + ")")
+            			  .then(function(response){
+            				  var s=response.data;
+            				  if(s.version === version){
+            					  httpDoer(url + uuid + ")/references")
+            		                .then(function (response) {
+            		                    references[uuid+"_"+version] = processReferences(response.data);
+            		                    resolve(references[uuid+"_"+version]);
+            		                });
+            				  }else{
+            					  onWrongVersion();
+            				  }
+            			  })
+            			  .catch(onWrongVersion);
+
+
+            		});
+            	};
+
+            	if(version){
+            		return getVersion();
+            	}
+
+                return httpDoer(url + uuid + ")/references")
+	                .then(function (response) {
+	                    references[uuid+"_"+version] = processReferences(response.data);
+	                    return references[uuid+"_"+version];
                 });
             },
-            getIndex: function (uuid, refuuid) {
+            getIndex: function (uuid, refuuid, version) {
                 return $http.get(url + uuid + ")/references", {cache: true}, {
                     headers: {
                         'Content-Type': 'text/plain'
@@ -1642,9 +1831,6 @@
         };
         return refFinder;
     });
-
-
-
 
     ginasApp.directive('infoTooltip', function($compile, $templateRequest) {
         return {
@@ -1761,12 +1947,45 @@
                 substance: '=?',
                 objreferences: '=?',
                 references: '=?',
-                divid: '=?'
+                sreferences: '=?',
+                divid: '=?',
+                version: '=?'
             },
             require: '^referencesmanager',
             link: function (scope, element, attrs, referencesCtrl) {
-                referencesCtrl.referenceRetriever.getAll(scope.substance).then(function (response) {
+
+
+            	if(scope.sreferences){
+            		scope.freferences={};
+            		_.chain(scope.sreferences)
+            		 .map(function(r){
+            			 if(r.term){
+            				 return r.term;
+            			 }
+            			 return r;
+            		 })
+            		 .map(function(r){
+            			 scope.freferences[r]=true;
+            			 return r;
+            		 })
+            		 .value();
+            	}
+
+            	//Not sure about this, I think it's using AJAX, which it shouldn't.
+                referencesCtrl.referenceRetriever.getAll(scope.substance, scope.version).then(function (response) {
+
+                	//TODO: re-evaluate
                     scope.references = response;
+                	if(scope.freferences){
+                		scope.references = _.chain(scope.references)
+                	                        .filter(function(r){
+                	                        	return scope.freferences[r.uuid];
+                	                        })
+                	                        .value();
+                	}
+
+
+
                 });
 
                 scope.getClass = function (index) {
@@ -2024,6 +2243,8 @@
         };
     });
 
+
+
     ginasApp.directive('parameters', function () {
 
         return {
@@ -2170,8 +2391,7 @@
                     if(seq) {
                         seq = seq.replace(/\s/g,"");
                         for (var i = 0; i < seq.length; i += 60) {
-                            if(i+60 < seq.length)
-                            {
+                            if (i + 60 < seq.length) {
                                 ret += seq.substr(i, 60) + "\n";
                             }else{
                                 ret += seq.substr(i, 60);
@@ -2225,7 +2445,6 @@
                        var targetElement = angular.element(allAA[bridge.residueIndex - 1]);
                        targetElement.isolateScope().showBridge();
                     }
-
                 };
 
                 scope.cleanSequence = function () {
@@ -2358,6 +2577,7 @@
                                         data.structuralUnits[i].type = _.find(cv, ['value', data.structuralUnits[i].type]);
                                     }
                                     polymerUtils.setSRUConnectivityDisplay(data.structuralUnits);
+
                                     //merge amounts with whatever is already there
                                     var amounts={};
                                     
@@ -2378,8 +2598,7 @@
                                         }
                                      })
                                      .value();
-                                    
-                                    
+
                                     polymerUtils.setSRUFromConnectivityDisplay(data.structuralUnits);
                                     scope.parent.polymer.structuralUnits = data.structuralUnits;
                                 });
@@ -2421,6 +2640,10 @@
                 scope.sketcher = new JSDraw("sketcherForm");
                 scope.sketcher.options.data = scope.mol;
                 scope.sketcher.setMolfile(scope.mol);
+
+                if(afterSketcherMade){
+                	afterSketcherMade();
+                }
 		scope.clean = function (mol){
 
 		  //remove "mul" from multiple amount
@@ -2449,17 +2672,27 @@
                         return rep(" ", p-v.length) + v;
                     };
                 
-                    var charges=_.chain($(xml).find("a[c]"))
+                    var aai=1;
+
+                    var charges = _.chain($(xml).find("a[i]"))
                      .map(function(a){
                           var ai = $(a).attr("i");
                           var ac = $(a).attr("c");
-                          var o  = {"i":ai-0, 
-                                  "c":ac-0};
+                            if(typeof ac === 'undefined'){
+                            	ac=0;
+                            }
+                            var o = {
+                                "i": (aai++),
+                                "c": ac - 0
+                            };
                           o.toString=function(){
                                 return leftPad(o.i+"",4) + leftPad(o.c+"",4);
                           };
                           return o;
                      })
+                        .filter(function (a){
+                        	return a.c!=0;
+                        })
                      .value();
                 
                     if(charges.length>0){
@@ -2752,6 +2985,7 @@
     });
 
 
+
 //*****************************************************************
 // Experimental !!!
 //*****************************************************************
@@ -2852,6 +3086,7 @@
         }
     });
     
+
 	/*
 	    <substance-preview> Directive
 	    	
@@ -2882,6 +3117,7 @@
 		fetchers are in the js api, and can render those. But there will need to be more
 		room for interaction.                   
 	*/
+
 	ginasApp.directive("substancePreview", function ($compile,APIFetcher) {
         return {
             restrict: 'E',
@@ -2893,7 +3129,7 @@
             },
             link: function (scope, element, attrs) {
             	//Set the global helper
-            	GGlob.GlobalSettings.setBaseURL(baseurl + "api/v1/");
+
             	
             	//######################
             	//HELPER FUNCTIONS START
@@ -3092,14 +3328,9 @@
 		    }
         }
     });
-
 //*****************************************************************
 //Views and General UI
 //*****************************************************************
-
-
-
-
 
     ginasApp.directive("treeView", function ($compile) {
         return {
@@ -3150,7 +3381,6 @@
             	scope.scrollTo = scope.$parent.scrollTo;
             	scope.getRange = scope.$parent.getRange;
             	scope.redirectVersion = function(){
-            		console.log(scope.versionNumber);
             		scope.$parent.redirectVersion(scope.versionNumber);
             	};
             },
@@ -3193,8 +3423,6 @@
     });
 
 })();
-
-
 
 
 //Routing intercept
@@ -3270,10 +3498,7 @@ $(function(){
 		//and if does not have info-popup parent
 	    event.target.closest('info-popup') === null){
 			//remove popover div
-        	//var toRemove=$('.popover');
-        	$('.popover').parents(".keep-open").find(".popover").addClass("keep-open-popover");
-        	$('.popover:not(.keep-open-popover)').remove();
-        	$('.keep-open-popover').removeClass("keep-open-popover");
+            $('.popover').remove();
         } else {
 	        return;
 	    }
@@ -3283,6 +3508,7 @@ $(function(){
 /* controls the "show smiles/inchi" block in the Structure card */
 $(function(){
     $('.show-smiles-inchi').click(function(event){
+        event.preventDefault();
 		$(this).hide();
 		$("#smiles-inchi").show();
 	});
@@ -3290,9 +3516,28 @@ $(function(){
 /* controls the "hide smiles/inchi" block in the Structure card */
 $(function(){
    $('.hide-smiles-inchi').click(function(event){
+        event.preventDefault();
 		$('#smiles-inchi').hide();
 		$(".show-smiles-inchi").show();
 	});
+});
+
+/* controls the "show/hide references" table on the overview card*/
+$(function () {
+    $('.show-overview-audit').click(function (event) {
+        event.preventDefault();
+        $(this).hide();
+        $("#overview-audit").show();
+        $('.hide-overview-audit').show();
+    });
+});
+$(function () {
+    $('.hide-overview-audit').click(function (event) {
+        event.preventDefault();
+        $('#overview-audit').hide();
+        $(".show-overview-audit").show();
+        $(this).hide();
+    });
 });
 
 /* format numbers: 1000 => 1,000 */
@@ -3339,6 +3584,4 @@ $(function(){
 Number.isFinite = Number.isFinite || function(value) {
     return typeof value === 'number' && isFinite(value);
 };
-
-
 
