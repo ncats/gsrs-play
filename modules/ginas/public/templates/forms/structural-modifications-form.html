@@ -38,7 +38,7 @@
                                             label="Location Type">
                                 </gsrs-input>
                             </div>
-                            <div class="col-md-2" ng-if="(obj.structuralModificationType.display=='Amino Acid Replacement'||obj.structuralModificationType.display=='NUCLEOSIDE SUBSTITUTION') && obj.locationType.value=='RESIDUE_SPECIFIC'">
+                            <div class="col-md-2" ng-if="obj.locationType.value=='RESIDUE_SPECIFIC'">
                                 <gsrs-input type="multi"
                                             ng-model="obj.$$residueModified"
                                             field="$$residueModified"
