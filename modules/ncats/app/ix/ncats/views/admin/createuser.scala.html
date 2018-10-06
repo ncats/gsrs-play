@@ -9,6 +9,17 @@
     <form role="form" method="post" action="@ix.ncats.controllers.crud.routes.Administration.addPrincipal()">
 
         <div class="body">
+         @defining(flash().remove("error")) { mesg =>
+            @if(mesg != null) {
+            <div class="alert alert-warning alert-dismissible" role="alert">
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <p class="warning-message">@mesg</p>
+            </div>
+            }
+            }
+
             <div class="form-group table" >
                 <table id="" align="center">
                     <tr>

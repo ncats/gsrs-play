@@ -5,25 +5,33 @@
 <div class="panel-heading prot-title">
 
     <div class = "row">
-        <div class = "col-md-5">
-            <h3 class="title-name"> <a href="@ix.ginas.controllers.routes.GinasApp.substance(GinasApp.getId(sub))" uib-tooltip="@sub.getName()" target="_self">@sub.getName()</a></h3>
-        </div>
-        <div class="col-md-5 prot-approvID">
+        <div class = "col-md-8">
+            <div class = "title-name-container">
+                <h4 class="title-name"> <a href="@ix.ginas.controllers.routes.GinasApp.substance(GinasApp.getId(sub))" uib-tooltip="@sub.getName()" target="_self">@sub.getName()</a></h4>
+            </div>
             @if(sub.getAccess().size() > 0){
-                <h4><code>Not a public record</code></h4>
+                <div class = "title-name-lock">
+                    <h4  class="title-name"> &nbsp<i uib-tooltip = "Not a public record" class="fa fa-lock fa-2x fa-1_1x warning"></i></h4>
+                </div>
             }
+
         </div>
-        <div class = "col-md-2 prot-approvID">
+        <div class = "col-md-4 prot-approvID">
             <h4 class= "text-right">
-                @if(sub.isNonSubstanceConcept()) {
-                    <a href="@ix.ginas.controllers.routes.GinasApp.substance(GinasApp.getId(sub))" uib-tooltip="view record details" target="_self"><span @if(sub.isSubstanceVariant()){
-                    class="subconcept"
-                    }>@sub.getApprovalIDDisplay()</span>
+            @if(sub.isNonSubstanceConcept()) {
+                <a href="@ix.ginas.controllers.routes.GinasApp.substance(GinasApp.getId(sub))" uib-tooltip="view record details" target="_blank">
+                @if(sub.isSubstanceVariant()){
+                    <span class="subconcept">UNII: @sub.getApprovalIDDisplay()</span>
+                }else{
+                    @if(sub.approvalID!=null){
+                        <span>FORCED UNII: @sub.getApprovalIDDisplay()</span>
+                    }
+                }
                 </a>
                 <info-button path= codes mark='exclaim' type ="@sub.getApprovalIDDisplay()" info="concept"></info-button>
-                } else {
-                    <a href="@ix.ginas.controllers.routes.GinasApp.substance(GinasApp.getId(sub))" uib-tooltip="view record details" target="_self"><code>@sub.getApprovalIDDisplay()</code></a>
-                }
+            } else {
+                <a href="@ix.ginas.controllers.routes.GinasApp.substance(GinasApp.getId(sub))" uib-tooltip="view record details" target="_blank"><span class="font14px">UNII:</span>@sub.getApprovalIDDisplay()</a>
+            }
             </h4>
         </div>
     </div>

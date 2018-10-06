@@ -1202,7 +1202,7 @@
                 });
             } else {
                 sub = angular.toJson($scope.substance.$$flattenSubstance());
-                console.log(sub);
+
                 $http.post(baseurl + 'api/v1/substances', sub, {
                     headers: {
                         'Content-Type': 'application/json'
@@ -1324,7 +1324,7 @@
                 });
             } else {
                 sub = angular.toJson($scope.substance.$$flattenSubstance());
-                console.log(sub);
+
                 $http.post(baseurl + 'api/v1/substances', sub, {
                     headers: {
                         'Content-Type': 'application/json'
@@ -1431,6 +1431,8 @@
             }
                 toggler.toggle($scope, divid, template);
         };
+
+
 
         //------------------------------------------------
         // GSRS Functions Begin
@@ -1908,6 +1910,8 @@
     ginasApp.directive('referencesmanager', function ($compile, $templateRequest, referenceRetriever, toggler) {
         return {
             controller: function ($scope) {
+
+
                 this.scope = $scope;
                 this.referenceRetriever = referenceRetriever;
                 $scope.addClass = [];

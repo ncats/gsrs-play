@@ -8,7 +8,7 @@
                         <strong>Primary Definition: </strong>
                     </div>
                     <div class = "col-md-6">
-                    	<a href="@ix.ginas.controllers.routes.GinasApp.substance(ref.getLinkingID())" target="_self">@ref.refPname</a>
+                    	<a href="@ix.ginas.controllers.routes.GinasApp.substance(ref.getLinkingID())" target="_blank">@ref.refPname</a>
                     </div>
                 </div>
                 
@@ -23,14 +23,13 @@
                     <span class = "badge">@sub.getAlternativeDefinitionRelationships().size()</span>
                     </div>
                 </div>
-                <hr>
             	}
     			@if(sub.hasNames()){
                 <div class = "row">
-                    <div class = "col-md-2">
+                    <div class = "col-lg-2 col-md-3">
                         <h5><strong>Names:</strong></h5>
                     </div>
-                    <div class = "col-md-10 break-text">
+                    <div class = "col-lg-10 break-text col-md-9">
                     	@for(n <- ix.ginas.controllers.GinasApp.limitList(sub.names,5)){
                     		<span title="@n.getName()" class="nowrap-list">@n.getName()</span>
                     	}
@@ -39,10 +38,10 @@
                 }
                 @if(sub.hasCodes()){
                 <div class = "row">
-                    <div class = "col-md-2">
+                    <div class = "col-lg-2 col-md-3">
                         <h5><strong>Codes:</strong></h5>
                     </div>
-                    <div class = "col-md-10">
+                    <div class = "col-lg-10 col-md-9">
                     
                     	
                     	@for(clist <- ix.ginas.controllers.GinasApp.getOrderedGroupedCodes(sub,4)){
@@ -61,16 +60,16 @@
                     </div>
                 </div>
                 }
-               
-            	
+
             	@if(!sub.isAlternativeDefinition() && sub.hasRelationships()){
             	<div class = "row">
-                    <div class = "col-md-3">
+                    <div class = "col-md-4">
                         <h5><strong>Relationships:</strong></h5>
                     </div>
-                    <div class = "col-md-9">
+                    <div class = "col-md-8">
                         <span class = "badge">@sub.relationships.size()</span>
                     </div>
                 </div>
                 }
-            	<hr>
+
+

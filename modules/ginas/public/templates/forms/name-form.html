@@ -1,8 +1,10 @@
 <div class="row info">
     <div class="row">
-        <form-header class="col-md-2" type="names" parent="substance" iscollapsed="iscollapsed"></form-header>
-        <button class="btn btn-primary pull-left" ng-click="addNew(nameForm, 'names', {'languages':[{'value':'en','display':'English'}]}, true); iscollapsed=false" style="margin-top: 18px;">
+        <form-header type="names" parent="substance" iscollapsed="iscollapsed"></form-header>
+        <div class="col-md-6">
+            <button class="btn btn-primary pull-left" ng-click="addNew(nameForm, 'names', {'languages':[{'value':'en','display':'English'}]}, true); iscollapsed=false">
             <i class="fa fa-plus"></i> Add name</button>
+    </div>
     </div>
     <div class="col-md-12" uib-collapse="iscollapsed">
 
@@ -108,19 +110,18 @@
                                                formname=form>
                             </modal-form-button>
 
-
                         </div>
                             <div class="col-md-1">
-                                <modal-form-button type="access"
+                                <!-- <modal-form-button type="access"
                                                    referenceobj="obj"
                                                    parent="parent">
-                                </modal-form-button>
+                                </modal-form-button> -->
+                                <access-management obj-to-manage-access="obj">
+                                </access-management>
                             </div>
                             <div class="col-md-1">
                                     <button ng-click="obj.$details=!obj.$details">{{obj.$details?"Hide Details":"Show Details"}}</button>
                             </div>
-
-
 
                         </div>
                         <spinner name="nameSpinner"><loading></loading><br/></spinner>
