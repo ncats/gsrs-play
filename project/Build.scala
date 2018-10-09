@@ -203,7 +203,9 @@ public class BuildInfo {
       javacOptions in (doc) ++= javaDocOptions,
 
     javaOptions in Test ++= Option(new File("modules/ginas").toPath.relativize(new File(System.getProperty("config.file")).toPath)).map("-Dconfig.file=" + _).toSeq,
-    javaOptions in Test ++= mapAsScalaMap(System.getProperties).filter( prop=> !("config.file".equals(prop._1))).map(prop => s"-D${prop._1}=${prop._2}").toSeq,
+    javaOptions in Test ++= mapAsScalaMap(System.getProperties)
+                          .filter( prop=> !("config.file".equals(prop._1)) && !("user.dir".equals(prop._1)))
+                          .map(prop => s"-D${prop._1}=${prop._2}").toSeq,
 
       cleanFiles += file("modules/ginas/ginas.ix")
   ).dependsOn(ginasEvo).aggregate(ginasEvo)
