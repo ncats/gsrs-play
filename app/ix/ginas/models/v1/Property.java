@@ -3,9 +3,12 @@ package ix.ginas.models.v1;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.persistence.Basic;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.Lob;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
@@ -39,8 +42,12 @@ public class Property extends CommonDataElementOfCollection {
     private SubstanceReference referencedSubstance;
     
     
-    
-    
+    // Should we add in the comments field?
+    //
+    // @JSONEntity(title = "Comments")
+    // @Lob
+    // @Basic(fetch=FetchType.EAGER)
+    // public String comments;
 
     @JSONEntity(title = "Defining")
     private Boolean defining;

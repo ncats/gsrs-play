@@ -73,8 +73,10 @@ public class ChangeSubstanceClassTest extends AbstractGinasServerTest {
             		.set("/substanceClass", "chemical")
             		.set("/structure", achemical.at("/structure"))
             		.set("/moieties", achemical.at("/moieties"))
-            		.add("/references/-", achemical.at("/references/0"))
+                    .append("/references/-", achemical.at("/references"))
+//            		.add("/references/-", achemical.at("/references/0"))
             		.build();
+
             ensurePass(api.updateSubstance(toSubmitConcept));
             JsonNode retrievedChemical=api.fetchSubstanceJsonByUuid(uuid);
             assertEquals("chemical",retrievedChemical.at("/substanceClass").asText());

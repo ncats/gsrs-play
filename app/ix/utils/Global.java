@@ -281,12 +281,14 @@ public class Global extends GlobalSettings {
 			this.delegate = action;
 		}
 
+
+		//For reasons that remain unclear, this never gets called.
 		@Override
 		public Promise<Result> call(Http.Context ctx) throws java.lang.Throwable {
 			Promise<Result> result = this.delegate.call(ctx);
 			Http.Response response = ctx.response();
 			response.setHeader("Access-Control-Allow-Origin", "*");
-			response.setHeader("Access-Control-Allow-Methods", "POST, PUT, GET"); // Only
+			response.setHeader("Access-Control-Allow-Methods", "POST, PUT, GET, PATCH"); // Only
 																					// allow
 																					// POST
 			response.setHeader("Access-Control-Max-Age", "300"); // Cache

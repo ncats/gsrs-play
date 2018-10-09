@@ -1,45 +1,44 @@
 package ix.ginas.processors;
 
-import java.io.File;
-import java.io.IOException;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.stream.Stream;
 
 import ix.core.EntityProcessor;
 import ix.core.adapters.EntityPersistAdapter;
-import ix.core.controllers.PayloadFactory;
-import ix.core.models.Payload;
-import ix.core.plugins.SequenceIndexerPlugin;
-import ix.core.plugins.StructureIndexerPlugin;
-import ix.core.plugins.StructureIndexerPlugin.StandardizedStructureIndexer;
 import ix.ginas.controllers.v1.SubstanceFactory;
 import ix.ginas.datasource.KewControlledPlantDataSet;
 import ix.ginas.models.v1.Relationship;
 import ix.ginas.models.v1.Substance;
 import ix.ginas.models.v1.Substance.SubstanceDefinitionType;
 import ix.ginas.models.v1.SubstanceReference;
-import ix.seqaln.SequenceIndexer;
-import org.jcvi.jillion.fasta.*;
 import play.Logger;
-import play.Play;
 import play.db.ebean.Model;
 
+/**
+ * This Substance Processor makes the following changes when a Substance is saved:
+ *
+ * <ol>
+ *     <li>If this Substance is an Alternate Definition: replace the reference to its PRIMARY definition
+ *          to make sure it's up to date.</li>
+ *      <li>Adds KEW tags if the approval ID is in the list of KEW records as specified in the KEW.json file</li>
+ *
+ * </ol>
+ *
+ * If the Substance is newly created/ just inserted, then
+ * look for dangling Relationships where previously loaded substances refer to this new substance
+ * and if it finds any, add the corresponding inverse relationship.  This is probably
+ * only done during partial BATCH loads.
+ *
+ */
 public class SubstanceProcessor implements EntityProcessor<Substance>{
 
-    private static Pattern PAYLOAD_UUID_PATTERN = Pattern.compile("payload\\((.+?)\\)");
-
-    public static StandardizedStructureIndexer _strucIndexer =
-            Play.application().plugin(StructureIndexerPlugin.class).getIndexer();
     KewControlledPlantDataSet kewData;
 
     public Model.Finder<UUID, Relationship> finder;
-
+    public Model.Finder<UUID, Substance> substanceFinder;
     public SubstanceProcessor(){
         try{
             kewData= new KewControlledPlantDataSet("kew.json");
@@ -47,6 +46,7 @@ public class SubstanceProcessor implements EntityProcessor<Substance>{
             e.printStackTrace();
         }
         finder = new Model.Finder(UUID.class, Relationship.class);
+        substanceFinder = new Model.Finder(UUID.class, Substance.class);
         //System.out.println("Made processor");
 
 
@@ -59,15 +59,15 @@ public class SubstanceProcessor implements EntityProcessor<Substance>{
     }
 
     public void addWaitingRelationships(Substance obj){
+
         List<Relationship> refrel = finder.where().eq("relatedSubstance.refuuid",
                 obj.getOrGenerateUUID().toString()).findList();
-        boolean changed=false;
-        for(Relationship r:refrel){
 
-            Relationship inv=RelationshipProcessor.getInstance().createAndAddInvertedRelationship(r,r.fetchOwner().asSubstanceReference(),obj);
-            if(inv!=null){
-                changed=true;
-            }
+        for(Relationship r:refrel){
+            RelationshipProcessor.getInstance().createAndAddInvertedRelationship(r,
+                    r.fetchOwner().asSubstanceReference(),
+                    obj);
+
         }
     }
 
@@ -87,9 +87,13 @@ public class SubstanceProcessor implements EntityProcessor<Substance>{
         postPersist(obj);
     }
 
-
     @Override
     public void prePersist(final Substance s) {
+        savingSubstance(s, true);
+    }
+
+    private void savingSubstance(final Substance s, boolean newInsert) {
+
 
 
         Logger.debug("Persisting substance:" + s);
@@ -115,19 +119,7 @@ public class SubstanceProcessor implements EntityProcessor<Substance>{
                         continue;
                     }
                     Logger.debug("Removing stale bidirectional relationships");
-                    //						EntityPersistAdapter.performChange(oldPri, new Callable(){
-                    //
-                    //							@Override
-                    //							public Object call() throws Exception {
-                    //								List<Relationship> related=oldPri.removeAlternativeSubstanceDefinitionRelationship(s);
-                    //								for(Relationship r:related){
-                    //									r.delete();
-                    //								}
-                    //								oldPri.forceUpdate();
-                    //								return null;
-                    //							}
-                    //
-                    //						});
+
 
                     EntityPersistAdapter.performChangeOn(oldPri, obj->{
                         List<Relationship> related=oldPri.removeAlternativeSubstanceDefinitionRelationship(s);
@@ -151,7 +143,7 @@ public class SubstanceProcessor implements EntityProcessor<Substance>{
                 Logger.debug("Got parent sub, which is:" + subPrimary.getName());
                 if (subPrimary != null) {
                     if (subPrimary.definitionType == SubstanceDefinitionType.PRIMARY) {
-                        final Substance subPrimaryFinal=subPrimary;
+
                         Logger.debug("Going to save");
 
                         EntityPersistAdapter.performChangeOn(subPrimary, obj -> {
@@ -171,7 +163,9 @@ public class SubstanceProcessor implements EntityProcessor<Substance>{
             }
         }
         addKewIfPossible(s);
+        if(newInsert) {
         addWaitingRelationships(s);
+    }
     }
 
     /**
@@ -194,7 +188,7 @@ public class SubstanceProcessor implements EntityProcessor<Substance>{
 
     @Override
     public void preUpdate(Substance obj) {
-        prePersist(obj);
+        savingSubstance(obj, false);
     }
 
     @Override

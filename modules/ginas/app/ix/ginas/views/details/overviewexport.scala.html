@@ -13,31 +13,38 @@ it contains export button information
 *@
 
 	 
-<div class = "col-md-5 pull-right">
-	<ul class= "list-inline pull-right list-unstyled">
+<div class = "col-md-3 col-xs-3 pull-right">
+	<div class= "list-inline pull-right list-unstyled" id = "button-container" style="">
+
+		<div class = "align-right" >
+			<download-button uuid="@sub.getUuid" format=format id = "download-button">Download</download-button>
+		</div>
+
 		@dynamic(name = IxDynamicResourceHandler.CAN_UPDATE, handler = new ix.ncats.controllers.security.IxDeadboltHandler()) {
-			<li>
+		<div class = "align-right" > <a href="@routes.Assets.at("gsrs2/index.html")#/substance/@sub.getUuid()/names"
+			target="_blank"
+
+			aria-label="Edit Substance">
+			<span class="sr-only">Edit New Form</span>
+
+			<i class="fa fa-pencil fa-2x" aria-hidden="true" id = "newform-button" uib-tooltip="New Form"></i>
+			</a>
+		</div>
+		<div class = "align-right" >
 				<a href="@ix.ginas.controllers.routes.GinasFactory.edit(GinasApp.getId(sub))" 
 				target="_self" 
-				uib-tooltip="Edit Substance" 
+
 				aria-label="Edit Substance">
 					<span class="sr-only">Edit Substance</span>
-					<span class="fa fa-pencil fa-2x success"></span>
+				<i class="fa fa-pencil fa-2x success" id = "edit-button" uib-tooltip="Edit Substance"></i>
 				</a>
-			</li>
-			<li> <a href="@routes.Assets.at("gsrs2/index.html")#/substance/@sub.getUuid()/names"
-					target="_blank"
-				uib-tooltip="New Form"
-				aria-label="Edit Substance">
-					<span class="sr-only">Edit New Form</span>
-				<i class="fa fa-pencil-square fa-2x" aria-hidden="true" ></i>
-			</a>
-			</li>
-							@*<i class="fa fa-pencil-square fa-2x" aria-hidden="true" ></i></a> </li>*@
+		</div>
+
+
+
 		}
-		<li> 
-			<download-button uuid="@sub.getUuid" format=format>Download</download-button>
-		</li>
-	</ul>
+
+
+	</div>
 </div>
                        

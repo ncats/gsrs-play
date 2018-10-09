@@ -34,11 +34,11 @@ public class IndexedSequenceSearchTest extends AbstractGinasServerTest{
 
 
             try(BrowserSession browserSession = restSession.newBrowserSession()){
-                SequenceSearchAPI searchAPI = new SequenceSearchAPI(browserSession);
-                List<SequenceSearchAPI.SearchResult> result =searchAPI.searchNucleicAcids("ACGTACGT", 0.5);
+                SequenceSearchAPI searchAPI = new SequenceSearchAPI(restSession);
+                SequenceSearchAPI.SearchResultActual result =searchAPI.searchNucleicAcids("ACGTACGT", 0.5);
 
-                assertEquals(1, result.size());
-                assertEquals("foo", result.get(0).getName());
+                assertEquals(1, result.count);
+                assertEquals("foo", result.hits.get(0).name);
             }
         }
     }

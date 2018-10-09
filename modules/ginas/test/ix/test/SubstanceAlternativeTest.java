@@ -6,6 +6,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 
+import ix.core.util.RunOnly;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -29,8 +30,8 @@ public class SubstanceAlternativeTest extends AbstractGinasServerTest {
 
     @Before
     public void login(){
-        //TODO do we need to specify token type?
-        session = ts.newRestSession(ts.getFakeUser1(), RestSession.AUTH_TYPE.TOKEN);
+
+        session = ts.newRestSession(ts.getAdmin(), RestSession.AUTH_TYPE.TOKEN);
 
         api = new SubstanceAPI(session);
     }
@@ -133,7 +134,7 @@ public class SubstanceAlternativeTest extends AbstractGinasServerTest {
         System.out.println("These are the relationships:" + newAVersion.get("relationships").size());
 
         SubstanceAPI.ValidationResponse validationResultAUpdate = api.validateSubstance(newAVersion);
-        assertTrue(validationResultAUpdate.isValid());
+        assertTrue(validationResultAUpdate.getMessages().toString(), validationResultAUpdate.isValid());
 
         ensurePass(api.updateSubstance(newAVersion));
 

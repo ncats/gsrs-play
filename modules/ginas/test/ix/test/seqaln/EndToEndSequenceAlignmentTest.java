@@ -27,7 +27,7 @@ public class EndToEndSequenceAlignmentTest extends AbstractGinasServerTest{
 
     File folder=new File("test/testJSON/pass");
     
-    private BrowserSession session;
+    private RestSession session;
 
     @Override
     public GinasTestServer createGinasTestServer() {
@@ -40,7 +40,7 @@ public class EndToEndSequenceAlignmentTest extends AbstractGinasServerTest{
 
     @Before
     public void login(){
-        session = ts.newBrowserSession(ts.getFakeUser1());
+        session = ts.newRestSession(ts.getFakeUser1());
     }
 
     @After
@@ -54,15 +54,15 @@ public class EndToEndSequenceAlignmentTest extends AbstractGinasServerTest{
 
         SequenceSearchAPI api = new SequenceSearchAPI(session);
 
-        List<SequenceSearchAPI.SearchResult> actual = api.searchProteins("CYIQNCPLG", 1);
+        SequenceSearchAPI.SearchResultActual actual = api.searchProteins("CYIQNCPLG", 1);
         //we can't guess the uuid at the moment because it's randomly generated
 
-        assertEquals(1, actual.size());
+        assertEquals(1, actual.count);
 
-        SequenceSearchAPI.SearchResult result = actual.get(0);
-        assertEquals(1, result.getPercentIdentity(), 0.001);
+        SequenceSearchAPI.SubstanceHit result = actual.hits.get(0);
+        assertEquals(1, result.matchContext.alignments.get(0).hsps.get(0).iden, 0.001);
 
-        assertEquals("OXYTOCIN", result.getName());
+        assertEquals("OXYTOCIN", result.name);
 
     }
 
@@ -73,15 +73,15 @@ public class EndToEndSequenceAlignmentTest extends AbstractGinasServerTest{
 
         SequenceSearchAPI api = new SequenceSearchAPI(session);
                                                                //"CYIQNCPLG"
-        List<SequenceSearchAPI.SearchResult> actual = api.searchProteins("CYIQXCPLG", .5);
+        SequenceSearchAPI.SearchResultActual actual = api.searchProteins("CYIQXCPLG", .5);
         //we can't guess the uuid at the moment because it's randomly generated
 
-        assertEquals(1, actual.size());
+        assertEquals(1, actual.count);
 
-        SequenceSearchAPI.SearchResult result = actual.get(0);
-        assertEquals(8/9D, result.getPercentIdentity(), 0.001);
+        SequenceSearchAPI.SubstanceHit result = actual.hits.get(0);
+        assertEquals(8/9D, result.matchContext.alignments.get(0).hsps.get(0).iden, 0.001);
       //  System.out.println(result.getPercentIdentity());
-        assertEquals("OXYTOCIN", result.getName());
+        assertEquals("OXYTOCIN", result.name);
 
     }
 

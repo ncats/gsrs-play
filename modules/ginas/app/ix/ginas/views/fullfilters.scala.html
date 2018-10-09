@@ -30,7 +30,7 @@
 			<div ng-hide="filtered">
 				<div  ng-cloak class="list-group-item row" ng-repeat="facet in ofacets | limitTo:quantity">
 					<div ng-if="facet.display">
-						<div class="col-md-1 col-sm-1" id="filter-checkbox-wrapper">
+						<div class="col-lg-1 col-md-1 col-sm-1" id="filter-checkbox-wrapper">
 							<input 
 							id="{{facet.mid}}"
 							type="checkbox"
@@ -38,10 +38,10 @@
 							ng-model="facet.checked"
 							/>
 						</div>
-						<div class="col-md-8 col-sm-8" >
+						<div class="col-lg-9 col-md-8 col-sm-8" >
 							<label for="{{facet.mid}}">{{facet.display}}</label>
 						</div>
-						<div class="col-md-1  col-sm-1" >
+						<div class="col-lg-2 col-md-3  col-sm-3" >
 							<span class="badge pull-right">{{facet.count}}</span>
 						</div>
 					</div>

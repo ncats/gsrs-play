@@ -17,7 +17,6 @@ public class ApiFunctionFactory extends InternalMapEntityResourceFactory<Registe
 
 	@Override
 	public void initialize(Application app) {
-		System.out.println("Initializing");
 		this.getStandardResourceStream(app, "ix.api.registeredfunctions")
 			.map(m->(String)m.get("class"))
 			.map(n->CachedSupplier.ofThrowing(()->Class.forName(n).newInstance()))

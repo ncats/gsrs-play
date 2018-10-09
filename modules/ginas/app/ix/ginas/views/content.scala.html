@@ -265,6 +265,21 @@ request().getQueryString("q") != null) { searchFlag =>
             </div>
             } else {
             There are no results to show.
+            @dynamic(name = IxDynamicResourceHandler.IS_ADMIN, handler = new ix.ncats.controllers.security.IxDeadboltHandler()) {
+            <div>
+                <label class="minor-option">
+                    Show Deprecated Records
+                    <input type="checkbox"     ng-model="showDeprecated"
+                           ng-change="showDeprecatedChange();"
+                           ng-true-value="'true'"
+                           ng-false-value="null"
+                           title="Show Deprecated"
+                           name="ShowDeprecated"
+                           id ="ShowDeprecated"
+                           aria-label="Show Deprecated" />
+                </label>
+            </div>
+            }
             }
         </div>
     </div>

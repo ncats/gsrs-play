@@ -1,5 +1,8 @@
 package ix.ginas.utils.validation.validators;
 
+import gov.nih.ncgc.chemical.Chemical;
+import gov.nih.ncgc.chemical.ChemicalFactory;
+import ix.core.validator.ExceptionValidationMessage;
 import ix.core.validator.GinasProcessingMessage;
 import ix.core.chem.StructureProcessor;
 import ix.core.models.Structure;
@@ -27,9 +30,13 @@ public class ChemicalValidator extends AbstractValidatorPlugin<Substance> {
 
         if (cs.structure == null) {
             callback.addMessage(GinasProcessingMessage.ERROR_MESSAGE("Chemical substance must have a chemical structure"));
-            System.out.println("This shold not be possible");
             return;
         }
+        String payload = cs.structure.molfile;
+        if (payload != null) {
+
+
+
 
         try {
             ix.ginas.utils.validation.PeptideInterpreter.Protein p = PeptideInterpreter
@@ -45,16 +52,31 @@ public class ChemicalValidator extends AbstractValidatorPlugin<Substance> {
 
         }
 
-        String payload = cs.structure.molfile;
-        if (payload != null) {
-            Structure struc = null;
 
             List<Moiety> moietiesForSub = new ArrayList<Moiety>();
 
 
             List<Structure> moieties = new ArrayList<Structure>();
-            struc = StructureProcessor.instrument(payload, moieties, true); // don't
+            Structure struc = StructureProcessor.instrument(payload, moieties, true); // don't
             // standardize
+
+            if(!payload.contains("M  END")){
+                //not a mol convert it
+                //struc is already standardized
+                callback.addMessage(GinasProcessingMessage.WARNING_MESSAGE(
+                        "structure should always be specified as mol file converting to format to mol automatically").appliableChange(true),
+                        () -> {
+                    try {
+                        cs.structure = cs.structure.copy();
+                        cs.structure.molfile = struc.molfile;
+                    }catch(Exception e){
+                        e.printStackTrace();
+                        callback.addMessage(new ExceptionValidationMessage(e));
+                    }
+
+                } );
+
+            }
             for (Structure m : moieties) {
                 Moiety m2 = new Moiety();
                 m2.structure = new GinasChemicalStructure(m);

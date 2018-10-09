@@ -38,9 +38,10 @@ public interface Validator<T> {
 	 * message.
 	 * 
 	 * 
-	 * @param objnew
-	 * @param objold
-	 * @return
+	 * @param objnew the new version of the object to be validated.
+	 * @param objold the previous version of the object to be validated;
+	 *               or null if there wasn't a previous version (for example, if it's a new registration)
+	 *
 	 */
 	void validate(T objnew, T objold, ValidatorCallback callback);
 	/**

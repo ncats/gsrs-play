@@ -1,9 +1,5 @@
 package ix.ginas.models.v1;
 
-import java.util.LinkedHashSet;
-import java.util.Set;
-import java.util.regex.Pattern;
-
 import javax.persistence.Basic;
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
@@ -16,17 +12,11 @@ import javax.persistence.Table;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import ix.core.models.Indexable;
-import ix.core.models.Keyword;
-import ix.core.util.EntityUtils;
 import ix.ginas.models.CommonDataElementOfCollection;
 import ix.ginas.models.utils.JSONConstants;
 import ix.ginas.models.utils.JSONEntity;
 import ix.ginas.models.utils.RelationshipUtil;
-import org.json4s.JsonUtil;
 
 
 @JSONEntity(title = "Relationship", isFinal = true)
@@ -93,15 +83,7 @@ public class Relationship extends CommonDataElementOfCollection {
     }
    
     
-    /**
-     * Returns true if this relationship should be inverted. That is, it is invertible,
-     * and it is not the product of an earlier inversion.
-     * @return
-     */
-    @JsonIgnore
-    public boolean shouldBeInverted(){
-    	return this.isGenerator() && this.isAutomaticInvertable();
-    }
+
     
     /**
      * Returns true if this relationship is made directly, and not from another relationship
@@ -120,8 +102,8 @@ public class Relationship extends CommonDataElementOfCollection {
      * @return
      */
     @JsonIgnore
-    public boolean isAutomaticInvertable(){
-    	return RelationshipUtil.isAutomaticInvertable(this);
+    public boolean isAutomaticInvertible(){
+    	return RelationshipUtil.isAutomaticInvertible(this);
     }
     
     public boolean hasComments(){
@@ -168,5 +150,10 @@ public class Relationship extends CommonDataElementOfCollection {
                 ", type='" + type + '\'' +
                 ", okToRemoveFlag=" + okToRemoveFlag +
                 '}';
+    }
+
+    @JsonIgnore
+    public String toSimpleString(){
+    	return type + ":" + relatedSubstance.refPname;
     }
 }

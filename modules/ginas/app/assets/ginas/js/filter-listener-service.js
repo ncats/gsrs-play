@@ -40,10 +40,8 @@ angular.module('filterListener', [])
                             var obj = {};
                             //this returns the object to be filtered by the form
                             if (scope.filterFunction) {
-                                console.log("filter function");
                                 //this filter function returns a string cv name to retrieve
                                 var cv = scope.filterFunction({type: newValue});
-                                console.log(cv);
                                 if(!_.isNull(cv)) {
                                     CVFields.getCV(cv).then(function (response) {
                                         //obj = [];
@@ -56,7 +54,6 @@ angular.module('filterListener', [])
                                             scope.obj = {};
                                         }
                                         if (edit) {
-                                            console.log("empty");
                                             scope.empty();
                                             scope.obj[scope.field] = obj;
                                         } else {
@@ -82,6 +79,7 @@ angular.module('filterListener', [])
                                             });
                                         }
                                     });
+
                                     if (filtered.length > 0) {
                                         scope.values = filtered;
                                     } else {

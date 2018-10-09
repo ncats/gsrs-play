@@ -11,9 +11,9 @@
 
             <p data-toggle="tooltip" title="Approval ID">
                 <a class="text-right" href="@ix.ginas.controllers.routes.GinasApp.substance(GinasApp.getId(prot))" uib-tooltip="view record details" target="_self">
-                    <code>@prot.approvalID</code></a> <br>
+                    <code>@prot.approvalID</code></a>
                 @if(prot.getAccess().size() > 0){
-                    <code>Not a public record</code>
+                    <i uib-tooltip = "Not a public record" class="fa fa-lock fa-1_1x warning"></i>
                 }
             </p>
         </div>

@@ -1,39 +1,53 @@
 
 @import ix.ginas.controllers.GinasApp
 @import ix.ginas.models.v1.Note
+@import ix.ginas.models.v1.Substance
 
-
-@(notes: List[Note], id:String)
+@(notes: List[Note], substance: Substance = null)
 @*
 <button class="btn btn-primary label-offset det" ng-init = "notescollapse =true" ng-click = "notescollapse = !notescollapse">
-  <i ng-show="notescollapse" class="fa fa-caret-right"></i>
-  <i ng-hide="notescollapse" class="fa fa-caret-down"></i>
-  Notes&nbsp;<span class="badge"> @notes.length</span></button>
+<i ng-show="notescollapse" class="fa fa-caret-right"></i>
+<i ng-hide="notescollapse" class="fa fa-caret-down"></i>
+Notes&nbsp;<span class="badge"> @notes.length</span></button>
 <div class="col-md-12 table-responsive" uib-collapse = "notescollapse">
 *@
-  <table class="table" id="notesTable">
-    <thead>
-      <tr>
-        <th>Note</th>
-        <th>References</th>
+<table class="table" id="notesTable">
+  <thead>
+    <tr>
+      <th>Note</th>
+      <th>References</th>
+    </tr>
+  </thead>
+  @for(n <- notes) {
+    <tr id = "notes-row-@n.uuid">
+      <td><pre class="fixedsize">@n.note</pre></td>
+      @if(n.getReferences.size > 0){
+        <td >
+          <button onclick = "addRef('@n.uuid',this,'notes');" class = "btn btn-primary reference-button" >view</button>
+        </td>
+        <div style = "display:none">
+
+          <div class="info-popup-container" id = "notes-ref-@n.uuid">
+            <div>
+              <label>Source@if(n.getReferences.size > 1) {s} else {}:</label>
+            </div>
+            <referencesmanager reftable hide-header="true"
+            show='["cit"]'
+            substance ="'@substance.uuid'"
+            version ="'@substance.version'"
+            sreferences = "@GinasApp.getAsJson(n.getReferences())" >
+            </referencesmanager>
+          </div>
+        </div>
       </tr>
-    </thead>
-    @for(n <- notes) {
-      <tr>
-        <td><pre class="fixedsize">@n.note</pre></td>
-        @if(n.getReferences.size > 0){
-          <td>
-          	<referencesmanager ref-count substance ="'@id'" divid ="'@n.getUuid'" references = "@GinasApp.getAsJson(n.getReferences())"></referencesmanager>
-          </td>
-          </tr>
-      	  <tr>
-      	  	<td class = "'@n.getUuid'" colspan = "5"></td>
-    	}else{
-          <td>none</td>
-      	}
-      </tr>
+    <tr>
+      <td class = "'@n.getUuid'" colspan = "5"></td>
+      }else{
+      <td>none</td>
     }
-  </table>
+    </tr>
+  }
+</table>
 @*
 </div>
 *@

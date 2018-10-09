@@ -1,4 +1,3 @@
-nowrap
 @CHARSET "UTF-8";
 
 body {
@@ -26,6 +25,10 @@ body, html {
     margin-bottom: 20px;
 }
 
+.panel-footer.nameDiv {
+    min-height: 90px;
+}
+
 #left-menu{
     padding-top: .7%;
     height: 50px;
@@ -40,25 +43,17 @@ body, html {
 }
 
 #logo{
-    height: 35px;
+    height: 80px;
 }
 
 #search-bar {
-    padding-top: 3%;
+    padding-top: 8px;
 }
 
 #content {
     padding-top: 0px;
 }
 
-.sidebar {
-    position: fixed;
-    height:100%;
-    bottom: -13rem;
-    overflow-y: scroll;
-    width: 28rem;
-    padding-bottom: 7rem;
-}
 
 nav#breadcrumb {
     padding-bottom: 10rem;
@@ -69,6 +64,7 @@ nav#breadcrumb {
     background: #ffffff;
     border: 1px solid rgb(218, 218, 218);
     border-radius: 4px;
+    padding-top: 20px;
     padding-bottom: 20px;
 }
 
@@ -82,7 +78,6 @@ nav#breadcrumb {
 }
 
 .det {
-    margin-top: 20px;
     margin-left: -8px;
     font-size: 18px;
     display: inline;
@@ -114,7 +109,7 @@ nav#breadcrumb {
 }
 
 #version {
-    padding-top: 55px;
+    padding-top: 40px;
     text-align: left;
 }
 
@@ -312,6 +307,14 @@ nav#main-pagination {
     position: relative;
     top: -180px;
     font-size: 18px;
+}
+
+/*adjust thumb 'type' label when bootstrap col == md*/
+@media screen and (min-width:992px) and (max-width:1200px) {
+    .row.stereo {
+        top: -144px;
+
+    }
 }
 
 .sub-table {
@@ -529,6 +532,8 @@ span#enabled {
     box-shadow: rgb(223, 223, 223) 0px 0px 0px 0px inset;
     transition: 0.3s ease-out all;
     -webkit-transition: 0.3s ease-out all;
+    top: 25px;
+    z-index: 99;
 }
 
 .toggleSwitch small {
@@ -1039,7 +1044,7 @@ div.col-md-9> div#subunits > div> subunit > div > div> div> span> amino-acid>a.a
 }
 
 .magnify {
-    cursor: -webkit-zoom-in;
+    cursor: zoom-in;
 }
 
 .mol-data-import {
@@ -1165,32 +1170,11 @@ amino-acid.selected-acid a {
 .subunit-chunk{
 	min-width: 165px;
 }
-h3.title-name{
+h4.title-name{
 overflow: hidden;
 white-space: nowrap;
 text-overflow: ellipsis;
-}
-
-.multi-progress{
-	position:relative;
-}
-
-.multi-progress .progress-bar{
-	position:absolute;
-	top:0px;
-	left:0px;
-}
-
-.multi-progress .progress-bar.background{
-	background-color:#f0ad4e;
-}
-.placeholder-content{
-	padding:10px;
-}
-span#record-count {
-    padding: .35em .6em .35em .6em;
-    margin-top: 2px;
-    display: inline-block;
+    margin-top: 20px;
 }
 
 .help-info{
@@ -1222,9 +1206,18 @@ span#record-count {
 }
 
 /*the grid framework adds negative margins here
-  so we compensate with a little padding*/
+  so we compensate with a little padding
+
+
+ 8/2018 added more padding, assuming container shrunk*/
 .record-container{
 	padding:0px;
+	padding-left:4px;
+	padding-right:4px;
+}
+.record-container.panel-body{
+	padding:0px;
+    padding-top:10px;
 	padding-left:4px;
 	padding-right:4px;
 }
@@ -1435,6 +1428,53 @@ span.nowrap-list {
 
 
 
+@keyframes spinner {
+  to {transform: rotate(360deg);}
+}
+
+
+
+.spinner-loader:before {
+  content: '';
+  box-sizing: border-box;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 12px;
+  height: 12px;
+  margin-top: -10px;
+  margin-top: -10px;
+  border-radius: 50%;
+  border-top: 2px solid #07d;
+  border-color: #07d;
+  border-right: 2px solid transparent;
+  animation: spinner 1.2s linear infinite;
+}
+
+.spinner-loader{
+	position: relative;
+    display: inline-block;
+    margin-top: 12px;
+    margin-right: 12px;
+    left:0px;
+    top:0px;
+}
+.spinner-loader-container{
+	display: inline;
+}
+
+.facet-loading-bar{
+	width: 100%;
+    padding-left: 10px;
+    height:15px;
+    animation: fadein1 1s;
+}
+
+@keyframes fadein1 {
+    0%   { height: 0px; opacity:0;}
+    70%  { height: 0px; opacity:0;}
+    100%  { height: 15px; opacity:1;}
+}
 
 
 
@@ -1461,11 +1501,14 @@ span.nowrap-list {
   -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=0)";
   filter: alpha(opacity=0);
 }
+.fade-ng-cloak.ng-hide,
 .fade-ng-cloak.ng-cloak,
 .fade-ng-cloak.ng-binding {
     opacity: 0;
     transition: opacity 800ms ease-in-out;
 }
+}
+
 .fade-ng-cloak.ng-binding {
     opacity: 1;
 }
@@ -1481,51 +1524,401 @@ span.nowrap-list {
     margin-right: 35px;
 }
 
-@keyframes spinner {
-  to {transform: rotate(360deg);}
+.grid-toggle .toggleSwitch{
+	top:0;
+}
+.gsrs-datatable td .hidden {
+    display:none;
+}
+/*for admin pannel tabs*/
+.admin-tabs .nav-tabs>li>a{
+	padding-left: 3px;
+    padding-right: 3px;
 }
 
+.docked-actions {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    margin: 0 auto;
+    border-top: none;
+    border-left: none;
+    border-right: none;
+    border-radius: 0;
+}
 
- 
-.spinner-loader:before {
-  content: '';
-  box-sizing: border-box;
+@media(min-width: 768px){
+    .docked-actions{
+        width: 768px;
+        padding-left: 9px;
+        padding-right: 9px;
+    }
+}
+
+@media(min-width: 992px){
+    .docked-actions{
+        width: 992px;
+        padding-left: 11px;
+        padding-right: 11px;
+    }
+}
+
+@media(min-width: 1200px){
+    .docked-actions{
+        width: 1200px;
+        padding-left: 15px;
+        padding-right: 15px;
+    }
+}
+
+.loader-horizontal, .loader-horizontal-modal {
+    height: 4px;
+    width: 100%;
+
+    overflow: hidden;
+    background-color: #ddd;
+    top: 0px;
+    z-index: 9999999;
+  }
+  .loader-horizontal:before, .loader-horizontal-modal:before {
+    display: block;
   position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 12px;
-  height: 12px;
-  margin-top: -10px;
-  margin-top: -10px;
-  border-radius: 50%;
-  border-top: 2px solid #07d;
-  border-color: #07d;
-  border-right: 2px solid transparent;
-  animation: spinner 1.2s linear infinite;
+    content: "";
+    left: -200px;
+    width: 200px;
+    height: 4px;
+    background-color: #2980b9;
+    animation: loading 2s linear infinite;
 }
 
-.spinner-loader{
+  @keyframes loading {
+      from {left: -200px; width: 30%;}
+      50% {width: 30%;}
+      70% {width: 70%;}
+      80% { left: 50%;}
+      95% {left: 120%;}
+      to {left: 100%;}
+  }
+
+  .loader-horizontal {
+    position: fixed;
+  }
+
+  .loader-horizontal-modal {
+    position: absolute;
+    left: 0;
+  }
+
+  .active-search {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, .8);
+    z-index: 100002;
+    animation-name: expand;
+    animation-duration: .35s;
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+
+  .active-search .main-search {
+      padding-right: 25px;
+  }
+
+  .search-close {
+      display: none;
+  }
+
+  .search-close {
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    z-index: 100003;
+    opacity: 0;
+  }
+
+  .search-help, .search-guide {
+    display: none;
+}
+
+  .active-search .search-help, .active-search .search-guide {
+      display: block;
+      padding: 10px 30px;
+      text-align: left;
+      background-color: white;
+  }
+
+  .active-search .search-close {
+      opacity: 1;
+      display: block;
+      animation-name: fade-in;
+      animation-delay: 350ms;
+      animation-duration: 200ms;
+  }
+
+  .deactivate-search {
+    overflow: hidden;
+    position: fixed;
+    padding: 0;
+    top: 0;
+    background: white;
+    z-index: 100002;
+    animation-name: retract;
+    animation-duration: .35s;
+    background-color: white;
+  }
+
+  .deactivate-search .search-help, .deactivate-search .search-guide {
+    /* animation-name: height-decrease;
+    animation-duration: .35s; */
+    background-color: white;
+}
+
+.deactivate-search .search-close {
+    animation-name: fade-out;
+    animation-duration: .35s;
+}
+
+.search-help-toggle,  .search-guide-toggle{
+    display: none;
+}
+
+.active-search .search-help-toggle, .active-search .search-guide-toggle {
+    display: inline;
+}
+
+.search-help .heading {
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+.search-help .description {
+    margin-bottom: 20px;
+}
+
+.search-help .example {
+    padding-left: 20px;
+    margin-top: 10px;
+}
+
+.search-help.ng-hide, .hg-hide .search-guide {
+    height: 0;
+    /* animation-name: height-decrease;
+    animation-duration: .30s; */
+}
+
+.search-help:not(.ng-hide), .search-guide {
+    height: auto;
+    /* animation-name: height-increase;
+    animation-duration: .30s; */
+}
+
+  .active-search ul:not(.uib-datepicker-popup):not(.dropdown-menu),
+  .active-search ul:not(.uib-datepicker-popup):not(.dropdown-menu) li,
+  .active-search ul:not(.uib-datepicker-popup):not(.dropdown-menu) li form,
+  .active-search ul:not(.uib-datepicker-popup):not(.dropdown-menu) li #search-bar {
+    width: 100%;
+    -webkit-transition: all .35s; /* Safari */
+    transition: all .35s;
+    background-color: white;
+    padding-right: 12px;
+  }
+
+  .active-search ul:not(.uib-datepicker-popup .dropdown-menu) {
+    padding: 10px 20px;
+  }
+
+  .active-search .form-inline .input-group .input-group-btn {
+      width: 63px;
+  }
+
+  .active-search ul:not(.uib-datepicker-popup):not(.dropdown-menu) > li > a {
+      display: inline-block;
+  }
+
+  .active-search ul:not(.uib-datepicker-popup):not(.dropdown-menu) > li > a:focus, .active-search ul:not(.uib-datepicker-popup):not(.dropdown-menu) > li > a:hover {
+      background-color: white;
+  }
+
+  .spaced-line {
+      margin-top: 7px;
+      margin-bottom: 7px;
+  }
+
+/* Safari 4.0 - 8.0 */
+@-webkit-keyframes height-increase {
+    from {height: 0;}
+    to {height: auto;}
+}
+
+/* Standard syntax */
+@keyframes height-increase {
+    from {height: 0;}
+    to {height: auto;}
+}
+
+/* Safari 4.0 - 8.0 */
+@-webkit-keyframes height-decrease {
+    from {height: auto; opacity: 1;}
+    to {height: 0; opacity: 0;}
+}
+
+/* Standard syntax */
+@keyframes height-decrease {
+    from {height: auto; opacity: 1;}
+    to {height: 0; opacity: 0;}
+}
+
+/* Safari 4.0 - 8.0 */
+@-webkit-keyframes fade-in {
+    from {opacity: 0;}
+    to {opacity: 1;}
+}
+
+/* Standard syntax */
+@keyframes fade-in {
+    from {opacity: 0;}
+    to {opacity: 1;}
+}
+
+/* Safari 4.0 - 8.0 */
+@-webkit-keyframes fade-out {
+    from {opacity: 1;}
+    to {opacity: 0;}
+}
+
+/* Standard syntax */
+@keyframes fade-out {
+    from {opacity: 1;}
+    to {opacity: 0;}
+}
+
+  .gutter-fix[id = "list"]{
+      margin-left:-5px;
+      margin-right:-5px;
+  }
+
+    .gutter-fix[id = "grid"]{
+        margin-left:-10px;
+        margin-right:-10px;
+    }
+.relpos{
        position: relative;
+}
+
+.search-error{
+	color:red;
+}
+
+.null-zone{
+	width: 100%;
+    height: 100%;
+    cursor: inherit;
+}
+
+/*changes for audit and references sub-tables */
+#overview-audit-table td{
+    border:none;
+}
+
+td.no-sort{
+    pointer-events: none!important;
+    cursor: default!important;
+}
+
+.reference-button{
+    display: block;
+    margin: auto;
+    padding-top:1px;
+    padding-bottom:1px
+}
+
+
+
+.fa-1_1x{
+    font-size:110% !important;
+}
+
+#moiety-table{
+    margin-bottom:5px;
+}
+#addCVTermForm{
+    word-break:break-word;
+}
+
+/*styles for the buttons in the overview card. If these are approved, switch to classes and apply to all buttons*/
+#button-container {
+    width:190px;
+    position:absolute;
+    top:-70px;
+    padding-top:20px;
+    right:-50px;
+    padding-right:50px;
+    margin-top:2px;
+}
+
+#button-container>div{
+    margin-right:15px;
+}
+
+@media(max-width: 768px) {
+    #button-container {
+        top:-50px;
+        padding-top:50px;
+        z-index: 9999;
+    }
+}
+
+.download-button {
+    padding: 4px;
+    font-size: 22px;
+    padding-bottom: 1px;
+    padding-top:5px;
+    border-color:#337ab7;
+}
+
+#edit-button {
+    font-size:32px;
+    margin-top:-2px;
+}
+
+
+#newform-button {
+    background-color:#337ab7;
+    border-color:#337ab7;
+    height:30px;
+    width:30px;
+    border-radius:4px;
+    padding-top: 2px;
+    padding-left: 1px;
+    color:white;
     display: inline-block;
-    margin-top: 12px;
-    margin-right: 12px;
-    left:0px;
-    top:0px;
-}
-.spinner-loader-container{
-       display: inline;
+    margin-bottom: 0;
+    font-size: 26px;
+    text-align: center;
+    vertical-align: middle;
 }
 
-.facet-loading-bar{
-       width: 100%;
-    padding-left: 10px;
-    height:15px;
-    animation: fadein1 1s;
+#newform-button:hover {
+    background-color:#2f5f8e;
 }
 
-@keyframes fadein1 {
-    0%   { height: 0px; opacity:0;}
-    70%  { height: 0px; opacity:0;}
-    100%  { height: 15px; opacity:1;}
+.align-left{
+    float:left;
 }
 
+/*prevent lock icon from being included in browse title hiddden overflow*/
+.title-name-lock{
+    width: 20px;
+    float: left;
+}
+.title-name-container{
+    max-width: 92%;
+    max-width: calc(100% - 21px);
+    float: left;
+
+}

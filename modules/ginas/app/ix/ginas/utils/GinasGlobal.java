@@ -134,6 +134,26 @@ public class GinasGlobal extends Global {
 			Promise<Result> result= this.delegate.call(ctx);
 			long end = System.currentTimeMillis();
 			AccessLogger.info(messagePrefix + " RETURNED:"+ (end-start)+ "ms \""+ req.uri() +"\"");
+
+			//FOR CORS
+			Http.Response response = ctx.response();
+			response.setHeader("Access-Control-Allow-Origin", "*");
+			response.setHeader("Access-Control-Allow-Methods", "POST, PUT, GET, PATCH"); // Only
+																					// allow
+																					// POST, PATCH, GET, PUT
+			response.setHeader("Access-Control-Max-Age", "300"); // Cache
+																	// response
+																	// for 5
+																	// minutes
+			response.setHeader("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept"); // Ensure
+																													// this
+																													// header
+																													// is
+																													// also
+																													// allowed!
+
+
+
 			return result;
 		}
 	}

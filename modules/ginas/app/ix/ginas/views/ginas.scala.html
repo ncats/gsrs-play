@@ -26,31 +26,22 @@
 
     <title>@title</title>
     <link rel="icon" type="img/ico" href='@routes.Assets.at("ginas/images/pillIconColor.ico")'>
-    <link rel="stylesheet"
-    href='@routes.WebJarAssets.at(WebJarAssets.locate("bootstrap.min.css"))'>
-    <link rel="stylesheet"
-    href='@routes.WebJarAssets.at(WebJarAssets.locate("font-awesome.min.css"))'>
+    <link rel="stylesheet" href='@routes.WebJarAssets.at(WebJarAssets.locate("bootstrap.min.css"))'>
+    <link rel="stylesheet" href='@routes.WebJarAssets.at(WebJarAssets.locate("font-awesome.min.css"))'>
     <link rel="stylesheet" href='@routes.Assets.at("ginas/css/ng-tags-input.css")'>
     <link rel="stylesheet" href='@routes.Assets.at("ginas/css/ng-tags-input.bootstrap.css")'>
     <link rel="stylesheet" href='@routes.Assets.at("ginas/css/json-formatter.css")'>
     <link rel="stylesheet" href='@routes.Assets.at("ginas/css/ginas.css")'>
-    
     @if(showMenuCss){
     <link rel="stylesheet" href='@routes.Assets.at("ginas/css/menu-style.css")'>
     }
     <link rel="stylesheet" href='@routes.Assets.at("ginas/css/jquery.dataTables.css")'>
-    
-    
-    
+
     <script src='@routes.WebJarAssets.at(WebJarAssets.locate("jquery.min.js"))'></script>
-   
     <script src='@routes.WebJarAssets.at(WebJarAssets.locate("moment.js"))'></script>
     <script src='@routes.WebJarAssets.at(WebJarAssets.locate("later.min.js"))'></script>
     <script src='@routes.WebJarAssets.at(WebJarAssets.locate("prettycron.js"))'></script>
     <script src='@routes.WebJarAssets.at(WebJarAssets.locate("humanize-duration.js"))'></script>
-    
-    
-    
     <script src='@routes.WebJarAssets.at(WebJarAssets.locate("bootstrap.min.js"))'></script>
     <script src='@routes.WebJarAssets.at(WebJarAssets.locate("angular.js"))'></script>
     <script src='@routes.WebJarAssets.at(WebJarAssets.locate("ui-bootstrap-tpls.js"))'></script>
@@ -59,9 +50,13 @@
     <script src='@routes.WebJarAssets.at(WebJarAssets.locate("angular-resource.js"))'></script>
     <script src='@routes.WebJarAssets.at(WebJarAssets.locate("angular-aria.js"))'></script>
     <script src='@routes.WebJarAssets.at(WebJarAssets.locate("lodash.js"))'></script>
-
     <script src='@routes.Assets.at("ginas/js/angular-local-storage.js")' type='text/javascript'></script>
     <script src='@routes.Assets.at("ginas/js/ginasApp.js")' type='text/javascript'></script>
+    <script src='@routes.Assets.at("ginas/js/top-dock.js")' type='text/javascript'></script>
+    <script src='@routes.Assets.at("ginas/js/dropdown-menu-checkbox-option.js")' type='text/javascript'></script>
+    <script src='@routes.Assets.at("ginas/js/access-management.js")' type='text/javascript'></script>
+    <script src='@routes.Assets.at("ginas/js/main-search.js")' type='text/javascript'></script>
+    <script src='@routes.Assets.at("ginas/js/main-search-guide.js")' type='text/javascript'></script>
     <script src='@routes.Assets.at("ginas/js/ginas-admin.js")' type='text/javascript'></script>
     <script src='@routes.Assets.at("ginas/js/ginas-downloads.js")' type='text/javascript'></script>
     <script src='@routes.Assets.at("ginas/js/ginas-scheduled.js")' type='text/javascript'></script>
@@ -81,7 +76,8 @@
     <script src='@routes.Assets.at("ginas/js/filereader.js")' type='text/javascript'></script>
     <script src='@routes.Assets.at("ginas/js/jquery.dataTables.js")' type='text/javascript'></script>
     <script src='@routes.Assets.at("ginas/js/polyfill.js")' type='text/javascript'></script>
-    
+    <script src='@routes.Assets.at("ginas/js/reference-subtable.js")' type='text/javascript'></script>
+
     <script src='@routes.Assets.at("gsrs2/assets/js/gsrsapi.0.1.js")' type='text/javascript'></script>
     
     @*<script src='@routes.Assets.at("ginas/js/help-info.js")' type='text/javascript'></script>*@
@@ -93,7 +89,11 @@
     <script src='@routes.Assets.at("ginas/js/jsDraw-extensions.js")'></script>
         <script>
                 $(document).ready(function(){
+
                 afterLoad();
+
+
+
                 });
         </script>
     }
@@ -102,7 +102,6 @@
         <link rel="stylesheet" href='@routes.Assets.at("javascripts/vakata-jstree-a6a0d0d/dist/themes/default/style.min.css")' />
         <script src='@routes.Assets.at("javascripts/vakata-jstree-a6a0d0d/dist/jstree.js")'></script>
     }
-
 
     <script type="text/javascript">
         var session = {
@@ -115,17 +114,149 @@
     	var baseurl = "@play.api.Play.configuration.getString("application.context").getOrElse("/ginas/app")/";
     </script>
 </head>
+
 <!-- do you see me? -->
+
 <body scroll-spy="breadcrumb" data-target="#breadcrumb" ng-controller ="GinasController as GinasCtrl">
-   	<div class="row-fluid" id="main-menu">@menu</div>
+    <div class="loader-horizontal" ng-show="isGlobalLoading"></div>
+	<div class="container-fluid">
+    <div class="row bkwhite">
+
+        <div class="col-md-3">
+            <a href = "@ix.ginas.controllers.routes.GinasApp.index()">
+                <img class="" id="logo" alt = "GSRS logo" height="180px" width="300px" src="@routes.Assets.at("ginas/images/gsrs-logo.svg")" />
+            </a>
+        </div>
+
+        <div class="col-md-2" id="versionsrs">
+            <code uib-tooltip="Built on @ix.BuildInfo.TIME v2.3.1 RC1" data-placement="top"><small>version 2.3.1 RC1</small></code>
+        </div>
+
+        <!-- Display Username and Roles if logged in -->
+
+        <div class="col-md-7">
+            @if(ix.ncats.controllers.auth.Authentication.getUser() != null) {
+            <h6>Welcome:&nbsp;<b>@ix.ncats.controllers.auth.Authentication.getUser().username</b>&nbsp;&nbsp;&nbsp;
+                Roles: @ix.ncats.controllers.auth.Authentication.getUser().getUserProfile().getRoles()&nbsp;&nbsp;&nbsp;&nbsp;</h6>
+            }
+
+        <div class="collapse navbar-collapse pull-right pull-down" id="searchtop">
+            <div main-search esc-key="closeLarge()" esc-global>
+                <div class="search-close">
+                    <a id="close-search">
+                        <i class="fa fa-times fa-2x"></i>
+                    </a>
+                </div>
+                <ul class="nav navbar-nav pull-right">
+                    <li ng-controller="TypeAheadController">
+                            <form class="form-inline main-search" role="search">
+                                <div class="input-group" id="search-bar">
+                                    <input type="text"
+                                        class="form-control"
+                                        id="search"
+                                        aria-label="Search G-SRS"
+                                        title="Search"
+                                        placeholder="Search ..."
+                                        ng-model = "$parent.query"
+                                        typeahead-popup-template-url="app/assets/templates/elements/suggest-popup.html"
+                                        uib-typeahead="r.d as r.d for r in getSuggestions($viewValue)"
+                                        typeahead-on-select="onSelect($item, $model, $label)"
+                                        typeahead-loading="loadingSuggest"
+                                        typeahead-focus-first ="false"
+                                        autocomplete="off">
+                                    <span class="input-group-btn">
+                                        <div class="btn-group" uib-dropdown>
+                                            <button id="split-button" class="btn btn-default"
+                                                    type="search"
+                                                    aria-label="Search"
+                                                    ng-click = "submitq($parent.query, '@ix.ginas.controllers.routes.GinasApp.substances(null)')">
+                                                <span class="sr-only">Search G-SRS</span>
+                                                <span class="fa fa-search"></span></button>
+                                            <button type="button" class="btn btn-default" uib-dropdown-toggle>
+                                                <span class="caret"></span>
+                                                <span class="sr-only">Restrict Search</span>
+                                            </button>
+                                            <ul class="dropdown-menu" uib-dropdown-menu role="menu" aria-labelledby="split-button">
+                                                <li role ="menuitem">
+                                                    <a type="search" aria-label="Search" ng-click = "submitq(query, '@ix.ginas.controllers.routes.GinasApp.substances(null)')">Global Search</a>
+                                                </li>
+                                                <li role ="menuitem">
+                                                    <a type="search" ng-class="{disabled: !query}" aria-label="Search" ng-click = "searchLimit = 'names'; submitq(query, '@ix.ginas.controllers.routes.GinasApp.substances(null)')">Restrict to Names <span class="fa fa-search"></span></a>
+                                                </li>
+                                                <li role ="menuitem">
+                                                    <a type="search" ng-class="{disabled: !query}" aria-label="Search" ng-click = "searchLimit = 'codes'; submitq(query, '@ix.ginas.controllers.routes.GinasApp.substances(null)')">Restrict to Codes <span class="fa fa-search"></span></a>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </span>
+                                </div>
+                                <div class="relpos fade-ng-cloak ng-hide-animate loader-horizontal" ng-cloak ng-show="loadingSuggest">
+                                </div>
+                            </form>
+
+                    </li>
+                    <li>
+                        <span class="search-help-toggle">&nbsp;
+                            <a ng-click="toggleHelp()">
+                                {{mainSearchVariables.isShowHelp ? 'Hide help' : 'Show help'}}
+                            </a>
+                        </span>
+                        <span class="search-guide-toggle">&nbsp;
+                            <a ng-click="toogleGuide()">
+                                {{mainSearchVariables.isShowGuide ? 'Hide guide' : 'Guide me'}}
+                            </a>
+                        </span>
+                    </li>
+                </ul>
+
+
+                <div ng-show="mainSearchVariables.isShowHelp" class="search-help">
+                    <div class="heading">
+                        Basic Searches
+                    </div>
+                    <div class="description">
+                        Searches without any special characters (listed below) will return items that contain the exact value(s) entered in the search field. This means that searching for "ASPIRIN CALCIUM" won't return any items that have "ASPIRIN GLYCINE CALCIUM" because the search term doesn't match exactly.
+                    </div>
+                    <div class="heading">
+                            Boolean Operators
+                    </div>
+                    <div class="description">
+                        <strong>OR</strong> - searches with terms separated by " OR " will return items that contain any of the terms in the search.
+                        <div class="example">
+                            Example: "ASPIRIN" OR "CALCIUM" will return items that have strings like "ASPIRIN GLYCINE" and "GLYCINE CALCIUM" because they contain at least one of the terms in the search.
+                        </div>
+                        <br />
+                        <strong>AND</strong> - searches with terms separated by " AND " will return items that contain all the terms in the search.
+                        <div class="example">
+                            Example: "ASPIRIN" AND "CALCIUM" won't return items that have strings "ASPIRIN GLYCINE" and "GLYCINE CALCIUM" because neither contain both terms, but it will return "ASPIRIN GLYCINE CALCIUM" because it contains both search terms.
+                        </div>
+                    </div>
+                </div>
+                <main-search-guide q="query" ng-show="mainSearchVariables.isShowGuide"></main-search-guide>
+                <div ng-click="closeLarge()" ng-show="mainSearchVariables.isFocus && !mainSearchVariables.isShowGuide" class="null-zone"></div>
+
+
+            </div>
+        </div> <!-- searchbox -->
+
+        </div>
+
+    </div>
+    <!-- row -->
+
+    <div class="row" id="">@menu</div>
     <div class="container" id="content" >
         @content
         <mol-export></mol-export>
     </div>
+
+    </div>
+
 <script>
 $(document).ready(function(){
   
   
+
            try{
                $("table.gsrs-datatable").DataTable( {
                        "lengthMenu": [[5, 20, 100, -1], [5, 20, 100, "All"]],
@@ -152,10 +283,6 @@ $(document).ready(function(){
                        }
                });
        });
-
-
-
-
   var onResize = function() {
 	  // apply dynamic padding at the top of the body according to the fixed navbar height
 	  $("body").css("padding-top", $(".navbar-fixed-top").height());
@@ -169,6 +296,7 @@ $(document).ready(function(){
 	  onResize();
 	});
 </script>
+
 <script>
                $(function () {
                        if($('.fixedpos').length>0){
@@ -272,7 +400,5 @@ $(document).ready(function(){
         </div>
     </div>
 </div>
-  
 </body>
 </html>
-

@@ -33,7 +33,7 @@ sbt -Dconfig.file=modules/ginas/conf/ginas.conf ginas/run
 ```
 
 (Instead of ```sbt```, you can also use ```./activator``` instead.)
-Now simply point your browser to [http://localhost:9000/ginas](http://localhost:9000/ginas).
+Now simply point your browser to [http://localhost:9000/ginas/app](http://localhost:9000/ginas/app).
 
 
 

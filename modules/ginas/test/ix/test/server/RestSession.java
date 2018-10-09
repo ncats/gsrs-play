@@ -18,19 +18,25 @@ import play.libs.ws.WSResponse;
  */
 public class RestSession extends AbstractSession<Void>{
 
-    private static final String API_URL_USERFETCH = "ginas/app/api/v1/whoami";
 
-    private static final String API_CV_LIST="ginas/app/api/v1/vocabularies";
 
     public SubstanceAPI newSubstanceAPI() {
         return new SubstanceAPI(this);
     }
 
     public BrowserSession newBrowserSession() {
-        return new BrowserSession(getUser(), getPort());
+        return new BrowserSession(getTestSever(), getUser(), getPort());
     }
 
+    @Override
+    public RestSession getRestSession() {
+        return this;
+    }
 
+    @Override
+    public BrowserSession getBrowserSession() {
+        return newBrowserSession();
+    }
 
     public enum AUTH_TYPE{
         USERNAME_PASSWORD,
@@ -45,20 +51,21 @@ public class RestSession extends AbstractSession<Void>{
     private AUTH_TYPE authType = AUTH_TYPE.NONE;
     Map<String, String> extraHeaders = new HashMap<>();
 
-    private final GinasTestServer ts;
+
 
     public RestSession(GinasTestServer ts, int port) {
-        super(port);
-        this.ts = Objects.requireNonNull(ts);
+        super(ts, port);
+
     }
     public RestSession(GinasTestServer ts, GinasTestServer.User user, int port){
         this(ts, user, port, AUTH_TYPE.USERNAME_PASSWORD);
+
     }
     public RestSession(GinasTestServer ts, GinasTestServer.User user, int port, AUTH_TYPE type) {
-        super(user, port);
-        Objects.requireNonNull(type);
-        this.authType = type;
-        this.ts = Objects.requireNonNull(ts);
+        super(ts, user, port);
+
+        this.authType =  Objects.requireNonNull(type);
+
     }
 
     public WSRequestHolder createRequestHolder(String path){
@@ -109,10 +116,13 @@ public class RestSession extends AbstractSession<Void>{
     }
 
 
+    public RestSubstanceSubstanceSearcher searcher(){
+        return new RestSubstanceSubstanceSearcher(this);
+    }
 
     private void refreshAuthInfoByUserNamePassword(){
-
-        WSRequestHolder  ws = WS.url(constructUrlFor(API_URL_USERFETCH));
+//ginas/app/api/v1/whoami"
+        WSRequestHolder  ws = WS.url(constructUrlFor(getHttpResolver().apiV1("whoami")));
         ws.setHeader("auth-username", getUser().getUserName());
         ws.setHeader("auth-password", getUser().getPassword());
 
@@ -125,6 +135,10 @@ public class RestSession extends AbstractSession<Void>{
         deadtime= TimeUtil.getCurrentTimeMillis() + userinfo.get("tokenTimeToExpireMS").asLong();
 
 
+    }
+
+    public GinasHttpResolver getHttpResolver() {
+        return getTestSever().getHttpResolver();
     }
 
     @Override
@@ -162,10 +176,10 @@ public class RestSession extends AbstractSession<Void>{
 
 
     public WSResponse whoAmI(){
-        return get(API_URL_USERFETCH);
+        return get(getHttpResolver().apiV1("whoami"));
     }
     public JsonNode whoAmIJson(){
-        return getAsJson(API_URL_USERFETCH);
+        return extractJSON(whoAmI());
     }
 
     public JsonNode urlJSON(String fullUrl){
@@ -173,11 +187,12 @@ public class RestSession extends AbstractSession<Void>{
     }
 
     public ControlledVocab getControlledVocabulary(){
-        return new ControlledVocab(getAsJson(API_CV_LIST));
+        //ginas/app/api/v1/vocabularies
+        return new ControlledVocab(getAsJson(getHttpResolver().apiV1("vocabularies")));
     }
 
 
     public MyDownloadsAPI newDownloadAPI(){
-        return new MyDownloadsAPI(this, ts);
+        return new MyDownloadsAPI(this, getTestSever());
     }
 }

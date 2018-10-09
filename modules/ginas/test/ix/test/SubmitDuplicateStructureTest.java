@@ -4,10 +4,12 @@ import com.fasterxml.jackson.databind.JsonNode;
 
 import ix.AbstractGinasServerTest;
 import ix.core.validator.ValidationMessage;
+import ix.core.models.Group;
 import ix.core.models.Role;
 import ix.ginas.models.v1.ChemicalSubstance;
 import ix.ginas.modelBuilders.ChemicalSubstanceBuilder;
 import ix.ginas.modelBuilders.SubstanceBuilder;
+import ix.ginas.models.v1.Name;
 import ix.test.server.GinasTestServer;
 import ix.test.server.RestSession;
 import ix.test.server.SubstanceAPI;
@@ -95,11 +97,16 @@ public class SubmitDuplicateStructureTest extends AbstractGinasServerTest {
 
         ChemicalSubstanceBuilder builder = SubstanceBuilder.from(inputJs);
 
+        Set<Group> groups = new HashSet<>();
+        groups.add( new Group("fake"));
+        builder.setAccess(groups);
+
+//        builder.modifyNames(names -> names.forEach( n-> n.setAccess(Collections.emptySet())));
         JsonNode js = builder.buildJson();
         SubstanceAPI.ValidationResponse validationResponse = api.validateSubstance(js);
 
 
-        assertTrue("not valid", validationResponse.isValid());
+        assertTrue(validationResponse.getMessages().toString(), validationResponse.isValid());
 
         ensurePass(api.submitSubstance(js));
 

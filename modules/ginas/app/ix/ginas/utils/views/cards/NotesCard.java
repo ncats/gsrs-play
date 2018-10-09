@@ -20,6 +20,6 @@ public class NotesCard extends CollectionDetailCard<Note>{
 
 	@Override
 	public Html innerContent() {
-		return ix.ginas.views.html.details.properties.notes.render(asList(), s.uuid.toString());
+		return ix.ginas.views.html.details.properties.notes.render(asList(), s);
 	}
 }

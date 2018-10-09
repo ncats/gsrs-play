@@ -1,7 +1,7 @@
 (function () {
     var ginasFormElements = angular.module('ginasFormElements', []);
 
-    ginasFormElements.factory('CVFields', function ($http, $q) {
+    ginasFormElements.factory('CVFields', function ($rootScope,$http, $q) {
         var vocabulariesUrl = baseurl + "api/v1/vocabularies";
         var CV = {
             //used for expanding a cv
@@ -73,6 +73,7 @@
             },
 
             updateCV: function (domainobj) {
+            	$rootScope.isGlobalLoading = true;
                 var promise;
                 if (domainobj.id) {
                     promise = $http.put(baseurl + 'api/v1/vocabularies', domainobj, {
@@ -82,6 +83,9 @@
                     }).success(function (data) {
                         alert('update was performed.');
                         return data;
+                    }).error(function (data){
+                    	alert('error updating CV terms');
+                   	 	return data;
                     });
                 } else {
                     promise = $http.post(baseurl + 'api/v1/vocabularies', domainobj, {
@@ -91,9 +95,11 @@
                     }).success(function (response) {
                         alert("new domain added");
                         return response;
-                    });
+                    })
                 }
-                return promise;
+                return promise.finally(function(t){
+                	$rootScope.isGlobalLoading = false;
+                    });
             },
 
             addCV: function (field, newcv) {
@@ -121,6 +127,8 @@
                     }).success(function (data) {
 
                         alert('update was performed.');
+                    }).error(function (data){
+                    	alert('error updating CV terms');
                     });
                 });
             },
@@ -166,6 +174,58 @@
         };
         return substanceFactory;
     }]);
+
+    ginasFormElements.factory('searchService', function ($http, $q, $timeout) {
+
+        var service = {
+            getSearchFields: _getSearchFields
+        }
+
+        return service;
+
+        function _getSearchFields () {
+            var deferred = $q.defer();
+
+            $timeout(function () {
+                deferred.resolve({
+                 data: [
+                    {
+                    "title":"Any Name",
+                    "field":"root_names_name",
+                    "type":"text",
+                    "description":"Any name (official, common, systematic, etc) found in a record"
+                    },
+                    {
+                    "title":"Any Code",
+                    "field":"root_codes_code",
+                    "type":"text",
+                    "description":"Any code (database link, classification code, etc) found in a record"
+                    },
+                    {
+                    "title":"Approval ID (UNII)",
+                    "field":"root_approvalID",
+                    "type":"text",
+                    "description":"The approval ID (UNII) of a record"
+                    },
+                    {
+                    "title":"Molecular Weight",
+                    "field":"root_structure_mwt",
+                    "type":"float",
+                    "description":"The molecular weight of the substance"
+                    },
+                    {
+                    "title":"Last Edited Date",
+                    "field":"root_lastEdited",
+                    "type":"timestamp",
+                    "description":"The date that the record was last edited"
+                    }
+                    ]
+                });
+            })
+
+            return deferred.promise;
+        }
+    });
 
    ginasFormElements.service('download', function ($location, $http) {
         var cache = true;
@@ -941,7 +1001,7 @@
                                 scope.url = URL.createObjectURL(b);
                             }
                             element.replaceWith($compile(
-                                '<a class="btn btn-primary" tabindex="0" role="button" download="results.json"' +
+                                '<a class="btn btn-primary download-button fa-lg" tabindex="0" role="button" download="results.json"' +
                                 'href="' + scope.url + '" target = "_self" id ="download">' +
                                 '<i class="fa fa-download" uib-tooltip="Download Page Results"></i>' +
                                 '</a>'
@@ -960,7 +1020,7 @@
                                 scope.url = URL.createObjectURL(b);
                             }
                             element.replaceWith($compile(
-                                '<a class="btn btn-primary"tabindex="0" role="button" download="results.json"' +
+                                '<a class="btn btn-primary download-button fa-lg"tabindex="0" role="button" download="results.json"' +
                                 'href="' + scope.url + '" target = "_self" id ="download">' +
                                 '<i class="fa fa-download" uib-tooltip="Download Page Results"></i>' +
                                 '</a>'
@@ -986,7 +1046,7 @@
                             scope.url = URL.createObjectURL(b);
                         }
                         element.replaceWith($compile(
-                            '<a class="btn btn-primary"tabindex="0" role="button" download="results.' + fileType +
+                            '<a class="btn btn-primary download-button fa-lg"tabindex="0" role="button" download="results.' + fileType +
                             '" href="' + scope.url + '" target = "_self" id ="download">' +
                             '<i class="fa fa-download" uib-tooltip="Download Results"></i>' +
                             '</a>'
@@ -997,7 +1057,7 @@
                     }
                 }
              },
-            template: '<a class="btn btn-primary" tabindex="0" role="button" ng-keypress = "make();" ng-click ="make()"><i class="fa fa-download" uib-tooltip="Download Results"></i></a>'
+            template: '<a class="btn btn-primary download-button fa-lg" tabindex="0" role="button" ng-keypress = "make();" ng-click ="make()" uib-tooltip="Download Results"><i class="fa fa-download" ></i></a>'
         };
     });
 
@@ -1129,6 +1189,7 @@
 
 ////////////See if this is can be moved to reference form or header form///////////////////////////////
             link: function(scope, element){
+
                 //this is used in the reference form to apply the references to structure/protein etc.
                 if(_.isUndefined(scope.referenceobj)){
                     var subClass = scope.parent.substanceClass;
@@ -1146,7 +1207,6 @@
          //   templateUrl: baseurl + "assets/templates/selectors/reference-selector.html",
 
             controller: function ($scope, $element, $attrs) {
-
                 $scope.opened=false;
                 var modalInstance;
 

@@ -84,7 +84,9 @@ public class StaticDelegatingNamedResource<I,V> implements InstantiatedNamedReso
     			return (opp)->{
     				@SuppressWarnings("rawtypes")
     				List<Argument> args=opp.getArguments();
-    				return SearchFactory.searchREST(resource, 
+    				return SearchFactory.searchREST(
+    						nr.searchRequestBuilderClass(),
+    						resource,
     						(String)args.get(0).getValue(),
     						(int)args.get(1).getValue(),
     						(int)args.get(2).getValue(),

@@ -4,14 +4,16 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 
 import java.io.IOException;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import ix.core.util.RunOnly;
+import ix.test.query.builder.SuppliedQueryBuilder;
+import ix.test.server.*;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -26,11 +28,6 @@ import ix.ginas.modelBuilders.SubstanceBuilder;
 import ix.test.performance.LoadRecordPerformanceTest;
 import ix.test.query.builder.SimpleQueryBuilder;
 import ix.test.server.GinasTestServer.User;
-import ix.test.server.RestSession;
-import ix.test.server.RestSubstanceSearcher;
-import ix.test.server.RestSubstanceSearcher.APIFacetResult;
-import ix.test.server.RestSubstanceSearcher.RestSearchResult;
-import ix.test.server.SubstanceAPI;
 import ix.test.server.SubstanceSearcher.FacetType;
 import ix.utils.Tuple;
 import ix.utils.Util;
@@ -48,17 +45,17 @@ public class APIFacetSearchTest extends AbstractGinasClassServerTest{
     
     private final static String codeSystem = "ACODE";
     private final static String[] codeValues = new String[]{
-            "VALUE1", 
-            "VALUE2", 
-            "VALUE3",
-            "VALUE4",
-            "VALUE5",
-            "VALUE6",
-            "VALUE7",
-            "VALUE8",
-            "VALUE9",
-            "VALUE10",
-            "VALUE11"
+            "VALUE1_A",
+            "VALUE2_A",
+            "VALUE3_A",
+            "VALUE4_A",
+            "VALUE5_A",
+            "VALUE6_A",
+            "VALUE7_A",
+            "VALUE8_A",
+            "VALUE9_A",
+            "VALUE10_A",
+            "VALUE11_A"
             
     };
     
@@ -105,24 +102,24 @@ public class APIFacetSearchTest extends AbstractGinasClassServerTest{
         Map<String,AtomicInteger> tmpSmallerValueCounter=new ConcurrentHashMap<>();
         
         System.out.println("loading");
-        
+        TreeSet<String> seen = new TreeSet<>();
         long timeElapsed = StopWatch.timeElapsed(()->{
             
             
             StreamUtil
                 .cycle(codeValues)
                 .limit(size)
-                .parallel()
+//                .parallel()
                 .forEach(v->{
                     String bucket=bucketPuller.get();
                     String smaller=smallerPuller.get();
-                    
+                    seen.add(v);
                     AbstractSubstanceBuilder<?,?> sb = new SubstanceBuilder();
                     if(Math.random()>.5){
                         sb=((SubstanceBuilder)sb).asChemical()
                              .setStructure(smilesPuller.get());
                     }
-                            
+                    sb.generateNewUUID();
                     sb.addCode(codeSystem, v)
                     .addCode(bucketCodeSystem, bucket)
                     .addCode(smallerCodeSystem, smaller)
@@ -135,19 +132,20 @@ public class APIFacetSearchTest extends AbstractGinasClassServerTest{
                     })
                     .buildJsonAnd(js->{
                         api.submitSubstanceJson(js);
+
                     });
                 });    
             
             
         });
         
-        facetValueCounter=tmpvalueCounter.entrySet().stream().map(Tuple::of).map(Tuple.vmap(i->i.get()))
-                    .collect(Tuple.toMap());
-        smallerFacetValueCounter=tmpSmallerValueCounter.entrySet().stream().map(Tuple::of).map(Tuple.vmap(i->i.get()))
-                .collect(Tuple.toMap());
+        facetValueCounter=new TreeMap<>(tmpvalueCounter.entrySet().stream().map(Tuple::of).map(Tuple.vmap(i->i.get()))
+                    .collect(Tuple.toMap()));
+        smallerFacetValueCounter=new TreeMap<>(tmpSmallerValueCounter.entrySet().stream().map(Tuple::of).map(Tuple.vmap(i->i.get()))
+                .collect(Tuple.toMap()));
         
         System.out.println("Load time:" + timeElapsed);
-        
+        System.out.println("seen = " + seen);
         //Just trigger a basic lucene caching
         //otherwise timing is off for other tests
         api.fetchSubstancesSearch();
@@ -156,25 +154,16 @@ public class APIFacetSearchTest extends AbstractGinasClassServerTest{
     
     
     @Test
-    public void topFacetsShowOnSearchAll(){
-        JsonNode jsn = api.fetchSubstancesSearchJSON();
+    public void topFacetsShowOnSearchAll() throws IOException{
         
-        JsonNode facets= jsn.at("/facets");
-        
-        
-        //This gobbledygook is just finding the facet which matches
-        //the codesystem provided, and then converting the values
-        //to a map of labels to counts
-        Map<String, Integer> facetValueCounts=StreamUtil.forIterable(facets)
-                                    .filter(t->t.at("/name").asText().equals(smallerCodeSystem))
-                                    .limit(1)
-                                    .map(t->t.at("/values"))
-                                    .flatMap(t->StreamUtil.forIterable(t))
-                                    .map(j->Tuple.of(j.at("/label").asText(), j.at("/count").asInt()))
-                                    .collect(Tuple.toMap());
+        RestSubstanceSubstanceSearcher searcher = new RestSubstanceSubstanceSearcher(session);
         
         
-        assertEquals(size,jsn.at("/total").asInt());
+        SearchResult result = searcher.all();
+        Map<String, Integer> facetValueCounts= result.getFacet(smallerCodeSystem);
+        
+        
+        assertEquals(size,result.numberOfResults());
         
         
         Map<String,Integer> limitMap = smallerFacetValueCounter.entrySet()
@@ -199,65 +188,80 @@ public class APIFacetSearchTest extends AbstractGinasClassServerTest{
     }
     
     @Test
-    public void topFacetsArePagable(){
-        JsonNode jsn = api.fetchSubstancesSearchJSON();
-        APIFacetResult facetResult = APIFacetResult.fromSearchResult(api, jsn, codeSystem);
+    public void topFacetsArePagable() throws IOException{
+        RestSubstanceSubstanceSearcher searcher = new RestSubstanceSubstanceSearcher(session);
         
-        Map<String,Integer> mapi=facetResult.getFacetMap();
+
+
+        Map<String, Map<String, Integer>> allFacets = searcher.query(
+                SimpleQueryBuilder.searchAll(),  h -> h.setQueryParameter("fdim", "20")).getAllFacets();
+
+        Map<String,Integer> mapi= allFacets.get(codeSystem);
+
         assertEquals(facetValueCounter.keySet(),mapi.keySet());
         assertEquals(facetValueCounter,mapi);
     }
     
     @Test
-    public void topFacetsAreFilterable(){
-        JsonNode jsn = api.fetchSubstancesSearchJSON();
-        APIFacetResult facetResult = APIFacetResult.fromSearchResult(api, jsn, codeSystem);
-        
+    public void topFacetsAreFilterable() throws IOException{
+        RestSubstanceSubstanceSearcher searcher = new RestSubstanceSubstanceSearcher(session);
         String contains = "VALUE1";
-        
-        APIFacetResult filteredFacetResult=facetResult.getFilteredFacet(contains);
+         Map<String, Integer> filteredFacetResult = searcher.queryFacets(SuppliedQueryBuilder.searchAll(), codeSystem, r -> r.setQueryParameter("fdim", "20")).getFilteredFacet(contains);
+
+//        assertEquals(1, filteredFacetResult.size());
+
+
+
+
+
         
         Map<String,Integer> filtered=facetValueCounter.entrySet()
                 .stream()
                 .filter(e->e.getKey().contains(contains))
                 .collect(Util.toMap());
         
-        
-        assertEquals(filtered.keySet(),filteredFacetResult.getFacetLabels());
-        assertEquals(filtered,filteredFacetResult.getFacetMap());
+        assertEquals(filtered.keySet(), filteredFacetResult.keySet());
+        assertEquals(filtered, filteredFacetResult);
     }
     
     @Test
     public void facetCountsUpdatedOnSearch() throws IOException{
-        RestSubstanceSearcher rsearch= new RestSubstanceSearcher(session);
+        RestSubstanceSubstanceSearcher rsearch= new RestSubstanceSubstanceSearcher(session);
         
-        RestSearchResult sr = (RestSearchResult) rsearch.exactSearch(bucketCodeValues[0]);
+        rsearch.request();
+        RestSubstanceSubstanceSearcher.RestExportSupportSearchResult searchResult = rsearch
+                        .request(SimpleQueryBuilder.exactSearch(bucketCodeValues[0]))
+                            .setQueryParameter("fdim", "20")
+                            .submit();
         
-        
-        APIFacetResult fr= sr.getFacetResult(bucketCodeSystem);
-        String labels= fr.getFacetLabels().stream().collect(Collectors.joining());
+        Map<String, Integer> fr = searchResult.getFacet(bucketCodeSystem);
+
+
+        String labels= fr.keySet().stream().collect(Collectors.joining());
         assertEquals(bucketCodeValues[0], labels); //the only label is just the one
                                                    //we searched for
         
-        APIFacetResult fr2= sr.getFacetResult(codeSystem);
-        int tsum = fr2.getFacetCounts().stream()
-            .mapToInt(t->t.v())
+
+        int tsum = searchResult.getFacet(codeSystem).values().stream()
+                                .mapToInt(Integer::intValue)
             .sum();
-        assertEquals(sr.getTotal().intValue(), tsum);
+
+        assertEquals(searchResult.getTotal(), tsum);
         assertNotEquals(size, tsum);
     }
     
     @Test
     public void facetCountsUpdatedOnSidewaysFacetSearch() throws IOException{
-        RestSubstanceSearcher rsearch= new RestSubstanceSearcher(session);
+        RestSubstanceSubstanceSearcher rsearch= new RestSubstanceSubstanceSearcher(session);
         
-        RestSearchResult sr = (RestSearchResult) rsearch.request()
+        RestSubstanceSubstanceSearcher.RestExportSupportSearchResult sr = (RestSubstanceSubstanceSearcher.RestExportSupportSearchResult) rsearch.request()
                                 .addFacet(bucketCodeSystem, bucketCodeValues[0])
                                 .setFacetType(FacetType.SIDEWAYS)
+                                .setQueryParameter("fdim", "20")
                                 .submit();
         
-        APIFacetResult fr= sr.getFacetResult(bucketCodeSystem);
-        Set<String> labels= fr.getFacetLabels();
+        Map<String, Integer> fr= sr.getFacet(bucketCodeSystem);
+        Set<String> labels= fr.keySet();
         Set<String> expected=Util.toSet(bucketCodeValues);
         
         //Unlike the search case, this should include the counts of the facets
@@ -267,51 +271,49 @@ public class APIFacetSearchTest extends AbstractGinasClassServerTest{
         assertEquals(expected, labels); 
         
         
-        APIFacetResult fr2= sr.getFacetResult(codeSystem);
-        int tsum = fr2.getFacetCounts().stream()
-            .mapToInt(t->t.v())
+        Map<String, Integer> fr2= sr.getFacet(codeSystem);
+        int tsum = fr2.values().stream()
+            .mapToInt(Integer::intValue)
             .sum();
-        assertEquals(sr.getTotal().intValue(), tsum);
+        assertEquals(sr.getTotal(), tsum);
         assertNotEquals(size, tsum);
     }
     
     @Test
     public void facetCountsUpdatedOnDrillDownFacetSearch() throws IOException{
-        RestSubstanceSearcher rsearch= new RestSubstanceSearcher(session);
+        RestSubstanceSubstanceSearcher rsearch= new RestSubstanceSubstanceSearcher(session);
         
-        RestSearchResult sr = (RestSearchResult) rsearch.request()
+        RestSubstanceSubstanceSearcher.RestExportSupportSearchResult sr =  rsearch.request()
                              .addFacet(bucketCodeSystem, bucketCodeValues[0])
                              .setFacetType(FacetType.DRILLDOWN)
+                                .setQueryParameter("fdim", "20")
                              .submit();
         
+
         
-        APIFacetResult fr= sr.getFacetResult(bucketCodeSystem);
-        Set<String> labels= fr.getFacetLabels();
-        Set<String> expected=Util.toSet(bucketCodeValues[0]);
-        
-        assertEquals(expected, labels); 
+        assertEquals(Util.toSet(bucketCodeValues[0]), sr.getFacet(bucketCodeSystem).keySet());
         
         
-        APIFacetResult fr2= sr.getFacetResult(codeSystem);
-        int tsum = fr2.getFacetCounts().stream()
-            .mapToInt(t->t.v())
+
+        int tsum = sr.getFacet(codeSystem).values().stream()
+                                    .mapToInt(Integer::intValue)
             .sum();
-        assertEquals(sr.getTotal().intValue(), tsum);
+        assertEquals(sr.getTotal(), tsum);
         assertNotEquals(size, tsum);
     }
     
     
     @Test
     public void facetCountsUpdatedOnSidewaysStructureAndFacetSearch() throws IOException{
-        RestSubstanceSearcher rsearch= new RestSubstanceSearcher(session);
+        RestSubstanceSubstanceSearcher rsearch= new RestSubstanceSubstanceSearcher(session);
         
-        RestSearchResult baseResult = (RestSearchResult) rsearch.substructure("C");
+        RestSubstanceSubstanceSearcher.RestExportSupportSearchResult baseResult = rsearch.substructure("C");
         
-        Integer expectedAmount= baseResult.getFacetResult(bucketCodeSystem)
-                                          .getFacetCountForValue(bucketCodeValues[0]);
+        int expectedAmount= baseResult.getFacet(bucketCodeSystem)
+                                          .get(bucketCodeValues[0]);
         
         
-        RestSearchResult facetedResult = (RestSearchResult) baseResult.getRefiningSearcher()
+        RestSubstanceSubstanceSearcher.RestExportSupportSearchResult facetedResult = baseResult.refiningRequest()
                         .addFacet(bucketCodeSystem, bucketCodeValues[0])
                         .setFacetType(FacetType.SIDEWAYS)
                         .submit();
@@ -320,23 +322,23 @@ public class APIFacetSearchTest extends AbstractGinasClassServerTest{
         assertEquals(expectedAmount, facetedResult.getTotal());
         
         assertEquals(
-                     baseResult.getFacetResult(bucketCodeSystem).getFacetMap(),
-                     facetedResult.getFacetResult(bucketCodeSystem).getFacetMap()
+                baseResult.getFacet(bucketCodeSystem),
+                     facetedResult.getFacet(bucketCodeSystem)
                     );
         
     }
     
     @Test
     public void facetCountsUpdatedOnDrillDownStructureAndFacetSearch() throws IOException{
-        RestSubstanceSearcher rsearch= new RestSubstanceSearcher(session);
+        RestSubstanceSubstanceSearcher rsearch= new RestSubstanceSubstanceSearcher(session);
         
-        RestSearchResult baseResult = (RestSearchResult) rsearch.substructure("C");
+        RestSubstanceSubstanceSearcher.RestExportSupportSearchResult baseResult = rsearch.substructure("C");
         
-        Integer expectedAmount= baseResult.getFacetResult(bucketCodeSystem)
-                                          .getFacetCountForValue(bucketCodeValues[0]);
+        int expectedAmount= baseResult.getFacet(bucketCodeSystem)
+                                          .get(bucketCodeValues[0]);
         
         
-        RestSearchResult facetedResult = (RestSearchResult) baseResult.getRefiningSearcher()
+        RestSubstanceSubstanceSearcher.RestExportSupportSearchResult facetedResult = baseResult.refiningRequest()
                         .addFacet(bucketCodeSystem, bucketCodeValues[0])
                         .setFacetType(FacetType.DRILLDOWN)
                         .submit();
@@ -347,39 +349,38 @@ public class APIFacetSearchTest extends AbstractGinasClassServerTest{
         
         
         assertEquals(
-                    baseResult.getFacetResult(bucketCodeSystem)
-                                .getFilteredFacet(bucketCodeValues[0])
-                                .getFacetMap(),
-                     facetedResult.getFacetResult(bucketCodeSystem).getFacetMap()
+                    baseResult.getFacet(bucketCodeSystem)
+                                .entrySet().stream()
+                                .filter(e-> e.getKey().equals(bucketCodeValues[0]))
+                                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue))
+                                ,
+                     facetedResult.getFacet(bucketCodeSystem)
                     );
         
     }
     
     @Test
     public void facetCountsUpdatedOnSidewaysStructureAndTextSearch() throws IOException{
-        RestSubstanceSearcher rsearch= new RestSubstanceSearcher(session);
+        RestSubstanceSubstanceSearcher rsearch= new RestSubstanceSubstanceSearcher(session);
         
-        RestSearchResult baseResult = (RestSearchResult) rsearch.substructure("C");
+        RestSubstanceSubstanceSearcher.RestExportSupportSearchResult baseResult = rsearch.substructure("C");
         
-        Integer expectedAmount= baseResult.getFacetResult(bucketCodeSystem)
-                                          .getFacetCountForValue(bucketCodeValues[0]);
+        int expectedAmount= baseResult.getFacet(bucketCodeSystem)
+                                          .get(bucketCodeValues[0]);
         
         //TestUtil.waitForParam("ok");
         
         
-        RestSearchResult subQueryResult = (RestSearchResult) baseResult.getRefiningSearcher()
-                        .setQuery(new SimpleQueryBuilder().where()
-                                .globalMatchesExact(bucketCodeValues[0])
-                                .build())
-                        .submit();
+        RestSubstanceSubstanceSearcher.RestExportSupportSearchResult subQueryResult = baseResult.refiningRequest(SimpleQueryBuilder.exactSearch(bucketCodeValues[0])).submit();
         
         assertEquals(expectedAmount, subQueryResult.getTotal());
         
         assertEquals(
-                    baseResult.getFacetResult(bucketCodeSystem)
-                                .getFilteredFacet(bucketCodeValues[0])
-                                .getFacetMap(),
-                     subQueryResult.getFacetResult(bucketCodeSystem).getFacetMap()
+                    baseResult.getFacet(bucketCodeSystem).entrySet()
+                                    .stream().filter(e-> e.getKey().equals(bucketCodeValues[0]))
+                                    .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)),
+
+                     subQueryResult.getFacet(bucketCodeSystem)
                     );
         
     }

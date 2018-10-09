@@ -3,19 +3,23 @@ package ix.test.server;
 import java.io.InputStream;
 import java.util.*;
 import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
-import ix.core.plugins.IxCache;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import ix.core.search.SearchResultContext;
+import ix.core.search.text.TextIndexer;
+import ix.ginas.controllers.GinasApp;
 import ix.ginas.models.v1.Substance;
 import ix.test.server.BrowserSubstanceSearcher.Order;
 import ix.test.server.BrowserSubstanceSearcher.SortByValueComparator;
-import ix.utils.Util;
 
 public class SearchResult {
 	private final Set<String> uuids;
 	private final Set<String> specialUuids = new HashSet<>();
 	private final Map<String, Map<String, Integer>> facetMap = new LinkedHashMap<>();
-	private final BrowserSubstanceSearcher searcher;
+	private final SubstanceSearcher searcher;
 
 	private String searchKey;
 
@@ -26,7 +30,7 @@ public class SearchResult {
 	    this("",new HashSet<String>(),null, null);
 	}
 
-	public SearchResult(String searchKey, Set<String> uuids, BrowserSubstanceSearcher searcher, GinasTestServer.User user) {
+	public SearchResult(String searchKey, Set<String> uuids, SubstanceSearcher searcher, GinasTestServer.User user) {
 		Objects.requireNonNull(uuids);
 		try {
 			Objects.requireNonNull(searchKey);
@@ -69,27 +73,35 @@ public class SearchResult {
 
 	public Stream<Substance> getSubstances() {
 
-//        String adaptedKey = "!"+ searchKey + "#"+ Util.sha1(username);
-//
-//        SearchResultContext src = new SearchResultContext((ix.core.search.SearchResult) IxCache.getRaw(adaptedKey));
-//        Collection results =  src.getResults();
 
-        return GinasTestServer.doAsUser(username, ()-> {
-            SearchResultContext src = SearchResultContext.getSearchResultContextForKey(searchKey);
-            if (src == null) {
-                throw new NullPointerException("null searchResultContext for " + searchKey);
+		Iterator<Substance> iter = new Iterator<Substance>(){
+			Iterator<String> uuidIter = uuids.iterator();
+
+
+			SubstanceAPI api = new SubstanceAPI(searcher.getSession().getRestSession());
+			@Override
+			public boolean hasNext() {
+				return uuidIter.hasNext();
             }
-            //src.getCall()
-            Collection results = src.getResults();
-            if (results == null) {
-                throw new NullPointerException("null results for " + searchKey + src.getMessage());
+
+			@Override
+			public Substance next() {
+				if(!hasNext()){
+					throw new NoSuchElementException();
             }
-            return results.stream().map(o -> (Substance) o);
-        });
+				String uuid = uuidIter.next();
+
+				return api.fetchSubstanceObjectByUuid(uuid);
+	}
+		};
+
+		return StreamSupport.stream(Spliterators.spliterator(iter, uuids.size(), Spliterator.ORDERED), false);
 	}
 
-    public BrowserSubstanceSearcher.WebExportRequest newExportRequest(String format) {
-        return searcher.getExport(format, searchKey);
+    public WebExportRequest newExportRequest(String format) {
+
+		return new WebExportRequest(searchKey,format,searcher.getSession());
+
     }
 
 	public InputStream export(String format) {
@@ -97,6 +109,7 @@ public class SearchResult {
 	}
 
 	public Map<String, Integer> getFacet(String facetName) {
+		System.out.println("facet map = " + facetMap);
 		return facetMap.get(facetName);
 	}
 
@@ -111,6 +124,15 @@ public class SearchResult {
 
 	}
 
+	public Map<String, Integer> getLastEditedFacets(){
+
+		ix.core.search.SearchResult substanceSearchResult = GinasApp.getSubstanceSearchResult(searcher==null? "" : searcher.request().getQuery(), 1000);
+		System.out.println("substance search result last edited = " + substanceSearchResult);
+		System.out.println("substance search result last edited long range facets = " + substanceSearchResult.getOptions().getLongRangeFacets());
+		TextIndexer.Facet facet= substanceSearchResult.getFacet("root_lastEdited");
+
+		return facet.toCountMap();
+	}
 	public Map<String, Map<String, Integer>> getAllFacets() {
 		return Collections.unmodifiableMap(facetMap);
 	}

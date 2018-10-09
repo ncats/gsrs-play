@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import ix.AbstractGinasServerTest;
 import ix.core.controllers.EntityFactory;
 import ix.core.models.Role;
+import ix.core.util.RunOnly;
 import ix.ginas.models.v1.Substance;
 import ix.test.server.ControlledVocab;
 import ix.test.server.GinasTestServer;
@@ -34,20 +35,20 @@ public class IntegrationTest extends AbstractGinasServerTest {
 		expectedException.expect(RuntimeException.class);
 		expectedException.expectMessage("no started application");
 
-		ts.notLoggedInRestSession().get("ginas/app");
+		ts.notLoggedInRestSession().get(ts.getHttpResolver().get(""));
 	}
 
 	@Test
 	public void restartedServer(){
 		ts.restart();
-		JsonNode substances = ts.notLoggedInRestSession().getAsJson("ginas/app/api/v1/substances");
+		JsonNode substances = ts.notLoggedInRestSession().getAsJson(ts.getHttpResolver().apiV1("substances"));
 		assertFalse( SubstanceJsonUtil.isLiteralNull(substances));
 
 	}
 
     @Test
     public void testRestAPISubstance() throws Exception {
-        JsonNode substances = ts.notLoggedInRestSession().getAsJson("ginas/app/api/v1/substances");
+        JsonNode substances = ts.notLoggedInRestSession().getAsJson(ts.getHttpResolver().apiV1("substances"));
         assertFalse( SubstanceJsonUtil.isLiteralNull(substances));
     }
 
@@ -78,7 +79,7 @@ public class IntegrationTest extends AbstractGinasServerTest {
 
 		ts.modifyConfig("ix.core.entityprocessors", processors);
 		ts.start();
-		JsonNode result = ts.notLoggedInRestSession().getAsJson("ginas/app/api/v1/vocabularies/search?q=terms_value:BDNUM");
+		JsonNode result = ts.notLoggedInRestSession().getAsJson(ts.getHttpResolver().apiV1("vocabularies/search?q=terms_value:BDNUM"));
 		assertFalse( SubstanceJsonUtil.isLiteralNull(result));
 		assertEquals(1, result.get("total").asInt());
 	}
@@ -88,6 +89,7 @@ public class IntegrationTest extends AbstractGinasServerTest {
     public void ensureSetupUsers() throws Exception{
         try(RestSession session = ts.newRestSession(ts.getFakeUser1())){
 
+        	System.out.println(ts.getApplication().configuration());
             assertEquals(ts.getFakeUser1().getUserName(), session.getUserName());
         }
 

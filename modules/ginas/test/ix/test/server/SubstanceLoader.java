@@ -206,7 +206,7 @@ public class SubstanceLoader {
 
 
         List<NameValuePair> params = options.generateParametersFor(json);
-        WebRequest request = session.newPostRequest("ginas/app/load");
+        WebRequest request = session.newPostRequest(session.getHttpResolver().get("load"));
         request.setEncodingType(FormEncodingType.MULTIPART);
         request.setRequestParameters(params);
 

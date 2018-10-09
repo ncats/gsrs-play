@@ -22,6 +22,6 @@ public class IdentifiersCard extends CollectionDetailCard<Code>{
 
 	@Override
 	public Html innerContent() {
-		return ix.ginas.views.html.details.properties.identifiercodes.render(c, s.uuid.toString());
+		return ix.ginas.views.html.details.properties.identifiercodes.render(c, s);
 	}
 }

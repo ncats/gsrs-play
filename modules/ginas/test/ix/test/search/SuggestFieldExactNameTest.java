@@ -1,10 +1,12 @@
 package ix.test.search;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import ix.core.util.RunOnly;
 import ix.test.SubstanceJsonUtil;
 import ix.ginas.modelBuilders.SubstanceBuilder;
 import ix.test.load.AbstractLoadDataSetTest;
 import ix.test.server.RestSession;
+import ix.test.server.RestSubstanceSubstanceSearcher;
 import ix.test.server.SubstanceAPI;
 import org.junit.After;
 import org.junit.Before;
@@ -40,10 +42,10 @@ public class SuggestFieldExactNameTest extends AbstractLoadDataSetTest{
         api.submitSubstance( new SubstanceBuilder().addName("Luke"));
         api.submitSubstance( new SubstanceBuilder().addName("Vader"));
 
-         WSResponse wsResponse = session.get("ginas/app/api/v1/suggest/Name?q=foo");
-        SubstanceJsonUtil.ensurePass(wsResponse);
 
-        JsonNode actualResults = wsResponse.asJson();
+         WSResponse wsResponse = session.get(session.getHttpResolver().apiV1("suggest/Name?q=foo"));
+
+        JsonNode actualResults = SubstanceJsonUtil.ensurePass(wsResponse);
 
         assertTrue(actualResults.isArray());
 
@@ -74,10 +76,10 @@ public class SuggestFieldExactNameTest extends AbstractLoadDataSetTest{
         api.submitSubstance( new SubstanceBuilder().addName("Luke"));
         api.submitSubstance( new SubstanceBuilder().addName("Vader"));
 
-        WSResponse wsResponse = session.get("ginas/app/api/v1/suggest/Name?q=fooBar");
-        SubstanceJsonUtil.ensurePass(wsResponse);
+        WSResponse wsResponse = session.get(session.getHttpResolver().apiV1("suggest/Name?q=fooBar"));
+//        SubstanceJsonUtil.ensurePass(wsResponse);
 
-        JsonNode actualResults = wsResponse.asJson();
+        JsonNode actualResults = SubstanceJsonUtil.ensurePass(wsResponse);
 
         assertTrue(actualResults.isArray());
 
@@ -110,10 +112,10 @@ public class SuggestFieldExactNameTest extends AbstractLoadDataSetTest{
         api.submitSubstance( new SubstanceBuilder().addName("Luke"));
         api.submitSubstance( new SubstanceBuilder().addName("Vader"));
 
-        WSResponse wsResponse = session.get("ginas/app/api/v1/suggest/Name?q=fooBar&max=100");
-        SubstanceJsonUtil.ensurePass(wsResponse);
+        WSResponse wsResponse = session.get(session.getHttpResolver().apiV1("suggest/Name?q=fooBar&max=100"));
+//
 
-        JsonNode actualResults = wsResponse.asJson();
+        JsonNode actualResults = SubstanceJsonUtil.ensurePass(wsResponse);
 
         assertTrue(actualResults.isArray());
 
@@ -148,10 +150,10 @@ public class SuggestFieldExactNameTest extends AbstractLoadDataSetTest{
         api.submitSubstance( new SubstanceBuilder().addName("Luke"));
         api.submitSubstance( new SubstanceBuilder().addName("Vader"));
 
-        WSResponse wsResponse = session.get("ginas/app/api/v1/suggest/Name?q=fooBarBaz5&max=100");
-        SubstanceJsonUtil.ensurePass(wsResponse);
+        WSResponse wsResponse = session.get(session.getHttpResolver().apiV1("suggest/Name?q=fooBarBaz5&max=100"));
+//        SubstanceJsonUtil.ensurePass(wsResponse);
 
-        JsonNode actualResults = wsResponse.asJson();
+        JsonNode actualResults = SubstanceJsonUtil.ensurePass(wsResponse);
 
         assertTrue(actualResults.isArray());
 
@@ -193,10 +195,10 @@ public class SuggestFieldExactNameTest extends AbstractLoadDataSetTest{
         api.submitSubstance( new SubstanceBuilder().addName("Luke"));
         api.submitSubstance( new SubstanceBuilder().addName("Vader"));
 
-        WSResponse wsResponse = session.get("ginas/app/api/v1/suggest/Name?q=fooBarBaz&max=100");
-        SubstanceJsonUtil.ensurePass(wsResponse);
+        WSResponse wsResponse = session.get(session.getHttpResolver().apiV1("suggest/Name?q=fooBarBaz&max=100"));
+//        SubstanceJsonUtil.ensurePass(wsResponse);
 
-        JsonNode actualResults = wsResponse.asJson();
+        JsonNode actualResults = SubstanceJsonUtil.ensurePass(wsResponse);
 
         assertTrue(actualResults.isArray());
 
@@ -231,10 +233,10 @@ public class SuggestFieldExactNameTest extends AbstractLoadDataSetTest{
         api.submitSubstance( new SubstanceBuilder().addName("Luke"));
         api.submitSubstance( new SubstanceBuilder().addName("Vader"));
 
-        WSResponse wsResponse = session.get("ginas/app/api/v1/suggest/Name?q=fooBarBaz%205&max=100");
-        SubstanceJsonUtil.ensurePass(wsResponse);
+        WSResponse wsResponse = session.get(session.getHttpResolver().apiV1("suggest/Name?q=fooBarBaz%205&max=100"));
+//        SubstanceJsonUtil.ensurePass(wsResponse);
 
-        JsonNode actualResults = wsResponse.asJson();
+        JsonNode actualResults = SubstanceJsonUtil.ensurePass(wsResponse);
 
         assertTrue(actualResults.isArray());
 

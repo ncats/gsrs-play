@@ -29,7 +29,7 @@ public class MyDownloadsAPI {
     }
 
     public List<ExportMetaData> getAllDownloads() throws IOException{
-        JsonNode node = session.getAsJson("ginas/app/downloads");
+        JsonNode node = session.getAsJson(session.getHttpResolver().get("downloads"));
 
 
         return EntityFactory.EntityMapper.FULL_ENTITY_MAPPER().readValue(node.toString(), new TypeReference<List<ExportMetaData>>() {

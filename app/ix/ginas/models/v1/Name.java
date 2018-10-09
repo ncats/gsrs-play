@@ -54,10 +54,16 @@ public class Name extends CommonDataElementOfCollection {
 		 * <li> Preferred status</li>
 		 * <li> Official status</li>
 		 * <li> English first</li>
-		 * <li> Number of References</li>
-		 * <li> Name Type</li>
 		 * <li> Alphabetical</li>
+		 * <li> Name Type</li>
+		 * <li> Number of References</li>
+		 *
+		 *
 		 * </ol>
+		 *
+		 * Note that this sort order was changed in September 2018
+		 * for v2.3.1 so sorting with older versions might
+		 * be slightly different.
 		 */
 		DISPlAY_NAME_FIRST_ENGLISH_FIRST{
 			public int compare(Name o1, Name o2) {
@@ -77,14 +83,19 @@ public class Name extends CommonDataElementOfCollection {
 					if(o2.isLanguage("en"))return 1;
 					return -1;
 				}
-				int refDiff=o2.getReferences().size()-o1.getReferences().size();
-				if(refDiff!=0){
-					return refDiff;
+				//katzelda GSRS-623 : changed sort order
+				//from #refs, type, alpha -> alpha, type, #refs
+				int nameCompare = o1.name.compareTo(o2.name);
+				if(nameCompare !=0){
+					return nameCompare;
 				}
-				if(!o2.type.equals(o1.type)){
-					return -o2.type.compareTo(o1.type);
+
+				int nameType = o1.type.compareTo(o2.type);
+				if(nameType !=0){
+					return nameType;
 				}
-				return -o2.name.compareTo(o1.name);
+				return o2.getReferences().size()-o1.getReferences().size();
+
 			}
 		},
 		BY_CREATION_DATE{

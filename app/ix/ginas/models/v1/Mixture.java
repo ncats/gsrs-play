@@ -1,5 +1,6 @@
 package ix.ginas.models.v1;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.persistence.*;
@@ -13,7 +14,7 @@ import ix.ginas.models.GinasCommonSubData;
 public class Mixture extends GinasCommonSubData {
 	@ManyToMany(cascade=CascadeType.ALL)
 	@JoinTable(name="ix_ginas_substance_mix_comp")
-	public List<Component> components;
+	public List<Component> components = new ArrayList<>();
 	
 	@OneToOne(cascade=CascadeType.ALL)
 	public SubstanceReference parentSubstance;

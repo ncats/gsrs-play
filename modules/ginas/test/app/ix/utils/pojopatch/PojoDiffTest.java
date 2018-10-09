@@ -7,6 +7,8 @@ import static org.junit.Assert.assertTrue;
 import java.util.*;
 import java.util.function.Supplier;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import ix.test.SubstanceJsonUtil;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -20,12 +22,9 @@ import com.github.fge.jsonpatch.diff.JsonDiff;
 import ix.AbstractGinasTest;
 import ix.core.controllers.EntityFactory;
 import ix.core.models.Author;
-import ix.core.models.Keyword;
 import ix.core.util.EntityUtils.EntityWrapper;
-import ix.ginas.models.v1.Name;
 import ix.ginas.models.v1.Parameter;
 import ix.ginas.models.v1.Property;
-import ix.ginas.models.v1.Substance;
 import ix.utils.pojopatch.PojoDiff;
 import ix.utils.pojopatch.PojoPatch;
 
@@ -277,16 +276,33 @@ public class PojoDiffTest extends AbstractGinasTest{
         assertEquals(new HashSet<>(a), new HashSet<>(b));
     }
 
+    static class Foo{
+        List<String> innerList;
+        @JsonCreator
+        public Foo(@JsonProperty("innerList") List<String> innerList){
+            this.innerList = innerList;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+
+            Foo foo = (Foo) o;
+
+            return innerList != null ? innerList.equals(foo.innerList) : foo.innerList == null;
+        }
+
+        @Override
+        public int hashCode() {
+            return innerList != null ? innerList.hashCode() : 0;
+        }
+    }
     @Test
     public void EmbedListTest() throws Exception{
-    	Substance s = new Substance();
-    	Name n = new Name();
-    	n.languages.add(new Keyword(null,"sp"));
-    	s.names.add(n);
     	
-    	Substance s2 = new Substance();
-    	Name n2 = new Name();
-    	s2.names.add(n2);
+        Foo s = new Foo(Arrays.asList("A, B"));
+        Foo s2 = new Foo(Arrays.asList("A, B"));
     	
     	s=getChanged(s, s2);
 

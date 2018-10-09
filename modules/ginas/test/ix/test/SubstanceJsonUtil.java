@@ -6,9 +6,15 @@ import java.util.*;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import ix.ginas.models.v1.Reference;
+
+import ix.core.models.Keyword;
+import ix.ginas.modelBuilders.SubstanceBuilder;
+import ix.ginas.models.GinasAccessReferenceControlled;
+import ix.ginas.models.GinasCommonSubData;
+import ix.ginas.models.v1.*;
 import play.libs.ws.WSResponse;
 import util.json.JsonUtil;
 import util.json.JsonUtil.JsonNodeBuilder;
@@ -121,7 +127,6 @@ public final class SubstanceJsonUtil {
 				.remove("/approvalID")
 				.remove("/approved")
 				.remove("/approvedBy")
-				
 				.set("/status", "pending")
 				.ignoreMissing();
 		boolean hasReferences=false;
@@ -142,10 +147,107 @@ public final class SubstanceJsonUtil {
 			
 		}
 		
-		return jnb.build();
+		return SubstanceBuilder.from(jnb.build())
 		
+		                .andThen(s->{
+		                	s.relationships
+		                	 .stream()
+		                	 .map(r->r.relatedSubstance)
+		                	 .filter(r->r.approvalID!=null)
+		                	 .forEach(r->{
+		                		 r.approvalID=null;
+		                	 });
+
+		                })
+				.andThen(s->{
+					s.names.stream()
+							.filter(n-> !n.isPublic())
+							.forEach(n-> {
+								n.setAccess(Collections.emptySet());
+
+								Reference r = createNewPublicDomainRef();
+								n.addReference(r, s);
+							});
+				})
+
+		                .onSubstanceClass( (cls, s) ->{
+		                	switch(cls){
+								case protein:
+								{
+									GinasCommonSubData protein = ((ProteinSubstance) s).protein;
+
+									removeUnusedReferencesAndAddPublicIfNeeded(s, protein);
+
+									break;
 	}
-	
+								case nucleicAcid:
+								{
+									NucleicAcid na = ((NucleicAcidSubstance)s).nucleicAcid;
+									removeUnusedReferencesAndAddPublicIfNeeded(s, na);
+
+									break;
+								}
+								case chemical:
+								{
+									ChemicalSubstance cs = (ChemicalSubstance)s;
+
+									removeUnusedReferencesAndAddPublicIfNeeded(s, cs.structure);
+
+
+									break;
+								}
+								case mixture:
+								{
+									removeUnusedReferencesAndAddPublicIfNeeded(s, ((MixtureSubstance)s).mixture);
+									break;
+								}
+								case  polymer:
+								{
+									removeUnusedReferencesAndAddPublicIfNeeded(s, ((PolymerSubstance)s).polymer);
+									break;
+								}
+								case structurallyDiverse:
+								{
+									removeUnusedReferencesAndAddPublicIfNeeded(s, ((StructurallyDiverseSubstance)s).structurallyDiverse);
+									break;
+								}
+								case specifiedSubstanceG1:
+								{
+									removeUnusedReferencesAndAddPublicIfNeeded(s, ((SpecifiedSubstanceGroup1Substance)s).specifiedSubstance);
+									break;
+								}
+							}
+						})
+				.buildJson();
+
+	}
+
+	private static void removeUnusedReferencesAndAddPublicIfNeeded(Substance s, GinasAccessReferenceControlled protein) {
+		Set<Keyword> kept = new HashSet<>();
+		for(Keyword k : protein.getReferences()){
+
+                String value = k.getValue();
+                Reference referenceByUUID = s.getReferenceByUUID(value);
+                if(null != referenceByUUID){
+
+                    kept.add(k);
+                }
+            }
+		protein.setReferences(kept);
+		if(protein.getReferences().isEmpty()){
+            Reference r = createNewPublicDomainRef();
+            protein.addReference(r, s);
+        }
+	}
+
+	private static Reference createNewPublicDomainRef(){
+		Reference r = new Reference();
+		r.publicDomain = true;
+		r.setAccess(Collections.emptySet());
+		r.addTag(Reference.PUBLIC_DOMAIN_REF);
+
+		return r;
+	}
 	public static JsonNode prepareUnapproved(JsonNode substance){
 		
 		return new JsonUtil.JsonNodeBuilder(substance)
@@ -159,14 +261,18 @@ public final class SubstanceJsonUtil {
 		
 	}
 
-	public static void ensureFailure(WSResponse response){
+	public static JsonNode ensureFailure(WSResponse response){
 		int status = response.getStatus();
 //		System.out.println("Response is:");
-//		System.out.println(response.getBody());
 		assertTrue("Expected failure code, got:" + status, status != 200 && status != 201);
+		try{
+			return response.asJson();
+		}catch(Exception e){
+				return new ObjectMapper().createObjectNode();
+		}
 	}
 
-	public static void ensurePass(WSResponse response){
+	public static JsonNode ensurePass(WSResponse response){
 		int status = response.getStatus();
 		try{
 			assertTrue("Expected pass code, got:" + status +" message = " + response.getStatusText(), status == 200 || status == 201);
@@ -174,6 +280,7 @@ public final class SubstanceJsonUtil {
 			System.err.println(response.getBody());
 			throw e;
 		}
+		return response.asJson();
 	}
 
 

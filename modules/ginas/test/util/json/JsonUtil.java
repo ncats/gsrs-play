@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.fge.jsonpatch.JsonPatch;
 import com.github.fge.jsonpatch.JsonPatchException;
 import com.github.fge.jsonpatch.diff.JsonDiff;
+import ix.core.models.Edit;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -43,8 +44,12 @@ public class JsonUtil {
 		return computeChanges(beforeNode,afterNode,filters);
 	}
 	
-	
-	
+	public static Changes computeChangesFromEdit(Edit edit, ChangeFilter...filters) throws IOException{
+		ObjectMapper mapper = new ObjectMapper();
+
+		return computeChanges(mapper.readTree(edit.oldValue), mapper.readTree(edit.newValue), filters);
+	}
+
     public static Changes computeChanges(JsonNode before, JsonNode after, ChangeFilter...filters ){
         JsonNode jp = JsonDiff.asJson(before,after);
         //System.out.println("THE CHANGES:" + jp);
@@ -134,6 +139,9 @@ public class JsonUtil {
     public static class JsonNodeBuilder{
     	final JsonNode oldJson;
     	private boolean ignoreMissing=false;
+
+
+
     	public static class JsonChange{
     		public String op;
     		public String path;
@@ -201,6 +209,17 @@ public class JsonUtil {
     	}
     	public JsonNodeBuilder remove(String path){
     		changes.add(JsonChange.remove(path));
+    		return this;
+    	}
+		public JsonNodeBuilder append(String dest, JsonNode sourceCollection) {
+			if(sourceCollection.isArray()){
+				for(JsonNode n : sourceCollection){
+					add(dest, n);
+				}
+			}else{
+				add(dest, sourceCollection);
+			}
+
     		return this;
     	}
     	public JsonNodeBuilder add(String path,Object value){

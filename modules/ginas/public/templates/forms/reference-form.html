@@ -1,8 +1,10 @@
 <div class="row info">
     <div class="row">
-        <form-header class="col-md-2" type="references" parent="parent" iscollapsed="iscollapsed"></form-header>
-        <button class="btn btn-primary pull-left" ng-click="addNewRef(refOnlyForm, 'references', true); iscollapsed=false" style="margin-top: 18px;">
+        <form-header type="references" parent="parent" iscollapsed="iscollapsed"></form-header>
+        <div class="col-md-6">
+            <button class="btn btn-primary pull-left" ng-click="addNewRef(refOnlyForm, 'references', true); iscollapsed=false">
             <i class="fa fa-plus"></i> Add reference</button>
+    </div>
     </div>
     <div class="col-md-12" uib-collapse="iscollapsed">
         <form class="form-horizontal" name="refOnlyForm" role="form" id="addRefOnlyForm" novalidate>
@@ -40,10 +42,12 @@
                                                        label="Public Domain"></check-box>
                                     </div>
                                     <div class="col-md-2 text-center">
-                                        <modal-form-button type="access"
+                                        <!-- <modal-form-button type="access"
                                                            referenceobj="obj"
                                                            parent="parent">
-                                        </modal-form-button>
+                                        </modal-form-button> -->
+                                        <access-management obj-to-manage-access="obj">
+                                        </access-management>
                                     </div>
                                    
                                     <div class="col-md-2">

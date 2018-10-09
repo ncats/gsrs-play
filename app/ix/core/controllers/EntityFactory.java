@@ -1298,7 +1298,7 @@ public class EntityFactory extends Controller {
 
 					@Override
 					public String getMessage() {
-						return "Error updating entity [Error ID:" + errorID + "]:" + e.getMessage() +  ". See applicaiton log for more details.";
+						return "Error updating entity [Error ID:" + errorID + "]:" + e.getMessage() +  ". See application log for more details.";
 					}
 
 					@Override

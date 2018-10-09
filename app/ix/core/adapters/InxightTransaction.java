@@ -6,6 +6,7 @@ import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
@@ -21,7 +22,18 @@ public class InxightTransaction implements Closeable{
 	private static ConcurrentHashMap<Transaction, InxightTransaction> _instances=
 			new ConcurrentHashMap<Transaction, InxightTransaction>();
 
-	
+	/**
+	 * Get the current transaction if there is one in scope.
+	 * @return an optional that contains the transaction if there
+	 * is one in scope; or empty.
+	 */
+	public static Optional<InxightTransaction> getCurrentTransaction(){
+		Transaction tx = Ebean.currentTransaction();
+		if(tx ==null){
+			return Optional.empty();
+		}
+		return Optional.of(getTransaction(tx));
+	}
 	public static InxightTransaction getTransaction(Transaction t){
 		
 		InxightTransaction it=_instances.get(t);

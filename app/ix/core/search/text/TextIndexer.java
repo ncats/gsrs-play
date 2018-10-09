@@ -701,6 +701,14 @@ public class TextIndexer implements Closeable, ProcessListener {
 			});
 		}
 		
+        public Map<String,Integer> toCountMap() {
+		    Map<String, Integer> map = new LinkedHashMap<>();
+            for(FV fv : values){
+                map.put(fv.getLabel(), fv.getCount());
+            }
+            return map;
+        }
+
 		public static enum Comparators implements Comparator<FV>{
             LABEL_SORTER_ASC{
                 @Override
@@ -1181,7 +1189,9 @@ public class TextIndexer implements Closeable, ProcessListener {
 		// load saved lookups
 		lookups = new ConcurrentHashMap<String, SuggestLookup>();
 		
-		for (File f : suggestDir.listFiles()) {
+        File[] suggestFiles = suggestDir.listFiles();
+        if(suggestFiles !=null) {
+            for (File f : suggestFiles) {
 			if (f.isDirectory()) {
 				try {
 					lookups.put(f.getName(), new SuggestLookup(f));
@@ -1191,7 +1201,8 @@ public class TextIndexer implements Closeable, ProcessListener {
 				}
 			}
 		}
-		
+        }
+
 		Logger.info("## " + suggestDir + ": " + lookups.size() + " lookups loaded!");
 
 		sorters = loadSorters(new File(dir, SORTER_CONFIG_FILE));
@@ -1561,7 +1572,10 @@ public class TextIndexer implements Closeable, ProcessListener {
 	public static void collectBasicFacets(Facets facets, SearchResult sr) throws IOException{
 		Map<String,List<DrillAndPath>> providedDrills = sr.getOptions().getEnhancedDrillDownsMap();
 		
-		List<FacetResult> facetResults = facets.getAllDims(sr.getOptions().getFdim());
+		int fdim=sr.getOptions().getFdim();
+		if(fdim<=0)return;
+
+		List<FacetResult> facetResults = facets.getAllDims(fdim);
 		if (DEBUG(1)) {
 			Logger.info("## Drilled " + (sr.getOptions().isSideway() ? "sideway" : "down") + " " + facetResults.size()+ " facets");
 		}

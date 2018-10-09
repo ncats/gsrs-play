@@ -6,7 +6,7 @@
     <div class="col-md-12">
 
         <form class="form-horizontal" name="termForm" role="form" id="addDomainForm" novalidate>
-            <div ng-repeat="(index,obj) in cv">
+            <div ng-repeat="(index,obj) in cv | orderBy:'domain'">
                 <ng-form name="form">
                     <div class="form-div" ng-class="{'bg-warning' : form.$invalid && form.$flagged}">
                         <div class="row">

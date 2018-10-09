@@ -11,11 +11,13 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.annotation.JsonTypeIdResolver;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import gov.nih.ncgc.chemical.Chemical;
 import gov.nih.ncgc.chemical.ChemicalFactory;
 import gov.nih.ncgc.jchemical.JchemicalReader;
+import ix.core.util.InheritanceTypeIdResolver;
 import ix.core.validator.GinasProcessingMessage;
 import ix.core.validator.GinasProcessingMessage.Link;
 import ix.core.models.Backup;
@@ -72,9 +74,24 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
     private static ChemicalFactory DEFAULT_READER_FACTORY = new JchemicalReader();
     private static String NULL_MOLFILE = "\n\n\n  0  0  0     0  0            999 V2000\nM  END\n\n$$$$";
 
+    /**
+     * Represent this Substance as full JsonNode.
+     *
+     * @apiNote This is identical to {@code  return EntityWrapper.of(this).toFullJsonNode();}
+     * @return The JsonNode representation of this Substance.
+     */
+    public JsonNode toFullJsonNode() {
+        return EntityWrapper.of(this).toFullJsonNode();
+    }
 
-
-
+    @Override
+    public String toString() {
+        return "Substance{" +
+                "uuid=" + uuid +
+                ", substanceClass=" + substanceClass +
+                ", version='" + version + '\'' +
+                '}';
+    }
 
     public enum SubstanceClass {
         chemical, 
@@ -827,9 +844,12 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
     }
 
     public Reference getReferenceByUUID(String uuid) {
+
         for (Reference r : this.references) {
-            if (r.getUuid().toString().equals(uuid))
+        	UUID ruuid = r.getUuid();
+        	if(ruuid!=null && ruuid.toString().equals(uuid)){
                 return r;
+        }
         }
         return null;
     }

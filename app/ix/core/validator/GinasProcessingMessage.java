@@ -5,8 +5,10 @@ import java.util.Collection;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import ix.core.util.InheritanceTypeIdResolver;
 import play.Logger;
 
+@InheritanceTypeIdResolver.DefaultInstance
 public class GinasProcessingMessage implements ValidationMessage {
 	public enum ACTION_TYPE{IGNORE, APPLY_CHANGE, FAIL, DO_NOTHING};
 
@@ -55,15 +57,13 @@ public class GinasProcessingMessage implements ValidationMessage {
 	}
 	
 	public static boolean ALL_VALID(Collection<GinasProcessingMessage> messages){
-		boolean valid=true;
 		for(GinasProcessingMessage gpm:messages){
 			Logger.info("Message:" + gpm.message);
 			if(gpm.isProblem()){
-				valid=false;
-				return valid;
+				return false;
 			}
 		}
-		return valid;
+		return true;
 	}
 	@JsonIgnore
 	public boolean isProblem(){
@@ -75,7 +75,10 @@ public class GinasProcessingMessage implements ValidationMessage {
 	}
 
 
-
+	public GinasProcessingMessage addLinks(Collection<? extends Link> links){
+		this.links.addAll(links);
+		return this;
+	}
 	public GinasProcessingMessage addLink(Link l){
 		this.links.add(l);
 		return this;
@@ -84,6 +87,11 @@ public class GinasProcessingMessage implements ValidationMessage {
 	@Override
 	public String getMessage() {
 		return message;
+	}
+
+	public GinasProcessingMessage setMessage(String s){
+		this.message=s;
+		return this;
 	}
 
 	@Override

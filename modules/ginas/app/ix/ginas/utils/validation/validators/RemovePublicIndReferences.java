@@ -15,7 +15,7 @@ import java.util.regex.Pattern;
  * Created by katzelda on 5/7/18.
  */
 public class RemovePublicIndReferences extends AbstractValidatorPlugin<Substance>{
-    Pattern IND_PATTERN = Pattern.compile(".*[ ]IND[ -]*[0-9][0-9][0-9]*.*");
+    Pattern IND_PATTERN = Pattern.compile(".*[^A-Z]IND[^A-Z]*[0-9][0-9][0-9]*.*");
 
     @Override
     public void validate(Substance s, Substance objold, ValidatorCallback callback) {
@@ -24,7 +24,7 @@ public class RemovePublicIndReferences extends AbstractValidatorPlugin<Substance
                     if("IND".equals(r.docType)){
                         return true;
                     }
-                    return IND_PATTERN.matcher(" " + r.citation).find();
+                    return IND_PATTERN.matcher((" " + r.citation).toUpperCase()).find();
                 })
                 .filter(r->r.isPublic() || r.isPublicDomain() || r.isPublicReleaseReference())
                 .forEach(r->{

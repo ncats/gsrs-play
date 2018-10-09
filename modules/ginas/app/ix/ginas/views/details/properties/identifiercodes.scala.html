@@ -1,65 +1,78 @@
 
 @import ix.ginas.controllers.GinasApp
 @import ix.ginas.models.v1.Code
+@import ix.ginas.models.v1.Substance
 
-@(codes: Collection[Code], id: String)
-    <table class="table gsrs-datatable" id="codesTable">
-        <thead>
-            <tr>
-                <th>Code System</th>
-                <th>Code</th>
-                <th>Type</th>
-                <th>Description</th>
-            </tr>
-        </thead>
-        @for(c <- codes) {
-          @if(!c.isClassification()){
-            <tr>
-                <td class="short">
-                    <table class="info-wrapper">
+@(codes: Collection[Code], substance: Substance = null)
+
+<table class="table gsrs-datatable" id="codesTable">
+	<thead>
+		<tr>
+			<th>Code System</th>
+			<th>Code</th>
+			<th>Type</th>
+			<th>Description</th>
+			<th class = "no-sort">References</th>
+		</tr>
+	</thead>
+	@for(c <- codes) {
+		@if(!c.isClassification()){
+			<tr id = "identifiers-row-@c.uuid">
+				<td class="short">
+					<table class="info-wrapper">
 						<tr>
 							<td style="width:100%;" id="no-word-break">
 								<span>@c.codeSystem</span>
 							</td>
-							
+
 							<td>
-								@if(c.getReferences.size > 0) {
-									<info-popup>
-										<div class="info-popup-container">
-											<div>
-												<label>Source@if(c.getReferences.size > 1) {s} else {}:</label>
-											</div>
-											<referencesmanager reftable hide-header="true" show='["cit"]' substance ="'@id'" sreferences = "@GinasApp.getAsJson(c.getReferences())" >
-											</referencesmanager>
+							@if(c.getReferences.size > 0) {
+								<div style = "display:none">
+
+									<div class="info-popup-container" id = "identifiers-ref-@c.uuid">
+										<div>
+											<label>Source@if(c.getReferences.size > 1) {s} else {}:</label>
 										</div>
-									</info-popup>
-								}
+										<referencesmanager reftable hide-header="true"
+										show='["cit"]'
+										substance ="'@substance.uuid'"
+										version ="'@substance.version'"
+										sreferences = "@GinasApp.getAsJson(c.getReferences())" >
+										</referencesmanager>
+
+									</div>
+								</div>
+							}
 							</td>
 						</tr>
-                    </table>
-                </td>
-				
-	            <td id="one-line">
-		            @if(c.url){
-		                <a href="@c.url" target="_blank" uib-tooltip="Click link">@c.code</a>
-		            }else{
-		                @c.code
-		            }
-		            <div class="audit-row" ng-if="audit==true">
-		                    <div class="audit-content">
-								Created by <code>@c.createdBy</code> on <code>@c.created</code> , Edited by <code>@c.lastEditedBy</code> on <code>@c.lastEdited</code>
-		                    </div>
-		            </div>
-                </td>
-                
-                <td id="one-line">
-					@GinasApp.getCV.getDisplay("CODE_TYPE",{c.`type`})
+					</table>
 				</td>
-				
-                <td>
-                    @c.comments
-                </td>
 
-            }
-        }
-    </table>
+				<td id="one-line">
+					@if(c.url){
+						<a href="@c.url" target="_blank" uib-tooltip="Click link">@c.code</a>
+					}else{
+						@c.code
+					}
+					<div class="audit-row" ng-if="audit==true">
+						<div class="audit-content">
+							Created by <code>@c.createdBy</code> on <code>@c.created</code> , Edited by <code>@c.lastEditedBy</code> on <code>@c.lastEdited</code>
+						</div>
+					</div>
+				</td>
+
+				<td id="one-line">
+				@GinasApp.getCV.getDisplay("CODE_TYPE",{c.`type`})
+				</td>
+
+				<td>
+				@c.comments
+				</td>
+				<td >
+					<button onclick = "addRef('@c.uuid',this,'identifiers');" class = "btn btn-primary  reference-button" >view</button>
+				</td>
+
+				}
+	}
+</table>
+

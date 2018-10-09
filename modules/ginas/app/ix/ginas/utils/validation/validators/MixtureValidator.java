@@ -6,8 +6,11 @@ import ix.ginas.controllers.v1.SubstanceFactory;
 import ix.ginas.models.v1.Component;
 import ix.ginas.models.v1.MixtureSubstance;
 import ix.ginas.models.v1.Substance;
+import ix.ginas.utils.validation.ValidationUtils;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -28,6 +31,7 @@ public class MixtureValidator extends AbstractValidatorPlugin<Substance> {
                     .ERROR_MESSAGE("Mixture substance must have at least 2 mixture components"));
         } else {
             Set<String> mixtureIDs = new HashSet<>();
+            int oneOfCount=0;
             for (Component c : cs.mixture.components) {
                 if (c.substance == null) {
                     callback.addMessage(GinasProcessingMessage
@@ -50,7 +54,20 @@ public class MixtureValidator extends AbstractValidatorPlugin<Substance> {
                                         + c.substance.refPname + "\""));
                     }
                 }
+
+                if("MAY_BE_PRESENT_ONE_OF".equals(c.type)){
+                    oneOfCount++;
+                }
             }
+            //GSRS-199
+            //You should have to have at least two "One of" components in the mixture record.
+            if(oneOfCount == 1){
+                callback.addMessage(GinasProcessingMessage
+                        .ERROR_MESSAGE("Should have at least two \"One of\" components in the mixture record"));
+            }
+
+            ValidationUtils.validateReference(cs, cs.mixture, callback, ValidationUtils.ReferenceAction.FAIL);
+
         }
 
     }

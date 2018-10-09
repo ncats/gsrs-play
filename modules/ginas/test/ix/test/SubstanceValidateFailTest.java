@@ -66,7 +66,7 @@ public class SubstanceValidateFailTest extends AbstractGinasClassServerTest {
             assertEquals(OK, wsResponse1.getHttpStatus());
 
             assertFalse(wsResponse1.isNull());
-            assertFalse(wsResponse1.isValid());
+            assertFalse(wsResponse1.getMessages().toString(), wsResponse1.isValid());
 
 
         }catch(Throwable e){

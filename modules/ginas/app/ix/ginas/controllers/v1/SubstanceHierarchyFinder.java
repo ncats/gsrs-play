@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -59,7 +60,7 @@ public class SubstanceHierarchyFinder {
 	
 	private CachedSupplier<List<HierarchyFinder>> hfinders=CachedSupplier.of(()->{
 		List<HierarchyFinder> finders= new ArrayList<>();
-		finders.add(new NonInvertibleRelationshipHierarchyFinder(Relationship.ACTIVE_MOIETY_RELATIONSHIP_TYPE).renameChildType("HAS AS ACTIVE MOIETY"));
+		finders.add(new NonInvertibleRelationshipHierarchyFinder(Relationship.ACTIVE_MOIETY_RELATIONSHIP_TYPE).renameChildType((p,c)->"HAS ACTIVE MOIETY:\"" + p.getName() + "\""));
 		finders.add(new InvertibleRelationshipHierarchyFinder("SALT/SOLVATE->PARENT").renameChildType("IS SALT/SOLVATE OF"));
 		finders.add(new InvertibleRelationshipHierarchyFinder("SUB_CONCEPT->SUBSTANCE").renameChildType("IS SUBCONCEPT OF"));
 		finders.add(new G1SSConstituentFinder().renameChildType("IS G1SS CONSTITUENT OF"));
@@ -321,6 +322,33 @@ public class SubstanceHierarchyFinder {
 				};			
 		}
 		
+		public default HierarchyFinder renameChildType(BiFunction<Substance,Substance,String> parentChildRenamer){
+			HierarchyFinder _this=this;
+
+				return new HierarchyFinder(){
+
+					@Override
+					public List<Tuple<String, Substance>> findChildren(Substance s) {
+						return _this.findChildren(s).stream()
+								                    .map(t->{
+								                    	String newName = parentChildRenamer.apply(s, t.v());
+								                    	return Tuple.of(newName,t.v());
+								                    })
+								                    .collect(Collectors.toList());
+					}
+
+					@Override
+					public List<Tuple<String, Substance>> findParents(
+							Substance s) {
+						return _this.findParents(s);
+					}
+				};
+		}
+
+		public default HierarchyFinder renameParentType(BiFunction<Substance,Substance,String> parentChildRenamer){
+			return this.reverse().renameChildType((p,c)->parentChildRenamer.apply(c, p)).reverse();
+		}
+
 		public default HierarchyFinder renameParentType(String newName){
 			return this.reverse().renameChildType(newName).reverse();			
 		}

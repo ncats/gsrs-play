@@ -292,12 +292,19 @@ public class GinasApp extends App {
 
     @Dynamic(value = IxDynamicResourceHandler.IS_ADMIN, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
     public static Result addPrincipal() {
+
+
+        try{
         DynamicForm requestData = Form.form().bindFromRequest();
         if (requestData.hasErrors()) {
-            return ok();// badRequest(createForm.render(userForm));
+               throw new IllegalStateException("User form has errors");
         }
-
         Administration.addUser(requestData);
+
+        }catch(Exception e){
+        	flash("error", e.getMessage());
+        	return createPrincipal();
+        }
         return redirect(ix.ginas.controllers.routes.GinasApp.listGinasUsers(1, 16, "", "", ""));
     }
 
@@ -1887,10 +1894,12 @@ public class GinasApp extends App {
 
         @Override
         protected ProteinSubstance instrument(SequenceIndexer.Result r) throws Exception {
-
-            System.out.println("result id = " + r.id);
             ProteinSubstance protein=null;
 
+            //I don't understand the logic here ...
+            //I don't think this does what it's supposed to.
+            //katzelda - needed for large fasta sequences
+            //but need tests to confirm
             if(r.id.startsWith(">")){
                 Matcher m = FASTA_FILE_PATTERN.matcher(r.id);
                 if(m.find()){
@@ -1903,9 +1912,8 @@ public class GinasApp extends App {
                 }
             }else {
 
-                List<ProteinSubstance> proteins = SubstanceFactory.protfinder.get().where()
-                        .eq("protein.subunits.uuid", r.id).findList(); // also slow
-                protein = proteins.isEmpty() ? null : proteins.get(0);
+                Optional<ProteinSubstance> proteinMatch = SubstanceFactory.getProteinSubstancesFromSubunitID(r.id);
+                protein = !proteinMatch.isPresent() ? null : proteinMatch.get();
             }
 
             if (protein != null) {
@@ -2717,17 +2725,17 @@ public class GinasApp extends App {
         @Override
         protected NucleicAcidSubstance instrument(SequenceIndexer.Result r) throws Exception {
             NucleicAcidSubstance nuc= null;
-            if(r.id.startsWith(">")){
-                Matcher m = FASTA_FILE_PATTERN.matcher(r.id);
-                if(m.find()){
-                    String parentId = m.group(1);
-                    nuc = SubstanceFactory.nucfinder.get().byId(UUID.fromString(parentId));
-                }
-            }else {
-                List<NucleicAcidSubstance> nucSubstances = SubstanceFactory.nucfinder.get().where()
-                        .eq("nucleicAcid.subunits.uuid", r.id).findList(); // also slow
-                nuc = nucSubstances.isEmpty() ? null : nucSubstances.get(0);
-            }
+//            if(r.id.startsWith(">")){
+//                Matcher m = FASTA_FILE_PATTERN.matcher(r.id);
+//                if(m.find()){
+//                    String parentId = m.group(1);
+//                    nuc = SubstanceFactory.nucfinder.get().byId(UUID.fromString(parentId));
+//                }
+//            }else {
+                Optional<NucleicAcidSubstance> nucSubstance = SubstanceFactory.getNucleicAcidSubstancesFromSubunitID(r.id); // also slow
+
+                nuc = !nucSubstance.isPresent() ? null : nucSubstance.get();
+//            }
 
             if (nuc != null) {
                 Key key=EntityWrapper.of(nuc).getKey();

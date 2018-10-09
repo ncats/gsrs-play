@@ -76,7 +76,7 @@ public class SubstanceValidSubmitTest extends AbstractGinasServerTest {
 
 		JsonNode js = SubstanceJsonUtil.prepareUnapprovedPublic(JsonUtil.parseJsonFile(resource));
 		SubstanceAPI.ValidationResponse response = api.validateSubstance(js);
-		assertTrue(response.isValid());
+		assertTrue(response.getMessages().toString() , response.isValid());
 
 		ensurePass(api.submitSubstance(js));
 	}
@@ -107,7 +107,7 @@ public class SubstanceValidSubmitTest extends AbstractGinasServerTest {
 		String uuid = js.get("uuid").asText();
 
 		SubstanceAPI.ValidationResponse response = api.validateSubstance(js);
-		assertTrue(response.isValid());
+		assertTrue(response.getMessages().toString(), response.isValid());
 
 		ensurePass(api.submitSubstance(js));
 

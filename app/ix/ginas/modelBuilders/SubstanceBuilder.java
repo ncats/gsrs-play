@@ -11,8 +11,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import ix.core.controllers.EntityFactory;
 import ix.core.util.GinasPortalGun;
 import ix.ginas.models.v1.ChemicalSubstance;
+import ix.ginas.models.v1.MixtureSubstance;
 import ix.ginas.models.v1.NucleicAcidSubstance;
+import ix.ginas.models.v1.PolymerSubstance;
 import ix.ginas.models.v1.ProteinSubstance;
+import ix.ginas.models.v1.SpecifiedSubstanceGroup1Substance;
+import ix.ginas.models.v1.StructurallyDiverseSubstance;
 import ix.ginas.models.v1.Substance;
 
 //public SubstanceBuilder
@@ -50,6 +54,10 @@ public class SubstanceBuilder extends AbstractSubstanceBuilder<Substance, Substa
 		return new ProteinSubstanceBuilder();
 	}
 
+	public MixtureSubstanceBuilder asMixture() {
+		return new MixtureSubstanceBuilder();
+	}
+
 	public NucleicAcidSubstanceBuilder asNucleicAcid(){
 		return new NucleicAcidSubstanceBuilder();
 	}
@@ -74,6 +82,16 @@ public class SubstanceBuilder extends AbstractSubstanceBuilder<Substance, Substa
 		if(substance instanceof ProteinSubstance){
 			return (B) new ProteinSubstanceBuilder((ProteinSubstance) substance);
 		}
+		if(substance instanceof MixtureSubstance){
+			return (B) new MixtureSubstanceBuilder((MixtureSubstance) substance);
+		}
+		if(substance instanceof PolymerSubstance){
+			return (B) new PolymerSubstanceBuilder((PolymerSubstance) substance);
+		}
+		if(substance instanceof StructurallyDiverseSubstance){
+			return (B) new StructurallyDiverseSubstanceBuilder((StructurallyDiverseSubstance) substance);
+		}
+
 
 		return (B) new SubstanceBuilder(substance);
 	}

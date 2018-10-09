@@ -12,13 +12,6 @@
                 <span class="icon-bar"></span> <span class="icon-bar"></span> <span
             class="icon-bar"></span>
             </button>
-            <a class="navbar-brand navbar-nav" href="@ix.ginas.controllers.routes.GinasApp.index()" target="_self" alt ="Home" aria-label="Return Home">
-                <span class="sr-only">Return Home</span>
-                <img src="@routes.Assets.at("ginas/images/gsrs-logo.svg")" alt="ginas logo" class="img-responsive" id="logo">
-            </a>
-            <div class=" hidden-xs hidden-sm" id="version">
-                <code uib-tooltip="Built on @ix.BuildInfo.TIME (commit: @ix.BuildInfo.COMMIT)"
-                tooltip-placement="right"><small>@ix.BuildInfo.VERSION</small></code>
             </div>
         </div>
         <div class="collapse navbar-collapse navbar-default" id = "menubar">
@@ -83,13 +76,15 @@
                 </li>
             </ul>
 
-            <ul class="nav navbar-nav pull-right" id="right-menu">
+                <div class="nav navbar-nav pull-right" id ="menu-login">
+                    <ul class="nav navbar-nav pull-right">
                 @dynamic(name = IxDynamicResourceHandler.IS_USER_PRESENT, handler = new ix.ncats.controllers.security.IxDeadboltHandler()) {
                     <li>
                         <a class="btn btn-default navbar-btn" ng-href= "@play.api.Play.configuration.getString("application.context").getOrElse("/ginas/app")/profile"
                         id ="profile-button" target="_self" role="button">
                             <i class="fa fa-user"></i>  @ix.ncats.controllers.auth.Authentication.getUser().username</a>
                     </li>
+
                     @if(!ix.ginas.controllers.GinasApp.isSingleSignOn()) {
                         <li><a class="btn btn-default navbar-btn" ng-href= "@play.api.Play.configuration.getString("application.context").getOrElse("/ginas/app")/logout"
                         id ="logout-button" target="_self" role="button">

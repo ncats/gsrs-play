@@ -24,7 +24,7 @@
     {"codeSystem":"USDA PLANTS","url":"https://plants.usda.gov/java/profile?symbol=$CODE$"},    
     {"codeSystem":"PUBCHEM","url":"https://pubchem.ncbi.nlm.nih.gov/compound/$CODE$"},    
     {"codeSystem":"CFR","url":"https://www.accessdata.fda.gov/scripts/cdrh/cfdocs/cfCFR/CFRSearch.cfm?fr=$CODE$"},    
-    {"codeSystem":"NCI_THESAURUS","url":"https://ncit.nci.nih.gov/ncitbrowser/ConceptReport.jsp?dictionary=NCI_Thesaurus&version=15.09d&ns=NCI_Thesaurus&code=$CODE$"},    
+    {"codeSystem":"NCI_THESAURUS","url":"https://ncit.nci.nih.gov/ncitbrowser/ConceptReport.jsp?dictionary=NCI%20Thesaurus&code=$CODE$"},
     {"codeSystem":"MESH","url":"https://www.ncbi.nlm.nih.gov/mesh/$CODE$"},    
     {"codeSystem":"UNIPROT","url":"http://www.uniprot.org/uniprot/$CODE$"} 
 ]

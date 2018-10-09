@@ -20,6 +20,7 @@ import ix.core.validator.ValidationMessage;
 import ix.core.controllers.EntityFactory;
 import ix.core.util.EntityUtils;
 import ix.ginas.models.v1.Substance;
+import ix.ginas.utils.JsonSubstanceFactory;
 import ix.seqaln.SequenceIndexer.CutoffType;
 import ix.test.SubstanceJsonUtil;
 import ix.ginas.modelBuilders.SubstanceBuilder;
@@ -37,6 +38,9 @@ public class SubstanceAPI {
     private static final String API_URL_SUGGEST = "ginas/app/api/v1/suggest";
     private static final String API_URL_SUBMIT_SUBSTANCE = "ginas/app/api/v1/substances";
     private static final String API_URL_SUBMIT_CV = "ginas/app/api/v1/vocabularies";
+
+    private static final String API_URL_VOCABULARIES_FETCH = "ginas/app/api/v1/vocabularies($ID$)?view=full";
+
     private static final String API_URL_FETCH = "ginas/app/api/v1/substances($UUID$)?view=full";
     private static final String API_URL_FETCH_BASIC = "ginas/app/api/v1/substances($UUID$)";
     private static final String API_URL_HISTORY = "ginas/app/api/v1/substances($UUID$)/@edits";
@@ -46,7 +50,7 @@ public class SubstanceAPI {
     private static final String API_URL_UPDATE = "ginas/app/api/v1/substances";
 
     private static final String API_URL_SUBSTANCES_SEARCH = "ginas/app/api/v1/substances/search";
-    private static final String API_URL_STRUCTURE_BROWSE = "ginas/app/api/v1/structures";
+    public static final String API_URL_STRUCTURE_BROWSE = "ginas/app/api/v1/structures";
 
 
     private static final String UI_URL_SUBSTANCE_SEARCH_TEXT="ginas/app/substances";
@@ -86,6 +90,8 @@ public class SubstanceAPI {
     }
 
 
+
+
     public WSResponse submitSubstance(JsonNode js) {
         return session.createRequestHolder(API_URL_SUBMIT_SUBSTANCE).post(js).get(timeout);
     }
@@ -106,8 +112,8 @@ public class SubstanceAPI {
         substanceBuilder.buildJsonAnd(j -> ensurePass(submitSubstance(j)));
     }
 
-    public void submitSubstance(Substance s){
-        ensurePass(submitSubstance(EntityUtils.EntityWrapper.of(s).toFullJsonNode()));
+    public JsonNode submitSubstance(Substance s){
+        return ensurePass(submitSubstance(EntityUtils.EntityWrapper.of(s).toFullJsonNode()));
     }
 
     public JsonNode submitSubstanceJson(JsonNode js) {
@@ -137,7 +143,10 @@ public class SubstanceAPI {
     }
 
 
+    public Substance fetchSubstanceObjectByUuid(String uuid){
 
+        return JsonSubstanceFactory.makeSubstance(fetchSubstanceJsonByUuid(uuid));
+    }
 
 
     public <T extends Substance> T fetchSubstanceObjectByUuid(String uuid, Class<T> substancetype){
@@ -156,6 +165,13 @@ public class SubstanceAPI {
         return session.createRequestHolder(API_URL_FETCH.replace("$UUID$", uuid)).get().get(timeout);
     }
     
+    public WSResponse fetchCVById(String id){
+        return session.createRequestHolder(API_URL_VOCABULARIES_FETCH.replace("$ID$", id)).get().get(timeout);
+    }
+    public JsonNode fetchCVJsonByUuid(String id){
+        return session.extractJSON(fetchCVById(id));
+    }
+
     public String fetchSubstanceLychiv4ByUuid(String uuid){
     	return session.extractJSON(session.createRequestHolder(API_URL_FETCH_BASIC.replace("$UUID$", uuid)+"/structure/properties(label:LyChI_L4)!(term)($0)").get().get(timeout)).asText();
     }
@@ -195,6 +211,8 @@ public class SubstanceAPI {
         		.setQueryParameter("type", "exact")
                 .setQueryParameter("q", smiles).get().get(timeout);
     }
+
+
 
     public String getTextSearchHTML(String q){
     	WSResponse wsr= getTextSearch(q);
@@ -366,8 +384,16 @@ public class SubstanceAPI {
 	public WSResponse submitCVDomain(JsonNode newCV) {
 		return session.createRequestHolder(API_URL_SUBMIT_CV).post(newCV).get(timeout);
 	}
+
+	public WSResponse updateCVDomain(JsonNode newCV) {
+		return session.createRequestHolder(API_URL_SUBMIT_CV).put(newCV).get(timeout);
+	}
 	public JsonNode submitCVDomainJson(JsonNode newCV) {
 		return this.session.extractJSON(submitCVDomain(newCV));
+	}
+
+	public JsonNode updateCVDomainJson(JsonNode newCV) {
+		return this.session.extractJSON(updateCVDomain(newCV));
 	}
 
 	public WSResponse export(String id, String format) {

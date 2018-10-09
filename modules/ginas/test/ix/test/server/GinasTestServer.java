@@ -26,6 +26,7 @@ import com.typesafe.config.ConfigFactory;
 import com.typesafe.config.ConfigValueFactory;
 import ix.core.factories.EntityProcessorFactory;
 import ix.core.models.*;
+import ix.core.util.ConfigHelper;
 import org.apache.commons.io.FileUtils;
 import org.junit.rules.ExternalResource;
 import org.junit.rules.TemporaryFolder;
@@ -98,6 +99,8 @@ import play.test.TestServer;
  * Created by katzelda on 2/25/16.
  */
 public class GinasTestServer extends ExternalResource{
+
+    private static final String APPLICATION_CONTEXT = "application.context";
 
     public enum ConfigOptions{
         THIS_TEST_ONLY("testSpecificConfigOperations"),
@@ -226,6 +229,7 @@ public class GinasTestServer extends ExternalResource{
     private TemporaryFolder exportDir = new TemporaryFolder();
 
 
+    private GinasHttpResolver httpResolver;
 
     private Config defaultConfig, additionalConfig, testSpecificConfig;
     private File storage;
@@ -332,7 +336,7 @@ public class GinasTestServer extends ExternalResource{
 
         acrossTestConfigOperations = CompletableFuture.completedFuture(additionalConf);
 
-        defaultBrowserSession = new BrowserSession(port){
+        defaultBrowserSession = new BrowserSession(this, port){
             @Override
             protected WSResponse doLogout() {
                 //no-op
@@ -523,7 +527,7 @@ public class GinasTestServer extends ExternalResource{
         return defaultBrowserSession;
     }
     public BrowserSession newBrowserSession(User user){
-        BrowserSession session = new BrowserSession(user, port);
+        BrowserSession session = new BrowserSession(this, user, port);
         sessions.add(session);
         return session;
     }
@@ -543,6 +547,20 @@ public class GinasTestServer extends ExternalResource{
         return createUser(username, password, approverUserRoles);
     }
 
+    /**
+     * While in Test mode, Ginas some ginas processing
+     * can be intentionally slowed down to help test
+     * concurrent activities.
+     * @param millis
+     * @return
+     */
+    public GinasTestServer slowDownProcessingBy(long millis){
+        return modifyConfig("ix.settings.debug.processordelay", millis);
+    }
+
+    public String getApplicationContext(){
+        return ConfigHelper.getOrDefault(APPLICATION_CONTEXT, "app");
+    }
 
     public User createAdmin(String username, String password){
         return createUser(username, password, adminUserRoles);
@@ -876,6 +894,10 @@ public class GinasTestServer extends ExternalResource{
         return ts.application();
     }
 
+    public GinasHttpResolver getHttpResolver() {
+        return httpResolver;
+    }
+
     public void start() {
         if(running){
             return;
@@ -954,6 +976,12 @@ public class GinasTestServer extends ExternalResource{
 
             //we have to wait to create the users until after Play has started.
             createInitialFakeUsers();
+
+            //we need to recreate the default rest and browser sessions
+            //because they read the config files to get context info
+            //which may have changed!!
+            httpResolver = new GinasHttpResolver(this);
+
         } catch(Throwable ex){
             running = false;
             throw new RuntimeException(ex);

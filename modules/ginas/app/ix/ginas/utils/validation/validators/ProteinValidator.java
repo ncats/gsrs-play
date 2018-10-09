@@ -1,23 +1,50 @@
 package ix.ginas.utils.validation.validators;
 
-import ix.core.validator.GinasProcessingMessage;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import com.fasterxml.jackson.databind.JsonNode;
+
 import ix.core.models.Payload;
 import ix.core.plugins.PayloadPlugin;
+import ix.core.plugins.SequenceIndexerPlugin;
+import ix.core.search.SearchResult;
 import ix.core.util.CachedSupplier;
+import ix.core.util.StreamUtil;
+import ix.core.util.EntityUtils.EntityWrapper;
+import ix.core.validator.GinasProcessingMessage;
 import ix.core.validator.ValidatorCallback;
-import ix.ginas.models.v1.*;
-import ix.ginas.utils.GinasUtils;
+import ix.ginas.controllers.v1.SubstanceFactory;
+import ix.ginas.models.v1.DisulfideLink;
+import ix.ginas.models.v1.Property;
+import ix.ginas.models.v1.Protein;
+import ix.ginas.models.v1.ProteinSubstance;
+import ix.ginas.models.v1.Site;
+import ix.ginas.models.v1.Substance;
+import ix.ginas.models.v1.Subunit;
 import ix.ginas.utils.ProteinUtils;
+import ix.ginas.utils.validation.ValidationUtils;
+import ix.seqaln.SequenceIndexer.CutoffType;
+import ix.utils.Tuple;
+import play.Logger;
 import play.Play;
 import play.mvc.Call;
-
-import java.util.*;
 
 /**
  * Created by katzelda on 5/14/18.
  */
 public class ProteinValidator extends AbstractValidatorPlugin<Substance> {
     private CachedSupplier<PayloadPlugin> _payload = CachedSupplier.of(()-> Play.application().plugin(PayloadPlugin.class));
+
+    private CachedSupplier<SequenceIndexerPlugin> _seqIndexer = CachedSupplier.of(()-> Play.application().plugin(SequenceIndexerPlugin.class));
 
     @Override
     public void validate(Substance objnew, Substance objold, ValidatorCallback callback) {
@@ -124,7 +151,6 @@ public class ProteinValidator extends AbstractValidatorPlugin<Substance> {
                             len += su.sequence.length();
                         }
                         double avgoff = delta / len;
-                        // System.out.println("Diff:" + pdiff + "\t" + avgoff);
                         if (Math.abs(pdiff) > .05) {
                             callback.addMessage(GinasProcessingMessage
                                     .WARNING_MESSAGE(
@@ -140,13 +166,14 @@ public class ProteinValidator extends AbstractValidatorPlugin<Substance> {
                     }
                 }
             }
-            // System.out.println("calc:" + tot);
 
         boolean sequenceHasChanged = sequenceHasChanged(cs, objold);
-//		System.out.println("SEQUENCE HAS CHANGED ?? " + cs.approvalID + "  " + old.approvalID + " ? " + sequenceHasChanged);
 
         if(sequenceHasChanged) {
             validateSequenceDuplicates(cs, callback);
+        }
+        if (!cs.protein.getSubunits().isEmpty()) {
+            ValidationUtils.validateReference(cs, cs.protein, callback, ValidationUtils.ReferenceAction.FAIL);
         }
     }
 
@@ -159,15 +186,11 @@ public class ProteinValidator extends AbstractValidatorPlugin<Substance> {
         Protein oldProtein = old.protein;
 
         if(oldProtein ==null){
-//			System.out.println("old protein is null");
             return newProtein !=null;
         }
         List<Subunit> newSubs = newProtein.getSubunits();
         List<Subunit> oldSubs = oldProtein.getSubunits();
         if(newSubs.size() != oldSubs.size()){
-//			System.out.println("subunit size differs " + newSubs.size() + " " + oldSubs.size());
-//			System.out.println(newSubs);
-//			System.out.println(oldSubs);
             return true;
         }
         int size = newSubs.size();
@@ -190,47 +213,111 @@ public class ProteinValidator extends AbstractValidatorPlugin<Substance> {
             for (Subunit su : proteinsubstance.protein.subunits) {
                 Payload payload = _payload.get().createPayload("Sequence Search",
                         "text/plain", su.sequence);
-                List<Substance> sr = ix.ginas.controllers.v1.SubstanceFactory
-                        .getNearCollsionProteinSubstancesToSubunit(10, 0, su);
-                if (sr != null && !sr.isEmpty()) {
-                    int dupes = 0;
-                    GinasProcessingMessage mes = null;
-                    for (Substance s : sr) {
-                        if (proteinsubstance.getUuid() == null
-                                || !s.getUuid()
-                                .toString()
-                                .equals(proteinsubstance.getUuid()
-                                        .toString())) {
 
-                            if (dupes <= 0) {
-                                mes = GinasProcessingMessage
-                                        .WARNING_MESSAGE("There is 1 substance with a similar sequence to subunit ["
-                                                + su.subunitIndex + "]:");
+                String msgOne = "There is 1 substance with a similar sequence to subunit ["
+                        + su.subunitIndex + "]:";
+
+                String msgMult = "There are ? substances with a similar sequence to subunit ["
+                        + su.subunitIndex + "]:";
+
+                List<Function<String,List<Tuple<Double,Tuple<ProteinSubstance,Subunit>>>>> searchers = new ArrayList<>();
+
+                //Simplified searcher, using lucene direct index
+                searchers.add(seq->{
+                	try{
+                	List<Tuple<ProteinSubstance,Subunit>> simpleResults=SubstanceFactory.executeSimpleExactProteinSubunitSearch(su);
+
+                	return simpleResults.stream()
+				                	  .map(t->{
+				                		  return Tuple.of(1.0,t);
+				                	  })
+				                      .filter(t->!t.v().k().getOrGenerateUUID().equals(proteinsubstance.getOrGenerateUUID()))
+				                      .collect(Collectors.toList());
+                	}catch(Exception e){
+                	    e.printStackTrace();
+                		Logger.warn("Problem performing sequence search on lucene index", e);
+                		return new ArrayList<>();
+                	}
+                });
+
+                //Traditional searcher using sequence indexer
+                searchers.add(seq->{
+                	return StreamUtil.forEnumeration(_seqIndexer.get()
+							.getIndexer()
+							.search(seq, SubstanceFactory.SEQUENCE_IDENTITY_CUTOFF, CutoffType.GLOBAL))
+                     .map(suResult->{
+                    	 return Tuple.of(suResult.score,SubstanceFactory.getSubstanceAndSubunitFromSubunitID(suResult.id));
+                     })
+                     .filter(op->op.v().isPresent())
+                     .map(Tuple.vmap(opT->opT.get()))
+                     .filter(t->!t.v().k().getOrGenerateUUID().equals(proteinsubstance.getOrGenerateUUID()))
+                     .filter(t->(t.v().k() instanceof ProteinSubstance))
+                     .map(t->{
+                    	 //TODO: could easily be cleaned up.
+                    	 ProteinSubstance ps=(ProteinSubstance)t.v().k();
+                    	 return Tuple.of(t.k(), Tuple.of(ps, t.v().v()));
+                     })
+                     //TODO: maybe sort by the similarity?
+                     .collect(Collectors.toList());
+                });
+
+                searchers.stream()
+                         .map(searcher->searcher.apply(su.sequence))
+                         .filter(suResults->!suResults.isEmpty())
+                         .map(res->res.stream().map(t->t.withKSortOrder(k->k)).sorted().collect(Collectors.toList()))
+                         .findFirst()
+                         .ifPresent(suResults->{
+                             List<GinasProcessingMessage.Link> links = new ArrayList<>();
                                 GinasProcessingMessage.Link l = new GinasProcessingMessage.Link();
                                 Call call = ix.ginas.controllers.routes.GinasApp
                                         .substances(payload.id.toString(), 16,1);
-                                l.href = call.url() + "&type=sequence";
-                                l.text = "Perform similarity search on subunit ["
-                                        + su.subunitIndex + "]";
+                             l.href = call.url() + "&type=sequence&identity=" + SubstanceFactory.SEQUENCE_IDENTITY_CUTOFF + "&identityType=SUB&seqType=Protein";
+                             l.text = "(Perform similarity search on subunit ["
+                                     + su.subunitIndex + "])";
 
-                                mes.addLink(l);
+                             String warnMessage=msgOne;
+
+                             if(suResults.size()>1){
+                            	 warnMessage = msgMult.replace("?", suResults.size() +"");
                             }
-                            dupes++;
-                            mes.addLink(GinasUtils.createSubstanceLink(s));
+
+                             GinasProcessingMessage dupMessage = GinasProcessingMessage
+                                     .WARNING_MESSAGE(warnMessage);
+                             dupMessage.addLink(l);
+
+
+
+                             suResults.stream()
+                                      .map(t->t.withKSortOrder(d->d))
+                                      .sorted()
+                                      .forEach(tupTotal->{
+                                     	 Tuple<ProteinSubstance,Subunit> tup=tupTotal.v();
+                                     	 double globalScore = tupTotal.k();
+                                     	 String globalScoreString = (int)Math.round(globalScore*100) + "%";
+
+                                     	 GinasProcessingMessage.Link l2 = new GinasProcessingMessage.Link();
+                                          Call call2 = ix.ginas.controllers.routes.GinasApp.substance(tup.k().uuid.toString());
+                                          l2.href = call2.url();
+                                          if(globalScore==1){
+         	                                 l2.text = "found exact duplicate (" + globalScoreString + ") sequence in " +
+         	                                          "Subunit [" +tup.v().subunitIndex + "] of \"" + tup.k().getApprovalIDDisplay() + "\" " +
+         	                                                                            "(\"" + tup.k().getName() + "\")";
+                                          }else{
+                                         	 l2.text = "found approximate duplicate (" + globalScoreString + ") sequence in " +
+         	                                          "Subunit [" +tup.v().subunitIndex + "] of \"" + tup.k().getApprovalIDDisplay() + "\" " +
+         	                                                                            "(\"" + tup.k().getName() + "\")";
                         }
-                    }
-                    if(dupes > 0) {
-                        if(dupes > 1){
-                            mes.message = "There are "
-                                    + dupes
-                                    + " substances with a similar sequence to subunit ["
-                                    + su.subunitIndex + "]:";
-                        }
-                        callback.addMessage(mes);
-                    }
-                }
+                                          links.add(l2);
+                                      });
+
+
+                             dupMessage.addLinks(links);
+                             callback.addMessage(dupMessage);
+                         });
+
             }
         } catch (Exception e) {
+        	Logger.error("Problem executing duplicate search function", e);
             callback.addMessage(GinasProcessingMessage
                     .ERROR_MESSAGE("Error performing seqeunce search on protein:"
                             + e.getMessage()));

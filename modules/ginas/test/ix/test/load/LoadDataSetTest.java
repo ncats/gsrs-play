@@ -2,15 +2,19 @@ package ix.test.load;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import ix.core.util.RunOnly;
+import ix.test.server.*;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -18,13 +22,6 @@ import org.junit.rules.ExpectedException;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
 
 import ix.ginas.utils.GinasGlobal;
-import ix.test.server.BrowserSession;
-import ix.test.server.ConfigUtil;
-import ix.test.server.GinasTestServer;
-import ix.test.server.RestSession;
-import ix.test.server.SearchResult;
-import ix.test.server.SubstanceLoader;
-import ix.test.server.BrowserSubstanceSearcher;
 import ix.test.util.TestUtil;
 import ix.utils.Util;
 /**
@@ -54,11 +51,15 @@ public class LoadDataSetTest extends AbstractLoadDataSetTest{
     public static void runRepTests(BrowserSession session) throws IOException, AssertionError{
     	
     	
-    	BrowserSubstanceSearcher searcher = new BrowserSubstanceSearcher(session);
-    	SearchResult all = searcher.all();
+        RestSubstanceSubstanceSearcher restSearcher= session.newRestSession().searcher();
+    	SearchResult all = restSearcher.all();
         assertEquals(90, all.numberOfResults());
        
-        SearchResult results = searcher.substructure("C1=CC=CC=C1");
+//        SearchResult results = searcher.substructure("C1=CC=CC=C1");
+//        String searchKey = results.getKey();
+        SearchResult results = restSearcher.substructure("C1=CC=CC=C1");
+
+        System.out.println("rest results = " + results.getAllFacets());
         assertEquals(17, results.numberOfResults());
         TestFacetUtil.assertFacetsMatch(TestFacetUtil.createExpectedRep90Facets(), results);
         
@@ -67,15 +68,37 @@ public class LoadDataSetTest extends AbstractLoadDataSetTest{
     private void substructureSearchShouldWait(BrowserSession session) throws IOException, AssertionError{
     	BrowserSubstanceSearcher searcher = new BrowserSubstanceSearcher(session);
     	searcher.setSearchOrder("Name Count");
-    	SearchResult results1 =searcher.getSubstructureSearch("CC1=CC=CC=C1", 1, 1,false);
+
+        RestSession restSession = session.newRestSession();
+    	RestSubstanceSubstanceSearcher restSearcher = restSession.searcher();
+
+        ObjectMapper mapper = new ObjectMapper();
+        SubstanceSearcher.SearchRequestOptions opts = new SubstanceSearcher.SearchRequestOptions("CC1=CC=CC=C1");
+
+//                                                opts.setRows(1);
+                                                opts.setOrder("Name Count");
+                                                opts.setWait(true);
+    	SearchResult restResult1 = restSearcher.structureSearch(opts).getAllResults(restSearcher, mapper).get();
+
+    	System.out.println("rest results total was " + restResult1.getUuids().size());
+
+    	List<String> expected = new ArrayList<>(restResult1.getUuids()).subList(5, restResult1.getUuids().size());
+
+
+    	opts.setPage(6);
+        SearchResult restResult2 = restSearcher.structureSearch(opts).getSomeResults(restSearcher, mapper, 5).get();
+//        assertEquals(restResult2.getUuids().size() - 5, expected.size());
+
+        assertEquals(expected, new ArrayList<>(restResult2.getUuids()));
+    	/* SearchResult results1 =searcher.getSubstructureSearch("CC1=CC=CC=C1", 1, 1,false);
     	//System.out.println("This was the first uuid:" + results1.getUuids().toString());
     	
     	
     	try{
-    	    Thread.sleep(1_000);
+//    	    Thread.sleep(1_000);
     	}catch(Exception e){}
     	
-    	SearchResult results2 =searcher.getSubstructureSearch("CC1=CC=CC=C1", 1, 15,true);
+    	SearchResult results2 =searcher.getSubstructureSearch("CC1=CC=CC=C1", 1, 6,true);
     	
     	
     	
@@ -90,13 +113,21 @@ public class LoadDataSetTest extends AbstractLoadDataSetTest{
 						+ results2.getUuids().toString() + "\"", results2
 						.getUuids().contains(findUUID));
         assertTrue("15th page of substructure search should have no other substances",results2.getUuids().size()==1);
+
+   */
     }
 
     private void substructureSearchShouldWaitAndLaterPagesShouldReturn(BrowserSession session) throws IOException, AssertionError{
-    	BrowserSubstanceSearcher searcher = new BrowserSubstanceSearcher(session);
-    	SearchResult resultsFirst =searcher.getSubstructureSearch("CC1=CC=CC=C1", 2, 3,true);
-    	SearchResult resultsLater =searcher.getSubstructureSearch("CC1=CC=CC=C1", 2, 6,true);
-    	assertTrue("6th page on substructure search should have 2 entries", resultsLater.getUuids().size()==2);
+        RestSession restSession = session.newRestSession();
+        RestSubstanceSubstanceSearcher searcher = restSession.searcher();
+        SubstanceSearcher.SearchRequestOptions opts = new SubstanceSearcher.SearchRequestOptions("CC1=CC=CC=C1");
+
+        opts.setRows(2);
+
+
+    	SearchResult results =searcher.structureSearch(opts).getSomeResults(searcher, new ObjectMapper(), 6).get();
+
+    	assertFalse("6th page on substructure search should have 2 entries", results.getUuids().isEmpty());
     }
     private void substructureHighlightingShouldShowOnLastPage(BrowserSession session) throws IOException, AssertionError{
     	BrowserSubstanceSearcher searcher = new BrowserSubstanceSearcher(session);
@@ -105,7 +136,7 @@ public class LoadDataSetTest extends AbstractLoadDataSetTest{
     	SearchResult resultsFirst =searcher.getSubstructureSearch("C1=CC=CC=C1", 1, 1,false);
     	HtmlPage lastResults =searcher.getSubstructurePage("C1=CC=CC=C1", 1, 10,true);
 //    	System.out.println(lastResults.asXml());
-    	Set<String> img_urls= BrowserSubstanceSearcher.getStructureImagesFrom(lastResults);
+    	Set<String> img_urls= searcher.getStructureImagesFrom(lastResults);
 //    	try {
 //            Thread.sleep(1200_000);
 //        } catch (InterruptedException e) {
@@ -154,7 +185,6 @@ public class LoadDataSetTest extends AbstractLoadDataSetTest{
 
     
     @Test
-    @RunOnly
     public void loadAsAdmin() throws IOException {
         try(BrowserSession session = ts.newBrowserSession(admin)){
             SubstanceLoader loader = new SubstanceLoader(session);
@@ -167,6 +197,7 @@ public class LoadDataSetTest extends AbstractLoadDataSetTest{
     
     @Test  
     public void substructureSearchOnRep90ShouldReturnDeterministicResults() throws IOException {
+
         try(BrowserSession session = ts.newBrowserSession(admin)){
 
             SubstanceLoader loader = new SubstanceLoader(session);
@@ -177,6 +208,7 @@ public class LoadDataSetTest extends AbstractLoadDataSetTest{
 
 
             runRepTests(session);
+
             substructureSearchShouldWait(session);
             
         }

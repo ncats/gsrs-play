@@ -12,7 +12,7 @@ object ApplicationBuild extends Build {
     .format(new java.util.Date())
   val appVersion = "%s-%s-%s".format(branch, buildDate, commit)
 
-  val displayVersion = "version 2.1 beta"
+  val displayVersion = "version 2.3 beta"
   val commonSettings = Seq(
     version := appVersion,    
     scalaVersion := "2.11.7",
@@ -40,6 +40,8 @@ object ApplicationBuild extends Build {
     "org.apache.httpcomponents" % "httpcore" %"4.4.4",
     "org.apache.httpcomponents" % "httpclient" %"4.3.1", //required for Ivy bug?
     "commons-io" % "commons-io" % "2.4",
+    "com.fasterxml.jackson.core" % "jackson-core" % "2.5.3",
+    "com.fasterxml.jackson.core" % "jackson-databind" % "2.5.3",
 
     "net.sourceforge.htmlunit" % "htmlunit" % "2.27" % Test,
     "com.zaxxer" % "HikariCP" % "2.4.6"

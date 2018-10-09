@@ -17,19 +17,8 @@ import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Optional;
-import java.util.Random;
-import java.util.Set;
-import java.util.TreeSet;
-import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
@@ -57,6 +46,7 @@ import ix.core.util.TimeUtil;
 import play.Logger;
 import play.Play;
 import play.db.ebean.Model;
+import play.libs.ws.WSRequestHolder;
 import play.mvc.Http;
 
 import java.io.*;
@@ -211,6 +201,14 @@ public class Util {
         for (int i = 0; i < d.length; ++i)
             sb.append(String.format("%1$02x", d[i]& 0xff));
         return sb.toString();
+    }
+
+    public static String sha1(WSRequestHolder requestHolder)throws UnsupportedEncodingException, NoSuchAlgorithmException{
+        Map<String, String[]> map = new TreeMap<>();
+        for(Entry<String, Collection<String>> entry : requestHolder.getQueryParameters().entrySet()){
+            map.put(entry.getKey(), entry.getValue().stream().toArray(size -> new String[size]));
+        }
+        return sha1(requestHolder.getUrl(), map);
     }
 
     public static String sha1 (String... values) {

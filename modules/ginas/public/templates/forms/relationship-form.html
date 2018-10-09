@@ -42,10 +42,12 @@
                                         </modal-form-button>
                                     </div>
                                     <div class="col-md-2 text-center">
-                                        <modal-form-button type="access"
+                                        <!-- <modal-form-button type="access"
                                                            referenceobj="obj"
                                                            parent="parent">
-                                        </modal-form-button>
+                                        </modal-form-button> -->
+                                        <access-management obj-to-manage-access="obj">
+                                         </access-management>
                                     </div>
                                     <div class="col-md-1">
                                         <button ng-click="obj.$details=!obj.$details">{{obj.$details?"Hide Details":"Show Details"}}</button>

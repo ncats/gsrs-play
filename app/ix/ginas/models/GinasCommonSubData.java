@@ -46,18 +46,18 @@ public class GinasCommonSubData extends GinasCommonData implements GinasAccessRe
 	}
     
    
-
+	@Override
 	public void addReference(String refUUID){
 		this.internalReferences.add(new Keyword(GinasCommonSubData.REFERENCE,
 				refUUID
 		));
 		setReferences(new LinkedHashSet<Keyword>(this.internalReferences));
 	}
-	
+	@Override
 	public void addReference(Reference r){
 		addReference(r.getOrGenerateUUID().toString());
 	}
-	
+	@Override
 	public void addReference(Reference r, Substance s){
 		s.references.add(r);
 		this.addReference(r);

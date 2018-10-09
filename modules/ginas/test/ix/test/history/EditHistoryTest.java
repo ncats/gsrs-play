@@ -3,7 +3,9 @@ package ix.test.history;
 import static ix.test.SubstanceJsonUtil.ensurePass;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -21,6 +23,10 @@ import ix.ginas.models.v1.Substance;
 import ix.ginas.modelBuilders.SubstanceBuilder;
 import ix.test.server.RestSession;
 import ix.test.server.SubstanceAPI;
+import util.json.Changes;
+import util.json.ChangesBuilder;
+import util.json.JsonUtil;
+import util.json.JsonUtilTest;
 
 public class EditHistoryTest  extends AbstractGinasServerTest {
 	public final static String INVALID_APPROVAL_ID="0000000001";
@@ -52,23 +58,40 @@ public class EditHistoryTest  extends AbstractGinasServerTest {
     			SubstanceFactory.getSubstance(uuid).getEdits().stream().forEach(p->{
     				JsonNode jsn=p.getDiff();
     				assertNotNull(jsn);
+					Changes actualChanges;
+					try {
+						actualChanges = JsonUtil.computeChangesFromEdit(p);
+					} catch (IOException e) {
+						throw new IllegalStateException(e);
+					}
+
     				
+					Changes expectedChanges = new ChangesBuilder(p.getOldValue().rawJson(), p.getNewValue().rawJson())
+													.replace("/lastEdited")
+													.replace("/version")
+							                        .added("/names/1/displayName")
+													.build();
     				
-    				assertEquals(
-    					Arrays.asList("/lastEdited","/version"),
-	    				StreamSupport.stream(jsn.spliterator(), false)
-	    	             	.filter(n->n.at("/op").asText().equals("replace"))
-	    	             	.map(n->n.at("/path").asText())
-	    	             	.collect(Collectors.toList())
-    	             	);
-    				
-    				assertEquals(
-        					Arrays.asList("/names/-"),
-    	    				StreamSupport.stream(jsn.spliterator(), false)
-    	    	             	.filter(n->n.at("/op").asText().equals("add"))
-    	    	             	.map(n->n.at("/path").asText())
-    	    	             	.collect(Collectors.toList())
-        	             	);
+//					System.out.println("actual changes = " + actualChanges);
+
+					Changes missingFrom = expectedChanges.missingFrom(actualChanges);
+					assertTrue(missingFrom.toString() +"\n expected = " + expectedChanges + "\nactual = " + actualChanges, missingFrom.isEmpty());
+
+//					assertEquals(
+//    					Arrays.asList("/lastEdited","/version"),
+//	    				StreamSupport.stream(jsn.spliterator(), false)
+//	    	             	.filter(n->n.at("/op").asText().equals("replace"))
+//	    	             	.map(n->n.at("/path").asText())
+//	    	             	.collect(Collectors.toList())
+//    	             	);
+//
+//    				assertEquals(
+//        					Arrays.asList("/names/-"),
+//    	    				StreamSupport.stream(jsn.spliterator(), false)
+//    	    	             	.filter(n->n.at("/op").asText().equals("add"))
+//    	    	             	.map(n->n.at("/path").asText())
+//    	    	             	.collect(Collectors.toList())
+//        	             	);
     			});
         }
     	

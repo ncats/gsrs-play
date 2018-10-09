@@ -22,7 +22,7 @@
             if (scope.stage === true) {
                 scope.stage = false;
                 $templateRequest(url).then(function (html) {
-                    console.log(html);
+
                     template = angular.element(html);
                     elementResult.append(template);
                     $compile(elementResult)(scope);
@@ -149,7 +149,7 @@
 
     });
 
-    ginasForms.factory('subunitParser', function(CVFields){
+    ginasForms.factory('subunitParser', function(CVFields,$q){
         var factoryResidues;
 
         var factory = this;
@@ -171,8 +171,14 @@
                 cls = "NUCLEIC_ACID_BASE";
             }
             return CVFields.getCV(cls).then(function (response) {
-                factoryResidues = response.data.content[0].terms;
-                return response.data.content[0].terms;
+            	var terms =response.data.content[0].terms;
+            	terms.push({
+            		"value":"X",
+            		"display":"Non-standard Residue"
+            	});
+
+                factoryResidues = terms;
+                return terms;
             });
         };
 
@@ -326,13 +332,27 @@
             }else if(subclass === "nucleicAcid"){
                 subunits=substance.nucleicAcid.subunits;
             }
-            var deferred = scope.$q.defer();
+            //This doesn't actually do anything with promises right now,
+            //but could be changed to use them.
+
             var promises = [];
             _.forEach(subunits, function (su, index) {
-                promises.push(factory.parseSubunit(substance,su,index+1));
+            	var ind=index;
+            	var su1=su;
+                promises.push(function(){
+                	factory.parseSubunit(substance,su1,ind);
+                });
             });
 
-            return deferred.all(promises);
+
+
+    		 return $q(function(resolve, reject) {
+    			 	_.forEach(promises,function(p){
+    	    			p();
+    	    		});
+    			 	resolve(substance);
+    			  });
+            //return deferred.all(promises);
         };
         /**
           * This method accepts a substance, a subunit, and an optional subunit index
@@ -360,6 +380,8 @@
                 })
                 .value();
 
+
+
             _.forEach(subunit.sequence.toUpperCase(), function (aa, index) {
                 var obj = {};
                 obj.value = aa;
@@ -375,6 +397,7 @@
                         obj.subunitIndex = subunitIndex;
                     }
                     obj.residueIndex = index - 0 + 1;
+
                      if (parent.substanceClass === 'protein') {
                         //parse out cysteines first
                         if (aa == 'C') {
@@ -383,14 +406,21 @@
                             obj.cysteine = false;
                         }
                     }
+
+                } else {
+                    obj.valid = false;
+                    if (subunit.subunitIndex) {
+                        obj.subunitIndex = subunit.subunitIndex;
+                    } else {
+                        obj.subunitIndex = subunitIndex;
+                    }
+                    obj.residueIndex = index - 0 + 1;
+
+                }
                     var modc = modifiedSitesMap.get(obj);
                     if(modc){
                         obj=_.merge(modc,obj);
                     }
-
-                } else {
-                    obj.valid = false;
-                }
                 display.push(obj);
             });
             display = _.chunk(display, 10);
@@ -848,6 +878,7 @@
 
 
         this.applyAll = function (type, parent, obj) {
+        	var _this=this;
             subunitParser.parseSubunits(parent).then(function() {
 
                 var plural = type + "s";
@@ -862,7 +893,7 @@
                     obj.sites = siteList.siteList(obj.$$displayString);
 
                 } else {
-                    var sites2 = this.getAllSitesWithout(type, parent.nucleicAcid.subunits);
+                    var sites2 = _this.getAllSitesWithout(type, parent.nucleicAcid.subunits);
                     obj.$$displayString = siteList.siteString(sites2);
                     obj.sites = siteList.siteList(obj.$$displayString);
                     obj.sites.$$displayString = obj.$$displayString;
@@ -1216,7 +1247,7 @@
             },
             templateUrl: baseurl + "assets/templates/forms/parameter-form.html",
             link: function (scope) {
-                console.log(scope);
+
             }
         };
     });
@@ -1365,7 +1396,7 @@
             templateUrl: baseurl + "assets/templates/forms/reference-form.html",
             link: function (scope, element, attrs) {
 
-                console.log(scope);
+
                 
                 scope.addNewRef = function (mainform, list, begin) {
                     //passes a new uuid for reference tracking
@@ -1729,9 +1760,10 @@
                 };
 
                 scope.close = function () {
+                    scope.update(scope.referenceobj, scope.index).then(function(){
                     scope.opened = false;
-                    scope.update(scope.referenceobj, scope.index);
                     modalInstance.close();
+                    });
                 };
 
                 scope.cancel = function () {
@@ -1742,6 +1774,7 @@
 
                 scope.open = function (obj, index) {
                     temp = angular.copy(obj);
+                    obj.terms = _.sortBy(obj.terms, ['value']);
                     scope.referenceobj = obj;
                     scope.index = index;
                      modalInstance = $uibModal.open({
@@ -1797,7 +1830,7 @@
                     domain = scope.flattenFields(domain);
                     domain.fields = scope.flattenFields(domain.fields);
 
-                    CVFields.updateCV(domain).then(function (response) {
+                    return CVFields.updateCV(domain).then(function (response) {
                         domain.$$unlocked = false;
                         CVFields.search("VOCAB_TYPE", response.vocabularyTermType).then(function (response) {
                             domain.vocabularyTermType = response[0];
@@ -2047,6 +2080,8 @@
             }
         };
     });
+
+
      ginasForms.directive('diversePlantForm', function (CVFields) {
          return {
              restrict: 'E',

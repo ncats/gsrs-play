@@ -20,7 +20,6 @@ import ix.test.server.RestSession;
  */
 public final class SessionHistoryTest extends AbstractGinasServerTest {
 
-    private static final String API_URL_EDIT_HISTORY = "ginas/app/api/v1/edits";
     
     /**
      * Confirms that a user, after logging in and out 3 times, does not have the
@@ -37,7 +36,7 @@ public final class SessionHistoryTest extends AbstractGinasServerTest {
         
         
         try( RestSession session = ts.newRestSession(ts.getFakeUser1())) {
-        	JsonNode jsn = session.getAsJson(API_URL_EDIT_HISTORY);
+        	JsonNode jsn = session.getAsJson(ts.getHttpResolver().apiV1("edits"));
         	JsonNode edits = jsn.at("/content");
         	assertEquals(0, edits.size());
         }

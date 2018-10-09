@@ -21,15 +21,26 @@ current, rows, total, pages, facets, ctx) {
     @menu()
 }{
     <div class= "panel-body record-container">
-        <div class = "row in" ng-show="!gridView" id ="list">
+        <div class = "row in gutter-fix" ng-show="!gridView" id ="list">
             @for(sub <- substancesList) {
             	@GinasApp.getListContentFor(sub,ctx)
             }
         </div>
-        <div class = "row hidden-xs" ng-if="gridView" id ="grid">
-            @for(sub <- substancesList) {
+        <div class = "row hidden-xs gutter-fix" ng-if="gridView" id ="grid">
+            <div class = "col-sm-12">
+                <div class = "row">
+            @for((sub, index) <- substancesList.zipWithIndex) {
+
                 @GinasApp.getGridContentFor(sub,ctx)
+                @if((index + 1) % 4 == 0) {
+                    @if((index + 1) != substancesList.length) {
+                        </div>
+                        <div class="row">
             }
+                }
+            }
+                        </div>
+                        </div>
         </div>
     </div>
 }

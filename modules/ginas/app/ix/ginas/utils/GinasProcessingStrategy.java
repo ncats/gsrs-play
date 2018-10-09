@@ -36,8 +36,7 @@ public abstract class GinasProcessingStrategy implements Predicate<GinasProcessi
 	public HANDLING_TYPE failType = HANDLING_TYPE.MARK;
 	public HANDLING_TYPE warningHandle = HANDLING_TYPE.MARK;
 
-	public static GinasProcessingStrategy ACCEPT_APPLY_ALL() {
-		return new GinasProcessingStrategy() {
+	private static GinasProcessingStrategy _ACCEPT_APPLY_ALL = new GinasProcessingStrategy() {
 			@Override
 			public void processMessage(GinasProcessingMessage gpm) {
 				if (gpm.suggestedChange){
@@ -51,10 +50,8 @@ public abstract class GinasProcessingStrategy implements Predicate<GinasProcessi
 				}
 			}
 		};
-	}
 
-	public static GinasProcessingStrategy ACCEPT_APPLY_ALL_WARNINGS() {
-		return new GinasProcessingStrategy() {
+	private static GinasProcessingStrategy _ACCEPT_APPLY_ALL_WARNINGS = new GinasProcessingStrategy() {
 			@Override
 			public void processMessage(GinasProcessingMessage gpm) {
 				if (gpm.messageType == GinasProcessingMessage.MESSAGE_TYPE.ERROR) {
@@ -68,6 +65,14 @@ public abstract class GinasProcessingStrategy implements Predicate<GinasProcessi
 				}
 			}
 		};
+
+
+	public static GinasProcessingStrategy ACCEPT_APPLY_ALL() {
+		return _ACCEPT_APPLY_ALL;
+	}
+
+	public static GinasProcessingStrategy ACCEPT_APPLY_ALL_WARNINGS() {
+		return _ACCEPT_APPLY_ALL_WARNINGS;
 	}
 	
 
@@ -110,8 +115,6 @@ public abstract class GinasProcessingStrategy implements Predicate<GinasProcessi
 				} else if (failType == HANDLING_TYPE.MARK) {
 					cs.status = GinasProcessingStrategy.FAILED;
 					cs.addRestrictGroup(Substance.GROUP_ADMIN);
-				} else {
-
 				}
 			}
 		}

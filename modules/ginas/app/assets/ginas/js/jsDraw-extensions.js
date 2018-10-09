@@ -871,3 +871,32 @@ function afterLoad(){
 	if(!JSDraw2.PT.Zr.iso)JSDraw2.PT.Zr.iso={};JSDraw2.PT.Zr.iso[86]=85.9164782175809;
 	if(!JSDraw2.PT.Zr.iso)JSDraw2.PT.Zr.iso={};JSDraw2.PT.Zr.iso[87]=86.9148164469766;
 }
+
+//remove unused buttons
+function afterSketcherMade(){
+	$("[cmd=save]").parent("td").remove();
+	$("[cmd=open]").parent("td").remove();
+	$("[cmd=new]").parent("td").next().remove();
+	$("[cmd=bracket]").click();
+	$("[cmd=select]").click();
+	$("[cmd=rectangle]").parent("td").next().remove();
+	$("[cmd=rectangle]").parent("td").remove();
+	//arrow
+	$("[cmd=arrow]").parent("td").prev().remove();
+	$("[cmd=arrow]").parent("td").next().remove();
+	$("[cmd=arrow]").parent("td").remove();
+
+	//helm_nucleotide
+	$("[cmd=helm_nucleotide]").parent("td").next().remove();
+	$("[cmd=helm_nucleotide]").parent("td").remove();
+
+	//seq
+	$("[cmd=seq]").parent("td").next().remove();
+	$("[cmd=seq]").parent("td").next().remove();
+	$("[cmd=seq]").parent("td").remove();
+
+	//pubchem
+	$("[cmd=pubchem]").parent("td").next().remove();
+	$("[cmd=pubchem]").parent("td").remove();
+}
+
