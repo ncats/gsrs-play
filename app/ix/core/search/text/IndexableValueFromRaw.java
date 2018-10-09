@@ -78,8 +78,13 @@ public class IndexableValueFromRaw implements IndexableValue{
 		this.path=name;
 	}
 
-	public IndexableValue withRange(double[] ranges) {
+	public IndexableValueFromRaw withRange(double[] ranges) {
 		this.drange=ranges;
+		return this;
+	}
+	
+	public IndexableValueFromRaw setFacet(boolean f){
+		this.facet=f;
 		return this;
 	}
 }
