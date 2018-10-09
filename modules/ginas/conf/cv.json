@@ -34,39 +34,6 @@
       {
         "version": 1,
         "created": 1473429305436,
-        "modified": 1473429305441,
-        "deprecated": false,
-        "value": "cder",
-        "display": "CDER",
-        "hidden": false,
-        "selected": false,
-        "filters": []
-      },
-      {
-        "version": 1,
-        "created": 1473429305436,
-        "modified": 1473429305441,
-        "deprecated": false,
-        "value": "cber",
-        "display": "CBER",
-        "hidden": false,
-        "selected": false,
-        "filters": []
-      },
-      {
-        "version": 1,
-        "created": 1473429305436,
-        "modified": 1473429305442,
-        "deprecated": false,
-        "value": "cvm",
-        "display": "CVM",
-        "hidden": false,
-        "selected": false,
-        "filters": []
-      },
-      {
-        "version": 1,
-        "created": 1473429305436,
         "modified": 1473429305442,
         "deprecated": false,
         "value": "admin",

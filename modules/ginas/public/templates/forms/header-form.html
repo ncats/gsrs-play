@@ -35,10 +35,9 @@
                     </gsrs-input>
                 </div>
                 <div class="col-md-1 pull-right">
-                    <modal-form-button type="access"
-                                       referenceobj="parent"
-                                       parent="parent">
-                    </modal-form-button>
+                	<access-management obj-to-manage-access="parent">
+                    </access-management>
+                   
                 </div>
                 <div class="col-md-2 pull-right text-center" ng-if="parent.substanceClass!='concept'">
                     <modal-form-button type="reference"
