@@ -3,6 +3,7 @@
 body {
     position: relative;
     background-color: #F8F8F8;
+    min-width: 997px;
     /*padding-top: 75px;*/
 }
 
@@ -1939,4 +1940,12 @@ td.no-sort{
 
 #menu{
 	margin-bottom:15px;
+}
+
+#versionsrs {
+    text-align: left;
+    display: inline-block;
+    vertical-align: bottom;
+    margin-bottom: 5px;
+    margin-left: 10px;
 }
