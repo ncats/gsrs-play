@@ -212,7 +212,8 @@ public class Structure extends BaseModel implements ForceUpdatableModel{
     
     public Integer ezCenters; // counter of E/Z centers
     public Integer charge; // formal charge
-    @Indexable(name = "Molecular Weight", dranges = { 0, 200, 400, 600, 800, 1000 }, format = "%1$.0f")
+    
+    @Indexable(name = "Molecular Weight", dranges = { 0, 200, 400, 600, 800, 1000 }, format = "%1$.0f", facet=true)
     public Double mwt; // molecular weight
 
     @ManyToMany(cascade = CascadeType.ALL)
@@ -269,6 +270,7 @@ public class Structure extends BaseModel implements ForceUpdatableModel{
     }
 
 
+    @JsonProperty(value="_self")
     public String getSelf() {
         return id != null ? Global.getRef(this) + "?view=full" : null;
     }
@@ -288,6 +290,16 @@ public class Structure extends BaseModel implements ForceUpdatableModel{
     @JsonProperty(value="id")
     public UUID getRealId(){
     	return this.id;
+    }
+    
+    @JsonProperty(value="uuid")
+    public String getUUID(){
+    	return getId();
+    }
+    
+    @JsonProperty(value="uuid")
+    public void setUUID(UUID id){
+    	this.setId(id);
     }
     
     @JsonIgnore
