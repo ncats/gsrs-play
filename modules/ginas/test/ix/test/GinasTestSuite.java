@@ -11,8 +11,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
+import ix.test.util.process.DifferentPortExecutorService;
 import org.junit.runners.Suite;
 import org.junit.runners.model.InitializationError;
 import org.junit.runners.model.RunnerBuilder;
@@ -95,6 +97,12 @@ public class GinasTestSuite extends Suite{
     }
 
     private static Class<?>[] handleClasses(Class<?>[] suiteClasses) {
+
+        int beginPort = Integer.parseInt(System.getProperty("beginPort", "9001"));
+        int endPort = Integer.parseInt(System.getProperty("endPort", "9005"));
+        int numThreads = Integer.parseInt(System.getProperty("numThreads", "3"));
+        DifferentPortExecutorService executorService = new DifferentPortExecutorService(beginPort, endPort, numThreads);
+
         MessageFormat format = new MessageFormat(System.getenv("command"));
         System.out.println("property value of command is '" + format.toPattern());
 
@@ -113,18 +121,18 @@ public class GinasTestSuite extends Suite{
             List<String> args = ArgParser.parseArgs(command);
             System.out.println("executing " + args);
             System.out.println("cwd = " + new File(".").getAbsolutePath());
-            try{
-                Process process = new ProcessBuilder(args)
-                                                .directory(root)
-                                                .inheritIO()
-                                                .start();
-                process.waitFor();
-                
-            }catch(Exception e){
-                e.printStackTrace();
-            }
-        }
 
+            executorService.add(new ProcessBuilder(args)
+                    .directory(root)
+                    .inheritIO());
+
+        }
+        executorService.shutdown();
+        try {
+            executorService.awaitTermination(1, TimeUnit.DAYS);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
         return new Class[0];
     }
 
