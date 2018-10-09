@@ -3,6 +3,8 @@ import sbt.Keys._
 import sbt._
 //import play.PlayImport._
 import play.Play.autoImport._
+import scala.collection.JavaConversions.mapAsScalaMap
+
 
 object ApplicationBuild extends Build {
   val branch = "git rev-parse --abbrev-ref HEAD".!!.trim
@@ -201,6 +203,8 @@ public class BuildInfo {
       javacOptions in (doc) ++= javaDocOptions,
 
     javaOptions in Test ++= Option(new File("modules/ginas").toPath.relativize(new File(System.getProperty("config.file")).toPath)).map("-Dconfig.file=" + _).toSeq,
-    cleanFiles += file("modules/ginas/ginas.ix")
+    javaOptions in Test ++= mapAsScalaMap(System.getProperties).filter( prop=> !("config.file".equals(prop._1))).map(prop => s"-D${prop._1}=${prop._2}").toSeq,
+
+      cleanFiles += file("modules/ginas/ginas.ix")
   ).dependsOn(ginasEvo).aggregate(ginasEvo)
 }

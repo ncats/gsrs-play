@@ -183,7 +183,20 @@ public class GinasTestServer extends ExternalResource{
         }
     }
 
-    public static int DEFAULT_PORT = 9005;
+    public static CachedSupplier<Integer> DEFAULT_PORT = CachedSupplier.of( ()-> {
+        String port = System.getProperty("ix.ginas.testserver.defaultPort");
+        if (port != null) {
+            try {
+                return Integer.parseInt(port);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+        }
+        //default
+        return 9005;
+    });
+
 
     private static final String FAKE_USERNAME_PREFIX="FAKE";
     private static final String FAKE_PASSWORD_PREFIX="pa$$word";
@@ -282,7 +295,7 @@ public class GinasTestServer extends ExternalResource{
      * Create a new instance listening on the default port.
      */
     public GinasTestServer(){
-        this(DEFAULT_PORT);
+        this(DEFAULT_PORT.get());
     }
 
 
@@ -294,7 +307,7 @@ public class GinasTestServer extends ExternalResource{
      *                                This can be further modified using the modifyConfig methods.
      */
     public GinasTestServer(Map<String, Object> additionalConfiguration){
-        this(DEFAULT_PORT, additionalConfiguration);
+        this(DEFAULT_PORT.get(), additionalConfiguration);
     }
 
     /**
@@ -312,7 +325,7 @@ public class GinasTestServer extends ExternalResource{
      *                       (but don't actually type that to put that).
      */
     public GinasTestServer(String additionalConf) {
-        this(DEFAULT_PORT, additionalConf);
+        this(DEFAULT_PORT.get(), additionalConf);
     }
     /**
      * Create a new GinasTestServer instance using the given port, with the given additional
@@ -963,7 +976,6 @@ public class GinasTestServer extends ExternalResource{
 //                });
 //        System.out.println("after");
         try {
-
 
             ts = new TestServer(port, fakeApplication(new Configuration(config.withoutPath("akka")).asMap()));
             ts.start();

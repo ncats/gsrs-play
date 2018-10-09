@@ -1,0 +1,21 @@
+<div class="text-center">
+    <label for={{name}}-{{type}} class="text-capitalize">Access</label>
+    <div uib-tooltip="{{variables.tooltipMessage}}" uib-dropdown on-toggle="processMenuChange()" is-open="variables.isDropdownOpen">
+        <a id="user-access-dropdown" uib-dropdown-toggle aria-label="{{variables.tooltipMessage}}">
+            <div>
+                <i class="fa fa-2x warning" ng-class="objToManageAccess.access.length ? 'fa-lock' : 'fa-unlock'"></i>
+            </div>
+            <span>
+                Options
+                <i class="fa fa-caret-down"></i>
+            </span>
+        </a>
+        <ul class="dropdown-menu" uib-dropdown-menu aria-labelledby="user-access-dropdown">
+            <li ng-repeat="accessOption in accessOptions">
+                <a dropdown-menu-checkbox-option toggle-property="accessOption.selected" call-on-toggle="toggleAccessOption(accessOption)">
+                    <input type="checkbox" /> {{accessOption.display}}
+                </a>
+            </li>
+        </ul>
+    </div>
+</div>
