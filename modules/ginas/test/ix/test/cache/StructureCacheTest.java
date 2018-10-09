@@ -2,6 +2,8 @@ package ix.test.cache;
 
 import static org.junit.Assert.*;
 
+import ix.AbstractGinasServerTest;
+import ix.test.server.GinasTestServer;
 import org.junit.Test;
 
 import ix.AbstractGinasClassServerTest;
@@ -11,10 +13,15 @@ import ix.core.plugins.IxCache;
 import ix.ginas.models.v1.GinasChemicalStructure;
 import ix.ginas.modelBuilders.SubstanceBuilder;
 
-public class StructureCacheTest extends AbstractGinasClassServerTest{
+public class StructureCacheTest extends AbstractGinasServerTest{
 
-	
-	
+	@Override
+	public GinasTestServer createGinasTestServer() {
+		GinasTestServer  ts = new GinasTestServer();
+		ts.modifyConfig("ix.cache.useFileDb = true",  GinasTestServer.ConfigOptions.ALL_TESTS);
+		return ts;
+	}
+
 	@Test
 	public void testStructureCacheStoresAndRetrieves(){
 		GinasChemicalStructure s=new SubstanceBuilder()
