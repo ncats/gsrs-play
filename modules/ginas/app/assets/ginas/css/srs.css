@@ -3,6 +3,7 @@
 body {
     position: relative;
     background-color: #F8F8F8;
+    min-width: 997px;
 }
 
 body, html {
@@ -724,9 +725,11 @@ mypanelheadingproddetail {
 }
 
 #versionsrs {
-    margin-top:20px;
-    padding-top: 40px;
     text-align: left;
+    display: inline-block;
+    vertical-align: bottom;
+    margin-bottom: 5px;
+    margin-left: 10px;
 }
 
 .navbar-default .navbar-nav>.active>a {
