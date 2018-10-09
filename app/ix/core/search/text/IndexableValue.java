@@ -214,10 +214,10 @@ public interface IndexableValue {
 	}
 	public static IndexableValue simpleFacetLongValue(String name, long value, long[] ranges){
 		
-		return new IndexableValueFromRaw(name,value).withRange(ranges);
+		return new IndexableValueFromRaw(name,value).setFacet(true).withRange(ranges);
 	}
 	public static IndexableValue simpleFacetDoubleValue(String name, double val, double[] ranges){
 		
-		return new IndexableValueFromRaw(name,val).withRange(ranges);
+		return new IndexableValueFromRaw(name,val).setFacet(true).withRange(ranges);
 	}
 }
