@@ -1536,7 +1536,6 @@
     	  return function (scope, element, attrs) {
 
     		var elm=element;
-    		console.log(attrs);
     		if(attrs.escGlobal !== 'undefined'){
     			elm=angular.element(document).find('body');
     		}

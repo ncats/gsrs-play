@@ -30,8 +30,8 @@ body, html {
 }
 
 #left-menu{
-    padding-top: .7%;
     height: 50px;
+    margin-top: -5px;
 }
 
 #right-menu{
@@ -1921,4 +1921,20 @@ td.no-sort{
     max-width: calc(100% - 21px);
     float: left;
 
+}
+
+
+#mymenubar{
+	color: #1d84b7;
+}
+#mymenubar ul li a {
+    color: #1d84b7;
+    font-size: 12px;
+    margin-top: 5px;
+    font-weight: bold;
+    margin-right: 14px;
+}
+
+#menu{
+	margin-bottom:15px;
 }

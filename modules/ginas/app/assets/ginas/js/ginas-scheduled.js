@@ -6,8 +6,6 @@
     //This is the controller for the list view for chemicals
     module.controller('ListViewController', function ($scope, $http, $timeout,$interval,$uibModal) {
         $scope.showLarge=false;
-        console.log("Test");
-
     });
 
 
