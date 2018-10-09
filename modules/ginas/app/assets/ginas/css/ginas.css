@@ -9,6 +9,7 @@ body {
 body, html {
     min-height: 100%;
     height: 100%;
+    min-width: 997px;
 }
 
 @-moz-document url-prefix() {
@@ -43,7 +44,8 @@ body, html {
 }
 
 #logo{
-    height: 80px;
+    height: 60px;
+    width: auto;
 }
 
 #search-bar {

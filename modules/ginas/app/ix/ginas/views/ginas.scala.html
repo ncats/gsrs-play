@@ -122,23 +122,21 @@
 	<div class="container-fluid">
     <div class="row bkwhite">
 
-        <div class="col-md-3">
+        <div class="col-md-5">
             <a href = "@ix.ginas.controllers.routes.GinasApp.index()">
                 <img class="" id="logo" alt = "GSRS logo" height="180px" width="300px" src="@routes.Assets.at("ginas/images/gsrs-logo.svg")" />
             </a>
+            <div id="versionsrs">
+                <code uib-tooltip="Built on @ix.BuildInfo.TIME v2.3.1 RC1" tooltip-placement="right"><small>version 2.3.1 RC1</small></code>
+            </div>
         </div>
-
-        <div class="col-md-2" id="versionsrs">
-            <code uib-tooltip="Built on @ix.BuildInfo.TIME v2.3.1 RC1" data-placement="top"><small>version 2.3.1 RC1</small></code>
-        </div>
-
         <!-- Display Username and Roles if logged in -->
 
         <div class="col-md-7">
-            @if(ix.ncats.controllers.auth.Authentication.getUser() != null) {
+            <!-- @if(ix.ncats.controllers.auth.Authentication.getUser() != null) {
             <h6>Welcome:&nbsp;<b>@ix.ncats.controllers.auth.Authentication.getUser().username</b>&nbsp;&nbsp;&nbsp;
                 Roles: @ix.ncats.controllers.auth.Authentication.getUser().getUserProfile().getRoles()&nbsp;&nbsp;&nbsp;&nbsp;</h6>
-            }
+            } -->
 
         <div class="collapse navbar-collapse pull-right pull-down" id="searchtop">
             <div main-search esc-key="closeLarge()" esc-global>
