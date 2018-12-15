@@ -43,11 +43,9 @@ public class StructureRecalcTaskInitializer extends ScheduledTaskInitializer
 					.streamSupplier(CommonStreamSuppliers.allFor(Structure.class))
 					.consumer((Structure s) ->
 					{
-						s.properties.stream().forEach(k ->
-						{
-							k.delete(); //delete old stored properties
-						});
-
+						s.properties.clear();
+						System.out.println("deleted properties for structure " + s.id);
+						
 						String molfileString = s.molfile;
 						Structure newStructure;
 						try
@@ -80,7 +78,7 @@ public class StructureRecalcTaskInitializer extends ScheduledTaskInitializer
 	@Override
 	public String getDescription()
 	{
-		return "Regenerate the Lychi structure hash for all chemicals in the database";
+		return "Regenerate structure properties collection for all chemicals in the database 2";
 	}
 
 }
