@@ -78,7 +78,7 @@ public class StructureRecalcTaskInitializer extends ScheduledTaskInitializer
 	@Override
 	public String getDescription()
 	{
-		return "Regenerate structure properties collection for all chemicals in the database 2";
+		return "Regenerate structure properties collection for all chemicals in the database";
 	}
 
 }
