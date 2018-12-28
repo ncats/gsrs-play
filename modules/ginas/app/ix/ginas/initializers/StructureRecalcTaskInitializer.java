@@ -14,6 +14,10 @@ import ix.core.utils.executor.ProcessListener;
 import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.ArrayList;
+import java.util.List;
+
+import ix.core.models.Value;
 
 /**
  *
@@ -43,8 +47,14 @@ public class StructureRecalcTaskInitializer extends ScheduledTaskInitializer
 					.streamSupplier(CommonStreamSuppliers.allFor(Structure.class))
 					.consumer((Structure s) ->
 					{
+						List<Value> toDelete = new ArrayList<>();
+						for( Value p : s.properties)
+						{
+							toDelete.add(p);
+						}
+
 						s.properties.clear();
-						System.out.println("deleted properties for structure " + s.id);
+						//System.out.println("deleted properties for structure " + s.id);
 						
 						String molfileString = s.molfile;
 						Structure newStructure;
@@ -54,9 +64,13 @@ public class StructureRecalcTaskInitializer extends ScheduledTaskInitializer
 									.mol(molfileString)
 									.build()
 									.instrument(); //compute new properties
-							s.properties.addAll(newStructure.properties); //add properties
+							s.properties = new ArrayList(newStructure.properties); //add properties
 							s.save(); //save
 
+							for( Value p : toDelete)
+							{
+								p.delete();
+							}
 						} catch (Exception ex)
 						{
 							System.err.println("Error reinitializing structure: " + ex.getMessage());
