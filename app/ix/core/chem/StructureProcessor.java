@@ -28,6 +28,8 @@ import chemaxon.struc.MolBond;
 import chemaxon.struc.Molecule;
 import chemaxon.util.MolHandler;
 import gov.nih.ncgc.jchemical.Jchemical;
+import java.util.ArrayList;
+import java.util.Date;
 
 
 public class StructureProcessor {
@@ -197,6 +199,7 @@ public class StructureProcessor {
      * @param settings
      */
     static void instrument (StructureProcessorTask settings) {
+			System.out.println("Starting in instrument at " + (new Date()));
         Structure struc = settings.getStructure();
         Collection<Structure> components = settings.getComponents();
         Molecule mol = settings.getMolecule();
@@ -344,6 +347,7 @@ public class StructureProcessor {
             
             try {
                 mstd.standardize(stdmol);
+								System.out.println("completed standardize at "+ (new Date()));
                 /*
                 if (mstd.getFragmentCount() > 1) {
                     Molecule[] frags = stdmol.cloneMolecule().convertToFrags();
@@ -408,12 +412,24 @@ public class StructureProcessor {
        
         
         //System.out.print(mol.toFormat("mol"));
-        
-        String[] hash = LyChIStandardizer.hashKeyArray(stdmol);
-        struc.properties.add(new Keyword (Structure.H_LyChI_L1, hash[0]));
-        struc.properties.add(new Keyword (Structure.H_LyChI_L2, hash[1]));
-        struc.properties.add(new Keyword (Structure.H_LyChI_L3, hash[2]));
-        struc.properties.add(new Keyword (Structure.H_LyChI_L4, hash[3]));
+
+				if( isLychiReady(mol))
+				{	
+					String[] hash = LyChIStandardizer.hashKeyArray(stdmol);
+					struc.properties.add(new Keyword (Structure.H_LyChI_L1, hash[0]));
+					struc.properties.add(new Keyword (Structure.H_LyChI_L2, hash[1]));
+					struc.properties.add(new Keyword (Structure.H_LyChI_L3, hash[2]));
+					struc.properties.add(new Keyword (Structure.H_LyChI_L4, hash[3]));
+					System.out.println("Assigned calculated LyChI at " + (new Date()));
+				}
+				else
+				{
+				  struc.properties.add(new Keyword (Structure.H_LyChI_L1, NOT_LYCHI_READY_VALUE));
+					struc.properties.add(new Keyword (Structure.H_LyChI_L2, NOT_LYCHI_READY_VALUE));
+					struc.properties.add(new Keyword (Structure.H_LyChI_L3, NOT_LYCHI_READY_VALUE));
+					struc.properties.add(new Keyword (Structure.H_LyChI_L4, NOT_LYCHI_READY_VALUE));
+					System.out.println("Assigned bogus LyChI at "  + (new Date()));
+				}
 
         struc.definedStereo = def;
         struc.stereoCenters = stereo;
@@ -550,4 +566,39 @@ public class StructureProcessor {
         
         return mol.toFormat("smarts");
     }
+		
+		private static boolean isLychiReady(Molecule mol)
+		{
+			if( mol == null )return false;
+			System.out.println("in isLychiReady, atomCount: " + mol.getAtomCount()
+				+ " at " + (new Date()));
+			if( mol.getAtomCount() > MAX_ATOMS_FOR_LYCHI)
+			{
+				System.out.println("too many atoms");
+				return false;
+			}
+			int electroNegCount = 0;
+			List<Integer> electronegAtomNos = new ArrayList<>();
+			electronegAtomNos.add(7);
+			electronegAtomNos.add(8);
+			electronegAtomNos.add(9);
+			for(int i =0; i<mol.getAtomCount(); i++)
+			{
+				if( electronegAtomNos.contains( mol.getAtom(i).getAtno() ))
+				{
+					electroNegCount++;
+				}
+			}
+			if( electroNegCount > MAX_ELECTRONEGATIVE_ATOMS_FOR_LYCHI)
+			{
+				System.out.println("too many electronegative atoms");
+				return false;
+			}
+			return true;
+		}
+		
+		//SWAGS:
+		private static final int MAX_ATOMS_FOR_LYCHI = 1000;
+		private static final int MAX_ELECTRONEGATIVE_ATOMS_FOR_LYCHI = 200;
+		public static final String NOT_LYCHI_READY_VALUE = "Lychi Placeholder";
 }
