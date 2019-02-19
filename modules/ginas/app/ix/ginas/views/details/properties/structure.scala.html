@@ -6,13 +6,23 @@
 @(sub: ix.ginas.models.v1.ChemicalSubstance)        
 
 @structureImage(s: Structure, size: Integer, version: String) = {
-    <img class="struc-thumb img-responsive" alt="Structure of @sub.getName" title="Structure of @sub.getName"
+<div ng-controller = "GinasController" >
+	<div class = "magnify" ng-click = "openImgModal('@sub.getUuid', '@ix.ginas.controllers.routes.GinasApp.structure(s.getId(), "svg", 700, null, version)')">
+		<img class="struc-thumb img-responsive structure-image-margins" alt="Structure of @sub.getName" title="Structure of @sub.getName (Click to view larger version)"
     ng-init="showStereo=false"
     ng-src='@ix.ginas.controllers.routes.GinasApp.structure(s.getId(), "svg", size, null, version)&stereo={{showStereo}}'>
-    <button ng-click="showStereo=!showStereo">
+</div>
+	@if(sub.structure.stereoCenters!=0){
+	<div class = "row">
+		<div class="col-md-12 col-sm-12 col-xs-12 text-center stereo-button">
+			<button class = "btn btn-primary reference-button " ng-click="showStereo=!showStereo" >
     <span ng-show="showStereo">Hide Stereo</span>
     <span ng-hide="showStereo">Show Stereo</span>
     </button>
+		</div>
+	</div>
+	}
+</div>
 }
 
 <div class="col-md-5 col-sm-5 col-xs-5">
@@ -113,26 +123,18 @@
 						<td>@sub.structure.stereoComments</td>
 					</tr>
 				}
-				@if(sub.structure.getReferences() != null && sub.structure.getReferences().size > 0) {
-				<tr>
-					<td colspan = "2">
-						<a href="#" class="show-overview-audit" style="display: inline;"><br>
-							<span class="overview-audit">Show Audit Info <span class="overview-audit"><i class="fa fa-caret-down" aria-hidden="true"></i>
-							</span></span>
-						</a>
-						<a href="#" class="hide-overview-audit" style="display:none"><br>
-							<span class="overview-audit">Hide Audit Info <span class="overview-audit"><i class="fa fa-caret-up" aria-hidden="true"></i>
-							</span></span>
-						</a>
-					</td>
-				</tr>
-				}
 
 			</table>
 
-			@if(sub.structure.getReferences() != null && sub.structure.getReferences().size > 0) {
-			<div id = "overview-audit" style = "display:none">
+				@if(sub.structure.getReferences() != null && sub.structure.getReferences().size > 0) {
+			<div class = "structure-toggle">
+			<a href ng-click="showAuditInfo=!showAuditInfo"  ng-hide="sysNames.length == 0">
+				<span ng-show="showAuditInfo">Hide Audit Info <i class="fa fa-caret-up" aria-hidden="true"></i></span>
+				<span ng-hide="showAuditInfo">Show Audit Info <i class="fa fa-caret-down" aria-hidden="true"></i></span>
+						</a>
+			</div>
 
+			<div ng-show="showAuditInfo">
 				<table class = "table kv-table" id = "overview-audit-table">
 					<tr>
 						<td>Created by</td>
@@ -149,22 +151,12 @@
 			}
 		</div>
 	</div>
-	<a href="#" class="show-smiles-inchi"><br>
-		<span class="smiles-inchi">Show SMILES / InChI</span>
-		<span class="smiles-inchi"><i class="fa fa-caret-down" aria-hidden="true"></i></span>
-	</a>
+
 </div>
 
-<div class="col-md-6 col-sm-6 col-xs-6">
-		<div class = "row">
+<div class="col-md-6 col-sm-6 col-xs-6" ">
 		@structureImage(sub.structure, 400, sub.version)
 		</div>
-		<div class = "row">
-			<div class = "col-md-6 col-md-offset-6">
-				
-			</div>
-		</div>
-</div>
 
  <div class="col-md-1 col-sm-1 col-xs-1">
 		<div class = "row">
@@ -181,7 +173,31 @@
 		</div>
 </div>
 
-<div class="col-md-12 col-sm-12 col-xs-12" id="smiles-inchi">
+<div class = "col-md-12 col-sm-12 col-xs-12 " ng-controller = "GinasController">
+	<div class = 'structure-toggle' ng-init="setSysNames('@sub.getUuid')" ng-hide="sysNames.length == 0">
+			<a href ng-click="showSysNames=!showSysNames" >
+				<span ng-show="showSysNames">Hide Systematic Names <i class="fa fa-caret-up" aria-hidden="true"></i></span>
+				<span ng-hide="showSysNames">Show Systematic Names <i class="fa fa-caret-down" aria-hidden="true"></i></span>
+			</a>
+	</div>
+	<div ng-show ="showSysNames" ng-hide = "!showSysNames" class = "padded">
+		<h4>Systematic Names:</h4>
+		<ul>
+			<li ng-show="sysNames.length == 0"><i>None recorded</i></li>
+			<li ng-repeat = "name in sysNames">{{name}}</li>
+		</ul>
+
+	</div>
+</div>
+
+<div class="col-md-12 col-sm-12 col-xs-12" id="">
+	<div class = 'structure-toggle'>
+	<a href ng-click="showSmilesInchi=!showSmilesInchi">
+		<span ng-show="showSmilesInchi">Hide SMILES / InChI <i class="fa fa-caret-up" aria-hidden="true"></i></span>
+		<span ng-hide="showSmilesInchi">Show SMILES / InChI <i class="fa fa-caret-down" aria-hidden="true"></i></span>
+	</a>
+	</div>
+	<div  ng-show="showSmilesInchi" class = "padded">
 	<div class="panel panel-default additional">
 		<div class="panel-heading"> 
 					<h3 class="panel-title">
@@ -191,7 +207,7 @@
 	
 		<div class="panel-body additional-data">
 
-			<div class="monospace">
+				<div class="monospace" modal-scope-binding = "smiles">
 				@sub.structure.smiles
 			</div>
 		</div>
@@ -212,7 +228,7 @@
 
 				@if(inchikey!=null){
 					<div class="panel-body additional-data">
-						<div class="monospace">
+							<div class="monospace" modal-scope-binding = "inchikey">
 									@inchikey
 						</div>
 					</div>
@@ -220,7 +236,7 @@
 				
 				@if(inchi!=null){
 					<div class="panel-body additional-data">
-						<div class="monospace">
+							<div class="monospace" modal-scope-binding = "inchi">
 									@inchi
 						</div>
 					</div>
@@ -229,9 +245,6 @@
 			</div>
 		}
 	}
-	<a href="#" class="hide-smiles-inchi"><br>
-		<span class="smiles-inchi">Hide SMILES / InChI</span>
-		<span class="smiles-inchi"><i class="fa fa-caret-up" aria-hidden="true"></i></span>
-	</a>
 			
 </div>   
+</div>

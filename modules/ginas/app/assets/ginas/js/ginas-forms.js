@@ -1605,9 +1605,9 @@
                 scope.numbers = true;
                 scope.viewchange = function(){
                     if(!scope.numbers){
-                        console.log("fasta view");
+
                     }else{
-                        console.log("number view");
+
                     }
                 }
                 scope.addNewSubunit = function (form) {

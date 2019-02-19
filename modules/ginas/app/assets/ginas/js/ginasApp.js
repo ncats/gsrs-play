@@ -1058,7 +1058,52 @@
                 backdrop: 'static'
             });
         };
-
+        $scope.openImgModal = function (uuid, imgUrl) {
+            var approveURL = baseurl + 'api/v1/substances(' + uuid + ')/names';
+            $scope.image = imgUrl;
+            $scope.setSysNames(uuid)
+            $scope.getSmilesInchi(uuid);
+            $scope.modalInstance = $uibModal.open({
+                templateUrl: baseurl + "assets/templates/modals/image-modal.html",
+                scope: $scope,
+                windowClass: 'image-window',
+                size: 'image'
+            });
+        };
+        $scope.setSysNames = function(uuid) {
+            var approveURL = baseurl + 'api/v1/substances(' + uuid + ')/names';
+            $http.get(approveURL, {cache: false}, {
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            }).then(function (response) {
+                var namelist = [];
+                for (var i = 0; i < response.data.length; i++) {
+                    if (response.data[i].type == 'sys') {
+                        namelist.push(response.data[i].name);
+                    }
+                }
+                $scope.sysNames = namelist;
+            });
+        };
+        $scope.getSmilesInchi = function(uuid){
+            var url = baseurl + 'export/' + uuid + '.smiles';
+            $http.get(url, {
+                headers: {
+                    'Content-Type': 'text/plain'
+                }
+            }).success(function (response) {
+                $scope.smiles = response;
+            });
+            url = baseurl + 'api/v1/substances(' + uuid + ')structure!$inchikey()';
+            $http.get(url, {
+                headers: {
+                    'Content-Type': 'text/plain'
+                }
+            }).success(function (response) {
+                $scope.inchikey = response;
+            });
+        };
         $scope.close = function () {
             $scope.modalInstance.close();
         };
@@ -1368,6 +1413,11 @@
                 molChanger.setMol($scope.substance.polymer.idealizedStructure.molfile);
             }
         };
+        $scope.browseSubstances=function(){
+            $scope.updateNav = false;
+            $window.location.search = null;
+            $window.location.href = baseurl+ 'substances/';
+        };
 
         $scope.viewSubstance = function () {
             $scope.updateNav = false;
@@ -1375,7 +1425,12 @@
             $window.location.href = baseurl + 'substance/' + $scope.postRedirect.split('-')[0];
             //  $window.location.search =null;
         };
-
+        $scope.editNewSubstance = function () {
+            $scope.updateNav = false;
+            $window.location.search = null;
+            $window.location.href = baseurl + 'substance/' + $scope.postRedirect.split('-')[0] + '/edit';
+            //  $window.location.search =null;
+        };
         $scope.addSameSubstanceType = function () {
             $scope.updateNav = false;
             $window.location.search = null;
@@ -1549,9 +1604,15 @@
     	      }
     	    });
     	  };
-    	})
-
-
+    });
+    ginasApp.directive('modalScopeBinding', function () {
+        return {
+            link: function ($scope, element, attr) {
+                var modalScopeVariableName = attr.modalScopeBinding;
+                $scope[modalScopeVariableName] = element[0].innerHTML;
+            }
+        }
+    });
     ginasApp.directive('loading', function ($http) {
         return {
             template: "<div class=\"sk-folding-cube\">\n" +
@@ -1993,6 +2054,11 @@
 
                 scope.getClass = function (index) {
                     return referencesCtrl.getClass(index);
+                };
+
+                scope.baseurl=baseurl;
+                if(scope.baseurl[scope.baseurl.length-1]==='/'){
+                    scope.baseurl=scope.baseurl.substring(0,scope.baseurl.length-1);
                 }
             },
             templateUrl: baseurl + "assets/templates/reference-table.html"
@@ -2072,16 +2138,17 @@
                         var link = '<a ng-click="showActive(' + i + ')" uib-tooltip="view reference">' + i + '</a>';
                         links.push(link);
                     });
-
-                    var templateString = angular.element('<div class ="row reftable"><div class ="col-md-8">'
-                    			+ "(" + links.length + ")"
-                    			+ ' </div><div class="col-md-4"><span class="btn btn-primary pull-right" type="button" uib-tooltip="Show all references" ng-click="toggle()"><i class="fa fa-long-arrow-down"></i></span><div></div>');
+                    scope.buttonLabel = "view";
+                    var templateString = angular.element('<div class ="reftable">'
+                        + '<div style = "float:left" class =" center-text">'
+                        + '</div><div style = "float:left"><button class="btn btn-primary reference-button" type="button" uib-tooltip="Show all references" ng-click="toggle()" >{{buttonLabel}} '+links.length+'<br/>reference(s)</button></div></div>');
                     element.append(angular.element(templateString));
                     $compile(templateString)(scope);
                 });
 
                 scope.toggle = function () {
                     referencesCtrl.toggle(scope, attrs.divid);
+                    scope.buttonLabel = scope.buttonLabel === 'view' ? 'hide' : 'view';
                 };
 
                 scope.showActive = function (index) {
@@ -3033,10 +3100,9 @@
 		           	 "     substanceuuid='" + scope.substanceuuid +  "'>" +
 		           	 "  </substance-preview>" + 
 		             "  </div>" +
-		             "</info-popup>\n" +
-		             "<span>{{_substance._name}} [{{_substance._approvalIDDisplay}}]</span>\n" +
-		             "</span>";
-            	
+                    "</info-popup>\n";
+                // div += "<span>{{_substance._name}} [{{_substance._approvalIDDisplay}}]</span>\n" + " </span>";
+                div += "</span>";
             	scope.iclass="";
             	
             	
@@ -3060,7 +3126,6 @@
             		scope.showPopup=!scope.showPopup;
             		setTimeout(function(){
             			scope.iclass="";
-            			//console.log("resetting class");
             			scope.$apply();
             		},10);
             	};
@@ -3083,8 +3148,7 @@
             		scope._substance=scope.substance;
             		scope.update();
             	}
-            	
-                element.append($compile(div)(scope));
+                element.empty().append($compile(div)(scope));
             }
         }
     });

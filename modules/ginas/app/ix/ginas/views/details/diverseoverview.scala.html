@@ -13,23 +13,6 @@
 				<td>Substance Class</td>
 				<td class="monospace flexbox">
 					Structurally Diverse
-					<info-popup class="flexbox">
-						<div class="info-popup-container">
-							<div>
-							@if(sub.structurallyDiverse.getReferences() != null && sub.structurallyDiverse.getReferences().size > 0) {
-								<referencesmanager reftable 
-								hide-header="false"
-								@* order can be changed in reference-table.html template *@
-								show='["typ","tags","cit"]'
-								substance ="'@sub.getUuid()'" 
-								sreferences = "@GinasApp.getAsJson(sub.structurallyDiverse.getReferences())" >
-								</referencesmanager>
-							}
-							@auditdetails(sub.structurallyDiverse)
-							</div>
-							
-						</div>
-					</info-popup>
 				</td>
 			</tr>
 			
@@ -156,6 +139,14 @@
 			
 			
 			@overview(sub)
+			@if(sub.structurallyDiverse.getReferences() != null && sub.structurallyDiverse.getReferences().size() > 0) {
+				<tr>
+					<td>
+						<a href ng-click = "showAuditInfo=!showAuditInfo"   ng-show = "!showAuditInfo" ng-hide = "showAuditInfo"  >Show Definitional References <i class="fa fa-caret-down" aria-hidden="true"></i></a>
+						<a ng-click = "showAuditInfo=!showAuditInfo"  ng-show = "showAuditInfo" ng-hide = "!showAuditInfo" >Hide Definitional References <i class="fa fa-caret-up" aria-hidden="true"></i></a>
+					</td>
+				</tr>
+			}
 		</table>
 	</div>
 	@overviewexport(sub)
@@ -309,3 +300,12 @@
 	</div>
 </div>
 *@
+<div ng-show="showAuditInfo">
+	<label>References:</label>
+	<referencesmanager reftable hide-header="true"
+					   show='["cit"]'
+					   substance ="'@sub.uuid'"
+					   version ="'@sub.version'"
+					   sreferences = "@GinasApp.getAsJson(sub.structurallyDiverse.getReferences())" >
+	</referencesmanager>
+</div>

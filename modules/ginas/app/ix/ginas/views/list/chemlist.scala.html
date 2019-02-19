@@ -30,10 +30,12 @@
     <span class="label label-danger label-offset list-view-badge">@chem.structure.stereoChemistry</span>
     }
 </div>
-
-                <div class = "magnify" ng-click = "showLarge=!showLarge">
+<div ng-controller = "GinasController" >
+    <div ng-init = "inchi = '@chem.structure.getInChI()'" style = "display:hidden"></div>
+    <div class = "magnify" ng-click = "openImgModal('@chem.uuid', '@ix.ginas.controllers.routes.GinasApp.structure(chem.structure.id.toString(), "svg", 700, ctx)')" >
                     <rendered id = '@chem.structure.id' ctx='@ctx' title="click to enlarge" ></rendered>
                 </div>
+</div>
                 <div>
                 @defining(GinasApp.getChemSimilarity(ctx, chem)) { sim =>
                     @if(sim != null) {
@@ -88,7 +90,7 @@
     </div>
 </div>
 }{
-        <div ng-if="showLarge" ng-click="showLarge!=showLarge">
+      <!--  <div ng-if="showLarge" ng-click="showLarge!=showLarge">
             <rendered size="500" id = '@chem.structure.id' ctx='@ctx' title="click to enlarge" ></rendered>
-        </div>
+        </div>-->
 }
