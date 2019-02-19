@@ -4,6 +4,7 @@ import ix.core.auth.Authenticator;
 import ix.core.auth.DefaultAuthenticator;
 import ix.core.models.UserProfile;
 import ix.core.util.EntityUtils.EntityInfo;
+import ix.core.util.IOUtil;
 import play.Application;
 import play.Logger;
 
@@ -36,7 +37,7 @@ public class AuthenticatorFactory  extends AccumlatingInternalMapEntityResourceF
 				String authClass=(String) m.get("authenticator");
     			String debug="Setting up authenticator [" + authClass + "] ... ";
     			try {
-					Class entityCls = Class.forName(authClass);
+					Class entityCls = IOUtil.getGinasClassLoader().loadClass(authClass);
 					Authenticator auth=(Authenticator) entityCls.newInstance();
 					this.register(RESOURCE_CLASS, auth, false);
 				} catch (Exception e) {

@@ -5,16 +5,19 @@ import static ix.test.SubstanceJsonUtil.ensurePass;
 import static org.junit.Assert.*;
 
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
 import ix.core.EntityProcessor;
 import ix.core.adapters.EntityPersistAdapter;
+import ix.core.controllers.EntityFactory;
+import ix.core.util.EntityUtils;
 import ix.core.util.RunOnly;
+import ix.ginas.exporters.JsonExporter;
 import ix.ginas.modelBuilders.SubstanceBuilder;
-import ix.ginas.models.v1.Relationship;
-import ix.ginas.models.v1.Substance;
-import ix.ginas.models.v1.SubstanceReference;
+import ix.ginas.models.v1.*;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -1078,4 +1081,5 @@ public class RelationshipInvertTest extends AbstractGinasServerTest {
             }
         }
     }
+
 }

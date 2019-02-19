@@ -34,18 +34,17 @@ object ApplicationBuild extends Build {
     javaEbean,
     cache,
     filters,
-//    "com.fasterxml.jackson.core" % "jackson-core" % "2.9.1",
-//    "com.fasterxml.jackson.core" % "jackson-databind" % "2.9.1",
-//    "com.fasterxml.jackson.core" % "jackson-annotations" % "2.9.1",
 
+    "com.fasterxml.jackson.core" % "jackson-core" % "2.9.7",
+        "com.fasterxml.jackson.core" % "jackson-databind" % "2.9.7",
+        "com.fasterxml.jackson.core" % "jackson-annotations" % "2.9.7",
     "org.apache.httpcomponents" % "httpclient" %"4.5.2",
     "org.apache.httpcomponents" % "httpcore" %"4.4.4",
     "org.apache.httpcomponents" % "httpclient" %"4.3.1", //required for Ivy bug?
     "commons-io" % "commons-io" % "2.4",
-    "com.fasterxml.jackson.core" % "jackson-core" % "2.5.3",
-    "com.fasterxml.jackson.core" % "jackson-databind" % "2.5.3",
+    "com.flipkart.zjsonpatch" % "zjsonpatch" % "0.4.6",
 
-    "net.sourceforge.htmlunit" % "htmlunit" % "2.27" % Test,
+    "net.sourceforge.htmlunit" % "htmlunit" % "2.33" % Test,
     "com.zaxxer" % "HikariCP" % "2.4.6"
       ,"com.edulify" %% "play-hikaricp" % "2.1.0"
       ,"mysql" % "mysql-connector-java" % "5.1.31"
@@ -60,7 +59,6 @@ object ApplicationBuild extends Build {
       ,"org.apache.lucene" % "lucene-suggest" % "4.10.0"
       ,"org.apache.lucene" % "lucene-facet" % "4.10.0"
       ,"org.apache.lucene" % "lucene-queryparser" % "4.10.0"
-      ,"com.github.fge" % "json-patch" % "1.9"
       ,"org.quartz-scheduler" % "quartz" % "2.2.1"
       ,"org.webjars" %% "webjars-play" % "2.3.0"
       ,"org.webjars" % "bootstrap" % "3.3.7"

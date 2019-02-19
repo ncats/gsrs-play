@@ -16,6 +16,7 @@ import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -171,7 +172,7 @@ public class SchedulerPlugin extends Plugin {
         
         
         
-    	private Consumer<TaskListener> r=(l)->{};
+    	private BiConsumer<JobStats, TaskListener> consumer=(s, l)->{};
     	
     	private Supplier<Boolean> check = ()->true;
     	
@@ -181,6 +182,8 @@ public class SchedulerPlugin extends Plugin {
     	
     	private Date lastStarted=null;
         private Date lastFinished=null;
+        private Date lastSuccessfulStart, lastSuccesfulFinish;
+
         private int numberOfRuns=0;
         private boolean enabled=true;
 
@@ -211,17 +214,18 @@ public class SchedulerPlugin extends Plugin {
         public Long id=idSupplier.get();
     	
     	
-    	public ScheduledTask(Consumer<TaskListener> r){
-    		this.r=r;
+    	public ScheduledTask(BiConsumer<JobStats,TaskListener> consumer){
+
+    	    this.consumer = consumer;
     	}
     	
-    	public ScheduledTask(Consumer<TaskListener> r, CronScheduleBuilder sched){
-    		this.r=r;
+    	public ScheduledTask(BiConsumer<JobStats, TaskListener> consumer, CronScheduleBuilder sched){
+    		this.consumer=consumer;
     		this.sched=sched;
     	}
     	
     	public ScheduledTask runnable(Runnable r){
-    		this.r=(l)->r.run();
+    		this.consumer=(s, l)->r.run();
     		return this;
     	}
     	
@@ -288,13 +292,17 @@ public class SchedulerPlugin extends Plugin {
     	
     	public synchronized void runNow(){
     	    numberOfRuns++;
+    	    JobStats stats = new JobStats(numberOfRuns, lastStarted, lastFinished, getNextRun(),
+    	                                lastSuccessfulStart, lastSuccesfulFinish);
+
     	    isRunning.set(true);
             lastStarted=TimeUtil.getCurrentDate();
             this.listener.start();
+            AtomicBoolean successful = new AtomicBoolean(false);
             try {
                 Callable<Void> callable = () -> {
                     try {
-                        r.accept(this.listener);
+                        consumer.accept(stats, this.listener);
                         return null;
                     }catch(Throwable t){
                         t.printStackTrace();
@@ -303,10 +311,15 @@ public class SchedulerPlugin extends Plugin {
             };
                 currentTask = new FutureTask<>(callable);
                 currentTask.run();
+                //if we get this far we didn't error out
+                lastSuccessfulStart = lastStarted;
             }finally{
                 lastFinished=TimeUtil.getCurrentDate();
                 isRunning.set(false);
                 this.listener.complete();
+                if(lastSuccessfulStart == lastStarted){
+                    lastSuccesfulFinish = lastFinished;
+                }
             }
             isLocked.set(false);
     	}
@@ -399,10 +412,10 @@ public class SchedulerPlugin extends Plugin {
         }
     	
     	public ScheduledTask wrap(Consumer<Runnable> wrapper){
-    	    Consumer<TaskListener> c=r;
-    	    r=(l)->{
+    	    BiConsumer<JobStats, TaskListener> c=consumer;
+    	    consumer=(s,l)->{
     	        wrapper.accept(()->{
-    	           c.accept(l); 
+    	           c.accept(s, l);
     	        });
     	    };
             return this;
@@ -457,12 +470,15 @@ public class SchedulerPlugin extends Plugin {
     	    return submitted.get();
     	}
     	
+    	public static ScheduledTask of(BiConsumer<JobStats, TaskListener> consumer){
+    	    return new ScheduledTask(consumer);
+        }
     	public static ScheduledTask of(Consumer<TaskListener> r){
-            return new ScheduledTask(r);
+            return new ScheduledTask((s,l) -> r.accept(l));
         }
     	
     	public static ScheduledTask of(Runnable r){
-            return new ScheduledTask((l)->r.run());
+            return new ScheduledTask((s,l)->r.run());
         }
     	
     	public static enum CRON_EXAMPLE{
@@ -545,6 +561,42 @@ public class SchedulerPlugin extends Plugin {
     }
     
     
-    
-    
+    public static class JobStats{
+        private final int numberOfRuns;
+        private final Date lastStarted, lastFinished, nextRun, lastSuccessfulStart, getLastSuccessfulFinish;
+
+        public JobStats(int numberOfRuns, Date lastStarted, Date lastFinished, Date nextRun, Date lastSuccessfulStart, Date getLastSuccessfulFinish) {
+            this.numberOfRuns = numberOfRuns;
+            this.lastStarted = lastStarted;
+            this.lastFinished = lastFinished;
+            this.nextRun = nextRun;
+            this.lastSuccessfulStart = lastSuccessfulStart;
+            this.getLastSuccessfulFinish = getLastSuccessfulFinish;
+        }
+
+        public int getNumberOfRuns() {
+            return numberOfRuns;
+        }
+
+        public Date getLastStarted() {
+            return lastStarted;
+        }
+
+        public Date getLastFinished() {
+            return lastFinished;
+        }
+
+        public Date getNextRun() {
+            return nextRun;
+        }
+
+        public Date getLastSuccessfulStart() {
+            return lastSuccessfulStart;
+        }
+
+        public Date getGetLastSuccessfulFinish() {
+            return getLastSuccessfulFinish;
+        }
+    }
+
 }

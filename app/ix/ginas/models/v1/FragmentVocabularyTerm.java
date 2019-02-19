@@ -4,6 +4,8 @@ import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
 import javax.persistence.Inheritance;
 
+import ix.core.SingleParent;
+
 /**
  * Created by peryeata on 02/17/2016.
  */
@@ -11,6 +13,7 @@ import javax.persistence.Inheritance;
 @Entity
 @Inheritance
 @DiscriminatorValue("FRAG")
+@SingleParent
 public class FragmentVocabularyTerm extends VocabularyTerm{
 
 	public String fragmentStructure;

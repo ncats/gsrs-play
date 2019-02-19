@@ -1,7 +1,9 @@
 package ix.ginas.utils.validation.validators;
 
+import ix.core.models.Keyword;
 import ix.core.validator.GinasProcessingMessage;
 import ix.ginas.models.v1.Code;
+import ix.ginas.models.v1.Reference;
 import ix.ginas.models.v1.Substance;
 import ix.ginas.utils.GinasUtils;
 import ix.ginas.utils.validation.ValidationUtils;
@@ -60,6 +62,39 @@ public class CodesValidator extends AbstractValidatorPlugin<Substance> {
             }
 
         }
+
+
+        for(Code cd : s.codes){
+
+            if("CAS".equals(cd.codeSystem)){
+                boolean found=false;
+                for(Keyword keywords :cd.getReferences()){
+                    Reference ref =s.getReferenceByUUID(keywords.term);
+                    if("STN".equalsIgnoreCase(ref.citation)){
+                        found=true;
+                        break;
+                    }
+                }
+                if(!found){
+                    GinasProcessingMessage mes = GinasProcessingMessage
+                            .WARNING_MESSAGE(
+                                    "Must specify STN reference for CAS")
+                            .appliableChange(true);
+                    callback.addMessage(mes, ()-> {
+                        Reference newRef = new Reference();
+                        newRef.citation ="STN";
+                        newRef.docType="STN (SCIFINDER)";
+                        newRef.publicDomain = true;
+                        newRef.addTag(Reference.PUBLIC_DOMAIN_REF);
+
+                        cd.addReference(newRef, s);
+                    });
+                }
+            }
+
+
+        }
+
         for (Code cd : s.codes) {
             try {
                 List<Substance> sr = ix.ginas.controllers.v1.SubstanceFactory

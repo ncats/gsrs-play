@@ -1,32 +1,23 @@
 package ix.ginas.models.v1;
 
 
+
 import ix.core.models.Indexable;
+import ix.ginas.models.GinasAccessReferenceControlled;
 import ix.ginas.models.GinasCommonSubData;
 import ix.ginas.models.utils.JSONConstants;
 import ix.ginas.models.utils.JSONEntity;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
-import javax.persistence.CascadeType;
-import javax.persistence.Entity;
-import javax.persistence.JoinTable;
-import javax.persistence.ManyToMany;
-import javax.persistence.OneToMany;
-import javax.persistence.OneToOne;
-import javax.persistence.OrderBy;
-import javax.persistence.Table;
-import javax.persistence.Transient;
+import javax.persistence.*;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
 
-import play.Logger;
+import ix.core.models.Indexable;
+import ix.ginas.models.GinasCommonSubData;
+import ix.ginas.models.utils.JSONConstants;
+import ix.ginas.models.utils.JSONEntity;
 
 @JSONEntity(title = "Nucleic Acid", isFinal = true)
 @SuppressWarnings("serial")
@@ -62,12 +53,12 @@ public class NucleicAcid extends GinasCommonSubData {
 	@ManyToMany(cascade=CascadeType.ALL)
     @JoinTable(name="ix_ginas_nucleicacid_subunits")
 	@OrderBy("subunitIndex asc")
-	public List<Subunit> subunits;
+	public List<Subunit> subunits = new ArrayList<>();
 	
 	@JSONEntity(title = "Sugars", isRequired = true)
 	@OneToMany(mappedBy = "owner", cascade = CascadeType.ALL)
     //@JoinTable(name="ix_ginas_nucleicacid_sugar")
-	List<Sugar> sugars;
+	List<Sugar> sugars = new ArrayList<>();
 
 	public List<Linkage> getLinkages() {
 		return linkages;
@@ -95,6 +86,8 @@ public class NucleicAcid extends GinasCommonSubData {
 		this.nucleicAcidType = nucleicAcidType;
 	}
 
+
+	@Indexable(facet=true,name="Nucleic Acid Subtype")
 	public List<String> getNucleicAcidSubType() {
 		if( this.nucleicAcidSubType != null){
 			String[] type = this.nucleicAcidSubType.split(";");
@@ -104,7 +97,6 @@ public class NucleicAcid extends GinasCommonSubData {
 		}
 	}
 
-	@Indexable(facet=true,name="Nucleic Acid Subtype")
 	public void setNucleicAcidSubType(List<String> nucleicAcidSubType) {
 		StringBuilder sb = new StringBuilder();
 		if(nucleicAcidSubType!=null){
@@ -139,14 +131,24 @@ public class NucleicAcid extends GinasCommonSubData {
 		Collections.sort(subunits, new Comparator<Subunit>() {
 			@Override
 			public int compare(Subunit o1, Subunit o2) {
+				if(o1.subunitIndex ==null){
+//					System.out.println("null subunit index");
+					if(o2.subunitIndex ==null){
+						return Integer.compare(o2.getLength(), o1.getLength());
+					}else{
+						return 1;
+					}
+				}
 				return o1.subunitIndex - o2.subunitIndex;
 			}
 		});
+		adoptChildSubunits();
 		return this.subunits;
 	}
 
 	public void setSubunits(List<Subunit> subunits) {
 		this.subunits = subunits;
+		adoptChildSubunits();
 	}
 
 	public List<Sugar> getSugars() {
@@ -214,4 +216,44 @@ public class NucleicAcid extends GinasCommonSubData {
     	return getModifiedSites().get(subunitIndex + "_" + residueIndex);    	
     }
 
+	/**
+	 * mark our child subunits as ours.
+	 * Mostly used so we know what kind of type
+	 * this subunit is by walking up the tree
+	 * to inspect its parent (us).
+	 */
+	@PreUpdate
+	@PrePersist
+	public void adoptChildSubunits(){
+		List<Subunit> subunits=this.subunits;
+		for(Subunit s: subunits){
+			s.setParent(this);
+		}
+	}
+
+	@Override
+	@JsonIgnore
+	public List<GinasAccessReferenceControlled> getAllChildrenCapableOfHavingReferences() {
+		List<GinasAccessReferenceControlled> temp = new ArrayList<GinasAccessReferenceControlled>();
+		if(this.linkages!=null){
+			for(Linkage l : this.linkages){
+				temp.addAll(l.getAllChildrenAndSelfCapableOfHavingReferences());
+			}
+		}
+		if(this.sugars!=null){
+			for(Sugar s : this.sugars){
+				temp.addAll(s.getAllChildrenAndSelfCapableOfHavingReferences());
+			}
+		}
+		if(this.subunits!=null){
+			for(Subunit s : this.subunits){
+				temp.addAll(s.getAllChildrenAndSelfCapableOfHavingReferences());
+			}
+		}
+		if(this.modifications!=null){
+			temp.addAll(modifications.getAllChildrenAndSelfCapableOfHavingReferences());
+		}
+
+		return temp;
+	}
 }

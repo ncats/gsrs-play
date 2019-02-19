@@ -5,9 +5,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.github.fge.jsonpatch.JsonPatch;
 
 import ix.core.controllers.PatchChange.Builder;
 import ix.core.controllers.PatchChange.PatchOperation;
@@ -72,12 +72,12 @@ public class PatchChanges{
         return and(using.apply(new PatchChange.Builder()));
     }
 
-    public JsonPatch asJsonPatch(EntityWrapper<?> target) throws IOException{
+    public JsonNode asJsonPatch(EntityWrapper<?> target) throws IOException{
         ArrayNode an = (new ObjectMapper()).createArrayNode();
         for(PatchChange pc: changes){
             an.addAll(pc.asJsonChange(target));
         }
-        return JsonPatch.fromJson(an);
+        return an;
     }
     
 }

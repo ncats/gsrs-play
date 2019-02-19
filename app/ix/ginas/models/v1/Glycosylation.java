@@ -16,6 +16,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import ix.core.models.Indexable;
+import ix.ginas.models.GinasAccessReferenceControlled;
 import ix.ginas.models.GinasCommonSubData;
 import ix.ginas.models.utils.JSONEntity;
 import play.Logger;
@@ -135,5 +136,21 @@ public class Glycosylation extends GinasCommonSubData {
         }
         return count;
     }
+
+	@Override
+	@JsonIgnore
+	public List<GinasAccessReferenceControlled> getAllChildrenCapableOfHavingReferences() {
+		List<GinasAccessReferenceControlled> temp = new ArrayList<GinasAccessReferenceControlled>();
+		if(_CGlycosylationSiteContainer!=null){
+			temp.addAll(_CGlycosylationSiteContainer.getAllChildrenAndSelfCapableOfHavingReferences());
+		}
+		if(_NGlycosylationSiteContainer!=null){
+			temp.addAll(_NGlycosylationSiteContainer.getAllChildrenAndSelfCapableOfHavingReferences());
+		}
+		if(_OGlycosylationSiteContainer!=null){
+			temp.addAll(_OGlycosylationSiteContainer.getAllChildrenAndSelfCapableOfHavingReferences());
+		}
+		return temp;
+	}
 
 }

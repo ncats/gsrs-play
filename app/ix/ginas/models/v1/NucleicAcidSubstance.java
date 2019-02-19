@@ -1,21 +1,19 @@
 package ix.ginas.models.v1;
 
-//import gov.nih.ncats.informatics.ginas.shared.model.v1.utils.JSONEntity;
-
-
-import ix.core.models.Group;
-import ix.ginas.models.GinasAccessReferenceControlled;
-import ix.ginas.models.GinasSubstanceDefinitionAccess;
-import ix.ginas.models.v1.Substance.SubstanceClass;
-
 import javax.persistence.CascadeType;
 import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
 import javax.persistence.Inheritance;
 import javax.persistence.OneToOne;
 import javax.persistence.Transient;
+
+
+import java.util.List;
 import java.util.Set;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+
+import ix.ginas.models.GinasAccessReferenceControlled;
+import ix.ginas.models.GinasSubstanceDefinitionAccess;
 
 @Entity
 @Inheritance
@@ -60,11 +58,17 @@ public class NucleicAcidSubstance extends Substance implements GinasSubstanceDef
     	}
     }
 
+
     @Override
     public void delete(){
+    	Modifications old=this.modifications;
+    	this.modifications=null;
     	super.delete();
     	for(Subunit su:this.nucleicAcid.subunits){
     		su.delete();
+    	}
+    	if(old!=null){
+    		old.delete();
     	}
     }
     
@@ -115,4 +119,14 @@ public class NucleicAcidSubstance extends Substance implements GinasSubstanceDef
 		return m;
 	}
 */
+
+	@Override
+	@JsonIgnore
+	public List<GinasAccessReferenceControlled> getAllChildrenCapableOfHavingReferences(){
+		List<GinasAccessReferenceControlled> temp = super.getAllChildrenCapableOfHavingReferences();
+		if(this.nucleicAcid!=null){
+			temp.addAll(this.nucleicAcid.getAllChildrenAndSelfCapableOfHavingReferences());
+		}
+		return temp;
+	}
 }

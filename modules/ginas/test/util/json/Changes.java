@@ -2,6 +2,11 @@ package util.json;
 
 
 
+import com.fasterxml.jackson.core.JsonPointer;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.flipkart.zjsonpatch.JsonDiff;
+import com.flipkart.zjsonpatch.JsonPatch;
 import org.scalatest.Entry;
 
 import java.util.*;
@@ -94,6 +99,40 @@ public class Changes {
         return toChanges(copy);
     }
     
+    public void assertMatches(JsonNode old, JsonNode newVersion){
+
+        JsonNode patch = JsonDiff.asJson(old, newVersion);
+
+        JsonNode ourVersion = JsonPatch.apply(this.asJsonPatch(), old);
+        JsonNode actualVersion = JsonPatch.apply(patch, old);
+        //actual may have additional changes we don't care about so don't want to do exact equals check
+        //only check the changes we care about
+        for(Change c : changes.values()){
+            JsonPointer key = JsonPointer.valueOf(c.getKey());
+            JsonNode actualNode = actualVersion.at(key);
+            if(c.getType() == Change.ChangeType.ADDED || c.getType() == Change.ChangeType.REPLACED) {
+
+                JsonNode expected = ourVersion.at(key);
+                if(expected.equals(actualNode)){
+                    throw new AssertionError(c +" expected = " + expected + " but was " + actualNode);
+                }
+            }else if(c.getType()== Change.ChangeType.REMOVED){
+               if(!actualNode.isMissingNode()){
+                   throw new AssertionError("should be removed but wasn't " + c + " but was " + actualNode);
+               }
+
+            }
+        }
+
+    }
+
+    public JsonNode asJsonPatch(){
+        ObjectMapper mapper = new ObjectMapper();
+        JsonNode n= mapper.valueToTree(changes.values());
+
+        return n;
+    }
+
     public Changes extra(Changes actual) {
        return actual.missingFrom(this);
     }

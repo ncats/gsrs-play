@@ -6,14 +6,14 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 
+import com.flipkart.zjsonpatch.JsonDiff;
+import com.flipkart.zjsonpatch.JsonPatch;
 import ix.core.util.RunOnly;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.github.fge.jsonpatch.JsonPatch;
-import com.github.fge.jsonpatch.diff.JsonDiff;
 
 import ix.AbstractGinasServerTest;
 import ix.test.server.RestSession;
@@ -128,8 +128,8 @@ public class SubstanceAlternativeTest extends AbstractGinasServerTest {
         //update alternative
         resource = new File("test/testJSON/alternative/PutAlt.json");
         JsonNode jsAUpdate = SubstanceJsonUtil.prepareUnapprovedPublic(JsonUtil.parseJsonFile(resource));
-        JsonPatch jsp = JsonDiff.asJsonPatch(jsA,jsAUpdate);
-        JsonNode newAVersion =jsp.apply(fetchedA);
+        JsonNode jsp = JsonDiff.asJson(jsA,jsAUpdate);
+        JsonNode newAVersion = JsonPatch.apply(jsp, fetchedA);
         String uuidAUpdate = newAVersion.get("uuid").asText();
         System.out.println("These are the relationships:" + newAVersion.get("relationships").size());
 

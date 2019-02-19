@@ -3,6 +3,7 @@ package ix.core.factories;
 import java.util.Set;
 
 import ix.core.util.CachedSupplier;
+import ix.core.util.IOUtil;
 import ix.core.util.pojopointer.extensions.RegisteredFunction;
 import play.Application;
 
@@ -19,7 +20,7 @@ public class ApiFunctionFactory extends InternalMapEntityResourceFactory<Registe
 	public void initialize(Application app) {
 		this.getStandardResourceStream(app, "ix.api.registeredfunctions")
 			.map(m->(String)m.get("class"))
-			.map(n->CachedSupplier.ofThrowing(()->Class.forName(n).newInstance()))
+			.map(n->CachedSupplier.ofThrowing(()-> IOUtil.getGinasClassLoader().loadClass(n).newInstance()))
 			.filter(p->!p.getThrown().isPresent())
 			.map(o->(RegisteredFunction)o.get())
 			.forEach(rf->{

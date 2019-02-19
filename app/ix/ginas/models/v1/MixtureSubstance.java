@@ -47,5 +47,13 @@ public class MixtureSubstance extends Substance implements GinasSubstanceDefinit
 	public GinasAccessReferenceControlled getDefinitionElement(){
 		return mixture;
 	}
-	
+	@Override
+	@JsonIgnore
+	public List<GinasAccessReferenceControlled> getAllChildrenCapableOfHavingReferences(){
+		List<GinasAccessReferenceControlled> temp = super.getAllChildrenCapableOfHavingReferences();
+		if(this.mixture!=null){
+			temp.addAll(this.mixture.getAllChildrenAndSelfCapableOfHavingReferences());
+		}
+		return temp;
+	}
 }

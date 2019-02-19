@@ -26,12 +26,7 @@ import ix.core.models.ProcessingRecord;
 import ix.core.processing.RecordExtractor;
 import ix.core.stats.Estimate;
 import ix.core.stats.Statistics;
-import ix.core.util.BlockingSubmitExecutor;
-import ix.core.util.CachedSupplier;
-import ix.core.util.ConfigHelper;
-import ix.core.util.FilteredPrintStream;
-import ix.core.util.Filters;
-import ix.core.util.TimeUtil;
+import ix.core.util.*;
 import ix.utils.Global;
 import ix.utils.Util;
 import play.Application;
@@ -383,7 +378,7 @@ public class GinasRecordProcessorPlugin extends Plugin {
 
     private PersistRecordWorkerFactory getPersistRecordWorkerFactory() {
       try {
-          Class<?> clazz = Class.forName(app.configuration().getString("ix.ginas.PersistRecordWorkerFactoryImpl"));
+          Class<?> clazz = IOUtil.getGinasClassLoader().loadClass(app.configuration().getString("ix.ginas.PersistRecordWorkerFactoryImpl"));
           return (PersistRecordWorkerFactory) clazz.newInstance();
       }catch (IllegalAccessException | InstantiationException |ClassNotFoundException e) {
           throw new IllegalStateException("error creating PersistRecordWorkerFactory instance", e);

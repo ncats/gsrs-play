@@ -5,21 +5,14 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
-import com.fasterxml.jackson.databind.JsonNode;
 
 import ix.core.models.Payload;
 import ix.core.plugins.PayloadPlugin;
 import ix.core.plugins.SequenceIndexerPlugin;
-import ix.core.search.SearchResult;
 import ix.core.util.CachedSupplier;
 import ix.core.util.StreamUtil;
-import ix.core.util.EntityUtils.EntityWrapper;
 import ix.core.validator.GinasProcessingMessage;
 import ix.core.validator.ValidatorCallback;
 import ix.ginas.controllers.v1.SubstanceFactory;
@@ -210,15 +203,30 @@ public class ProteinValidator extends AbstractValidatorPlugin<Substance> {
             ProteinSubstance proteinsubstance, ValidatorCallback callback) {
 
         try {
-            for (Subunit su : proteinsubstance.protein.subunits) {
-                Payload payload = _payload.get().createPayload("Sequence Search",
-                        "text/plain", su.sequence);
+        	proteinsubstance.protein.subunits
+        			                       .stream()
+        			                       .collect(Collectors.groupingBy(su->su.sequence))
+        			                       .entrySet()
+        			                       .stream()
+        			                       .map(Tuple::of)
+        			                       .map(t->t.v())
+        			                       .map(l->l.stream().map(su->Tuple.of(su.subunitIndex,su).withKSortOrder())
+        			                    		   			 .sorted()
+        			                    		   			 .map(t->t.v())
+        			                    		   			 .collect(Collectors.toList()))
+        			                       .forEach(subs->{
+        			                    	   try{
+        			                    		   Subunit su=subs.get(0);
+        			                    		   String suSet = subs.stream().map(su1->su1.subunitIndex+"").collect(Collectors.joining(","));
+
+        			                    	   Payload payload = _payload.get()
+        			                    			                     .createPayload("Sequence Search","text/plain", su.sequence);
 
                 String msgOne = "There is 1 substance with a similar sequence to subunit ["
-                        + su.subunitIndex + "]:";
+        			                                   + suSet + "]:";
 
                 String msgMult = "There are ? substances with a similar sequence to subunit ["
-                        + su.subunitIndex + "]:";
+        			                                   + suSet + "]:";
 
                 List<Function<String,List<Tuple<Double,Tuple<ProteinSubstance,Subunit>>>>> searchers = new ArrayList<>();
 
@@ -244,7 +252,7 @@ public class ProteinValidator extends AbstractValidatorPlugin<Substance> {
                 searchers.add(seq->{
                 	return StreamUtil.forEnumeration(_seqIndexer.get()
 							.getIndexer()
-							.search(seq, SubstanceFactory.SEQUENCE_IDENTITY_CUTOFF, CutoffType.GLOBAL))
+        			           							.search(seq, SubstanceFactory.SEQUENCE_IDENTITY_CUTOFF, CutoffType.GLOBAL, "Protein"))
                      .map(suResult->{
                     	 return Tuple.of(suResult.score,SubstanceFactory.getSubstanceAndSubunitFromSubunitID(suResult.id));
                      })
@@ -314,8 +322,10 @@ public class ProteinValidator extends AbstractValidatorPlugin<Substance> {
                              dupMessage.addLinks(links);
                              callback.addMessage(dupMessage);
                          });
-
-            }
+        			                    	   }catch(Exception e){
+        			                    		   e.printStackTrace();
+        			                    	   }
+        			                       });
         } catch (Exception e) {
         	Logger.error("Problem executing duplicate search function", e);
             callback.addMessage(GinasProcessingMessage

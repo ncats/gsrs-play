@@ -37,9 +37,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.deser.DeserializationProblemHandler;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.github.fge.jsonpatch.JsonPatch;
 
+import com.flipkart.zjsonpatch.JsonPatch;
 import ix.core.*;
+import ix.core.util.EntityUtils;
 import ix.core.validator.*;
 import ix.core.adapters.EntityPersistAdapter;
 import ix.core.adapters.InxightTransaction;
@@ -640,14 +641,10 @@ public class EntityFactory extends Controller {
             
             JsonNode node = request().body().asJson();
             T inst = mapper.treeToValue(node, type);
-            if(validator!=null){
-		            ValidationResponse<T> vr=validator.validate(inst, null);
-		            if(!vr.isValid()){
+            ValidationResponse<T> vr = validateAndSave(inst, validator);
+            if (vr != null && !vr.isValid()){
 		            	return badRequest(validationResponse(vr));
 		            }
-            }
-            
-            inst.save();
             tx.commit();
             Status s=created (mapper.toJson(inst));
             return s;
@@ -663,6 +660,18 @@ public class EntityFactory extends Controller {
         }
     }
     
+    public static <T extends Model> ValidationResponse<T> validateAndSave(T obj, Validator<T> validator) {
+        ValidationResponse<T> vr =null;
+        if(validator!=null){
+                 vr=validator.validate(obj, null);
+                if(!vr.isValid()){
+                    return vr;
+                }
+        }
+        EntityWrapper.of(obj).save();
+        return vr;
+    }
+
     public static enum RESPONSE_TYPE{
     	FULL,
     	MESSAGES
@@ -769,7 +778,7 @@ public class EntityFactory extends Controller {
         if (inst != null) {
             ObjectMapper mapper = getEntityMapper ();
             JsonNode node = mapper.valueToTree(inst);
-            inst.delete();
+            EntityWrapper.of(inst).delete();
             return Java8Util.ok (node);
         }
         return notFound (request().uri()+" not found");
@@ -1003,7 +1012,7 @@ public class EntityFactory extends Controller {
                      .getVersionField()
                      .get();
         
-        JsonPatch patch = changes.asJsonPatch(clonedWrapped);
+        JsonNode patch = changes.asJsonPatch(clonedWrapped);
         
         JsonNode clonedJson =clonedWrapped.toFullJsonNode();
         clonedWrapped.getEntityInfo()
@@ -1015,7 +1024,7 @@ public class EntityFactory extends Controller {
             });
         
         
-        JsonNode changedJson = patch.apply(clonedJson);
+        JsonNode changedJson = JsonPatch.apply(patch, clonedJson);
         if(!validate){
             StagedChange stagedChange = new StagedChange(version, changes);
             
@@ -1203,6 +1212,10 @@ public class EntityFactory extends Controller {
         	System.out.println("Found:" + changeStack.size() + " changes");
         }
         
+        //This is the last line of defense for making sure that the patch worked
+        //Should throw an exception here if there's a major problem
+        String serialized=EntityWrapper.of(rawOld).toInternalJson();
+
     	while(!changeStack.isEmpty()){
     		Object v=changeStack.pop();
     		EntityWrapper ewchanged=EntityWrapper.of(v);
@@ -1337,16 +1350,23 @@ public class EntityFactory extends Controller {
      */
     protected static <T> Result updateEntity (JsonNode json, Class<? extends T> type, Validator<T> validator ) {
         EntityMapper mapper = EntityMapper.FULL_ENTITY_MAPPER();
-        try {       
-            ValidationResponse<T> response = updateEntityValidated(json,type,validator);
+        ValidationResponse<T> response=null;
+        try {
+           response = updateEntityValidated(json,type,validator);
             if(!response.isValid()){
                 //TODO: Should this be OK ... probably not
                 return internalServerError(prepareValidationResponse(response,false));
             }
+
             return Java8Util.ok (mapper.valueToTree(response.getNewObect()));
         }catch (Exception ex) {
         	Logger.error("Error updating record", ex);
+        	if(response !=null)
+            {
+                System.err.println("problem json = " + response.getNewObect());
+            }
             ex.printStackTrace();
+
             return RouteFactory._apiBadRequest("Error updating record");
         }
     }

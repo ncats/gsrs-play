@@ -239,6 +239,14 @@ public class GinasCommonData extends BaseModel implements GinasAccessControlled,
     
     
     public void updateAuditInfo(boolean creation, boolean force){
+
+    	//The logic here is essentially:
+    	//1. If lastEdited date is null, it will get the current date.
+    	//2. If created date is null, it will get the current date.
+    	//3. If lastEditedBy is null, it will get the current user.
+    	//4. If createdBy is null, it will also get the current user.
+    	//
+
     	Date currentDate = TimeUtil.getCurrentDate();
     	if(this.lastEditedBy == null || this.createdBy==null || force){
 
@@ -249,7 +257,6 @@ public class GinasCommonData extends BaseModel implements GinasAccessControlled,
 	        		this.lastEdited = currentDate;
 	        	}
 	    		if(creation && (this.createdBy==null || force)){
-	    			
 	    			this.createdBy=p1;
 	    			this.created= currentDate;
 	        	}

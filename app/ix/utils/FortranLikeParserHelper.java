@@ -1,5 +1,6 @@
 package ix.utils;
 
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -44,10 +45,20 @@ public class FortranLikeParserHelper {
 		 */
 		public String getStandardForm(){
 			String val = getValueTrimmed();
-			String pad = IntStream.range(0, form.length() - val.length())
-			         .mapToObj(i->" ")
-			         .collect(Collectors.joining());
-			return pad+val;
+
+			int padSize = form.length() - val.length();
+			if(padSize >0){
+
+				char[] padd = new char[padSize];
+				Arrays.fill(padd, ' ');
+				return new StringBuilder(form.length())
+						.append(padd)
+						.append(val)
+						.toString();
+
+			}
+			return val;
+
 		}
 	}
 	
@@ -68,17 +79,24 @@ public class FortranLikeParserHelper {
 			char[] arr=format.toCharArray();
 			char p=arr[0];
 			int start=0;
+			int cursor=1;
 			for(int i=1;i<arr.length;i++){
 				char c=arr[i];
 				if(c!=p){
-					add(new SubsectionParser(p,start,i));
-					start=i;
+					add(new SubsectionParser(p,start,cursor));
+					start=cursor;
 					p=c;
 				}
+				cursor++;
 			}
 			add(new SubsectionParser(p,start,form.length()));
 		}
 		
+		@Override
+		public String toString(){
+			return format;
+		}
+
 		private LineParser add(SubsectionParser sparser){
 			subParsers.put(sparser.form,sparser);
 			return this;
@@ -98,6 +116,42 @@ public class FortranLikeParserHelper {
 			          .collect(Collectors.joining());
 		}
 		
+		public class ParsedOperation{
+			private Map<String,ParsedSection> sections;
+			public ParsedOperation(Map<String,ParsedSection> sections){
+				this.sections=sections;
+			}
+			public String toLine(){
+				return standardize(sections);
+			}
+			public ParsedOperation remove(String key){
+				sections.remove(key);
+				return this;
+			}
+			public ParsedOperation set(String key, String val){
+				ParsedSection ps=sections.computeIfAbsent(key,k->new ParsedSection(key, val.trim()));
+				ps.value=val.trim();
+				return this;
+			}
+			public int getAsInt(String key) {
+				ParsedSection m=sections.get(key);
+				if(m==null){
+					return 0;
+				}
+				return Integer.parseInt(m.getValueTrimmed());
+			}
+			public String get(String key){
+				ParsedSection m=sections.get(key);
+				if(m==null){
+					return null;
+				}
+				return m.getValueTrimmed();
+			}
+		}
+		public ParsedOperation parseAndOperate(String line){
+			return new ParsedOperation(parse(line));
+		}
+
 		public Map<String,ParsedSection> parse(String line){
 			return subParsers.values().stream()
 			                  .map(p->p.parse(line))
@@ -121,10 +175,17 @@ public class FortranLikeParserHelper {
 			public SubsectionParser(char c,int start, int end){
 				this.start=start;
 				this.end=end;
-				this.form=IntStream.range(start, end)
-				         .mapToObj(i->c+"")
-				         .collect(Collectors.joining());
+				char[] array = new char[end-start];
+				Arrays.fill(array, c);
+				this.form=new String(array);
 			}
+
+			public SubsectionParser(String f,int start, int end){
+				this.form=f;
+				this.start=start;
+				this.end=end;
+			}
+
 			public Optional<ParsedSection> parse(String line){
 				if(start>=line.length())return Optional.empty();
 				String val = line.substring(start, Math.min(end,line.length()));

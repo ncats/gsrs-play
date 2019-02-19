@@ -1,14 +1,15 @@
 package ix.ginas.models.v1;
 
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import ix.core.SingleParent;
 import ix.core.models.Indexable;
+import ix.ginas.models.GinasAccessReferenceControlled;
 import ix.ginas.models.GinasCommonSubData;
 
-import javax.persistence.Basic;
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.Lob;
-import javax.persistence.Table;
+import javax.persistence.*;
+import java.util.ArrayList;
+import java.util.List;
 
 @SuppressWarnings("serial")
 @Entity
@@ -21,9 +22,21 @@ public class Subunit extends GinasCommonSubData {
     public String sequence;
 
     public Integer subunitIndex;
+    /**
+     * parent object for this subunit
+     * mostly used so we know what kind of type
+     * this subunit is by walking up the tree
+     * to inspect its parent.  See {@link Protein#adoptChildSubunits()}
+     */
+    @Transient
+    @JsonIgnore
+    private GinasCommonSubData parent;
 
     public Subunit () {}
     
+
+
+
     public int getLength(){
     	if(sequence!=null){
     		return sequence.length();
@@ -32,7 +45,18 @@ public class Subunit extends GinasCommonSubData {
     	}
     }
     
-    
+    @JsonIgnore
+    public GinasCommonSubData getParent(){
+    	return parent;
+
+    }
+
+    @JsonIgnore
+    public void setParent(GinasCommonSubData p){
+    	this.parent=p;
+    }
+
+
 //    public List<char[]> getCharArr(){
 //    	List<char[]> returnArr = new ArrayList<char[]>();
 //    	int index = 0;
@@ -47,4 +71,13 @@ public class Subunit extends GinasCommonSubData {
 //    	sequence.getChars(start, stop, sub, 0);
 //    	return sub;
 //    }
+
+    @Override
+   	@JsonIgnore
+   	public List<GinasAccessReferenceControlled> getAllChildrenCapableOfHavingReferences() {
+   		List<GinasAccessReferenceControlled> temp = new ArrayList<>();
+
+
+   		return temp;
+   	}
 }

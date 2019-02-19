@@ -27,6 +27,7 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import ix.core.SingleParent;
 import ix.core.models.VIntArray;
+import ix.ginas.models.GinasAccessReferenceControlled;
 import ix.ginas.models.GinasCommonSubData;
 import ix.ginas.models.serialization.IntArrayDeserializer;
 import ix.ginas.models.serialization.IntArraySerializer;
@@ -142,4 +143,16 @@ public class Unit extends GinasCommonSubData {
 
 
     public Unit () {}
+
+
+	  @Override
+	   	@JsonIgnore
+	   	public List<GinasAccessReferenceControlled> getAllChildrenCapableOfHavingReferences() {
+	   		List<GinasAccessReferenceControlled> temp = new ArrayList<GinasAccessReferenceControlled>();
+
+	   		if(this.amount!=null){
+	   			temp.addAll(amount.getAllChildrenAndSelfCapableOfHavingReferences());
+	   		}
+	   		return temp;
+	   	}
 }

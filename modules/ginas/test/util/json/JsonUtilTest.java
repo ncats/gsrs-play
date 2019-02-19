@@ -261,7 +261,7 @@ public class JsonUtilTest {
 
             Changes expected = new ChangesBuilder(before, after)
 
-                    .removed("/names/6/references/1")
+//                    .removed("/names/6/references/1")
 
                     .added("/names/0/uuid")
                     .added("/names/1/uuid")
@@ -275,7 +275,9 @@ public class JsonUtilTest {
 
 
 
-            assertEquals(expected, changes);
+            Changes missingFrom = expected.missingFrom(changes);
+            assertTrue(missingFrom.toString() +"\n expected = " + expected + "\nactual = " + changes, missingFrom.isEmpty());
+
         }
     }
 

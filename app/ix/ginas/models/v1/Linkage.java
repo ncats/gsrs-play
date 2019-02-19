@@ -3,6 +3,7 @@ package ix.ginas.models.v1;
 
 import ix.core.SingleParent;
 import ix.core.models.BeanViews;
+import ix.ginas.models.GinasAccessReferenceControlled;
 import ix.ginas.models.GinasCommonSubData;
 
 import java.util.ArrayList;
@@ -89,4 +90,13 @@ public class Linkage extends GinasCommonSubData {
 		return m;
 	}*/
 
+		@Override
+		@JsonIgnore
+		public List<GinasAccessReferenceControlled> getAllChildrenCapableOfHavingReferences() {
+			List<GinasAccessReferenceControlled> temp = new ArrayList<GinasAccessReferenceControlled>();
+			if(siteContainer!=null){
+				temp.addAll(siteContainer.getAllChildrenAndSelfCapableOfHavingReferences());
+			}
+			return temp;
+		}
 }

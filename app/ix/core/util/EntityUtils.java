@@ -201,7 +201,7 @@ public class EntityUtils {
 	}
 
 	public static EntityInfo<?> getEntityInfoFor(String className) throws ClassNotFoundException {
-		Class<?> cls = Class.forName(className);
+		Class<?> cls = IOUtil.getGinasClassLoader().loadClass(className);
 		return getEntityInfoFor(cls);
 	}
 
@@ -337,8 +337,11 @@ public class EntityUtils {
 		}
 		private static Pattern PAYLOAD_UUID_PATTERN = Pattern.compile("payload\\((.+?)\\)");
 		public Stream<Tuple<MethodOrFieldMeta, Object>> streamSequenceFieldAndValues(Predicate<MethodOrFieldMeta> p) {
-			Stream<Tuple<MethodOrFieldMeta, Object>> fieldInfoStream = ei.getSequenceFieldInfo().stream().filter(p).map(m -> new Tuple<>(m, m.getValue(this.getValue())))
-					.filter(t -> t.v().isPresent()).map(t -> new Tuple<>(t.k(), t.v().get()));
+			Stream<Tuple<MethodOrFieldMeta, Object>> fieldInfoStream = ei.getSequenceFieldInfo().stream()
+					.filter(p)
+					.map(m -> new Tuple<>(m, m.getValue(this.getValue())))
+					.filter(t -> t.v().isPresent())
+					.map(t -> new Tuple<>(t.k(), t.v().get()));
 
 			if (NucleicAcidSubstance.class.isAssignableFrom(ei.getEntityClass())) {
 				Substance obj = ((Substance) this.getValue());
@@ -699,17 +702,37 @@ public class EntityUtils {
 		public boolean isExplicitDeletable() {
 			return this.ei.isExplicitDeletable();
 		}
-		
+		/**
+		 * This method just delegates to {@link Model#save()} for the
+		 * wrapped entity, only also passing in the datasource
+		 * that was specified via the config file.
+		 */
+		public void save(){
+			if(this.ei.datasource!=null) {
+				((Model) this.getValue()).save(ei.datasource);
+			}else{
+				((Model) this.getValue()).save();
+			}
+		}
+
 		public void delete() {
+			if(this.ei.datasource!=null) {
+				((Model) this.getValue()).delete(ei.datasource);
+			}else{
 			((Model)this.getValue()).delete();
 		}
-		
+		}
+
 		public void update() {
 			if(_k instanceof ForceUpdatableModel){ //TODO: Move to EntityInfo
         		((ForceUpdatableModel)_k).forceUpdate();
         	}else if(_k instanceof Model){
+        	    if(this.ei.datasource!=null){
+        	        ((Model)_k).update(this.ei.datasource);
+        	    }else{
         		((Model)_k).update();
         	}
+		}
 		}
 
 		public Optional<Object> getArrayElementAt(int index) {

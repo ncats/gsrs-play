@@ -1,7 +1,9 @@
 package ix.ginas.models.v1;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
@@ -230,6 +232,12 @@ public class GinasChemicalStructure extends Structure implements GinasAccessRefe
 		return Util.asAuditInfo(this);
 	}	
 	
-	
+	@Override
+	@JsonIgnore
+	public List<GinasAccessReferenceControlled> getAllChildrenCapableOfHavingReferences() {
+		return new ArrayList<GinasAccessReferenceControlled>();
+	}
+
+
 	
 }

@@ -341,6 +341,7 @@ public class StreamUtil {
 
 
         public T next() {
+
             return elements[(index++)%elements.length];
         }
     }

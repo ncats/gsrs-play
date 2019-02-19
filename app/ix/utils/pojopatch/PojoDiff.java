@@ -1,37 +1,32 @@
 package ix.utils.pojopatch;
-import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Optional;
-import java.util.Stack;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonUnwrapped;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.github.fge.jsonpatch.JsonPatch;
-import com.github.fge.jsonpatch.JsonPatchException;
-import com.github.fge.jsonpatch.diff.JsonDiff;
+//import com.github.fge.jsonpatch.JsonPatch;
+//import com.github.fge.jsonpatch.JsonPatchException;
+//import com.github.fge.jsonpatch.diff.JsonDiff;
+import com.flipkart.zjsonpatch.DiffFlags;
+import com.flipkart.zjsonpatch.JsonDiff;
+import com.flipkart.zjsonpatch.JsonPatch;
 
 import ix.core.controllers.EntityFactory;
+import ix.core.models.Keyword;
 import ix.core.util.EntityUtils.EntityWrapper;
 import ix.utils.Util;
 
@@ -86,27 +81,7 @@ public class PojoDiff {
 		EntityWrapper<?> ew = EntityWrapper.of(o);
 		return ew.getOptionalKey().map(k->k.getIdString());
 	};
-	
-	public static class JsonObjectPatch<T> implements PojoPatch<T>{
-		private JsonPatch jp;
-		private Class<T> cls;
-		public JsonObjectPatch(JsonPatch jp, Class<T> cls){
-			this.cls=cls;
-			this.jp=jp;
-		}
-		public Stack<?> apply(T old, ChangeEventListener ... changeListener) throws Exception{
-			
-			JsonNode oldjson=EntityWrapper.of(old)
-					                      .toFullJsonNode();
-			JsonNode newjson=jp.apply(oldjson);
-			T ntarget=EntityWrapper.of(old).getEntityInfo().fromJsonNode(newjson);
-			return new EnhancedObjectPatch(old,ntarget).apply(old, changeListener);
-		}
-		@Override
-		public List<Change> getChanges() {
-			throw new UnsupportedOperationException("change list not yet supported");
-		}
-	}
+
 	
 	private static class JsonSimpleNodeChange{
 		@JsonProperty
@@ -150,7 +125,7 @@ public class PojoDiff {
 		private JsonNode jps;
 		private JsonNode[] oldAndNew = new JsonNode[2];
 		
-		private JsonPatch plainOldJsonPatch=null;
+		private JsonNode plainOldJsonPatch=null;
 		
 		
 		public EnhancedObjectPatch(T oldV, T newV){
@@ -168,10 +143,10 @@ public class PojoDiff {
 				//At this point, you have the correct object, but not via mutating the original.
 				//To do this, you need to then apply a traditional EnhancedObjectPatch
 				//using the original supplied object, and this new target.
-				JsonPatch temp= getPlainOldJsonPatch();
+				JsonNode temp= getPlainOldJsonPatch();
 				EntityWrapper<T> newOld = EntityWrapper.of(old);
 				JsonNode json=newOld.toFullJsonNode();
-				T newtarget=newOld.getEntityInfo().fromJsonNode(temp.apply(json));
+				T newtarget=newOld.getEntityInfo().fromJsonNode( JsonPatch.apply(temp, json));
 				return new EnhancedObjectPatch<T>(old, newtarget).apply(old);
 			}
 		}
@@ -183,9 +158,9 @@ public class PojoDiff {
 			return jps;
 		}
 		
-		private JsonPatch getPlainOldJsonPatch(){
+		private JsonNode getPlainOldJsonPatch(){
 			if(plainOldJsonPatch==null){
-				plainOldJsonPatch=	JsonDiff.asJsonPatch(EntityWrapper.of(oldV).toFullJsonNode(), EntityWrapper.of(newV).toFullJsonNode());
+				plainOldJsonPatch=	JsonDiff.asJson(EntityWrapper.of(oldV).toFullJsonNode(), EntityWrapper.of(newV).toFullJsonNode(),JSON_DIFF_FLAGS);
 			}
 			return plainOldJsonPatch;
 		}
@@ -209,7 +184,8 @@ public class PojoDiff {
 		}
 	}
 	
-	
+	private static EnumSet<DiffFlags> JSON_DIFF_FLAGS = DiffFlags.dontNormalizeOpIntoMoveAndCopy().clone();
+
 	
 	/**
 	 * Return a {@link ix.utils.pojopatch.PojoPatch} which captures the 
@@ -253,9 +229,8 @@ public class PojoDiff {
 		return new EnhancedObjectPatch<T>(oldValue,newValue);
 	}
 	
-	public static <T> PojoPatch<T> fromJsonPatch(JsonPatch jp, Class<T> type) throws IOException{
-		return new JsonObjectPatch<T>(jp, type);
-	}
+
+	private static Pattern UUID_PATTERN = Pattern.compile("^\\s*([a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12})\\s*$");
 	
 	private static String getID(JsonNode o){
 		try{
@@ -269,6 +244,13 @@ public class PojoDiff {
 					return id.asText();
 				}
 				return null;
+			}else if(o.isValueNode() && o.isTextual()){
+				String value = o.asText();
+				Matcher matcher = UUID_PATTERN.matcher(value);
+				if(matcher.matches()){
+					return matcher.group(1);
+				}
+
 			}
 		}catch(Exception e){
 			System.err.println(e.getMessage());
@@ -423,7 +405,8 @@ public class PojoDiff {
 		
 		JsonNode diff= JsonDiff.asJson(
 				oldAndNewValue[0],
-				oldAndNewValue[1]
+				oldAndNewValue[1],
+				JSON_DIFF_FLAGS
     			);
 		List<JsonNode> reorderedDiffs= new ArrayList<JsonNode>();
 		
@@ -431,7 +414,8 @@ public class PojoDiff {
 		
 		JsonNode normalDiff= JsonDiff.asJson(
 				js1,
-				js2
+				js2,
+				JSON_DIFF_FLAGS
     			);
 		
 		
@@ -477,21 +461,14 @@ public class PojoDiff {
 		//return normalDiff;
 	}
 	
-	private static <T> Stack<?> applyPatch(T oldValue, JsonPatch jp, ChangeEventListener ... changeListener) throws IllegalArgumentException, JsonPatchException, JsonProcessingException{
-		ObjectMapper mapper = _mapper;
-		JsonNode oldNode=mapper.valueToTree(oldValue);
-		JsonNode newNode=jp.apply(oldNode);
-		//cast to T should be safe...
-		@SuppressWarnings("unchecked")
-		T newValue =  (T) mapper.treeToValue(newNode,oldValue.getClass());
-		return applyChanges(oldValue,newValue,null);
-	}
+
 	
 	public static JsonNode getJsonDiff(Object oldValue, Object newValue){
 			ObjectMapper mapper = _mapper;
 			return JsonDiff.asJson(
 	    			mapper.valueToTree(oldValue),
-	    			mapper.valueToTree(newValue)
+	    			mapper.valueToTree(newValue),
+					JSON_DIFF_FLAGS
 	    			);
 	}
 	/**
@@ -523,7 +500,8 @@ public class PojoDiff {
 				ObjectMapper mapper = _mapper;
 				jsonpatch = JsonDiff.asJson(
 		    			mapper.valueToTree(oldValue),
-		    			mapper.valueToTree(newValue)
+		    			mapper.valueToTree(newValue),
+						JSON_DIFF_FLAGS
 		    			);
 			}
         	
@@ -1133,9 +1111,18 @@ public class PojoDiff {
 		}
 		
 		private static <T> int getObjectWithID(Collection<T> c, String id){
+
 			return findFirstPositionMatching(c, (t)-> {
+				if(t instanceof Keyword){
+					Keyword k = (Keyword) t;
+					if(id != null && Objects.equals(id, k.getValue())){
+						return true;
+					}
+				}
 				Optional<String> ido=IDGetter.apply(t);
+
 				if(!ido.isPresent()){
+
 					return false;
 				}
 				return ido.get().equals(id);

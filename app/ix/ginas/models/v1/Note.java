@@ -33,4 +33,11 @@ public class Note extends CommonDataElementOfCollection {
     public Note (String note) {
         this.note = note;
     }
+	@Override
+	@JsonIgnore
+	public List<GinasAccessReferenceControlled> getAllChildrenCapableOfHavingReferences() {
+		List<GinasAccessReferenceControlled> temp = new ArrayList<GinasAccessReferenceControlled>();
+
+		return temp;
+	}
 }

@@ -30,9 +30,12 @@ public class SequenceIndexerPlugin extends Plugin {
             File sequence = ctx.sequence();
             indexer = SequenceIndexer.open(sequence);
 
-            int kmersize = app.configuration().getInt("ix.kmer.size", 3);
+            int kmersize = app.configuration().getInt("ix.kmer.default", 3);
+            int nuc = app.configuration().getInt("ix.kmer.nuc", 3);
+            int prot = app.configuration().getInt("ix.kmer.protein", 3);
             indexer.setKmerSize(kmersize);
-
+            indexer.setNucleicKmer(nuc);
+            indexer.setProteinKmer(prot);
 
             Logger.info("Plugin "+getClass().getName()+" started!");        
         }

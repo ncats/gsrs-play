@@ -17,6 +17,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import gov.nih.ncgc.chemical.Chemical;
 import gov.nih.ncgc.chemical.ChemicalFactory;
 import gov.nih.ncgc.jchemical.JchemicalReader;
+import ix.core.util.IOUtil;
 import ix.core.util.InheritanceTypeIdResolver;
 import ix.core.validator.GinasProcessingMessage;
 import ix.core.validator.GinasProcessingMessage.Link;
@@ -33,7 +34,10 @@ import ix.core.models.ProcessingJob;
 import ix.core.plugins.GinasRecordProcessorPlugin;
 import ix.core.util.EntityUtils.EntityWrapper;
 import ix.core.util.TimeUtil;
+import ix.core.validator.GinasProcessingMessage;
+import ix.core.validator.GinasProcessingMessage.Link;
 import ix.ginas.modelBuilders.SubstanceBuilder;
+import ix.ginas.models.GinasAccessReferenceControlled;
 import ix.ginas.models.GinasCommonData;
 import ix.ginas.models.ValidationMessageHolder;
 import ix.ginas.models.serialization.DateDeserializer;
@@ -157,7 +161,7 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
     		SubstanceReference sr=this.getParentSubstanceReference();
     		if(sr!=null){
     			try{
-	    			Substance parent=(Substance) Class.forName("ix.ginas.controllers.v1.SubstanceFactory").getMethod("getFullSubstance",SubstanceReference.class).invoke(null, sr);
+	    			Substance parent=(Substance) IOUtil.getGinasClassLoader().loadClass("ix.ginas.controllers.v1.SubstanceFactory").getMethod("getFullSubstance",SubstanceReference.class).invoke(null, sr);
 	    			if(parent!=null){
 		    			if(parent.status.equals(this.STATUS_APPROVED)){
 		    				return "Validated Subconcept (UNII)";
@@ -586,6 +590,8 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
         return names;
     }
 
+
+
     @PrePersist
     @PreUpdate
     public void fixstatus(){
@@ -914,6 +920,8 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
     public Note addNote(String note) {
         Note n = new Note();
         n.note=note;
+
+        this.notes.add(n);
         return n;
     }
 
@@ -1261,25 +1269,8 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
     @JsonIgnore
     public List<Edit> getEdits(){
         List<Edit> elist = EntityWrapper.of(this).getEdits();
-
-        /*.stream()
-                .map(t-> Tuple.of(t.version,t))
-                .map(Tuple.kmap(n->{
-                    try {
-                        return Integer.parseInt(n);
-                    }catch(Exception e){
-                        return 0;
-                    }
-                }))
-                .sorted((a,b)->{
-                    return b.k()-a.k();
-                })
-                .map(t->t.v())
-                .collect(toList());*/
-
         elist.sort(new Comparator<Edit>(){
             public int compare(Edit e1, Edit e2) {
-
                        try {
                            int i1 = Integer.parseInt(e1.version) ;
                            int i2 = Integer.parseInt(e2.version);
@@ -1295,6 +1286,14 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
         //more explicitly
        // return EntityWrapper.of(this).getEdits();
         return elist;
+    }
+
+    @JsonIgnore
+    public String getMostRecentVersion(){
+    	List<Edit> edits=getEdits();
+    	if(edits.isEmpty())return this.version;
+    	return (Integer.parseInt(edits.get(0).version)+1)+"";
+
     }
 
     /**
@@ -1370,6 +1369,32 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
         if(!added){
             this.references.remove(r);
         }
+    }
+
+
+    @JsonIgnore
+    public List<GinasAccessReferenceControlled> getAllChildrenCapableOfHavingReferences(){
+    	List<GinasAccessReferenceControlled> temp = new ArrayList<GinasAccessReferenceControlled>();
+    	for(Name n: names){
+    		temp.addAll(n.getAllChildrenAndSelfCapableOfHavingReferences());
+    	}
+    	for(Code c: codes){
+    		temp.addAll(c.getAllChildrenAndSelfCapableOfHavingReferences());
+    	}
+    	for(Relationship r: relationships){
+    		temp.addAll(r.getAllChildrenAndSelfCapableOfHavingReferences());
+    	}
+    	for(Property p: properties){
+    		temp.addAll(p.getAllChildrenAndSelfCapableOfHavingReferences());
+    	}
+    	for(Note n: notes){
+    		temp.addAll(n.getAllChildrenAndSelfCapableOfHavingReferences());
+    	}
+    	if(this.modifications!=null){
+    		temp.addAll(this.modifications.getAllChildrenAndSelfCapableOfHavingReferences());
+    	}
+
+    	return temp;
     }
 
 

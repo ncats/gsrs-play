@@ -42,6 +42,7 @@ public class InxightTransaction implements Closeable{
 		}else{
 			it= new InxightTransaction(t);
 			it.setEnhanced(false);
+
 			return it;
 		}
 	}

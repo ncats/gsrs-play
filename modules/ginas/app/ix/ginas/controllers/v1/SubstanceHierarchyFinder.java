@@ -28,6 +28,7 @@ import ix.ginas.models.v1.SpecifiedSubstanceGroup1Substance;
 import ix.ginas.models.v1.StructurallyDiverseSubstance;
 import ix.ginas.models.v1.Substance;
 import ix.ginas.models.v1.SubstanceReference;
+import ix.ginas.models.v1.MixtureSubstance;
 import ix.ncats.controllers.App;
 import ix.utils.Tuple;
 import play.db.ebean.Model.Finder;
@@ -63,6 +64,7 @@ public class SubstanceHierarchyFinder {
 		finders.add(new NonInvertibleRelationshipHierarchyFinder(Relationship.ACTIVE_MOIETY_RELATIONSHIP_TYPE).renameChildType((p,c)->"HAS ACTIVE MOIETY:\"" + p.getName() + "\""));
 		finders.add(new InvertibleRelationshipHierarchyFinder("SALT/SOLVATE->PARENT").renameChildType("IS SALT/SOLVATE OF"));
 		finders.add(new InvertibleRelationshipHierarchyFinder("SUB_CONCEPT->SUBSTANCE").renameChildType("IS SUBCONCEPT OF"));
+		//finders.add(new MixtureComponentFinder().renameChildType("IS MIXTURE CONSTITUENT"));
 		finders.add(new G1SSConstituentFinder().renameChildType("IS G1SS CONSTITUENT OF"));
 		finders.add(new StructurallyDiverseParentFinder());
 		//StructurallyDiverseParentFinder
@@ -423,7 +425,54 @@ public class SubstanceHierarchyFinder {
 					 .collect(Collectors.toList());
 		}
 	}
-	
+	public static List<MixtureSubstance> getMixturesContaining(Substance s){
+		MixtureComponentFinder finder= new MixtureComponentFinder();
+		return finder.findChildren(s)
+				.stream()
+				.map(t->(MixtureSubstance)t.v())
+				.collect(Collectors.toList());
+	}
+
+	public static List<SpecifiedSubstanceGroup1Substance> getG1SSContaining(Substance s){
+		G1SSConstituentFinder finder= new G1SSConstituentFinder();
+		return finder.findChildren(s)
+		      .stream()
+		      .map(t->(SpecifiedSubstanceGroup1Substance)t.v())
+		      .collect(Collectors.toList());
+	}
+
+
+	public static class MixtureComponentFinder implements HierarchyFinder {
+		public MixtureComponentFinder(){
+		}
+		@Override
+		public List<Tuple<String, Substance>> findParents(Substance s) {
+			if(s instanceof MixtureSubstance){
+				MixtureSubstance ssg=(MixtureSubstance)s;
+				return ssg.mixture
+						.components
+						.stream()
+						.map(c->Tuple.of("Mixture Component" + c,SubstanceFactory.getFullSubstance(c.substance)))
+						.filter(rs->rs.v()!=null)
+						.collect(Collectors.toList());
+
+			}
+			return new ArrayList<>();
+		}
+		@Override
+		public List<Tuple<String, Substance>> findChildren(Substance s) {
+			return SubstanceFactory.finder.get()
+					.where()
+					.eq("mixture.components.substance.refuuid", s.uuid.toString())
+					.findList()
+					.stream()
+					.map(ms -> (MixtureSubstance) ms)
+					.map(ms -> Tuple.of("EXISTS IN MIXTURE",
+							ms))
+					.map(Tuple.vmap(sub -> (Substance) sub))
+					.collect(Collectors.toList());
+		}
+	}
 	/**
 	 * This hierarchy finder finds parent source material
 	 * @author tyler

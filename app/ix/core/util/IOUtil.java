@@ -1,11 +1,16 @@
 package ix.core.util;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.type.TypeFactory;
+
 import java.io.*;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.Objects;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Created by katzelda on 5/17/16.
@@ -16,6 +21,30 @@ public final class IOUtil {
         //can not instantiate
     }
 
+
+    private static AtomicReference<ClassLoader> ginasClassloader = new  AtomicReference<>(IOUtil.class.getClassLoader());
+
+    /**
+     *  This makes a ObjectMapper with our custom classloader
+     *  so we could load cards that are defined with classes
+     *  from external plugins
+     * @return
+     */
+    public static ObjectMapper createNewGinasClassLoaderBackedMapper(){
+        ObjectMapper mapper = new ObjectMapper();
+        TypeFactory tf = TypeFactory.defaultInstance()
+                .withClassLoader(IOUtil.getGinasClassLoader());
+        mapper.setTypeFactory(tf);
+
+        return mapper;
+    }
+    public static ClassLoader getGinasClassLoader(){
+        return ginasClassloader.get();
+    }
+
+    public static void setGinasClassLoader(ClassLoader newLoader){
+        ginasClassloader.set(Objects.requireNonNull(newLoader));
+    }
 
     public static void deleteRecursivelyQuitely(File dir) {
         try {

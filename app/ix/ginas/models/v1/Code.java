@@ -1,6 +1,7 @@
 package ix.ginas.models.v1;
 
-import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.regex.Pattern;
 
 import javax.persistence.Basic;
@@ -15,6 +16,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import ix.core.models.DynamicFacet;
 import ix.core.models.Indexable;
 import ix.ginas.models.CommonDataElementOfCollection;
+import ix.ginas.models.GinasAccessReferenceControlled;
 import ix.ginas.models.utils.JSONConstants;
 import ix.ginas.models.utils.JSONEntity;
 
@@ -104,6 +106,11 @@ public class Code extends CommonDataElementOfCollection{
 		}
 		return false;
 	}
-    
+	@Override
+	@JsonIgnore
+	public List<GinasAccessReferenceControlled> getAllChildrenCapableOfHavingReferences() {
+		return new ArrayList<>();
+	}
+
     
 }

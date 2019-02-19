@@ -416,9 +416,9 @@ public class SubstanceFactory extends EntityFactory {
 		return validate(subClass, finder.get(), sv);
 	}
 
-	public static Result delete(UUID uuid) {
-		return delete(uuid, finder.get());
-	}
+//	public static Result delete(UUID uuid) {
+//		return delete(uuid, finder.get());
+//	}
 
 	public static Class<? extends Substance> getClassFromJson(JsonNode json) {
 		Class<? extends Substance> subClass = Substance.class;
@@ -528,7 +528,7 @@ public class SubstanceFactory extends EntityFactory {
 		Set<Substance> dupes = new LinkedHashSet<Substance>();
 		try {
 			ResultEnumeration re = EntityPersistAdapter.getSequenceIndexer().search(subunit.sequence, SubstanceFactory.SEQUENCE_IDENTITY_CUTOFF,
-					CutoffType.GLOBAL);
+					CutoffType.GLOBAL,"Protein" );
 			int i = 0;
 			while (re.hasMoreElements()) {
 				SequenceIndexer.Result r = re.nextElement();
@@ -772,7 +772,7 @@ public class SubstanceFactory extends EntityFactory {
 		}else{
 			processor = new ix.ginas.controllers.GinasApp.GinasNucleicSequenceResultProcessor();
 		}
-        context =App.sequence(q, cutoff,type, 1, processor)
+        context =App.sequence(q, cutoff,type, 1, processor, seqType)
                     .getFocused(top, skip, fdim, field);
         
         return detailedSearch(context);

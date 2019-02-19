@@ -10,6 +10,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import ix.core.SingleParent;
 import ix.core.models.Indexable;
+import ix.ginas.models.GinasAccessReferenceControlled;
 import ix.ginas.models.GinasCommonSubData;
 
 
@@ -40,4 +41,14 @@ public class OtherLinks extends GinasCommonSubData {
     }
 
     public OtherLinks () {}
+
+    @Override
+   	@JsonIgnore
+   	public List<GinasAccessReferenceControlled> getAllChildrenCapableOfHavingReferences() {
+   		List<GinasAccessReferenceControlled> temp = new ArrayList<GinasAccessReferenceControlled>();
+   		if(this.siteContainer!=null){
+   				temp.addAll(siteContainer.getAllChildrenAndSelfCapableOfHavingReferences());
+   		}
+   		return temp;
+   	}
 }

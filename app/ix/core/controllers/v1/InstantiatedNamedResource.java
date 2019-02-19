@@ -49,7 +49,9 @@ public interface InstantiatedNamedResource<I,V> {
         GET_OPERATION(new Operation("get", 
                 Argument.of(null, Id.class, "id"),
                 Argument.of(null, String.class, "expand"))),
-        DOC_OPERATION(new Operation("doc", 
+        DELETE_OPERATION(new Operation("delete",
+                Argument.of(null, Id.class, "id"))),
+        DOC_OPERATION(new Operation("doc",
                 Argument.of(null, Id.class, "id"))),
         EDITS_OPERATION(new Operation("edits", 
                 Argument.of(null, Id.class, "id"))),
@@ -168,7 +170,10 @@ public interface InstantiatedNamedResource<I,V> {
 	default Result edits(I id){
 		return operate(Operations.EDITS_OPERATION.with(id));
 	}
-	
+	default Result delete(I id){
+		return operate(Operations.DELETE_OPERATION.with(id));
+	}
+
 	default Result field(I id, String field){
 		return operate(Operations.FIELD_OPERATION.with(id, field));
 	}
