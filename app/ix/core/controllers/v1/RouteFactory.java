@@ -361,13 +361,13 @@ public class RouteFactory extends Controller {
         String raw =  new String(request().body().asRaw().asBytes());
 
         String base64Encoded = raw.substring(raw.indexOf(',')+1);
-        System.out.println("base64 =" +base64Encoded);
+//        System.out.println("base64 =" +base64Encoded);
         byte[] data = Base64.getDecoder().decode(base64Encoded);
         String mol;
         try {
              mol =new StructureImageExtractor(data).getChemical().toMol();
 
-             System.out.println("parsed mol=\n" +mol);
+//             System.out.println("parsed mol=\n" +mol);
             StructureProcessorTask.Builder taskBuilder = new StructureProcessorTask.Builder()
                     .mol(mol)
                     .query(true)
