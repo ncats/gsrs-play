@@ -185,7 +185,11 @@
             _.forEach(sub, function (value, key) {
                 _.set(substance, key, value);
             });
-            
+            if(sub.protein){
+                if(sub.protein.proteinSubType){
+                    sub.protein.proteinSubTypes=sub.protein.proteinSubType.split("|");
+                }
+            }
             substance.$$setClass(substance.$$getClass());
             return $q.when(expandCV(substance));
 
@@ -228,6 +232,14 @@
                 }
             }
             sub = flattenCV(sub);
+
+            var st;
+            if(sub.protein){
+                st=sub.protein.proteinSubTypes;
+            }
+            if(st){
+                sub.protein.proteinSubType=st.join("|");
+            }
             if (_.has(sub, 'moieties')) {
                 _.forEach(sub.moieties, function (m) {
                     if(!_.has(sub, '$$update') || m["$$new"]){
@@ -441,14 +453,14 @@
                 	           			//need to get out the most important part
                 	           			//always get the part in first <b> and 
                 	           			//extend
-                	           			var lim=20;
+                                var lim = 30;
                 	           			var start=0;
                 	           			var bef="";
                 	           			
                 	           			var sindex=v.highlight.indexOf("<b>");
                 	           			var eindex=v.highlight.indexOf("</b>")-3;
                 	           			if(eindex>lim){
-                	           				start=sindex-(eindex-lim);
+                                    start = eindex - lim;
                 	           			}
                 	           			if(start>0){
                 	           				bef="...";
@@ -616,8 +628,7 @@
         };
         
     });
-
-    ginasApp.controller("GinasController", function ($rootScope, $scope, $resource, $location, $compile, $uibModal, $http, $window, $anchorScroll, $timeout, polymerUtils,
+    ginasApp.controller("GinasController", function ($rootScope, $scope, $document, $location, $compile, $uibModal, $http, $window, $anchorScroll, $timeout, polymerUtils,
                                                      localStorageService, Substance, UUID, substanceSearch, substanceIDRetriever, CVFields, molChanger, toggler, resolver,
                                                      substanceFactory,
                                                      spinnerService, typeaheadService, subunitParser) {
@@ -630,16 +641,26 @@
         $scope.noResults = false;
         $scope.show = false;
         $scope.sequence = "";
+        $scope.searchVariables = {
+            isSearchKeyed: false
+        };
+        var currentKeyPressFunction;
         $scope.cleanSequence = function (seqType){
             $scope.sequence = subunitParser.cleanSequence($scope.sequence, _.lowerCase(seqType));
         }
 
         $scope.preload = function(seqType){
+            if("protein"===seqType.toLowerCase()){
+                $scope.seqType = "Protein";
+                subunitParser.getResidues("protein");
+            }else if("nucleicacid"===seqType.toLowerCase()){
+                $scope.seqType = "NucleicAcid";
+                subunitParser.getResidues("nucleicAcid");
+            }else{
             $scope.seqType = _.capitalize(seqType);
-            subunitParser.getResidues(seqType);
+                subunitParser.getResidues("protein");
         }
-
-
+        }
         $window.SDFFields = {};
 
         $scope.getClass = function (path) {
@@ -653,7 +674,7 @@
             var ret = typeaheadService.search(query);
            return ret;
         };
-        
+
         $scope.submitq= function(query, action) {
             // if (query.indexOf("\"") < 0 && query.indexOf("*") < 0 && query.indexOf(":") < 0 && query.indexOf(" AND ") < 0 && query.indexOf(" OR ") < 0) {
             //     $scope.q = "\"" + query + "\"";
@@ -1455,7 +1476,14 @@
 
         $scope.submitpaster = function (input) {
             $scope.substanceClass = $location.$$search.kind;
-            Substance.$$setSubstance(JSON.parse(input)).then(function (data) {
+            if(!$scope.substanceClass){
+                $scope.substanceClass=$scope.substance.substanceClass;
+            }
+            var inp=input;
+            if(typeof inp == "string"){
+                inp=JSON.parse(inp);
+            }
+            Substance.$$setSubstance(inp).then(function (data) {
                 $scope.substance = data;
                 if($scope.substance.substanceClass =="chemical"){
                     molChanger.setMol($scope.substance.structure.molfile);
@@ -1465,6 +1493,15 @@
                     var url = baseurl + "assets/templates/modals/paste-redirect-modal.html";
                     $scope.open(url);
                 }
+                setTimeout(function(){
+                    var oldClass=$scope.substance.substanceClass;
+                    $scope.substance.substanceClass="concept";
+                    $scope.$apply();
+                    setTimeout(function(){
+                        $scope.substance.substanceClass=oldClass;
+                        $scope.$apply();
+                    },1);
+                },1);
             });
 
         };

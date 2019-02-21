@@ -25,7 +25,12 @@
 			@if(sub.protein.proteinSubType != null) {
 				<tr>
 					<td>Protein Sub Type</td>
-					<td class="monospace">@GinasApp.getCV.getDisplay("PROTEIN_SUBTYPE", sub.protein.proteinSubType)</td>
+					<td class="monospace">
+					@{sub.protein.getProteinSubtypes()
+					             .map(st=>GinasApp.getCV.getDisplay("PROTEIN_SUBTYPE", st))
+					             .mkString(" ")}
+
+					</td>
 				</tr>
 			}
 			@if(sub.protein.sequenceOrigin != null) {
