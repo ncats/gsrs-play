@@ -13,11 +13,13 @@
             method="POST" action="@ix.ginas.controllers.routes.GinasApp.structureSearchPost()" novalidate>
                 <div class="row form-row">
                     <div class="col-md-12">
-                        <sketcher parent = substance ng-model=parent.structure.molfile ajax="false" 
+                        <div id = "sketcher-wrapper">
+                        <sketcher parent = substance ng-model=parent.structure.molfile ajax="false"
                         	@if(mol != null) {
                         		load="@mol"
                         	}
                         ></sketcher>
+                    </div>
 
                     </div>
                 </div>

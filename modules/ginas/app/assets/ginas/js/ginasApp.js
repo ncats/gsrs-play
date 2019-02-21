@@ -2585,9 +2585,8 @@
             return sk.sketcher.getSmiles();
         };
     });
-
-    ginasApp.directive('sketcher', function ($compile, $http, $timeout, UUID, polymerUtils, CVFields, localStorageService, molChanger, Substance) {
-        return {
+    ginasApp.directive('sketcher', function ($compile, $http, $timeout, UUID, polymerUtils, CVFields, localStorageService, molChanger, Substance, $rootScope) {
+        var t={
             restrict: 'E',
             replace: true,
             scope: {
@@ -2597,12 +2596,39 @@
             },
 
             link: function (scope, element, attrs) {
+
+                var setLoading=function(b){
+                    $rootScope.isGlobalLoading = b;
+                    try{
+                        $timeout(function() {
+                            $rootScope.$apply();
+                        });
+                    }catch(error) {
+                        console.error(error);
+                    }
+
+                };
+
+                scope.showCanvas=true;
+                scope.fromImage=false;
+                scope.canvasLabel="";
+
                 var url = baseurl + 'structure';
 
                 if (!_.isUndefined(scope.parent.structure)) {
                     scope.mol = scope.parent.structure.molfile;
                 }
-                var template = angular.element('<div id="sketcherForm" dataformat="molfile"></div>');
+                var canvasHTML= '<div class="text-center" id = "canvas-wrapper" ng-show = "canvasLabel != \'\'" >' +
+                    '<div id = "canvas-label" class=" col-md-12" style = "text-align:center;padding-bottom:5px;padding-top:5px"  ><b>{{canvasLabel}}</b> &nbsp ' +
+                    '<a class="btn btn-primary" ng-show="fromImage&&showCanvas" ng-click="showCanvas=!showCanvas" class="">Hide</a>' +
+                    '<a class="btn btn-primary" ng-show="fromImage&&!showCanvas" ng-click="showCanvas=!showCanvas" class="">Show</a>' +
+                    '</div><div class=" col-md-12" text-center" ng-show = "invalidStructure" ng-init = "invalidStructure = false"><b style = "color:red">Structure not detectable</b></span></div>' +
+                    '<canvas height="1" ng-show="showCanvas" id="clip_canvas" style="max-width:800px;"></canvas>' +
+                    '</div>';
+                var template = angular.element('<div><div id="sketcherForm" dataformat="molfile"></div> <div class = "col-md-12" id = "testing">' +
+                		'<div class="text-center">' +
+                        'Load an image by pasting a copied image into the canvas with <code>ctrl + v</code>, or dragging a local image file' +
+                        '</div> <div id = "canvas_cont">' + canvasHTML + '</div> </div> </div>');
                 element.append(template);
                 $compile(template)(scope);
 
@@ -2630,9 +2656,10 @@
                                         return definitionalChange;
                                 };
 
-                scope.updateMol = function (force) {
+                scope.updateMolServer = function(mfile, force, reset){
+                    setLoading(false);
                         var url = baseurl + 'structure';
-                        $http.post(url, scope.mol, {
+                    $http.post(url, mfile, {
                             headers: {
                                 'Content-Type': 'text/plain'
                             }
@@ -2674,7 +2701,9 @@
                                 });
                             }
                             if (scope.parent.structure) {
+                        	if(data.structure){
                                 data.structure.id = scope.parent.structure.id;
+                        	}
                             } else {
                                 scope.parent.structure = {};
                             }
@@ -2702,8 +2731,15 @@
 
                             if (data.structure) {
                                 _.set(scope.parent, 'q', data.structure.smiles);
+                            if (reset){
+                                scope.sketcher.setMolfile(data.structure.molfile);
                             }
+                        }
+
                         });
+                };
+                scope.updateMol = function (force) {
+                    scope.updateMolServer(scope.mol,force,false);
                 };
                 scope.$parent.updateMol=scope.updateMol;
                 
@@ -2766,11 +2802,20 @@
                      .value();
                 
                     if(charges.length>0){
-                        var mCharge = "M  CHG" + leftPad(charges.length + "", 3) 
-                                    + _.chain(charges)
-                                       .map(function(c){return c.toString();})
+                        var chgCount=function(count){
+                            return "M  CHG" + leftPad(count + "", 3);
+                        };
+
+                        return _.chain(charges)
+                            .chunk(8)
+                            .map(function(c){ return chgCount(c.length) +
+                                _.chain(c)
+                                    .map(function(ic){return ic.toString();})
+                                    .value()
                                        .join("");
-                        return mCharge;
+                            })
+                            .value()
+                            .join("\n");
                     }
                     return null;
                 };
@@ -2844,10 +2889,205 @@
                     });
                 }
 
+                var sketcherElm = {
+                	"get":function(){
+                		return element[0];
             }
         };
-    });
 
+                var CLIPBOARD = new CLIPBOARD_CLASS("clip_canvas", true);
+
+
+                /**
+                 * image pasting into canvas
+                 *
+                 * @param {string} canvas_id - canvas id
+                 * @param {boolean} autoresize - if canvas will be resized
+                 */
+                function CLIPBOARD_CLASS(canvas_id, autoresize) {
+                    var _self = this;
+                    var canvas = null;
+                    var ctx =null;
+                    //handlers
+                    document.addEventListener('paste', function(e) {
+                        _self.paste_auto(e, 'paste');
+                    }, false);
+
+                    document.addEventListener('dragstart', function(e){
+                        e = e || event;
+                        e.preventDefault();
+                    },false);
+
+                    document.addEventListener('dragover', function(e){
+                        e = e || event;
+                        e.preventDefault();
+                    },false);
+
+                    document.addEventListener('dragleave',function(e){
+                        e = e || event;
+                        e.preventDefault();
+                    },false);
+                    sketcherElm.get().addEventListener('dragover', function(e){
+                        e = e || event;
+                        e.stopPropagation();
+                        e.preventDefault();
+                        sketcherElm.get().parentElement.classList.add('dragover');
+                    },false);
+                    sketcherElm.get().addEventListener('dragleave', function(e){
+                        e = e || event;
+                        e.stopPropagation();
+                        e.preventDefault();
+                        sketcherElm.get().parentElement.classList.remove('dragover');
+                    },false);
+
+                    document.addEventListener('drop', function(e) {
+                        e.stopPropagation();
+                        e.preventDefault();
+                        sketcherElm.get().parentElement.classList.remove('dragover');
+                        _self.paste_auto(e, 'drop');
+                    }, false);
+
+                    this.loadImage = function(blob){
+                    	var source=null;
+                    	if(typeof blob  ==="string"){
+                    		source=blob;
+                    	}else{
+                    		var URLObj = window.URL || window.webkitURL;
+                    		source = URLObj.createObjectURL(blob);
+                    	}
+                        this.paste_createImage(source);
+                        return true;
+                    }
+
+                    this.paste_auto = function(e, method) {
+                    	var _this=this;
+                    	canvas = document.getElementById(canvas_id);
+                        ctx = document.getElementById(canvas_id).getContext("2d");
+                        var gotImage=false;
+                        var text = null;
+                        if (method == 'drop') {
+                            var items = e.dataTransfer.files;
+
+                            if(items.length==0){
+                            	for(var ii=0;ii<e.dataTransfer.items.length;ii++){
+                            		if(e.dataTransfer.items[ii].type==="text/html"){
+                            			e.dataTransfer.items[ii].getAsString(function(s){
+                            				if(s.indexOf("<img") ==0){
+                            					var url = JSON.parse(s.split("src=")[1].split(/[ |>]+/)[0].trim());
+                            					if(_this.loadImage(url)){
+                                                    scope.invalidStructure = false;
+                            						e.preventDefault();
+                            					}
+                            				}
+    });
+                            		}
+                            	}
+                            	return;
+                            }
+
+                        }else if (method == 'paste'){
+                            var items = e.clipboardData.items;
+                        }
+                        if (!items) return;
+                                for (var i = 0; i < items.length; i++) {
+                                    if (items[i].type.indexOf("image") !== -1) {
+                                        scope.invalidStructure = false;
+                                    	var blob;
+                                        if(method == "drop"){
+                                            blob = items[i];
+                                        }else if(method == "paste") {
+                                            blob = items[i].getAsFile();
+                                        }
+                                        if(_this.loadImage(blob)){
+                    						e.preventDefault();
+                    						gotImage=true;
+                    					}
+                                        break;
+                                    } else if (items[i].type.indexOf("text") !== -1) {
+                                        items[i].getAsString(function (r) {
+                                            if (r) {
+                                                text = r;
+                                                if (!gotImage) {
+                                                    try {
+                                                        if (scope.sketcher.activated) {
+                                                            if (text.indexOf("<div") == -1) {
+                                                                setLoading(true);
+                                                                scope.updateMolServer(text, true, true);
+                                                            }
+                                                        }
+                                                    } catch (e) {
+                                                        if (text.indexOf("<div") == -1) {
+                                                            setLoading(true);
+                                                            scope.updateMolServer(text, true, true);
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        });
+                                    }
+                                }
+                    };
+                    //draw pasted image to canvas
+                    this.paste_createImage = function(source) {
+                    	scope.fromImage=true;
+                        var myEl = angular.element( document.querySelector( 'canvas' ) );
+                        var pastedImage = new Image();
+                        pastedImage.onload = function() {
+                            if (autoresize === true) {
+                                //resize
+                                canvas.width = pastedImage.width;
+                                canvas.height = pastedImage.height;
+
+                                myEl.addClass('canvas-display');
+                                scope.canvasLabel="Original Image";
+
+                                //$compile(angular.element(document.getElementById('canvas-label').innerHTML ="<b>Original Image<b>"))(scope);
+                            } else {
+                                //clear canvas
+                                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                                myEl.removeClass('canvas-display');
+                                scope.canvasLabel="Original Image";
+                            }
+                            ctx.fillStyle = "#FFFFFF";
+                            ctx.fillRect(0, 0, pastedImage.width, pastedImage.height);
+                            ctx.drawImage(pastedImage, 0, 0);
+                            var dataURL = canvas.toDataURL();
+                            if(dataURL.length>100000){
+                            	dataURL = canvas.toDataURL('image/jpeg', 100000/dataURL.length);
+                            	console.log(dataURL.length);
+                            }
+                            setLoading(true);
+                            //TODO: Change to use angular
+                            $.ajax({
+                                url: "/ginas/app/api/v1/foo/ocrStructure",
+                                type: "POST",
+                                headers: {  'Access-Control-Allow-Origin': 'http://localhost:9000' },
+                                data: dataURL,
+                                contentType: 'application/json',
+                                success: function(response) {
+                                    setLoading(false);
+                                    var myresp = JSON.parse(response);
+                                    scope.sketcher.setMolfile(myresp.molfile);
+
+                                },
+                                error: function(rep, error, t) {
+                                    //error handling
+                                    setLoading(false);
+                                    scope.invalidStructure = true;
+                                    console.log(error);
+                                }
+                            });
+                        };
+                        pastedImage.crossOrigin="anonymous";
+                        pastedImage.src = source;
+                    };
+                }
+            }
+        };
+
+
+        return t;
+    });
     ginasApp.directive('modalButton', function ($compile, $templateRequest, $http, $uibModal, molChanger, FileReader) {
         return {
             scope: {
@@ -3651,4 +3891,113 @@ $(function(){
 Number.isFinite = Number.isFinite || function(value) {
     return typeof value === 'number' && isFinite(value);
 };
+function restoreVersion(uuid, version){
+    if(confirm("Are you sure you'd like to restore version " + version + "?")){
+        var simpleModal=function(title){
+            var mod={};
+            var mid=("mod-over" + Math.random()).replace(".","");
+            mod._title=title;
+            mod._contents="";
+            mod.id=mid;
+            mod._accept=function(){};
+            mod._reject=function(){};
+            mod.show=function(){
+                var ofun=window["rawModDone"];
+                if(!ofun){
+                    ofun=function(){};
+                }
+                window["rawModDone"]=function(b,t){
+                    ofun(b);
+                    if(b===mod.id){
+                        $("#" +mod.id).remove();
+                        if(t){
+                            mod._accept();
+                        }else{
+                            mod._reject();
+                        }
+                    }
+                };
+                //
+                var raw=(function(){/*
+            <div id="{{mid}}" style="z-index:999999;position:fixed;top:0px;width:100%;height:100%;background: rgba(0, 0, 0, 0.6);">
+               <div style="
+                   text-align: center;
+                   padding: 100px;
+                   max-width:600px;
+                   margin:auto;
+               ">
+                  <div style="color:white;font-weight:bold;">
+                     {{title}}
+                  </div>
+                  <div>
+                     {{contents}}
+                  </div>
+                  <div>
+                     <button onclick="rawModDone('{{mid}}',false)">Cancel</button>
+                     <button onclick="rawModDone('{{mid}}',true)">OK</button>
+                  </div>
+               </div>
+            </div>*/}.toString()).substring(14).replace(/\*\/.*/g,"");
+                raw=raw.replace(/\{\{mid\}\}/g,mod.id)
+                    .replace("{{title}}",mod._title);
+                raw=raw.replace("{{contents}}",mod._contents);
 
+                document.body.appendChild($(raw)[0]);
+                return mod;
+            };
+            mod.accept=function(cb){
+                mod._accept=cb;
+                return mod;
+            };
+            mod.reject=function(cb){
+                mod._reject=cb;
+                return mod;
+            };
+            mod.contents=function(cont){
+                mod._contents=cont;
+                return mod;
+            };
+            mod.title=function(title){
+                mod._title=title;
+                return mod;
+            };
+            mod.rawText=function(raw){
+                return mod.contents("<textarea style='margin:10px;min-width:300px;min-height:300px;'>" + raw + "</textarea>");
+            }
+            return mod;
+        };
+
+        var setLoading=function(b){
+            angular.element(document.body).scope().isGlobalLoading=b;
+            angular.element(document.body).scope().$apply();
+        };
+        try{
+            setLoading(true);
+            var onError=function(e){
+                if(confirm("There was a problem restoring that version ... would you like to see the error details?")){
+                    simpleModal("Error restoring record. Here is some information on the error to share with a system admin / developers.")
+                        .rawText(JSON.stringify(e,null,2))
+                        .show();
+                }
+            };
+
+            return GGlob.SubstanceFinder
+                .get(uuid)
+                .andThen(function(s){
+                    return s.restoreVersion(version);
+                })
+                .get(function(e){
+                    if(!e || e.isError){
+                        onError(e);
+                    }else{
+                        alert("Version " + version + " restored");
+                        location.href=baseurl + "substance/" + e.uuid;
+                    }
+                    setLoading(false);
+                });
+        }catch(e){
+            onError(e);
+            setLoading(false);
+        }
+    }
+}

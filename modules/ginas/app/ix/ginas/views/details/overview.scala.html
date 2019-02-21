@@ -12,13 +12,6 @@ it is used by *name*overview.scala.html files, where *name* is chemical, mixture
 basically supplies a few <tr> tags with 'record details'
 *@
 
-@*
-deprecated early version                    
-<div class="col-md-7">
-	<table class="table table-striped kv-table">
-		<tbody>
-*@
-
 
 
 <tr>
@@ -50,6 +43,20 @@ deprecated early version
 		</code>
 	</td>
 </tr>
+
+@defining(sub.getMostRecentVersion()) { version =>
+			@if(version != sub.version){
+<tr>
+<td colspan=2><code>This is an older version of the record</code>
+@dynamic(name = IxDynamicResourceHandler.IS_ADMIN, handler = new ix.ncats.controllers.security.IxDeadboltHandler()) {
+	<div><button class="btn btn-warning " onclick="restoreVersion('@sub.uuid','@sub.version')">Restore this version</button></div>
+}
+</td>
+</tr>
+			}
+		}
+
+
 @if(sub.isDeprecated()) {
 <tr>
 	<td>Record Status</td>
@@ -60,55 +67,3 @@ deprecated early version
 }
 
 @substancedetailsoverview(sub)
-
-
-
-@*
-deprecated early version                    
-		</tbody>
-	</table>                               
-</div>
-*@ 
-
-@*	
-deprecated early version                     
-<div class = "col-md-3 pull-right">
-	<h5>Substance ID:</h5>
-	@if(sub.isSubstanceVariant()) {
-		<h3 class= "appid subconcept"> @sub.getApprovalIDDisplay()</h3>
-	} else {
-		<h3 class= "appid">@sub.getApprovalIDDisplay()</h3>
-	}
-	<div class = "pull-right">
-		<ul class= "list-inline pull-right list-unstyled">
-			@dynamic(name = IxDynamicResourceHandler.CAN_UPDATE, handler = new ix.ncats.controllers.security.IxDeadboltHandler()) {
-				<li>
-					<a href="@ix.ginas.controllers.routes.GinasFactory.edit(GinasApp.getId(sub))" 
-					target="_self" 
-					uib-tooltip="Edit Substance" 
-					aria-label="Edit Substance">
-						<span class="sr-only">Edit Substance</span>
-						<span class="fa fa-pencil fa-2x success"></span>
-					</a>
-				</li>
-			}
-			<li> 
-				<download-button uuid="@sub.getUuid" format=format>Download</download-button>
-			</li>
-		</ul>
-	</div>
-</div>
-*@                    
-@*   
-deprecated early version                    
-<div style="position:absolute;bottom:0px; width:60%">
-		<div class = "row">
-			<div class = "col-md-4">
-			   <i>Show audit details:</i>
-			</div>
-			<div class = "col-md-2">
-			   <input  type="checkbox" ng-model="audit" />
-			</div>
-		</div>
-</div>
-*@
