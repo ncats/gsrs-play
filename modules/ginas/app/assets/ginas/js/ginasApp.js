@@ -3,7 +3,6 @@
     var ginasApp = angular.module('ginas', ['ngAria', 'ngMessages', 'ngResource', 'ui.bootstrap', 'ui.bootstrap.showErrors',
             'LocalStorageModule', 'ngTagsInput', 'jsonFormatter', 'ginasForms', 'ginasFormElements', 'ginasAdmin', 'ginasDownloads', 'ginasScheduled', 'diff-match-patch',
             'angularSpinners', 'filterListener', 'validatorListener', 'ginasFilter'
-
         ]).run(function ($rootScope, $anchorScroll) {
             $anchorScroll.yOffset = 150; // always scroll by 100 extra pixels
             $rootScope.isGlobalLoading = false;
@@ -70,7 +69,6 @@
                                             //  _.set(newcv, 'value', value + ' (not in CV)');
                                         }
                                         sub[field][key] = newcv;
-
                                     }
                                 });
                             }
@@ -155,30 +153,24 @@
                 default:
                     break;
             }
-
             if (!substance.references) {
                 substance.references = [];
             }
-
             if (!substance.access) {
                 substance.access = [{
                     value: 'protected',
                     display: 'PROTECTED'
                 }];
             }
-
             return substance;
         };
-
         substance.$$getClass = function () {
             return substance.substanceClass;
         };
-
         substance.$$changeClass = function (newClass) {
             substance.substanceClass = newClass;
             return substance;
         };
-
         substance.$$setSubstance = function (sub) {
             _.forEach(sub, function (value, key) {
                 _.set(substance, key, value);
@@ -190,16 +182,13 @@
             }
             substance.$$setClass(substance.$$getClass());
             return $q.when(expandCV(substance));
-
         };
-
         //returns a flattened clone of the substance
         substance.$$flattenSubstance = function () {
             var sub = _.cloneDeep(substance);
             if (sub.q) {
                 delete sub.q;
             }
-
             if (sub.substanceClass === 'protein') {
                 if (_.has(sub.protein, 'disulfideLinks')) {
                     _.forEach(sub.protein.disulfideLinks, function (link, key) {
@@ -212,22 +201,19 @@
                     _.forEach(sub.protein.otherLinks, function (value, key) {
                         var otherLink = {};
                         var sites = _.toArray(value.sites);
-
-
                         // TODO: Previously we would throw away odd-number
-                        // sites, anticipating that other links typically connected 
+                        // sites, anticipating that other links typically connected
                         // sets of 2 residues. This was not a good idea as some
                         // links are between odd numbers of sites. However, some
                         // form of warning should probably be present which makes the
                         // meaning of the sets of otherLinks more clear.
-
                         //if (sites.length % 2 != 0) {
                         //    sites = _.dropRight(sites);
                         //}
-
                         sub.protein.otherLinks[key].sites = sites;
                     });
                 }
+
             }
             sub = flattenCV(sub);
 
@@ -257,7 +243,6 @@
                     sub = _.omit(sub, 'structure');
                 }
             }
-
             if (_.has(sub, 'polymer')) {
                 polymerUtils.setSRUFromConnectivityDisplay(sub.polymer.structuralUnits);
                 _.forEach(sub.polymer.structuralUnits, function (sru) {
@@ -265,10 +250,7 @@
                         delete sru.attachmentMap["$errors"];
                     }
                 });
-
             }
-
-
             if (_.has(sub, 'modifications')) {
                 if (_.has(sub.modifications, 'structuralModifications')) {
                     _.forEach(sub.modifications.structuralModifications, function (mod) {
@@ -278,13 +260,11 @@
                     });
                 }
             }
-
             if (_.has(sub, 'nucleicAcid')) {
                 if (_.has(sub.nucleicAcid, 'sugars')) {
                     _.forEach(sub.nucleicAcid.sugars, function (sugar) {
                         if (sugar.sitesShorthand) {
                             _.unset(sugar, 'sitesShorthand');
-
                         }
                     });
                 }
@@ -340,14 +320,10 @@
             var errors = [];
             var connections = display.split(";");
             var regex = /^\s*[A-Za-z][A-Za-z]*[0-9]*_(R[0-9][0-9]*)[-][A-Za-z][A-Za-z]*[0-9]*_(R[0-9][0-9]*)\s*$/g;
-
-
             var map = {};
-
             for (var i = 0; i < connections.length; i++) {
                 var con = connections[i].trim();
                 if (con === "") continue;
-
                 regex.lastIndex = 0;
                 var res = regex.exec(con);
                 if (res == null) {
@@ -363,7 +339,6 @@
                     map[res[1]].push(res[2]);
                 }
             }
-
             if (errors.length > 0) {
                 map.$errors = errors;
             }
@@ -382,13 +357,10 @@
                 srus[i].attachmentMap = map;
             }
         };
-
         return utils;
     });
-
     ginasApp.service('nameFinder', function ($http) {
         var url = baseurl + "api/v1/substances/search";
-
         var nameFinder = {
             search: function (query) {
                 var promise = $http.get(url, {
@@ -407,7 +379,6 @@
         };
         return nameFinder;
     });
-
     ginasApp.factory('substanceIDRetriever', ['$http', function ($http) {
         var url = baseurl + "api/v1/substances(";
         var editSubstance = {
@@ -426,7 +397,6 @@
         };
         return editSubstance;
     }]);
-
     ginasApp.service('typeaheadService', function ($http) {
         var url = baseurl + "api/v1/suggest";
         var suggest = {
