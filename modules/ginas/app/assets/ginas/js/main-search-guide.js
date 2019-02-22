@@ -5,11 +5,13 @@
         .module('ginas')
         .directive('mainSearchGuide', mainSearchGuide);
 
-    function mainSearchGuide(searchService) {
+    function mainSearchGuide(searchService, $location, $q, $timeout) {
         var directive = {
             link: link,
             scope: {
-                q: '='
+                q: '=',
+                submitQuery: '&onQuerySubmit',
+                control: '='
             },
             restrict: 'E',
             templateUrl: baseurl + 'assets/templates/elements/main-search-guide.html',
@@ -18,6 +20,8 @@
 
         function link(scope, element, attrs) {
 
+            scope.internalControl = scope.control || {};
+
             var everyWhereOption = {
                 title: 'every field of the record',
                 field: 'everywhere',
@@ -25,13 +29,25 @@
                 description: ''
             };
 
-            var otherField = {
-                title: 'another field ...',
-                field: 'other',
-                isOther: true,
+            var otherOption = {
+                title: 'Other',
+                field: '',
                 type: 'text',
-                description: ''
-            };
+                description: '',
+                isOther: true,
+                otherIndex: 0
+            }
+
+            var manuallyEnteredOption = function (fieldName) {
+                return {
+                    title: fieldName || 'Other',
+                    field: fieldName || '',
+                type: 'text',
+                    description: 'mannually entered field',
+                    display: 'Other' + (fieldName ? (' - ' + fieldName) : ''),
+                    isOther:true
+                }
+            }
 
             var Term = function(r){
                 var nt={};
@@ -44,7 +60,7 @@
                  *
                  */
                 nt.validate=function(v){
-                    if(typeof v === "undefined" || v === null || v.trim() === ""){
+                    if (typeof v === "undefined" || v === null || (v.trim && v.trim() === "")) {
                         throw "Required";
                     }
                 };
@@ -384,31 +400,341 @@
 
             scope.mainSearchGuideVariables = {
                 fieldOptions: [],
-                queries: [
-                    defaultQuery()
-                ],
+                queries: [],
                 booleanOperatorOptions: booleanOperatorOptions,
-                isSearchValid: false
+                isSearchValid: false,
+                otherFieldName: '',
             }
 
-            function loadDirective() {
-                getSearchFields();
+            var otherInputTimer;
+
+            scope.internalControl.loadDirective = function () {
+                scope.mainSearchGuideVariables.queries = [];
+
+                getSearchFields().then(function success() {
+                    if (scope.q || $location.search()['q']) {
+                        var query = scope.q || $location.search()['q'];
+                        processLuceneQueryString(query);
+                        scope.validateQuery();
+                    }
+
+                    if (scope.mainSearchGuideVariables.queries.length === 0) {
+                        scope.mainSearchGuideVariables.queries.push(defaultQuery());
+                    }
+                }, function error() { });
+            }
+
+            function processLuceneQueryString(queryString) {
+                queryString = queryString.replace(/-/g, "\\-");
+
+                try {
+                    processLuceneParserObject(luceneParser.parse(queryString));
+                } catch(e) {
+                    console.log(e);
+                }
+            }
+
+
+            function processLuceneParserObject(luceParserResults) {
+
+                Object.keys(luceParserResults).forEach(function (key) {
+                    if (key === 'left' || key === 'right') {
+                        if (luceParserResults[key].left || luceParserResults[key].right) {
+                            processLuceneParserObject(luceParserResults[key]);
+                        } else {
+                            addQueryFromParser(luceParserResults[key]);
+                        }
+                    } else if (key === 'operator') {
+
+                        if (!scope.mainSearchGuideVariables.queries) {
+                            scope.mainSearchGuideVariables.queries = [];
+                        };
+
+                        var operator;
+
+                        if (luceParserResults[key] === '<implicit>') {
+                            luceParserResults[key] = 'OR'
+                        }
+
+                        for (var i = 0; i < scope.mainSearchGuideVariables.booleanOperatorOptions.length; i++) {
+                            if (scope.mainSearchGuideVariables.booleanOperatorOptions[i].value === luceParserResults[key]) {
+                                operator = scope.mainSearchGuideVariables.booleanOperatorOptions[i];
+                                break;
+                            }
+                        };
+
+                        scope.mainSearchGuideVariables.queries.push({
+                            booleanOperator: operator
+                        });
+
+                        if (scope.mainSearchGuideVariables.queries[scope.mainSearchGuideVariables.queries.length - 2]) {
+                            scope.mainSearchGuideVariables.queries[scope.mainSearchGuideVariables.queries.length - 2].selectedBool = operator;
+                        }
+                    }
+                });
+            }
+
+            function addQueryFromParser(luceneParserQuery) {
+
+                var query;
+                var lastQuery = scope.mainSearchGuideVariables.queries.length && scope.mainSearchGuideVariables.queries[scope.mainSearchGuideVariables.queries.length - 1] || {};
+
+                if (lastQuery.booleanOperator && !lastQuery.terms) {
+                    query = lastQuery;
+                } else {
+                    query = {};
+                    if (!scope.mainSearchGuideVariables.queries) {
+                        scope.mainSearchGuideVariables.queries = [];
+                    }
+                    scope.mainSearchGuideVariables.queries.push(query);
+                }
+
+                query.field = getFieldOption(luceneParserQuery.field);
+
+                query.type = query.field.type;
+
+                var terms = createQueryTermsFromParser(query.type, luceneParserQuery);
+                var endTermArray = [
+                    {
+                        type: 'end',
+                        value: ''
+                    }
+                ]
+
+                query.terms = terms.concat(endTermArray);
+
+                query.selectedBool = booleanOperatorOptions[0]
+
+                if (query.index == null) {
+                    query.index = scope.mainSearchGuideVariables.queries.length - 1;
+                }
+            }
+
+            function createQueryTermsFromParser(fieldType, luceneParserQueryTerm) {
+
+                var terms = [];
+
+                if (fieldType === 'text') {
+                    var term = {
+                        options: queryTermOptions[fieldType]
+                    }
+
+                    for (var i = 0; i < termPatterns[fieldType].length; i++) {
+                        if (termPatterns[fieldType][i].pattern.test(luceneParserQueryTerm.term)) {
+                            term.type = termPatterns[fieldType][i].termType;
+                            term.value = termPatterns[fieldType][i].getValue(luceneParserQueryTerm.term);
+                            term.queryOption = termPatterns[fieldType][i].getQueryOption();
+                            break;
+                        }
+                    }
+
+                    terms.push(term);
+                } else {
+                    if (luceneParserQueryTerm.term || (Number(luceneParserQueryTerm.term_max) - Number(luceneParserQueryTerm.term_min)) === 86399999) {
+                        var term = {
+                            options: queryTermOptions[fieldType],
+                            type: 'exact',
+                            value: luceneParserQueryTerm.term || moment(luceneParserQueryTerm.term_max, 'x')._d,
+                            queryOption: _.filter(queryTermOptions[fieldType], { value: 'exact' })[0]
+                        }
+                        terms.push(term);
+                    } else {
+
+                        if (luceneParserQueryTerm.term_min !== '\\-10E50') {
+                            var term = {
+                                options: queryTermOptions[fieldType],
+                                type: 'startsWith',
+                                value: fieldType === 'timestamp' && moment(luceneParserQueryTerm.term_min, 'x')._d || luceneParserQueryTerm.term_min,
+                                queryOption: _.filter(queryTermOptions[fieldType], { value: 'startsWith' })[0]
+                            }
+                            terms.push(term);
+                        }
+
+                        if (luceneParserQueryTerm.term_max !== '10E50') {
+                            var term = {
+                                options: terms.length > 0 ? terms[0].queryOption.nextOptions : queryTermOptions[fieldType],
+                                type: 'endsWith',
+                                value: fieldType === 'timestamp' && moment(luceneParserQueryTerm.term_max, 'x')._d || luceneParserQueryTerm.term_max,
+                                queryOption: terms.length > 0 ? terms[0].queryOption.nextOptions[1] : _.filter(queryTermOptions[fieldType], { value: 'endsWith' })[0]
+                            }
+                            terms.push(term);
+                        } else {
+                            var term = {
+                                options: terms[0].queryOption.nextOptions,
+                                type: terms[0].queryOption.nextOptions[0].value,
+                                value: '',
+                                queryOption: terms[0].queryOption.nextOptions[0]
+                            }
+                            terms.push(term);
+                        }
+                    }
+                }
+
+                return terms;
+            }
+
+            var termPatterns = {
+                text: [
+                    {
+                        termType: 'exact',
+                        pattern: /^\^.*\$$/,
+                        getValue: function (termString) {
+                            return termString.substring(
+                                termString.lastIndexOf("^") + 1,
+                                termString.lastIndexOf("$")
+                            )
+                        },
+                        getQueryOption: function () {
+                            return _.filter(queryTermOptions.text, { value: 'exact' })[0];
+                        }
+                    },
+                    {
+                        termType: 'startsWith',
+                        pattern: /^\^.*/,
+                        getValue: function (termString) {
+                            return termString.substring(
+                                termString.lastIndexOf("^") + 1
+                            )
+                        },
+                        getQueryOption: function () {
+                            return _.filter(queryTermOptions.text, { value: 'startsWith' })[0];
+                        }
+                    },
+                    {
+                        termType: 'endsWith',
+                        pattern: /.*\$$/,
+                        getValue: function (termString) {
+                            return termString.substring(
+                                0,
+                                termString.lastIndexOf("$")
+                            )
+                        },
+                        getQueryOption: function () {
+                            return _.filter(queryTermOptions.text, { value: 'endsWith' })[0];
+                        }
+                    },
+                    {
+                        termType: 'containsPartial',
+                        pattern: /^\*.*\*$/,
+                        getValue: function (termString) {
+                            return termString.substring(
+                                termString.indexOf("*") + 1,
+                                termString.lastIndexOf("*")
+                            )
+                        },
+                        getQueryOption: function () {
+                            return _.filter(queryTermOptions.text, { value: 'containsPartial' })[0];
+                        }
+                    },
+                    {
+                        termType: 'startsWithPartial',
+                        pattern: /.*\*$/,
+                        getValue: function (termString) {
+                            return termString.substring(
+                                0,
+                                termString.lastIndexOf("*")
+                            )
+                        },
+                        getQueryOption: function () {
+                            return _.filter(queryTermOptions.text, { value: 'startsWithPartial' })[0];
+                        }
+                    },
+                    {
+                        termType: 'endsWithPartial',
+                        pattern: /^\*.*/,
+                        getValue: function (termString) {
+                            return termString.substring(
+                                termString.lastIndexOf("*") + 1
+                            )
+                        },
+                        getQueryOption: function () {
+                            return _.filter(queryTermOptions.text, { value: 'endsWithPartial' })[0];
+                        }
+                    },
+                    {
+                        termType: 'contains',
+                        pattern: /./,
+                        getValue: function (termString) {
+                            return termString
+                        },
+                        getQueryOption: function () {
+                            return _.filter(queryTermOptions.text, { value: 'contains' })[0];
+                        }
+                    }
+                ]
+            }
+
+            function getFieldOption(fieldName) {
+                var fieldOption;
+
+                if (fieldName === '<implicit>') {
+                    fieldOption = everyWhereOption;
+                } else {
+                    for (var i = 0; i < scope.mainSearchGuideVariables.fieldOptions.length; i++) {
+                        if (scope.mainSearchGuideVariables.fieldOptions[i].field === fieldName) {
+                            fieldOption = scope.mainSearchGuideVariables.fieldOptions[i];
+                            break;
+                        }
+                    }
+            }
+
+                if (!fieldOption) {
+
+                    var unknownField = manuallyEnteredOption(fieldName);
+
+                    scope.mainSearchGuideVariables.fieldOptions.push(unknownField);
+
+                    fieldOption = unknownField;
+                }
+
+                return fieldOption;
             }
 
             function getSearchFields() {
+                var deferred = $q.defer();
+
                 searchService.getSearchFields().then(function success(response) {
 
 
                     scope.mainSearchGuideVariables.fieldOptions = response.data;
                     scope.mainSearchGuideVariables.fieldOptions.unshift(everyWhereOption);
-                    scope.mainSearchGuideVariables.fieldOptions.push(otherField);
+                    scope.mainSearchGuideVariables.fieldOptions.push(otherOption);
 
                     _.chain(scope.mainSearchGuideVariables.fieldOptions)
                         .map(function(fieldOption){
                             fieldOption.display = fieldOption.title + (fieldOption.description ? ' - ' + fieldOption.description : '');
                         })
                         .value();
-                })
+                    deferred.resolve();
+                }, function error() {
+                    deferred.reject();
+                });
+
+                return deferred.promise;
+            }
+
+            scope.processOtherField = function(fieldOption){
+
+                if (fieldOption.field) {
+                    fieldOption.display = 'Other - '  + fieldOption.field;
+                } else {
+                    fieldOption.display = 'Other';
+                }
+
+                var containsOther=false;
+
+                for(var i=0;i<scope.mainSearchGuideVariables.fieldOptions.length;i++){
+                    var op = scope.mainSearchGuideVariables.fieldOptions[i];
+                    if(op.display === "Other"){
+                        containsOther=true;
+                    }
+                }
+                if(!containsOther){
+                    var otherField = manuallyEnteredOption();
+                    scope.mainSearchGuideVariables.fieldOptions.push(otherField);
+                }
+
+                scope.processValueChange();
             }
 
             scope.selectFieldOption = function (query, fieldOption) {
@@ -426,7 +752,7 @@
                     }
                 ];
                 scope.selectQueryOption(query, query.terms[0],0);
-                scope.validateQuery();
+                scope.processValueChange();
             }
 
             scope.selectQueryOption = function (query, term, termIndex) {
@@ -456,7 +782,7 @@
                     };
                     query.terms = _.take(query.terms, termIndex + 2);
                 }
-                scope.validateQuery();
+                scope.processValueChange();
             }
 
             scope.selectBooleanOperatorOption = function (query) {
@@ -470,7 +796,7 @@
                     q.index=queryIndex+1;
                     scope.mainSearchGuideVariables.queries[queryIndex + 1] = q;
                 }
-                scope.validateQuery();
+                scope.processValueChange();
             }
 
 
@@ -492,6 +818,10 @@
 
                     query.isValid = true;
 
+                    if (query.field.field == null || query.field.field == '') {
+                        query.isValid = false;
+                        isSearchValid = false;
+                    } else {
                     for (var termIndex = 0; termIndex < query.terms.length; termIndex++) {
                         var term = query.terms[termIndex];
 
@@ -513,6 +843,7 @@
                         }
 
                     }
+                    }
 
                     if(query.isValid){
                         if(query.type==='float' || query.type==='timestamp'){
@@ -532,9 +863,7 @@
                 }
 
                 scope.mainSearchGuideVariables.isSearchValid = isSearchValid;
-                if(isSearchValid){
-                    scope.createQuery();
-                }
+
                 return isSearchValid;
             }
 
@@ -571,18 +900,23 @@
                         }
                     }
                 }
-                scope.q = constructedQuery;
+                return constructedQuery;
+
             }
             scope.runQuery = function () {
-                if(scope.validateQuery()){
-                    //TODO:Fix this, it's a hack
-                    setTimeout(function(){
-                        $("#searchtop #split-button").click();
-                    },0);
+                var isValid = scope.validateQuery();
+                if (isValid) {
+                    scope.q = scope.createQuery();
+                    scope.submitQuery({isFromQueryBuilder: true});
                 }
             }
 
-            loadDirective();
+            scope.processValueChange = function () {
+                var isValid = scope.validateQuery();
+                if (isValid) {
+                    scope.q = scope.createQuery();
+                }
+            }
         }
     };
 })()

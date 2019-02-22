@@ -4,7 +4,7 @@
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en" ng-app ="ginas">
 <head>
-    <base href="@play.api.Play.configuration.getString("application.context").getOrElse("/ginas/app")">
+    <base href="@play.api.Play.configuration.getString("application.context").getOrElse("/")">
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -59,6 +59,7 @@
     <script src='@routes.Assets.at("ginas/js/access-management.js")' type='text/javascript'></script>
     <script src='@routes.Assets.at("ginas/js/main-search.js")' type='text/javascript'></script>
     <script src='@routes.Assets.at("ginas/js/main-search-guide.js")' type='text/javascript'></script>
+    <script src='@routes.Assets.at("ginas/js/lucene-query-friendly-display.js")' type='text/javascript'></script>
     <script src='@routes.Assets.at("ginas/js/ginas-admin.js")' type='text/javascript'></script>
     <script src='@routes.Assets.at("ginas/js/ginas-downloads.js")' type='text/javascript'></script>
     <script src='@routes.Assets.at("ginas/js/ginas-scheduled.js")' type='text/javascript'></script>
@@ -83,9 +84,7 @@
     <script src='@routes.Assets.at("gsrs2/assets/js/gsrsapi.0.1.js")' type='text/javascript'></script>
     <script src='@routes.Assets.at("gsrs2/assets/js/json-patch.min.js")' type='text/javascript'></script> @*
 
-    @*<script src='@routes.Assets.at("ginas/js/help-info.js")' type='text/javascript'></script>*@
-
-	@if(showSketcher){
+    <script src='@routes.Assets.at("ginas/js/help-info.js")' type='text/javascript'></script>*@ @if(showSketcher){
     <script src='@routes.WebJarAssets.at(WebJarAssets.locate("dojo/dojo.js"))'></script>
     <script src='@routes.Assets.at("javascripts/JSDraw5.2.0/Scilligence.JSDraw2.Pro.js")'></script>
 	<script src='@routes.Assets.at("javascripts/JSDraw5.2.0/Scilligence.JSDraw2.Resources.js")'></script>
@@ -108,7 +107,7 @@
 
     <script type="text/javascript">
         var session = {
-	        @if(ix.ncats.controllers.auth.Authentication.getUser() != null) {         
+	        @if(ix.ncats.controllers.auth.Authentication.getUser() != null) {
 	            username:"@ix.ncats.controllers.auth.Authentication.getUser().username"
 	        } else {
 	            username:null
@@ -144,34 +143,25 @@
 <body scroll-spy="breadcrumb" data-target="#breadcrumb" ng-controller ="GinasController as GinasCtrl">
     <div class="loader-horizontal" ng-show="isGlobalLoading"></div>
 	<div class="container-fluid">
-    <div class="row bkwhite">
+        <div class="top-bar bkwhite">
 
-        <div class="col-md-5">
+            <div class="logo-container">
             <a href = "@ix.ginas.controllers.routes.GinasApp.index()">
                 <img class="" id="logo" alt = "GSRS logo" height="180px" width="300px" src="@routes.Assets.at("ginas/images/gsrs-logo.svg")" />
             </a>
-            <div id="versionsrs">
-                <code uib-tooltip="Built on @ix.BuildInfo.TIME v2.3.1 RC1" tooltip-placement="right"><small>version 2.3.1 RC1</small></code>
             </div>
-        </div>
-        <!-- Display Username and Roles if logged in -->
 
-        <div class="col-md-7">
-            <!-- @if(ix.ncats.controllers.auth.Authentication.getUser() != null) {
-            <h6>Welcome:&nbsp;<b>@ix.ncats.controllers.auth.Authentication.getUser().username</b>&nbsp;&nbsp;&nbsp;
-                Roles: @ix.ncats.controllers.auth.Authentication.getUser().getUserProfile().getRoles()&nbsp;&nbsp;&nbsp;&nbsp;</h6>
-            } -->
-
-        <div class="collapse navbar-collapse pull-right pull-down" id="searchtop">
-            <div main-search esc-key="closeLarge()" esc-global>
+            <div class="top-bar-content">
+                <div class="top-bar-content-line">
+                    <div id="searchtop" class="search-top" main-search esc-key="closeLarge()" esc-global>
                 <div class="search-close">
                     <a id="close-search">
                         <i class="fa fa-times fa-2x"></i>
                     </a>
                 </div>
-                <ul class="nav navbar-nav pull-right">
-                    <li ng-controller="TypeAheadController">
-                            <form class="form-inline main-search" role="search">
+                        <div ng-controller="TypeAheadController">
+                            <form class="form-inline main-search" ng-submit="submitq(searchVariables.query, '@ix.ginas.controllers.routes.GinasApp.substances(null)')"
+                                role="search">
                                 <div class="input-group" id="search-bar">
                                     <input type="text"
                                         class="form-control"
@@ -179,26 +169,26 @@
                                         aria-label="Search G-SRS"
                                         title="Search"
                                         placeholder="Search ..."
-                                        ng-model = "$parent.query"
-                                        typeahead-popup-template-url="app/assets/templates/elements/suggest-popup.html"
+                                        ng-model="searchVariables.query"
+                                        ng-disabled="mainSearchVariables.isShowGuide"
+                                        typeahead-popup-template-url="@play.api.Play.configuration.getString("application.context").getOrElse("")/assets/templates/elements/suggest-popup.html"
                                         uib-typeahead="r.d as r.d for r in getSuggestions($viewValue)"
                                         typeahead-on-select="onSelect($item, $model, $label)"
                                         typeahead-loading="loadingSuggest"
                                         typeahead-focus-first ="false"
+                                        ng-focus="checkIfKeyPressed()"
+                                        ng-blur="removeKeyPressCheck()"
                                         autocomplete="off">
                                     <span class="input-group-btn">
                                         <div class="btn-group" uib-dropdown>
-                                            <button id="split-button" class="btn btn-default"
-                                                    type="search"
-                                                    aria-label="Search"
-                                                    ng-click = "submitq($parent.query, '@ix.ginas.controllers.routes.GinasApp.substances(null)')">
+                                            <button id="split-button" class="btn btn-default" type="search" aria-label="Search" ng-click="submitq(searchVariables.query, '@ix.ginas.controllers.routes.GinasApp.substances(null)')" ng-disabled="mainSearchVariables.isShowGuide">
                                                 <span class="sr-only">Search G-SRS</span>
                                                 <span class="fa fa-search"></span></button>
-                                            <button type="button" class="btn btn-default" uib-dropdown-toggle>
+                                            <!-- <button type="button" class="btn btn-default" uib-dropdown-toggle>
                                                 <span class="caret"></span>
                                                 <span class="sr-only">Restrict Search</span>
-                                            </button>
-                                            <ul class="dropdown-menu" uib-dropdown-menu role="menu" aria-labelledby="split-button">
+                                                                                </button> -->
+                                            <!-- <ul class="dropdown-menu" uib-dropdown-menu role="menu" aria-labelledby="split-button">
                                                 <li role ="menuitem">
                                                     <a type="search" aria-label="Search" ng-click = "submitq(query, '@ix.ginas.controllers.routes.GinasApp.substances(null)')">Global Search</a>
                                                 </li>
@@ -208,16 +198,15 @@
                                                 <li role ="menuitem">
                                                     <a type="search" ng-class="{disabled: !query}" aria-label="Search" ng-click = "searchLimit = 'codes'; submitq(query, '@ix.ginas.controllers.routes.GinasApp.substances(null)')">Restrict to Codes <span class="fa fa-search"></span></a>
                                                 </li>
-                                            </ul>
+                                                                                </ul> -->
                                         </div>
                                     </span>
                                 </div>
                                 <div class="relpos fade-ng-cloak ng-hide-animate loader-horizontal" ng-cloak ng-show="loadingSuggest">
                                 </div>
                             </form>
-
-                    </li>
-                    <li>
+                        </div>
+                        <div class="search-toggle-container">
                         <span class="search-help-toggle">&nbsp;
                             <a ng-click="toggleHelp()">
                                 {{mainSearchVariables.isShowHelp ? 'Hide help' : 'Show help'}}
@@ -228,10 +217,7 @@
                                 {{mainSearchVariables.isShowGuide ? 'Hide guide' : 'Guide me'}}
                             </a>
                         </span>
-                    </li>
-                </ul>
-
-
+                        </div>
                 <div ng-show="mainSearchVariables.isShowHelp" class="search-help">
                     <div class="heading">
                         Basic Searches
@@ -254,15 +240,28 @@
                         </div>
                     </div>
                 </div>
-                <main-search-guide q="query" ng-show="mainSearchVariables.isShowGuide"></main-search-guide>
+                        <main-search-guide q="searchVariables.query" ng-show="mainSearchVariables.isShowGuide" on-query-submit="submitq(searchVariables.query, '@ix.ginas.controllers.routes.GinasApp.substances(null)', isFromQueryBuilder)" control="mainSearchGuideControl"></main-search-guide>
                 <div ng-click="closeLarge()" ng-show="mainSearchVariables.isFocus && !mainSearchVariables.isShowGuide" class="null-zone"></div>
-
-
+                    </div>
+                    <div class="search-actions">
+                       <a style = "padding-right:120px;" ng-click="openQueryBuilder()">Query Builder</a>
             </div>
-        </div> <!-- searchbox -->
-
+                </div>
+                <div class="top-bar-content-line">
+                    <div id="versionsrs">
+                        <code>
+                            <small uib-tooltip="Built on @ix.BuildInfo.TIME v2.3.3 RC2" tooltip-placement="right">version 2.3.3 RC2</small>
+                        </code>
         </div>
-
+                    <div class="auth-data">
+                        @if(ix.ncats.controllers.auth.Authentication.getUser() != null) {
+                        <h6>Welcome:&nbsp;
+                            <b>@ix.ncats.controllers.auth.Authentication.getUser().username</b>&nbsp;&nbsp;&nbsp; Roles: @ix.ncats.controllers.auth.Authentication.getUser().getUserProfile().getRoles()&nbsp;&nbsp;&nbsp;&nbsp;</h6>
+                        }
+                    </div>
+                </div>
+            </div>
+            <div class="clearfix"></div>
     </div>
     <!-- row -->
 
@@ -276,8 +275,8 @@
 
 <script>
 $(document).ready(function(){
-  
-  
+
+
 
            try{
                $("table.gsrs-datatable").DataTable( {
@@ -292,12 +291,12 @@ $(document).ready(function(){
                 console.log(e);
                }
                $('.unloaded').removeClass("unloaded");
-	 
+
                $('body').scrollspy({
                        offset:300,
                        target:".sidebar-inner"
                });
-	 
+
 
                $('#affix').affix({
                        offset: {
@@ -325,9 +324,9 @@ $(document).ready(function(){
                                var fixmeTop = $('.fixedpos').offset().top;       // get initial position of the element
 
                                $(window).scroll(function() {                  // assign scroll event listener
-       
+
                                        var currentScroll = $(window).scrollTop(); // get current position
-                               
+
                                        if (currentScroll >= fixmeTop) {           // apply position: fixed if you
                                                $('.fixedpos').css({                      // scroll to that element or below it
                                                        position: 'fixed',
@@ -342,14 +341,14 @@ $(document).ready(function(){
                                });
                        }
                        var resetBindings = function(){
-                       
+
                                $('[data-toggle="popover"]:not(.toggle-force)').off();
                                $('.toggle-on').off();
-                               
-                               
+
+
                                $('[data-toggle="popover"]:not(.toggle-on)').unbind( "click" );
                                $('.toggle-on').unbind( "click" );
-                               
+
                                $('[data-toggle="popover"]:not(.toggle-on)').click(function(){
                                        $(this).addClass("toggle-on");
                                        var _this=this;
@@ -359,17 +358,17 @@ $(document).ready(function(){
                                        },10);
                                        resetBindings();
                                });
-                               
+
                                $('.toggle-on').click(function(){
                                        $(this).removeClass("toggle-on");
                                        $(this).popover('hide');
                                        resetBindings();
-                               });     
-                               
+                               });
+
                                $('[data-toggle="popover"]:not(.toggle-force)')
                        .popover({ trigger: "manual" , html: true, animation:false})
                        .on("mouseenter", function () {
-                               
+
                                if(false){
                                var _this = this;
                                var t=Math.random() + "";
@@ -390,7 +389,7 @@ $(document).ready(function(){
                                if(!$(_this).hasClass("toggle-on")){
                                var t=Math.random() + "";
                                $(_this).attr("fade_id",t);
-                               
+
                                setTimeout(function () {
                                                if (!$(".popover:hover").length) {
                                                        if($(_this).attr("fade_id") == t){
@@ -403,12 +402,12 @@ $(document).ready(function(){
                        });
                        };
                        resetBindings();
-                       
+
                        document.body.addEventListener("click", function(e){
                                if(!$(e.target).parents(".popover").length){
                                        $('[data-toggle="popover"]').popover('hide');
                                }
-                       
+
                        });
                });
        </script>

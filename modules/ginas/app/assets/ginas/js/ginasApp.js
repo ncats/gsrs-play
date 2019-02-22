@@ -591,16 +591,22 @@
             readAsText: readAsText
         };
     }]);
-    
-    ginasApp.controller("TypeAheadController", function ($rootScope, $scope, $resource, $location, $compile, $uibModal, $http, $window, $anchorScroll, $timeout, polymerUtils,
-            localStorageService, Substance, UUID, substanceSearch, substanceIDRetriever, CVFields, molChanger, toggler, resolver,
-            spinnerService, typeaheadService) {
+    ginasApp.controller("TypeAheadController", function ($rootScope, $scope, $location, typeaheadService) {
     	$scope.types=[];
     	
     	$scope.showTypes=["Approval_ID","Display_Name","CAS","Name"];
     	
     	$scope.qmod="query";
-    	
+        if ($scope.searchVariables) {
+            $scope.searchVariables.query = '';
+        }
+
+        if ($location.search()['q']
+            && !$location.search()['type']
+            && $location.search()['cutoff'] !== null
+            && $location.path().indexOf('structure') === -1) {
+            $scope.searchVariables[$scope.qmod] = $location.search()['q'];
+        }
     	$scope.init = function(qmod){
     		$scope.qmod=qmod;
     	}
@@ -613,7 +619,10 @@
     	
     	
         $scope.onSelect = function($item, $model, $label ){
-        	$scope[$scope.qmod]=$item.v;
+            if ($scope.searchVariables) {
+                $scope.searchVariables.isSearchKeyed = false;
+                $scope.searchVariables[$scope.qmod] = '"' + $item.v + '"';
+            }
         };
         
         $scope.getSuggestions = function(query){
@@ -674,15 +683,29 @@
             var ret = typeaheadService.search(query);
            return ret;
         };
-
-        $scope.submitq= function(query, action) {
+        $scope.checkIfKeyPressed = function () {
+            currentKeyPressFunction = $document.onkeypress;
+            $document[0].onkeypress = function () {
+                $scope.searchVariables.isSearchKeyed = true;
+                if (currentKeyPressFunction) {
+                    currentKeyPressFunction();
+                }
+            }
+        }
+        $scope.removeKeyPressCheck = function () {
+            $document[0].onkeypress = currentKeyPressFunction;
+        }
+        $scope.submitq = function (query, action, isFromQueryBuilder) {
             // if (query.indexOf("\"") < 0 && query.indexOf("*") < 0 && query.indexOf(":") < 0 && query.indexOf(" AND ") < 0 && query.indexOf(" OR ") < 0) {
             //     $scope.q = "\"" + query + "\"";
             // } else {
             //     $scope.q = query;
             // }
+            if (!isFromQueryBuilder && $scope.searchVariables.isSearchKeyed && query.indexOf('"') < 0 && query.indexOf("*") < 0 && query.indexOf(":") < 0 && query.indexOf(" AND ") < 0 && query.indexOf(" OR ") < 0) {
+                $scope.q = "\"" + query + "\"";
+            } else {
                 $scope.q = query;
-
+            }
             switch ($scope.searchLimit){
                 case "global":
                 break;
@@ -701,19 +724,27 @@
             //a terminal "/", but we want to remove that slash, which
             //we do with the following regex.
             var base=baseurl.replace(/.$/g,"");
-            
+            if(base && base.length>0){
             //We only want the part of the URL _before_ the base path.
             //The reason is that angular is trying to be smart
             //and preserve all paths to be from the base path, so you can't give
             //it a full path, because it will append the base path.
             whereiam = whereiam.split(base)[0];
-            
+            }else{
+                whereiam = whereiam.replace(/(^[^?]*).*$/g, "$1");
+                if(whereiam[whereiam.length-1]=='/'){
+                    whereiam=whereiam.substring(0,whereiam.length-1);
+                }
+            }
+
             //The action already has the base path built in, so this 
             //is the "new" absolute base path + the action we want
             var nav= whereiam + action;  
                       
+            var rq= $scope.q;
+
             $location.search({});
-            $location.search("q",$scope.q);
+            $location.search("q", rq);
             $location.hash("");
             
             //This just gets angular's encoding of the query portion of the URL,
@@ -723,8 +754,7 @@
             		   .value()
             		   .join("?");
             		   
-           
-            window.location = nav + "?" + qpart;
+            window.location = nav + "?" + qpart.replace(";","%3B");
         };
 
         if (typeof $window.loadjson !== "undefined" &&
@@ -892,6 +922,14 @@
             {
                 "value": "$root_lastEdited",
                 "display": "Newest Change"
+            },
+            {
+                "value": "$root_structure_mwt",
+                "display": "Highest Molecular Weight"
+            },
+            {
+                "value": "^root_structure_mwt",
+                "display": "Lowest Molecular Weight"
             }
             	];
 
@@ -1325,6 +1363,7 @@
                     url = baseurl + "assets/templates/modals/update-success.html";
                     $scope.postRedirect = response.data.uuid;
                     $scope.open(url);
+                $scope.submitpaster(response.data);
                 }, function (response) {
             	var messages=[];
             	var msg = {
@@ -1381,6 +1420,7 @@
                     $scope.postRedirect = response.data.uuid;
                     $scope.close(url1);
                     $scope.open(url);
+                    $scope.submitpaster(response.data);
                 }, function (response) {
                     $scope.errorsArray = $scope.parseErrorArray(response.data.validationMessages);
                     url = baseurl + "assets/templates/modals/submission-failure.html";

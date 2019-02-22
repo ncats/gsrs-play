@@ -13,7 +13,7 @@
 
         function link(scope, element, attrs) {
 
-            scope.query = '';
+            scope.mainSearchGuideControl = {};
 
             scope.mainSearchVariables = {
                 isShowHelp: false,
@@ -22,6 +22,7 @@
             }
 
             var containerElement = element[0];
+            var containerElementCurrentClassList;
             var searchInputElement = containerElement.querySelector('#search');
             var searchInputElementLeft = searchInputElement.getBoundingClientRect().left;
             var searchInputElementRight = window.screen.width - searchInputElement.getBoundingClientRect().right;
@@ -48,18 +49,31 @@
             var closeSearchElement = containerElement.querySelector('#close-search');
 
             function loadDirective() {
-                searchInputElement.onfocus = focusSearch;
+                // searchInputElement.onfocus = focusSearch;
                 closeSearchElement.addEventListener('click', closeSearch);
             }
 
             scope.closeLarge=closeSearch;
 
-            function focusSearch () {
-                scope.$apply(function (){
-                    scope.mainSearchVariables.isFocus=true;
-                });
-                containerElement.classList.add('active-search');
+            scope.openQueryBuilder = function () {
+
+                scope.mainSearchGuideControl.loadDirective();
+
                 document.getElementsByTagName('body')[0].style.overflow = 'hidden';
+
+                    scope.mainSearchVariables.isFocus=true;
+
+                containerElementCurrentClassList = containerElement.className.split(' ');
+
+                for(var i = 0; i < containerElementCurrentClassList.length; i++) {
+                    var className = containerElementCurrentClassList[i];
+                    console.log(className);
+                    containerElement.classList.remove(className);
+                }
+
+                containerElement.classList.add('active-search');
+
+                searchInputElement.focus();
             }
 
             scope.toggleHelp = function () {
@@ -73,11 +87,15 @@
             }
 
             function closeSearch () {
+                scope.mainSearchVariables.isShowGuide = false;
                 if(scope.mainSearchVariables.isFocus){
                     containerElement.classList.add('deactivate-search');
                     containerElement.classList.remove('active-search');
                     $timeout(function(){
                         containerElement.classList.remove('deactivate-search');
+                        if (containerElementCurrentClassList && containerElementCurrentClassList.length) {
+                            containerElement.classList.add(containerElementCurrentClassList);
+                        }
                         document.getElementsByTagName('body')[0].style.overflow = null;
                     },350);
                     scope.mainSearchVariables.isFocus=false;
