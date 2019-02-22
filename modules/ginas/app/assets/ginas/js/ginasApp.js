@@ -1,13 +1,13 @@
 (function () {
     'use strict';
     var ginasApp = angular.module('ginas', ['ngAria', 'ngMessages', 'ngResource', 'ui.bootstrap', 'ui.bootstrap.showErrors',
-        'LocalStorageModule', 'ngTagsInput', 'jsonFormatter', 'ginasForms', 'ginasFormElements', 'ginasAdmin','ginasDownloads','ginasScheduled', 'diff-match-patch',
-        'angularSpinners', 'filterListener', 'validatorListener', 'ginasFilter'
+            'LocalStorageModule', 'ngTagsInput', 'jsonFormatter', 'ginasForms', 'ginasFormElements', 'ginasAdmin', 'ginasDownloads', 'ginasScheduled', 'diff-match-patch',
+            'angularSpinners', 'filterListener', 'validatorListener', 'ginasFilter'
 
-    ]).run(function ($rootScope, $anchorScroll) {
-            $anchorScroll.yOffset = 150;   // always scroll by 100 extra pixels
-        $rootScope.isGlobalLoading = false;
-     })
+        ]).run(function ($rootScope, $anchorScroll) {
+            $anchorScroll.yOffset = 150; // always scroll by 100 extra pixels
+            $rootScope.isGlobalLoading = false;
+        })
         .config(function (localStorageServiceProvider, $locationProvider) {
             localStorageServiceProvider
                 .setPrefix('ginas');
@@ -17,12 +17,7 @@
                 requireBase: true
             });
         });
-
-
-
-
     ginasApp.factory('Substance', function ($q, CVFields, UUID, polymerUtils, siteList) {
-
         function isCV(ob) {
             if (typeof ob !== "object") return false;
             if (ob === null) return false;
@@ -72,7 +67,7 @@
                                         if (_.isUndefined(newcv)) {
                                             newcv = {};
                                             _.set(newcv, 'display', value + ' (not in CV)');
-                                          //  _.set(newcv, 'value', value + ' (not in CV)');
+                                            //  _.set(newcv, 'value', value + ' (not in CV)');
                                         }
                                         sub[field][key] = newcv;
 
@@ -95,8 +90,7 @@
                                 if (_.isUndefined(newcv)) {
                                     newcv = {};
                                     _.set(newcv, 'display', sub[field] + ' (not in CV)');
-                                  //  _.set(newcv, 'value', sub[field] + ' (not in CV)');
-
+                                    //  _.set(newcv, 'value', sub[field] + ' (not in CV)');
                                 }
                                 sub[field] = newcv;
                             }
@@ -106,56 +100,57 @@
             });
             return sub;
         }
-
         var substance = {};
-
         substance.$$setClass = function (subClass) {
             var substanceClass = subClass;
             substance.substanceClass = substanceClass;
             switch (substanceClass) {
                 case "chemical":
-                	if(!substance.structure){
-                		substance.structure = {};
-                		_.set(substance.structure, 'opticalActivity', {value: "UNSPECIFIED", display:"UNSPECIFIED"});
-                		substance.moieties = [];
-                	}
+                    if (!substance.structure) {
+                        substance.structure = {};
+                        _.set(substance.structure, 'opticalActivity', {
+                            value: "UNSPECIFIED",
+                            display: "UNSPECIFIED"
+                        });
+                        substance.moieties = [];
+                    }
                     break;
                 case "protein":
-                	if(!substance.protein){
-	                    substance.protein = {};
-	                    substance.protein.subunits = [];
-	                    substance.protein.glycosylation = {
-	                        'CGlycosylationSites': [],
-	                        'NGlycosylationSites': [],
-	                        'OGlycosylationSites': []
-	                    };
-                	}
+                    if (!substance.protein) {
+                        substance.protein = {};
+                        substance.protein.subunits = [];
+                        substance.protein.glycosylation = {
+                            'CGlycosylationSites': [],
+                            'NGlycosylationSites': [],
+                            'OGlycosylationSites': []
+                        };
+                    }
                     break;
                 case "structurallyDiverse":
-                	if(!substance.structurallyDiverse){
-                		substance.structurallyDiverse = {};
-                	}
+                    if (!substance.structurallyDiverse) {
+                        substance.structurallyDiverse = {};
+                    }
                     break;
                 case "nucleicAcid":
-                	if(!substance.nucleicAcid){
-                		substance.nucleicAcid = {};
-                		substance.nucleicAcid.subunits = [];
-                	}
+                    if (!substance.nucleicAcid) {
+                        substance.nucleicAcid = {};
+                        substance.nucleicAcid.subunits = [];
+                    }
                     break;
                 case "mixture":
-                	if(!substance.mixture){
-                		substance.mixture = {};
-                	}
+                    if (!substance.mixture) {
+                        substance.mixture = {};
+                    }
                     break;
                 case "polymer":
-                	if(!substance.polymer){
-                		substance.polymer = {};
-                	}
+                    if (!substance.polymer) {
+                        substance.polymer = {};
+                    }
                     break;
                 case "specifiedSubstanceG1":
-                	if(!substance.specifiedSubstance){
-                		substance.specifiedSubstance = {};
-                	}
+                    if (!substance.specifiedSubstance) {
+                        substance.specifiedSubstance = {};
+                    }
                     break;
                 default:
                     break;
@@ -165,8 +160,11 @@
                 substance.references = [];
             }
 
-            if(!substance.access){
-            	substance.access = [{value: 'protected', display: 'PROTECTED'}];
+            if (!substance.access) {
+                substance.access = [{
+                    value: 'protected',
+                    display: 'PROTECTED'
+                }];
             }
 
             return substance;
@@ -185,9 +183,9 @@
             _.forEach(sub, function (value, key) {
                 _.set(substance, key, value);
             });
-            if(sub.protein){
-                if(sub.protein.proteinSubType){
-                    sub.protein.proteinSubTypes=sub.protein.proteinSubType.split("|");
+            if (sub.protein) {
+                if (sub.protein.proteinSubType) {
+                    sub.protein.proteinSubTypes = sub.protein.proteinSubType.split("|");
                 }
             }
             substance.$$setClass(substance.$$getClass());
@@ -205,9 +203,9 @@
             if (sub.substanceClass === 'protein') {
                 if (_.has(sub.protein, 'disulfideLinks')) {
                     _.forEach(sub.protein.disulfideLinks, function (link, key) {
-                         _.forEach(link.sites, function (site, sitekey) {
-                            link.sites[sitekey] = _.pick(site, ['subunitIndex','residueIndex']);
-                            });
+                        _.forEach(link.sites, function (site, sitekey) {
+                            link.sites[sitekey] = _.pick(site, ['subunitIndex', 'residueIndex']);
+                        });
                     });
                 }
                 if (_.has(sub.protein, 'otherLinks')) {
@@ -222,7 +220,7 @@
                         // links are between odd numbers of sites. However, some
                         // form of warning should probably be present which makes the
                         // meaning of the sets of otherLinks more clear.
-                         
+
                         //if (sites.length % 2 != 0) {
                         //    sites = _.dropRight(sites);
                         //}
@@ -234,23 +232,23 @@
             sub = flattenCV(sub);
 
             var st;
-            if(sub.protein){
-                st=sub.protein.proteinSubTypes;
+            if (sub.protein) {
+                st = sub.protein.proteinSubTypes;
             }
-            if(st){
-                sub.protein.proteinSubType=st.join("|");
+            if (st) {
+                sub.protein.proteinSubType = st.join("|");
             }
             if (_.has(sub, 'moieties')) {
                 _.forEach(sub.moieties, function (m) {
-                    if(!_.has(sub, '$$update') || m["$$new"]){
-                                                m.id = UUID.newID();
+                    if (!_.has(sub, '$$update') || m["$$new"]) {
+                        m.id = UUID.newID();
                     }
                 });
             }
             if (_.has(sub, 'structure')) {
                 //apparently needs to be reset as well
                 if (!_.has(sub, '$$update')) {
-                                        var nid=UUID.newID();
+                    var nid = UUID.newID();
                     sub.structure.id = nid;
                 }
                 //sub.structure.id = UUID.newID();
@@ -262,17 +260,17 @@
 
             if (_.has(sub, 'polymer')) {
                 polymerUtils.setSRUFromConnectivityDisplay(sub.polymer.structuralUnits);
-                _.forEach(sub.polymer.structuralUnits, function(sru){
-                	if(_.has(sru,"attachmentMap")){
-                		delete sru.attachmentMap["$errors"];
-                	}
+                _.forEach(sub.polymer.structuralUnits, function (sru) {
+                    if (_.has(sru, "attachmentMap")) {
+                        delete sru.attachmentMap["$errors"];
+                    }
                 });
 
             }
 
 
             if (_.has(sub, 'modifications')) {
-               if (_.has(sub.modifications, 'structuralModifications')) {
+                if (_.has(sub.modifications, 'structuralModifications')) {
                     _.forEach(sub.modifications.structuralModifications, function (mod) {
                         if (mod.$$residueModified) {
                             mod.residueModified = _.join(mod.$$residueModified, ';');
@@ -281,7 +279,7 @@
                 }
             }
 
-                if (_.has(sub, 'nucleicAcid')) {
+            if (_.has(sub, 'nucleicAcid')) {
                 if (_.has(sub.nucleicAcid, 'sugars')) {
                     _.forEach(sub.nucleicAcid.sugars, function (sugar) {
                         if (sugar.sitesShorthand) {
@@ -332,14 +330,14 @@
                     }
                 }
             }
-            if(disp === "") return undefined;
+            if (disp === "") return undefined;
             return disp;
         };
         utils.sruDisplayToConnectivity = function (display) {
-            if(!display){
+            if (!display) {
                 return {};
             }
-            var errors =[];
+            var errors = [];
             var connections = display.split(";");
             var regex = /^\s*[A-Za-z][A-Za-z]*[0-9]*_(R[0-9][0-9]*)[-][A-Za-z][A-Za-z]*[0-9]*_(R[0-9][0-9]*)\s*$/g;
 
@@ -348,13 +346,16 @@
 
             for (var i = 0; i < connections.length; i++) {
                 var con = connections[i].trim();
-                if (con === "")continue;
+                if (con === "") continue;
 
                 regex.lastIndex = 0;
                 var res = regex.exec(con);
                 if (res == null) {
-                   var text =  "Connection '" + con + "' is not properly formatted";
-                    errors.push({text: text, type: 'warning'});
+                    var text = "Connection '" + con + "' is not properly formatted";
+                    errors.push({
+                        text: text,
+                        type: 'warning'
+                    });
                 } else {
                     if (!map[res[1]]) {
                         map[res[1]] = [];
@@ -363,7 +364,7 @@
                 }
             }
 
-            if(errors.length > 0) {
+            if (errors.length > 0) {
                 map.$errors = errors;
             }
             return map;
@@ -390,8 +391,10 @@
 
         var nameFinder = {
             search: function (query) {
-                var promise = $http.get(url,{
-                	params: {"q": "root_names_name:" + query + "*"},
+                var promise = $http.get(url, {
+                    params: {
+                        "q": "root_names_name:" + query + "*"
+                    },
                 }, {
                     headers: {
                         'Content-Type': 'text/plain'
@@ -409,7 +412,9 @@
         var url = baseurl + "api/v1/substances(";
         var editSubstance = {
             getSubstance: function (editId) {
-                var promise = $http.get(url + editId + ")?view=full", {cache: true}, {
+                var promise = $http.get(url + editId + ")?view=full", {
+                    cache: true
+                }, {
                     headers: {
                         'Content-Type': 'text/plain'
                     }
@@ -427,52 +432,64 @@
         var suggest = {
             search: function (query, typePriority, ukeys) {
                 var promise = $http.get(url, {
-                	params:{"q" : query}
-                },{
+                    params: {
+                        "q": query
+                    }
+                }, {
                     headers: {
                         'Content-Type': 'text/plain'
                     }
                     ///TODO sort by weight///
                     //TODO search multiple field types//
                 }).then(function (response) {
-                	if(!ukeys)ukeys=[];
-                	if(!typePriority)typePriority=function(t){return 0;};
-                	ukeys.length=0;
-                	
-                	var pairs=_.chain(response.data)
-                	           .map(function(v,k){
-                	        	   	return {"key":k, "values" : v, "i":typePriority(k)};
-                	           	})
-                	           	.sortBy("i")
-                	           	.filter(function(kv){
-                	           		return kv.i>=0;
-                	           	})
-                	           	.flatMap(function(kvp){
-                	           		ukeys.push(kvp.key);
-                	           		return _.map(kvp.values, function(v){
-                	           			//need to get out the most important part
-                	           			//always get the part in first <b> and 
-                	           			//extend
+                    if (!ukeys) ukeys = [];
+                    if (!typePriority) typePriority = function (t) {
+                        return 0;
+                    };
+                    ukeys.length = 0;
+
+                    var pairs = _.chain(response.data)
+                        .map(function (v, k) {
+                            return {
+                                "key": k,
+                                "values": v,
+                                "i": typePriority(k)
+                            };
+                        })
+                        .sortBy("i")
+                        .filter(function (kv) {
+                            return kv.i >= 0;
+                        })
+                        .flatMap(function (kvp) {
+                            ukeys.push(kvp.key);
+                            return _.map(kvp.values, function (v) {
+                                //need to get out the most important part
+                                //always get the part in first <b> and 
+                                //extend
                                 var lim = 30;
-                	           			var start=0;
-                	           			var bef="";
-                	           			
-                	           			var sindex=v.highlight.indexOf("<b>");
-                	           			var eindex=v.highlight.indexOf("</b>")-3;
-                	           			if(eindex>lim){
+                                var start = 0;
+                                var bef = "";
+
+                                var sindex = v.highlight.indexOf("<b>");
+                                var eindex = v.highlight.indexOf("</b>") - 3;
+                                if (eindex > lim) {
                                     start = eindex - lim;
-                	           			}
-                	           			if(start>0){
-                	           				bef="...";
-                	           			}else{
-                	           				start=0;
-                	           			}
-                	           			
-                	           			return {"k":kvp.key,"v":v.key,"d":bef + v.key.substring(start)};
-                	           		});
-                	           	})
-                	           	.value();
-	           		
+                                }
+                                if (start > 0) {
+                                    bef = "...";
+                                } else {
+                                    start = 0;
+                                }
+
+                                return {
+                                    "k": kvp.key,
+                                    "v": v.key,
+                                    "d": bef + v.key.substring(start)
+                                };
+                            });
+                        })
+                        .value();
+
                     return pairs;
                 });
                 return promise;
@@ -486,10 +503,14 @@
         var url = baseurl + "api/v1/substances/search";
 
         this.load = function (field) {
-            $http.get(url,{
-            	params:{"q":field.toUpperCase()}
-            	
-            }, {cache: true}, {
+            $http.get(url, {
+                params: {
+                    "q": field.toUpperCase()
+                }
+
+            }, {
+                cache: true
+            }, {
                 headers: {
                     'Content-Type': 'text/plain'
                 }
@@ -592,55 +613,55 @@
         };
     }]);
     ginasApp.controller("TypeAheadController", function ($rootScope, $scope, $location, typeaheadService) {
-    	$scope.types=[];
-    	
-    	$scope.showTypes=["Approval_ID","Display_Name","CAS","Name"];
-    	
-    	$scope.qmod="query";
+        $scope.types = [];
+
+        $scope.showTypes = ["Approval_ID", "Display_Name", "CAS", "Name"];
+
+        $scope.qmod = "query";
         if ($scope.searchVariables) {
             $scope.searchVariables.query = '';
         }
 
-        if ($location.search()['q']
-            && !$location.search()['type']
-            && $location.search()['cutoff'] !== null
-            && $location.path().indexOf('structure') === -1) {
+        if ($location.search()['q'] &&
+            !$location.search()['type'] &&
+            $location.search()['cutoff'] !== null &&
+            $location.path().indexOf('structure') === -1) {
             $scope.searchVariables[$scope.qmod] = $location.search()['q'];
         }
-    	$scope.init = function(qmod){
-    		$scope.qmod=qmod;
-    	}
-    	
-    	$scope.nameFor = function(suggest){
-    		if(suggest==="Approval_ID")return "UNII";
-    		if(suggest==="Display_Name")return "Preferred Term";
-    		return suggest;
-    	};
-    	
-    	
-        $scope.onSelect = function($item, $model, $label ){
+        $scope.init = function (qmod) {
+            $scope.qmod = qmod;
+        }
+
+        $scope.nameFor = function (suggest) {
+            if (suggest === "Approval_ID") return "UNII";
+            if (suggest === "Display_Name") return "Preferred Term";
+            return suggest;
+        };
+
+
+        $scope.onSelect = function ($item, $model, $label) {
             if ($scope.searchVariables) {
                 $scope.searchVariables.isSearchKeyed = false;
                 $scope.searchVariables[$scope.qmod] = '"' + $item.v + '"';
             }
         };
-        
-        $scope.getSuggestions = function(query){
-           var ret = typeaheadService.search(query,function(t){
-        	   if(t==="Approval_ID" && query.length<3){
-        		   return -1;
-        	   }
-        	   return $scope.showTypes.indexOf(t);
-           },$scope.types);
-            
-           return ret;
+
+        $scope.getSuggestions = function (query) {
+            var ret = typeaheadService.search(query, function (t) {
+                if (t === "Approval_ID" && query.length < 3) {
+                    return -1;
+                }
+                return $scope.showTypes.indexOf(t);
+            }, $scope.types);
+
+            return ret;
         };
-        
+
     });
     ginasApp.controller("GinasController", function ($rootScope, $scope, $document, $location, $compile, $uibModal, $http, $window, $anchorScroll, $timeout, polymerUtils,
-                                                     localStorageService, Substance, UUID, substanceSearch, substanceIDRetriever, CVFields, molChanger, toggler, resolver,
-                                                     substanceFactory,
-                                                     spinnerService, typeaheadService, subunitParser) {
+        localStorageService, Substance, UUID, substanceSearch, substanceIDRetriever, CVFields, molChanger, toggler, resolver,
+        substanceFactory,
+        spinnerService, typeaheadService, subunitParser) {
         $scope.substance = $window.loadjson;
         $scope.updateNav = false;
         $scope.validating = false;
@@ -654,21 +675,21 @@
             isSearchKeyed: false
         };
         var currentKeyPressFunction;
-        $scope.cleanSequence = function (seqType){
+        $scope.cleanSequence = function (seqType) {
             $scope.sequence = subunitParser.cleanSequence($scope.sequence, _.lowerCase(seqType));
         }
 
-        $scope.preload = function(seqType){
-            if("protein"===seqType.toLowerCase()){
+        $scope.preload = function (seqType) {
+            if ("protein" === seqType.toLowerCase()) {
                 $scope.seqType = "Protein";
                 subunitParser.getResidues("protein");
-            }else if("nucleicacid"===seqType.toLowerCase()){
+            } else if ("nucleicacid" === seqType.toLowerCase()) {
                 $scope.seqType = "NucleicAcid";
                 subunitParser.getResidues("nucleicAcid");
-            }else{
-            $scope.seqType = _.capitalize(seqType);
+            } else {
+                $scope.seqType = _.capitalize(seqType);
                 subunitParser.getResidues("protein");
-        }
+            }
         }
         $window.SDFFields = {};
 
@@ -679,9 +700,9 @@
 
         };
 
-        $scope.getSuggestions = function(query){
+        $scope.getSuggestions = function (query) {
             var ret = typeaheadService.search(query);
-           return ret;
+            return ret;
         };
         $scope.checkIfKeyPressed = function () {
             currentKeyPressFunction = $document.onkeypress;
@@ -706,75 +727,77 @@
             } else {
                 $scope.q = query;
             }
-            switch ($scope.searchLimit){
+            switch ($scope.searchLimit) {
                 case "global":
-                break;
+                    break;
                 case "names":
-                    $scope.q ='root_names_name:' + $scope.q;
-                break;
+                    $scope.q = 'root_names_name:' + $scope.q;
+                    break;
                 case "codes":
-                    $scope.q ='root_codes_code:' + $scope.q;
-                break;
+                    $scope.q = 'root_codes_code:' + $scope.q;
+                    break;
             }
-            
+
             //First, we get the absolute url where we currently are            
-            var whereiam=window.location.href;
-            
+            var whereiam = window.location.href;
+
             //Then we get the base path of the app, which will have
             //a terminal "/", but we want to remove that slash, which
             //we do with the following regex.
-            var base=baseurl.replace(/.$/g,"");
-            if(base && base.length>0){
-            //We only want the part of the URL _before_ the base path.
-            //The reason is that angular is trying to be smart
-            //and preserve all paths to be from the base path, so you can't give
-            //it a full path, because it will append the base path.
-            whereiam = whereiam.split(base)[0];
-            }else{
+            var base = baseurl.replace(/.$/g, "");
+            if (base && base.length > 0) {
+                //We only want the part of the URL _before_ the base path.
+                //The reason is that angular is trying to be smart
+                //and preserve all paths to be from the base path, so you can't give
+                //it a full path, because it will append the base path.
+                whereiam = whereiam.split(base)[0];
+            } else {
                 whereiam = whereiam.replace(/(^[^?]*).*$/g, "$1");
-                if(whereiam[whereiam.length-1]=='/'){
-                    whereiam=whereiam.substring(0,whereiam.length-1);
+                if (whereiam[whereiam.length - 1] == '/') {
+                    whereiam = whereiam.substring(0, whereiam.length - 1);
                 }
             }
 
             //The action already has the base path built in, so this 
             //is the "new" absolute base path + the action we want
-            var nav= whereiam + action;  
-                      
-            var rq= $scope.q;
+            var nav = whereiam + action;
+
+            var rq = $scope.q;
 
             $location.search({});
             $location.search("q", rq);
             $location.hash("");
-            
+
             //This just gets angular's encoding of the query portion of the URL,
             //which will be explicitly added.
-            var qpart=_.chain(($location.absUrl().split("?")))
-            		   .filter(function(a,b){return b;}) //get rid of first element
-            		   .value()
-            		   .join("?");
-            		   
-            window.location = nav + "?" + qpart.replace(";","%3B");
+            var qpart = _.chain(($location.absUrl().split("?")))
+                .filter(function (a, b) {
+                    return b;
+                }) //get rid of first element
+                .value()
+                .join("?");
+
+            window.location = nav + "?" + qpart.replace(";", "%3B");
         };
 
         if (typeof $window.loadjson !== "undefined" &&
             JSON.stringify($window.loadjson) !== "{}") {
-            
-            $scope.substance=Substance;
-            
-            Substance.$$setSubstance($window.loadjson).then(function(data){
-            	if(data.names){
-            		data.names.sort(function(a,b){
-	            		if(a.displayName && !b.displayName)return -1;
-	            		if(!a.displayName && b.displayName)return 1;
-	            		//if(a.preferred && !b.preferred)return 1;
-	            		//if(!a.preferred && b.preferred)return -1;
-	            		return a.name.localeCompare(b.name);	            		
-	            	});
-            	}
-            	
+
+            $scope.substance = Substance;
+
+            Substance.$$setSubstance($window.loadjson).then(function (data) {
+                if (data.names) {
+                    data.names.sort(function (a, b) {
+                        if (a.displayName && !b.displayName) return -1;
+                        if (!a.displayName && b.displayName) return 1;
+                        //if(a.preferred && !b.preferred)return 1;
+                        //if(!a.preferred && b.preferred)return -1;
+                        return a.name.localeCompare(b.name);
+                    });
+                }
+
                 _.set(data, '$$update', true);
-                data=data.$$setClass(data.$$getClass());
+                data = data.$$setClass(data.$$getClass());
                 $scope.substance = data;
             });
         } else {
@@ -792,28 +815,28 @@
 
         var windowElement = angular.element($window);
         var u = $location.path().split('/');
-        var inter = _.intersection(u, ["edit","wizard"]);
-        if(inter.length > 0){
+        var inter = _.intersection(u, ["edit", "wizard"]);
+        if (inter.length > 0) {
             $scope.updateNav = true;
         }
-            windowElement.on('beforeunload', function (event) {
-                if($scope.updateNav == true) {
-                    return "Navigating away from this page will lose all unsaved changed.";
-                }
-            });
+        windowElement.on('beforeunload', function (event) {
+            if ($scope.updateNav == true) {
+                return "Navigating away from this page will lose all unsaved changed.";
+            }
+        });
 
         $scope.type = $location.search().type;
-        
-        if(!$scope.type){
-        	$scope.type="Substructure";
+
+        if (!$scope.type) {
+            $scope.type = "Substructure";
         }
-        
-        $scope.cutoff = $location.search().cutoff-0;
-        if(!Number.isFinite($scope.cutoff)){
-        	$scope.cutoff=0.8;
+
+        $scope.cutoff = $location.search().cutoff - 0;
+        if (!Number.isFinite($scope.cutoff)) {
+            $scope.cutoff = 0.8;
         }
-        
-        
+
+
         $scope.stage = true;
         $scope.gridView = localStorageService.get('gridView') || false;
         $scope.diff = false;
@@ -824,7 +847,7 @@
         $scope.viewToggle = function () {
             $scope.show = !$scope.show;
             if ($scope.show) {
-            $scope.submitSubstanceView = angular.fromJson(angular.toJson($scope.substance.$$flattenSubstance()));
+                $scope.submitSubstanceView = angular.fromJson(angular.toJson($scope.substance.$$flattenSubstance()));
                 if ($location.hash() !== 'json-area') {
                     $location.hash('json-area');
                 } else {
@@ -833,23 +856,23 @@
             }
         };
 
-        $scope.resolveName = function(name, div){
-        	
-        	$scope.structureSearchResolve=[];
+        $scope.resolveName = function (name, div) {
+
+            $scope.structureSearchResolve = [];
             resolver.resolve(name, 'structureSearchSpinner').then(function (response) {
 
                 if (response.data.length > 0) {
-                	$scope.structureSearchResolve=_.union($scope.structureSearchResolve, response.data);
+                    $scope.structureSearchResolve = _.union($scope.structureSearchResolve, response.data);
                 }
                 $scope.name = null;
                 var template = angular.element('<substance-viewer data=structureSearchResolve parent = substance></substance-viewer>');
                 toggler.refresh($scope, div, template);
                 spinnerService.hideAll();
-                $timeout(function() {
+                $timeout(function () {
                     $anchorScroll(div);
                 }, 0, false);
             });
-            
+
             substanceFactory.getSubstances(name).then(function (response) {
                 var duplicate = [];
                 if (response.data.count > 0) {
@@ -860,8 +883,8 @@
                 }
                 return duplicate;
             });
-            
-            
+
+
         };
 
         $scope.toggleGrid = function () {
@@ -880,28 +903,27 @@
         };
 
         $scope.redirectVersion = function (v) {
-                if(!v){
-                        v=$scope.versionNumber;
-                }
-       
+            if (!v) {
+                v = $scope.versionNumber;
+            }
+
             var base = $window.location.pathname.split('/v/')[0];
             var newLocation = "/v/" + v;
             $window.location.pathname = base + newLocation;
         };
 
 
-		//We can put this here, but it makes it difficult to expand in the future.
-		//The server knows how things can be sorted, we need to either ajax
-		//(which can cause latency problems), or we can have it pre-stored
-		//server-side, and injected.
-        $scope.sortValues = [
-         	{
-               "value":  "default",
-               "display": "Relevance"
+        //We can put this here, but it makes it difficult to expand in the future.
+        //The server knows how things can be sorted, we need to either ajax
+        //(which can cause latency problems), or we can have it pre-stored
+        //server-side, and injected.
+        $scope.sortValues = [{
+                "value": "default",
+                "display": "Relevance"
             },
             {
-               "value": "^Display Name",
-               "display": "Display Name, A-Z"
+                "value": "^Display Name",
+                "display": "Display Name, A-Z"
             },
             {
                 "value": "$Display Name",
@@ -931,99 +953,101 @@
                 "value": "^root_structure_mwt",
                 "display": "Lowest Molecular Weight"
             }
-            	];
+        ];
 
         var suppliedOrder = _.find($scope.sortValues, {
-        	value : $location.search()["order"]
+            value: $location.search()["order"]
         });
-        $scope.selectedSort = suppliedOrder || {value: "Sort By"};
+        $scope.selectedSort = suppliedOrder || {
+            value: "Sort By"
+        };
 
         $scope.showDeprecated = $location.search()["showDeprecated"] || "false";
 
-        $scope.showDeprecatedChange = function(model) {
-    		$location.search("showDeprecated",$scope.showDeprecated);
+        $scope.showDeprecatedChange = function (model) {
+            $location.search("showDeprecated", $scope.showDeprecated);
             window.location = $location.absUrl();
         };
 
-        $scope.sortSubstances = function(model) {
+        $scope.sortSubstances = function (model) {
 
-            $location.search("order",$scope.selectedSort.value);
+            $location.search("order", $scope.selectedSort.value);
             window.location = $location.absUrl();
         };
 
-        $scope.showPriv = function(){
+        $scope.showPriv = function () {
             $scope.showprivates = !$scope.showprivates;
         };
 
-       // $scope.showprivates = false;
-	//Prepare an export file for download
+        // $scope.showprivates = false;
+        //Prepare an export file for download
         $scope.downloadFile = function (url) {
-            if($scope.showprivates){
-                url = url + '&publicOnly=' + (!$scope.showprivates ? 1: 0) ;
+            if ($scope.showprivates) {
+                url = url + '&publicOnly=' + (!$scope.showprivates ? 1 : 0);
             }
-		$http.get(url)
-		  .then(function(response) {
-      			var dl = response.data;
-			if(dl){
-				if(dl.isReady){
-					
-					var d = new Date();
-					var datestr = d.toISOString().split("T")[0] + "_" + d.toTimeString().split(" ")[0].split(":").join("_");
-					var proposedfname="export-" + datestr + "." +  dl.url.split("format=")[1].split("&")[0];
-					
-					
-					$scope.exportData={};
-					
-					if(dl.isCached){
-						$scope.exportData.cached=dl.cached;
-						$scope.baseurl=baseurl;
-					}
-					
-					$scope.fileNamePrompt(proposedfname, function(fname){
-						
-						
-						var nurl=dl.url + "&genUrl=" + encodeURIComponent(window.location.href) + "&filename="+ encodeURIComponent(fname);
+            $http.get(url)
+                .then(function (response) {
+                    var dl = response.data;
+                    if (dl) {
+                        if (dl.isReady) {
 
-						//alert(nurl);
-						$http.get(nurl).then(function(rep){
-							var meta=rep.data;
-							window.location.href=baseurl + "myDownloads/" + meta.id;
-						}, function(rep){
-							$scope.exportUnavailableWarning();
-						});
-					})
-					
-				}else if(dl.isPresent){ //busy
-					$scope.exportUnavailableWarning();
-				}else{ //unknown result set
-					$scope.exportUnavailableWarning();
-				}
-			}else{
-				$scope.exportUnavailableWarning();
-			}
-		});
+                            var d = new Date();
+                            var datestr = d.toISOString().split("T")[0] + "_" + d.toTimeString().split(" ")[0].split(":").join("_");
+                            var proposedfname = "export-" + datestr + "." + dl.url.split("format=")[1].split("&")[0];
 
 
-    	};
+                            $scope.exportData = {};
 
-	$scope.exportUnavailableWarning = function(){
-	        $scope.modalInstance = $uibModal.open({
-                        templateUrl: baseurl + "assets/templates/modals/export-warning.html",
-                        scope: $scope
+                            if (dl.isCached) {
+                                $scope.exportData.cached = dl.cached;
+                                $scope.baseurl = baseurl;
+                            }
+
+                            $scope.fileNamePrompt(proposedfname, function (fname) {
+
+
+                                var nurl = dl.url + "&genUrl=" + encodeURIComponent(window.location.href) + "&filename=" + encodeURIComponent(fname);
+
+                                //alert(nurl);
+                                $http.get(nurl).then(function (rep) {
+                                    var meta = rep.data;
+                                    window.location.href = baseurl + "myDownloads/" + meta.id;
+                                }, function (rep) {
+                                    $scope.exportUnavailableWarning();
+                                });
+                            })
+
+                        } else if (dl.isPresent) { //busy
+                            $scope.exportUnavailableWarning();
+                        } else { //unknown result set
+                            $scope.exportUnavailableWarning();
+                        }
+                    } else {
+                        $scope.exportUnavailableWarning();
+                    }
                 });
-	};
-	
-	$scope.fileNamePrompt = function(fname, cb){
-		$scope.exportFname=fname;
-        $scope.modalInstance = $uibModal.open({
-                    templateUrl: baseurl + "assets/templates/modals/filename-prompt.html",
-                    scope: $scope
-            });
-        $scope.mclose=function(fname2){
-        	$scope.close();
-        	cb(fname2);
+
+
         };
-	};
+
+        $scope.exportUnavailableWarning = function () {
+            $scope.modalInstance = $uibModal.open({
+                templateUrl: baseurl + "assets/templates/modals/export-warning.html",
+                scope: $scope
+            });
+        };
+
+        $scope.fileNamePrompt = function (fname, cb) {
+            $scope.exportFname = fname;
+            $scope.modalInstance = $uibModal.open({
+                templateUrl: baseurl + "assets/templates/modals/filename-prompt.html",
+                scope: $scope
+            });
+            $scope.mclose = function (fname2) {
+                $scope.close();
+                cb(fname2);
+            };
+        };
 
         $scope.compare = function () {
             //$scope.left = angular.toJson(Substance.$$flattenSubstance(angular.copy($scope.substance)));
@@ -1035,9 +1059,9 @@
         $scope.canApprove = function () {
 
             var lastEdit = $scope.substance.lastEditedBy;
-            if (!lastEdit){
+            if (!lastEdit) {
                 return false;
-                }
+            }
             if ($scope.substance.status === "approved") {
                 return false;
             }
@@ -1067,7 +1091,7 @@
             localStorageService.remove('structureid');
         };
 
-        $scope.$on('validate', function(event, obj, form, path){
+        $scope.$on('validate', function (event, obj, form, path) {
             $scope.validate(obj, form, path);
         });
 
@@ -1129,9 +1153,11 @@
                 size: 'image'
             });
         };
-        $scope.setSysNames = function(uuid) {
+        $scope.setSysNames = function (uuid) {
             var approveURL = baseurl + 'api/v1/substances(' + uuid + ')/names';
-            $http.get(approveURL, {cache: false}, {
+            $http.get(approveURL, {
+                cache: false
+            }, {
                 headers: {
                     'Content-Type': 'application/json'
                 }
@@ -1145,7 +1171,7 @@
                 $scope.sysNames = namelist;
             });
         };
-        $scope.getSmilesInchi = function(uuid){
+        $scope.getSmilesInchi = function (uuid) {
             var url = baseurl + 'export/' + uuid + '.smiles';
             $http.get(url, {
                 headers: {
@@ -1169,11 +1195,11 @@
 
         $scope.submitSubstanceConfirm = function () {
             $scope.isLoading = true;
-            $scope.validating =true;
-           // var f = function () {
-                var url = baseurl + "assets/templates/modals/substance-submission.html";
-                $scope.open(url);
-           // };
+            $scope.validating = true;
+            // var f = function () {
+            var url = baseurl + "assets/templates/modals/substance-submission.html";
+            $scope.open(url);
+            // };
             var noGlogalLoading = true;
             $scope.validateSubstance(noGlogalLoading);
         };
@@ -1222,27 +1248,31 @@
             $scope.checkErrors();
 
 
-			//TODO: Remove later. This just adds uuids to names which don't have UUIDs.
-			//This should not be necessary, but appears to be.
-			//**************************
-			
-			_.chain(angular.element(document.body).scope().substance.names)
-						   .filter(function(n){return !n.uuid;})
-			               .forEach(function(n){n.uuid=angular.element(document.body).injector().get("UUID").newID();})
-			               .value();
-			               
-			//**************************
+            //TODO: Remove later. This just adds uuids to names which don't have UUIDs.
+            //This should not be necessary, but appears to be.
+            //**************************
+
+            _.chain(angular.element(document.body).scope().substance.names)
+                .filter(function (n) {
+                    return !n.uuid;
+                })
+                .forEach(function (n) {
+                    n.uuid = angular.element(document.body).injector().get("UUID").newID();
+                })
+                .value();
+
+            //**************************
 
             var sub = angular.toJson($scope.substance.$$flattenSubstance());
             $scope.errorsArray = [];
             $http.post(baseurl + 'api/v1/substances/@validate', sub).then(
-	    function success(response) {
-                $scope.validating = false;
-                $scope.errorsArray = $scope.parseErrorArray(response.data.validationMessages);
-                $scope.canSubmit = $scope.noErrors();
-                // if (callback) {
-                //     callback();
-                // }
+                function success(response) {
+                    $scope.validating = false;
+                    $scope.errorsArray = $scope.parseErrorArray(response.data.validationMessages);
+                    $scope.canSubmit = $scope.noErrors();
+                    // if (callback) {
+                    //     callback();
+                    // }
                     if ($scope.errorsArray && $scope.errorsArray.length) {
                         if ($location.hash() !== 'errors-area') {
                             $location.hash('errors-area');
@@ -1250,28 +1280,28 @@
                             $anchorScroll();
                         }
                     }
-            },
-	    function failure(response) {
-		var msg = {
-			message:response.data,
-			messageType:"ERROR",
-			error:true
-		};
-                $scope.validating = false;
-                $scope.errorsArray = [msg];
-                $scope.canSubmit = $scope.noErrors();
-            }
-	    ).finally(function () {
+                },
+                function failure(response) {
+                    var msg = {
+                        message: response.data,
+                        messageType: "ERROR",
+                        error: true
+                    };
+                    $scope.validating = false;
+                    $scope.errorsArray = [msg];
+                    $scope.canSubmit = $scope.noErrors();
+                }
+            ).finally(function () {
                 $rootScope.isGlobalLoading = false;
                 $scope.isLoading = false;
                 $scope.validating = false;
             });
         };
 
-//this is already a function the substance object has, not really needed.
-                $scope.getSubstanceClass = function() {
-                        return $scope.substance.substanceClass;
-                }
+        //this is already a function the substance object has, not really needed.
+        $scope.getSubstanceClass = function () {
+            return $scope.substance.substanceClass;
+        }
 
         $scope.submitSubstance = function () {
             var url;
@@ -1351,48 +1381,50 @@
             $scope.updateNav = false;
             var sub = angular.toJson($scope.substance.$$flattenSubstance());
             var keyid = $scope.substance.uuid;
-            var approveURL= baseurl + "api/v1/substances(" + keyid + ")/@approve";
-            
-             $scope.submitting = true;
-            $http.get(approveURL,{cache: false},{
-                    headers: {
-                        'Content-Type': 'application/json'
-                    }
-                }).then(function (response) {
-                    $scope.updateNav = false;
-                    url = baseurl + "assets/templates/modals/update-success.html";
-                    $scope.postRedirect = response.data.uuid;
-                    $scope.open(url);
+            var approveURL = baseurl + "api/v1/substances(" + keyid + ")/@approve";
+
+            $scope.submitting = true;
+            $http.get(approveURL, {
+                cache: false
+            }, {
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            }).then(function (response) {
+                $scope.updateNav = false;
+                url = baseurl + "assets/templates/modals/update-success.html";
+                $scope.postRedirect = response.data.uuid;
+                $scope.open(url);
                 $scope.submitpaster(response.data);
-                }, function (response) {
-            	var messages=[];
-            	var msg = {
-                        message: "Unknown error",
-                        messageType: "ERROR",
-                        error: true
-                    };
-            	if(response.data && typeof response.data === "object"){
-            		if(response.data.validationMessages){
-            			messages=response.data.validationMessages;
-            		}else{
-            			if(response.data.message){
-            				msg.message=response.data.message;
+            }, function (response) {
+                var messages = [];
+                var msg = {
+                    message: "Unknown error",
+                    messageType: "ERROR",
+                    error: true
+                };
+                if (response.data && typeof response.data === "object") {
+                    if (response.data.validationMessages) {
+                        messages = response.data.validationMessages;
+                    } else {
+                        if (response.data.message) {
+                            msg.message = response.data.message;
+                        }
+                        messages.push(msg);
                     }
-            			messages.push(msg);
-            		}
-            	}else{
-            		if(response.data){
-            			msg.message=response.data;
-            		}
-            		messages.push(msg);
-            	}
+                } else {
+                    if (response.data) {
+                        msg.message = response.data;
+                    }
+                    messages.push(msg);
+                }
                 $scope.errorsArray = $scope.parseErrorArray(messages);
-                    url = baseurl + "assets/templates/modals/submission-failure.html";
-                    $scope.submitting = false;
-                    $scope.open(url);
-                });
-            
-            
+                url = baseurl + "assets/templates/modals/submission-failure.html";
+                $scope.submitting = false;
+                $scope.open(url);
+            });
+
+
         };
 
 
@@ -1474,10 +1506,10 @@
                 molChanger.setMol($scope.substance.polymer.idealizedStructure.molfile);
             }
         };
-        $scope.browseSubstances=function(){
+        $scope.browseSubstances = function () {
             $scope.updateNav = false;
             $window.location.search = null;
-            $window.location.href = baseurl+ 'substances/';
+            $window.location.href = baseurl + 'substances/';
         };
 
         $scope.viewSubstance = function () {
@@ -1516,16 +1548,16 @@
 
         $scope.submitpaster = function (input) {
             $scope.substanceClass = $location.$$search.kind;
-            if(!$scope.substanceClass){
-                $scope.substanceClass=$scope.substance.substanceClass;
+            if (!$scope.substanceClass) {
+                $scope.substanceClass = $scope.substance.substanceClass;
             }
-            var inp=input;
-            if(typeof inp == "string"){
-                inp=JSON.parse(inp);
+            var inp = input;
+            if (typeof inp == "string") {
+                inp = JSON.parse(inp);
             }
             Substance.$$setSubstance(inp).then(function (data) {
                 $scope.substance = data;
-                if($scope.substance.substanceClass =="chemical"){
+                if ($scope.substance.substanceClass == "chemical") {
                     molChanger.setMol($scope.substance.structure.molfile);
                 }
                 if ($scope.substance.substanceClass != $scope.substanceClass) {
@@ -1533,21 +1565,20 @@
                     var url = baseurl + "assets/templates/modals/paste-redirect-modal.html";
                     $scope.open(url);
                 }
-                setTimeout(function(){
-                    var oldClass=$scope.substance.substanceClass;
-                    $scope.substance.substanceClass="concept";
+                setTimeout(function () {
+                    var oldClass = $scope.substance.substanceClass;
+                    $scope.substance.substanceClass = "concept";
                     $scope.$apply();
-                    setTimeout(function(){
-                        $scope.substance.substanceClass=oldClass;
+                    setTimeout(function () {
+                        $scope.substance.substanceClass = oldClass;
                         $scope.$apply();
-                    },1);
-                },1);
+                    }, 1);
+                }, 1);
             });
 
         };
 
-        $scope.bugSubmit = function (bugForm) {
-        };
+        $scope.bugSubmit = function (bugForm) {};
 
         $scope.setEditId = function (editid) {
             localStorageService.set('editID', editid);
@@ -1561,7 +1592,7 @@
             } else {
                 template = angular.element('<rendered size="500" id=' + id + '></rendered>');
             }
-                toggler.toggle($scope, divid, template);
+            toggler.toggle($scope, divid, template);
         };
 
 
@@ -1582,6 +1613,7 @@
             }
             return false;
         }
+
         function flattenCV2(sub) {
             for (var v in sub) {
                 if (isCV2(sub[v])) {
@@ -1665,22 +1697,22 @@
     /***** GSRS Functions ENDS *************************************************/
 
     ginasApp.directive('escKey', function () {
-    	  return function (scope, element, attrs) {
+        return function (scope, element, attrs) {
 
-    		var elm=element;
-    		if(attrs.escGlobal !== 'undefined'){
-    			elm=angular.element(document).find('body');
-    		}
+            var elm = element;
+            if (attrs.escGlobal !== 'undefined') {
+                elm = angular.element(document).find('body');
+            }
 
-    	    elm.bind('keydown keypress', function (event) {
-    	      if(event.which === 27) { // 27 = esc key
-    	        scope.$apply(function (){
-    	          scope.$eval(attrs.escKey);
-    	        });
-    	        event.preventDefault();
-    	      }
-    	    });
-    	  };
+            elm.bind('keydown keypress', function (event) {
+                if (event.which === 27) { // 27 = esc key
+                    scope.$apply(function () {
+                        scope.$eval(attrs.escKey);
+                    });
+                    event.preventDefault();
+                }
+            });
+        };
     });
     ginasApp.directive('modalScopeBinding', function () {
         return {
@@ -1693,28 +1725,28 @@
     ginasApp.directive('loading', function ($http) {
         return {
             template: "<div class=\"sk-folding-cube\">\n" +
-            "  <div class=\"sk-cube1 sk-cube\"></div>\n" +
-            "  <div class=\"sk-cube2 sk-cube\"></div>\n" +
-            "  <div class=\"sk-cube4 sk-cube\"></div>\n" +
-            "  <div class=\"sk-cube3 sk-cube\"></div>\n" +
-            "</div>"
+                "  <div class=\"sk-cube1 sk-cube\"></div>\n" +
+                "  <div class=\"sk-cube2 sk-cube\"></div>\n" +
+                "  <div class=\"sk-cube4 sk-cube\"></div>\n" +
+                "  <div class=\"sk-cube3 sk-cube\"></div>\n" +
+                "</div>"
         };
     });
 
-    ginasApp.directive('stringToNumber', function() {
-    	  return {
-    	    require: 'ngModel',
-    	    link: function(scope, element, attrs, ngModel) {
-    	      ngModel.$parsers.push(function(value) {
-    	        return '' + value;
-    	      });
-    	      ngModel.$formatters.push(function(value) {
-    	        return parseFloat(value);
-    	      });
-    	    }
-    	  };
-    	});
-    
+    ginasApp.directive('stringToNumber', function () {
+        return {
+            require: 'ngModel',
+            link: function (scope, element, attrs, ngModel) {
+                ngModel.$parsers.push(function (value) {
+                    return '' + value;
+                });
+                ngModel.$formatters.push(function (value) {
+                    return parseFloat(value);
+                });
+            }
+        };
+    });
+
     ginasApp.directive('scrollSpy', function ($timeout) {
         return function (scope, elem, attr) {
             scope.$watch(attr.scrollSpy, function (value) {
@@ -1747,20 +1779,20 @@
                         scope.relink();
                     }
                 });
-                scope.relink = function(){
+                scope.relink = function () {
                     var url = baseurl + 'img/' + scope.id + '.svg?size={{size||150}}';
                     if (!_.isUndefined(scope.ctx)) {
                         url += '&context={{ctx}}';
-                    }else{
+                    } else {
                         url += '&context=' + Math.random();
                     }
 
                     if (attrs.smiles) {
                         var smiles = attrs.smiles
-                                            .replace(/[;]/g,'%3B')
-                                            .replace(/[#]/g,'%23')
-                                            .replace(/[+]/g,'%2B')
-                                            .replace(/[|]/g,'%7C');
+                            .replace(/[;]/g, '%3B')
+                            .replace(/[#]/g, '%23')
+                            .replace(/[+]/g, '%2B')
+                            .replace(/[|]/g, '%7C');
                         url = baseurl + "render?structure=" + smiles + "&size={{size||150}}&standardize=true";
                     }
                     var template = angular.element('<img width=height={{size||150}} height={{size||150}} ng-src="' + url + '" class="tooltip-img" ng-cloak>');
@@ -1781,35 +1813,35 @@
                 value: '='
             },
             link: function (scope, element, attrs) {
-                    scope.formatValue = function (v){
-                            if (v) {
-                            if(typeof v === "object"){
-                                    if(v.display){
-                                            return v.display;
-                                    }else if(v.value){
-                                            return v.value;
-                                    }else{
-                                            return null;
-                                    }
-                            }else{
-                                    return v;
+                scope.formatValue = function (v) {
+                    if (v) {
+                        if (typeof v === "object") {
+                            if (v.display) {
+                                return v.display;
+                            } else if (v.value) {
+                                return v.value;
+                            } else {
+                                return null;
                             }
+                        } else {
+                            return v;
+                        }
                     }
                     return null;
-                    };
+                };
 
                 scope.display = function () {
                     if (!_.isUndefined(scope.value) && !_.isNull(scope.value)) {
                         var ret = "";
                         var addedunits = false;
                         var unittext = scope.formatValue(scope.value.units);
-                        if(!unittext){
-                                unittext="";
+                        if (!unittext) {
+                            unittext = "";
                         }
 
 
                         if (scope.value) {
-                                var atype=scope.formatValue(scope.value.type);
+                            var atype = scope.formatValue(scope.value.type);
                             if (atype) {
                                 ret += atype + "\n";
                             }
@@ -1876,90 +1908,94 @@
         };
     });
 
-    ginasApp.factory('referenceRetriever', function ($http,$q) {
+    ginasApp.factory('referenceRetriever', function ($http, $q) {
         var url = baseurl + "api/v1/substances(";
         var references = {};
         var refFinder = {
             getAll: function (uuid, version) {
-            	if(references[uuid+"_"+version]){
-            		return $q(function(resolve, reject) {
-            			resolve(references[uuid+"_"+version]);
-            		});
-            	}
+                if (references[uuid + "_" + version]) {
+                    return $q(function (resolve, reject) {
+                        resolve(references[uuid + "_" + version]);
+                    });
+                }
 
-            	var processReferences=function(refs){
-            		_.forEach(refs, function (ref, index) {
+                var processReferences = function (refs) {
+                    _.forEach(refs, function (ref, index) {
                         _.set(ref, '$$index', index + 1);
                     });
-            		return refs;
-            	};
+                    return refs;
+                };
 
-            	var httpDoer=function(burl){
-            		return $http.get(burl, { cache: true }, {
-                    headers: {
-                        'Content-Type': 'text/plain'
-                    }
+                var httpDoer = function (burl) {
+                    return $http.get(burl, {
+                        cache: true
+                    }, {
+                        headers: {
+                            'Content-Type': 'text/plain'
+                        }
                     });
-            	};
+                };
 
-            	var getVersion =function(){
-            		return $q(function(resolve, reject){
+                var getVersion = function () {
+                    return $q(function (resolve, reject) {
 
-            			var onWrongVersion=function(e){
-          				  httpDoer(url + uuid + ")/@edits")
-            			  .then(function(response){
-	            			var edits = response.data;
-	            			var mversion=_.chain(edits)
-					            		  .filter(function(e){
-					            			 return e.version === version;
-					            		   })
-					            		  .value();
-	            			var ovalURL = mversion[0].oldValue;
-	            			return httpDoer(ovalURL)
-	            			 .then(function(response){
-	                			references[uuid+"_"+version] = processReferences(response.data.references);
-	                			resolve(references[uuid+"_"+version]);
-	                		 }).catch(function(e){
-	                			reject(e);
-	                		 });
-	            		})
-	            		.catch(function(e){
-	                			reject(e);
-	                	});
-        			  };
-
-
-            			httpDoer(url + uuid + ")")
-            			  .then(function(response){
-            				  var s=response.data;
-            				  if(s.version === version){
-            					  httpDoer(url + uuid + ")/references")
-            		                .then(function (response) {
-            		                    references[uuid+"_"+version] = processReferences(response.data);
-            		                    resolve(references[uuid+"_"+version]);
-            		                });
-            				  }else{
-            					  onWrongVersion();
-            				  }
-            			  })
-            			  .catch(onWrongVersion);
+                        var onWrongVersion = function (e) {
+                            httpDoer(url + uuid + ")/@edits")
+                                .then(function (response) {
+                                    var edits = response.data;
+                                    var mversion = _.chain(edits)
+                                        .filter(function (e) {
+                                            return e.version === version;
+                                        })
+                                        .value();
+                                    var ovalURL = mversion[0].oldValue;
+                                    return httpDoer(ovalURL)
+                                        .then(function (response) {
+                                            references[uuid + "_" + version] = processReferences(response.data.references);
+                                            resolve(references[uuid + "_" + version]);
+                                        }).catch(function (e) {
+                                            reject(e);
+                                        });
+                                })
+                                .catch(function (e) {
+                                    reject(e);
+                                });
+                        };
 
 
-            		});
-            	};
+                        httpDoer(url + uuid + ")")
+                            .then(function (response) {
+                                var s = response.data;
+                                if (s.version === version) {
+                                    httpDoer(url + uuid + ")/references")
+                                        .then(function (response) {
+                                            references[uuid + "_" + version] = processReferences(response.data);
+                                            resolve(references[uuid + "_" + version]);
+                                        });
+                                } else {
+                                    onWrongVersion();
+                                }
+                            })
+                            .catch(onWrongVersion);
 
-            	if(version){
-            		return getVersion();
-            	}
+
+                    });
+                };
+
+                if (version) {
+                    return getVersion();
+                }
 
                 return httpDoer(url + uuid + ")/references")
-	                .then(function (response) {
-	                    references[uuid+"_"+version] = processReferences(response.data);
-	                    return references[uuid+"_"+version];
-                });
+                    .then(function (response) {
+                        references[uuid + "_" + version] = processReferences(response.data);
+                        return references[uuid + "_" + version];
+                    });
             },
             getIndex: function (uuid, refuuid, version) {
-                return $http.get(url + uuid + ")/references", {cache: true}, {
+                return $http.get(url + uuid + ")/references", {
+                    cache: true
+                }, {
                     headers: {
                         'Content-Type': 'text/plain'
                     }
@@ -1971,7 +2007,7 @@
         return refFinder;
     });
 
-    ginasApp.directive('infoTooltip', function($compile, $templateRequest) {
+    ginasApp.directive('infoTooltip', function ($compile, $templateRequest) {
         return {
             restrict: 'E',
             //replace: true,
@@ -1984,64 +2020,64 @@
                 var template;
 
                 $templateRequest(baseurl + "assets/templates/popovers/popover-template.html").then(function (html) {
-                        template = angular.element(html);
-                        element.html(template).show();
-                        $compile(element.contents())(scope);
-                    });
+                    template = angular.element(html);
+                    element.html(template).show();
+                    $compile(element.contents())(scope);
+                });
             }
         }
     });
 
-    ginasApp.directive('infoPopup', function($compile, $sce) {
-      var dir = {
-        restrict: 'E',
-        //replace: true,
-        scope:{
-            type: '@',
-            icon: '@',
-            showPopup:'=',
-            trigger:'@'
-        },
-        xemplate: '<a class="info-pop" popover-trigger="{{trigger}}" popover-is-open="showPopup" popover-placement="TYPEVAR" data-container="body" popover-append-to-body="false" uib-popover-template="\'htmlvar\'"><i class="fa {{icon}}"></i></a>',
-        compile: function(element, attrs, linker) {
-        
-          var original = element.html(); // grab original
-          element.html("");
-          
-          
-          
-          
-          var rnd = 'pop-' + (Math.random()+"").replace(".","") + '.html';
-          
-          var template= '<script type="text/ng-template" id="' + rnd  +'">'+
-                           original+
-                        '</script>';
+    ginasApp.directive('infoPopup', function ($compile, $sce) {
+        var dir = {
+            restrict: 'E',
+            //replace: true,
+            scope: {
+                type: '@',
+                icon: '@',
+                showPopup: '=',
+                trigger: '@'
+            },
+            xemplate: '<a class="info-pop" popover-trigger="{{trigger}}" popover-is-open="showPopup" popover-placement="TYPEVAR" data-container="body" popover-append-to-body="false" uib-popover-template="\'htmlvar\'"><i class="fa {{icon}}"></i></a>',
+            compile: function (element, attrs, linker) {
 
-          //element.html(dir.xemplate); // set template html manually
-          
-          return function(scope, element, attributes) {
-            if(typeof scope.type === 'undefined'){
-                scope.type = "auto";
-            }
-            if(typeof scope.icon === 'undefined'){
-            	scope.icon = "fa-info-circle";
-            }
-            if(typeof scope.trigger === 'undefined'){
-            	scope.trigger = "click";
-            }
+                var original = element.html(); // grab original
+                element.html("");
 
-            
-            //scope.showPopup=true;
-            var elm=angular.element(template + dir.xemplate.replace("htmlvar",rnd).replace("TYPEVAR",scope.type));
-            
-            scope.htmlvar=$sce.trustAsHtml(original);
-            element.append($compile(elm)(scope));
-            
-            
-          }
-        }
-      };
-      return dir;
+
+
+
+                var rnd = 'pop-' + (Math.random() + "").replace(".", "") + '.html';
+
+                var template = '<script type="text/ng-template" id="' + rnd + '">' +
+                    original +
+                    '</script>';
+
+                //element.html(dir.xemplate); // set template html manually
+
+                return function (scope, element, attributes) {
+                    if (typeof scope.type === 'undefined') {
+                        scope.type = "auto";
+                    }
+                    if (typeof scope.icon === 'undefined') {
+                        scope.icon = "fa-info-circle";
+                    }
+                    if (typeof scope.trigger === 'undefined') {
+                        scope.trigger = "click";
+                    }
+
+
+                    //scope.showPopup=true;
+                    var elm = angular.element(template + dir.xemplate.replace("htmlvar", rnd).replace("TYPEVAR", scope.type));
+
+                    scope.htmlvar = $sce.trustAsHtml(original);
+                    element.append($compile(elm)(scope));
+
+
+                }
+            }
+        };
+        return dir;
     });
 
     ginasApp.directive('referencesmanager', function ($compile, $templateRequest, referenceRetriever, toggler) {
@@ -2096,34 +2132,34 @@
             link: function (scope, element, attrs, referencesCtrl) {
 
 
-            	if(scope.sreferences){
-            		scope.freferences={};
-            		_.chain(scope.sreferences)
-            		 .map(function(r){
-            			 if(r.term){
-            				 return r.term;
-            			 }
-            			 return r;
-            		 })
-            		 .map(function(r){
-            			 scope.freferences[r]=true;
-            			 return r;
-            		 })
-            		 .value();
-            	}
+                if (scope.sreferences) {
+                    scope.freferences = {};
+                    _.chain(scope.sreferences)
+                        .map(function (r) {
+                            if (r.term) {
+                                return r.term;
+                            }
+                            return r;
+                        })
+                        .map(function (r) {
+                            scope.freferences[r] = true;
+                            return r;
+                        })
+                        .value();
+                }
 
-            	//Not sure about this, I think it's using AJAX, which it shouldn't.
+                //Not sure about this, I think it's using AJAX, which it shouldn't.
                 referencesCtrl.referenceRetriever.getAll(scope.substance, scope.version).then(function (response) {
 
-                	//TODO: re-evaluate
+                    //TODO: re-evaluate
                     scope.references = response;
-                	if(scope.freferences){
-                		scope.references = _.chain(scope.references)
-                	                        .filter(function(r){
-                	                        	return scope.freferences[r.uuid];
-                	                        })
-                	                        .value();
-                	}
+                    if (scope.freferences) {
+                        scope.references = _.chain(scope.references)
+                            .filter(function (r) {
+                                return scope.freferences[r.uuid];
+                            })
+                            .value();
+                    }
 
 
 
@@ -2133,9 +2169,9 @@
                     return referencesCtrl.getClass(index);
                 };
 
-                scope.baseurl=baseurl;
-                if(scope.baseurl[scope.baseurl.length-1]==='/'){
-                    scope.baseurl=scope.baseurl.substring(0,scope.baseurl.length-1);
+                scope.baseurl = baseurl;
+                if (scope.baseurl[scope.baseurl.length - 1] === '/') {
+                    scope.baseurl = scope.baseurl.substring(0, scope.baseurl.length - 1);
                 }
             },
             templateUrl: baseurl + "assets/templates/reference-table.html"
@@ -2169,9 +2205,9 @@
                         links.push(link);
                     });
 
-                    var templateString = angular.element('<div class ="row reftable"><div class ="col-md-8">'
-                    			+ _.join(links,",")
-                    			+ ' </div><div class="col-md-4"><span class="btn btn-primary pull-right" type="button" uib-tooltip="Show all references" ng-click="toggle()"><i class="fa fa-long-arrow-down"></i></span><div></div>');
+                    var templateString = angular.element('<div class ="row reftable"><div class ="col-md-8">' +
+                        _.join(links, ",") +
+                        ' </div><div class="col-md-4"><span class="btn btn-primary pull-right" type="button" uib-tooltip="Show all references" ng-click="toggle()"><i class="fa fa-long-arrow-down"></i></span><div></div>');
                     element.append(angular.element(templateString));
                     $compile(templateString)(scope);
                 });
@@ -2216,9 +2252,9 @@
                         links.push(link);
                     });
                     scope.buttonLabel = "view";
-                    var templateString = angular.element('<div class ="reftable">'
-                        + '<div style = "float:left" class =" center-text">'
-                        + '</div><div style = "float:left"><button class="btn btn-primary reference-button" type="button" uib-tooltip="Show all references" ng-click="toggle()" >{{buttonLabel}} '+links.length+'<br/>reference(s)</button></div></div>');
+                    var templateString = angular.element('<div class ="reftable">' +
+                        '<div style = "float:left" class =" center-text">' +
+                        '</div><div style = "float:left"><button class="btn btn-primary reference-button" type="button" uib-tooltip="Show all references" ng-click="toggle()" >{{buttonLabel}} ' + links.length + '<br/>reference(s)</button></div></div>');
                     element.append(angular.element(templateString));
                     $compile(templateString)(scope);
                 });
@@ -2246,7 +2282,7 @@
             },
             link: function (scope, element, attrs) {
                 var template;
-                if (!_.isNull(scope.citation.url)&& !_.isUndefined(scope.citation.url)) {
+                if (!_.isNull(scope.citation.url) && !_.isUndefined(scope.citation.url)) {
                     template = angular.element('<a href = {{citation.url}} target = "_blank"><span>{{citation.citation}}</span></a>');
                 } else {
                     template = angular.element('<span>{{citation.citation}}</span>');
@@ -2274,7 +2310,7 @@
                         scope.referenceobj.sites.$$displayString = siteList.siteString(scope.referenceobj.sites);
                     } else {
                         if (scope.field) {
-                            if(_.isUndefined(scope.referenceobj[scope.field])){
+                            if (_.isUndefined(scope.referenceobj[scope.field])) {
                                 _.set(scope.referenceobj, scope.field, []);
                             }
                             scope.referenceobj[scope.field].$$displayString = siteList.siteString(scope.referenceobj[scope.field]);
@@ -2291,17 +2327,17 @@
         };
     });
 
-/*    ginasApp.directive('comment', function () {
+    /*    ginasApp.directive('comment', function () {
 
-        return {
-            restrict: 'E',
-            replace: true,
-            scope: {
-                value: '='
-            },
-            template: '<div><span id="comment-text">{{value|limitTo:40}}...</span></div>'
-        };
-    });*/
+            return {
+                restrict: 'E',
+                replace: true,
+                scope: {
+                    value: '='
+                },
+                template: '<div><span id="comment-text">{{value|limitTo:40}}...</span></div>'
+            };
+        });*/
 
 
 
@@ -2310,9 +2346,11 @@
         var versionurl = baseurl + "api/v1/substances($UUID$)/version";
         var editurl = baseurl + "api/v1/edits($UUID$)/$oldValue";
         var fetcher = {
-            fetchCurrentVersion: function(uuid){
-                var url2 = versionurl.replace("$UUID$",uuid);
-                return $http.get(url2,{cache: true},{
+            fetchCurrentVersion: function (uuid) {
+                var url2 = versionurl.replace("$UUID$", uuid);
+                return $http.get(url2, {
+                    cache: true
+                }, {
                     headers: {
                         'Content-Type': 'text/plain'
                     }
@@ -2321,12 +2359,14 @@
                 });
             },
             fetch: function (uuid, version) {
-                if(version){
-                    return fetcher.fetchVersion(uuid,version);
+                if (version) {
+                    return fetcher.fetchVersion(uuid, version);
                 }
 
                 var url2 = url + uuid + ")";
-                return $http.get(url2,{cache: true},{
+                return $http.get(url2, {
+                    cache: true
+                }, {
                     headers: {
                         'Content-Type': 'text/plain'
                     }
@@ -2334,44 +2374,50 @@
                     return response.data;
                 });
             },
-            fetchVersion: function(uuid, version){
+            fetchVersion: function (uuid, version) {
                 return fetcher.fetchCurrentVersion(uuid)
-                              .then(function (r){
-                                    if(r+""===version +""){
-                                        return fetcher.fetch(uuid);
-                                    }else{
-                                        var url2 =url + uuid + ")/@edits";
-                                        return $http.get(url2,{cache: true},{
-                                            headers: {
-                                                'Content-Type': 'text/plain'
-                                            }
-                                        }).then(function (response) {
-                                            console.log("ERROR");
-                                            console.log(response);
-                                            var oversion = _.chain(response.data)
-                                             .filter(function(edit){return version+"" === edit.version;})
-                                             .value();
+                    .then(function (r) {
+                        if (r + "" === version + "") {
+                            return fetcher.fetch(uuid);
+                        } else {
+                            var url2 = url + uuid + ")/@edits";
+                            return $http.get(url2, {
+                                cache: true
+                            }, {
+                                headers: {
+                                    'Content-Type': 'text/plain'
+                                }
+                            }).then(function (response) {
+                                console.log("ERROR");
+                                console.log(response);
+                                var oversion = _.chain(response.data)
+                                    .filter(function (edit) {
+                                        return version + "" === edit.version;
+                                    })
+                                    .value();
 
-                                            if(oversion.length>=1){
-                                                var nurl = oversion[0].oldValue;
-                                                nurl = editurl.replace("$UUID$",nurl.split("(")[1].split(")")[0]);
-                                                
-                                                return $http.get(nurl,{cache: true},{
-                                                                headers: {
-                                                                    'Content-Type': 'text/plain'
-                                                                }
-                                                             }).then(function (response) {
-                                                                    return response.data;
-                                                             });
-                                            }else{
-                                                return fetcher.fetch(uuid);
-                                            }
-                                        });
-                                    }
-                               });
-                
+                                if (oversion.length >= 1) {
+                                    var nurl = oversion[0].oldValue;
+                                    nurl = editurl.replace("$UUID$", nurl.split("(")[1].split(")")[0]);
 
-                
+                                    return $http.get(nurl, {
+                                        cache: true
+                                    }, {
+                                        headers: {
+                                            'Content-Type': 'text/plain'
+                                        }
+                                    }).then(function (response) {
+                                        return response.data;
+                                    });
+                                } else {
+                                    return fetcher.fetch(uuid);
+                                }
+                            });
+                        }
+                    });
+
+
+
             }
         };
         return fetcher;
@@ -2448,16 +2494,18 @@
                             element.html(template).show();
                             $compile(element.contents())(scope);
                         });
-                    } /*else if (scope.acidClass === 'plain') {
+                    }
+                    /*else if (scope.acidClass === 'plain') {
 
-                        $templateRequest(baseurl + "assets/templates/tooltips/tooltip-template-plain.html").then(function (html) {
-                            template = angular.element(html);
-                            element.html(template).show();
-                            $compile(element.contents())(scope);
-                        });
+                                           $templateRequest(baseurl + "assets/templates/tooltips/tooltip-template-plain.html").then(function (html) {
+                                               template = angular.element(html);
+                                               element.html(template).show();
+                                               $compile(element.contents())(scope);
+                                           });
 
-                    }*/ else{
-                        
+                                       }*/
+                    else {
+
                         $templateRequest(baseurl + "assets/templates/tooltips/tooltip-template.html").then(function (html) {
                             template = angular.element(html);
                             element.html(template).show();
@@ -2475,9 +2523,9 @@
                     $anchorScroll(div);
                 };
 
-                scope.clicked = function(){
-                        scope.scrollTo(scope.acidClass,scope.acid);
-                        scope.$emit("selected",scope.acid);
+                scope.clicked = function () {
+                    scope.scrollTo(scope.acidClass, scope.acid);
+                    scope.$emit("selected", scope.acid);
                 };
             }
         };
@@ -2499,26 +2547,26 @@
             },
             link: function (scope, element, attrs) {
                 var sclass = attrs.subclass;
-                if(_.isUndefined(sclass)){
-                	if (_.has(scope.parent, 'protein')) {
-                		sclass="protein";
-                	}else{
-                		sclass="nucleicAcid";
-                	}
+                if (_.isUndefined(sclass)) {
+                    if (_.has(scope.parent, 'protein')) {
+                        sclass = "protein";
+                    } else {
+                        sclass = "nucleicAcid";
+                    }
                 }
                 scope.numbers = true;
                 scope.edit = true;
 
-                if(scope.obj) {
+                if (scope.obj) {
                     scope.obj.subunitIndex = _.toInteger(scope.index);
                 }
 
-                scope.preformatSeq = function(seq){
-                    var ret="";
-                    if(seq) {
+                scope.preformatSeq = function (seq) {
+                    var ret = "";
+                    if (seq) {
                         for (var i = 0; i < seq.length; i += 10) {
-                            if(i%60==0){
-                                ret+="\n";
+                            if (i % 60 == 0) {
+                                ret += "\n";
                             }
                             ret += seq.substr(i, 10) + "     ";
 
@@ -2527,20 +2575,20 @@
                     return ret.trim();
                 };
 
-                scope.postFormatSeq = function(seq){
-                    return seq.replace(/\s/g,"");
+                scope.postFormatSeq = function (seq) {
+                    return seq.replace(/\s/g, "");
                 };
 
-                scope.fastaFormat = function(){
-                    if(!scope.obj)return "";
+                scope.fastaFormat = function () {
+                    if (!scope.obj) return "";
                     var seq = scope.obj.sequence;
-                    var ret="";
-                    if(seq) {
-                        seq = seq.replace(/\s/g,"");
+                    var ret = "";
+                    if (seq) {
+                        seq = seq.replace(/\s/g, "");
                         for (var i = 0; i < seq.length; i += 60) {
                             if (i + 60 < seq.length) {
                                 ret += seq.substr(i, 60) + "\n";
-                            }else{
+                            } else {
                                 ret += seq.substr(i, 60);
                             }
                         }
@@ -2550,10 +2598,10 @@
 
                 scope.toggleEdit = function () {
                     scope.edit = !scope.edit;
-                    if(scope.edit){ //edit starts
+                    if (scope.edit) { //edit starts
                         scope.startEdit();
-                    }else{ //edit is done
-                        scope.obj.sequence=scope.postFormatSeq(scope.obj.$sequence);
+                    } else { //edit is done
+                        scope.obj.sequence = scope.postFormatSeq(scope.obj.$sequence);
                         scope.parseSubunit();
                         scope.fastaview = scope.fastaFormat();
                     }
@@ -2561,22 +2609,22 @@
                 };
 
                 scope.startEdit = function () {
-                    scope.obj.$sequence=scope.preformatSeq(scope.obj.sequence);
+                    scope.obj.$sequence = scope.preformatSeq(scope.obj.sequence);
                 };
 
-                scope.isSelected = function (site){
-                        if(!scope.selected)return;
+                scope.isSelected = function (site) {
+                    if (!scope.selected) return;
 
-                        var isselected=false;
-                        _.forEach(scope.selected, function(selSite){
-                                if(selSite.subunitIndex === site.subunitIndex && selSite.residueIndex === site.residueIndex){
-                                        isselected=true;
-                                }
-                        });
-                        return isselected;
+                    var isselected = false;
+                    _.forEach(scope.selected, function (selSite) {
+                        if (selSite.subunitIndex === site.subunitIndex && selSite.residueIndex === site.residueIndex) {
+                            isselected = true;
+                        }
+                    });
+                    return isselected;
                 };
 
-                scope.parseSubunit = function(){
+                scope.parseSubunit = function () {
                     subunitParser.parseSubunit(scope.parent, scope.obj, scope.index);
                 };
 
@@ -2587,10 +2635,10 @@
                     } else {
                         bridge = acid.otherLinks;
                     }
-                    if(bridge && bridge.residueIndex){
-                       var allAA = element[0].querySelectorAll('amino-acid');
-                       var targetElement = angular.element(allAA[bridge.residueIndex - 1]);
-                       targetElement.isolateScope().showBridge();
+                    if (bridge && bridge.residueIndex) {
+                        var allAA = element[0].querySelectorAll('amino-acid');
+                        var targetElement = angular.element(allAA[bridge.residueIndex - 1]);
+                        targetElement.isolateScope().showBridge();
                     }
                 };
 
@@ -2607,33 +2655,33 @@
                         var sclass;
                         if (_.has(data, 'protein')) {
                             scope.obj = data.protein.subunits[scope.index];
-                            scope.index = scope.index-0+1;
-                            sclass="protein";
+                            scope.index = scope.index - 0 + 1;
+                            sclass = "protein";
                         } else {
                             scope.obj = data.nucleicAcid.subunits[scope.index];
-                            scope.index = scope.index-0+1;
-							sclass="nucleicAcid";
+                            scope.index = scope.index - 0 + 1;
+                            sclass = "nucleicAcid";
                         }
-                        subunitParser.getResidues(sclass).then(function (){
-	                    	scope.parseSubunit();
-                            if(_.isUndefined(scope.obj.sequence)) {
-                                scope.edit=true;
+                        subunitParser.getResidues(sclass).then(function () {
+                            scope.parseSubunit();
+                            if (_.isUndefined(scope.obj.sequence)) {
+                                scope.edit = true;
                                 scope.startEdit();
                             }
-                 		});
+                        });
                         scope.fastaview = scope.fastaFormat();
                         //scope.parseSubunit();
                     });
                 } else {
-                	subunitParser.getResidues(sclass).then(function (){
-	                    scope.parseSubunit();
-                        if(_.isUndefined(scope.obj.sequence)) {
-                            scope.edit=true;
+                    subunitParser.getResidues(sclass).then(function () {
+                        scope.parseSubunit();
+                        if (_.isUndefined(scope.obj.sequence)) {
+                            scope.edit = true;
                             scope.startEdit();
                         }
                         scope.fastaview = scope.fastaFormat();
 
-                 	});
+                    });
                 }
                 scope.edit = false;
             },
@@ -2663,7 +2711,7 @@
         };
     });
     ginasApp.directive('sketcher', function ($compile, $http, $timeout, UUID, polymerUtils, CVFields, localStorageService, molChanger, Substance, $rootScope) {
-        var t={
+        var t = {
             restrict: 'E',
             replace: true,
             scope: {
@@ -2674,28 +2722,28 @@
 
             link: function (scope, element, attrs) {
 
-                var setLoading=function(b){
+                var setLoading = function (b) {
                     $rootScope.isGlobalLoading = b;
-                    try{
-                        $timeout(function() {
+                    try {
+                        $timeout(function () {
                             $rootScope.$apply();
                         });
-                    }catch(error) {
+                    } catch (error) {
                         console.error(error);
                     }
 
                 };
 
-                scope.showCanvas=true;
-                scope.fromImage=false;
-                scope.canvasLabel="";
+                scope.showCanvas = true;
+                scope.fromImage = false;
+                scope.canvasLabel = "";
 
                 var url = baseurl + 'structure';
 
                 if (!_.isUndefined(scope.parent.structure)) {
                     scope.mol = scope.parent.structure.molfile;
                 }
-                var canvasHTML= '<div class="text-center" id = "canvas-wrapper" ng-show = "canvasLabel != \'\'" >' +
+                var canvasHTML = '<div class="text-center" id = "canvas-wrapper" ng-show = "canvasLabel != \'\'" >' +
                     '<div id = "canvas-label" class=" col-md-12" style = "text-align:center;padding-bottom:5px;padding-top:5px"  ><b>{{canvasLabel}}</b> &nbsp ' +
                     '<a class="btn btn-primary" ng-show="fromImage&&showCanvas" ng-click="showCanvas=!showCanvas" class="">Hide</a>' +
                     '<a class="btn btn-primary" ng-show="fromImage&&!showCanvas" ng-click="showCanvas=!showCanvas" class="">Show</a>' +
@@ -2703,193 +2751,202 @@
                     '<canvas height="1" ng-show="showCanvas" id="clip_canvas" style="max-width:800px;"></canvas>' +
                     '</div>';
                 var template = angular.element('<div><div id="sketcherForm" dataformat="molfile"></div> <div class = "col-md-12" id = "testing">' +
-                		'<div class="text-center">' +
-                        'Load an image by pasting a copied image into the canvas with <code>ctrl + v</code>, or dragging a local image file' +
-                        '</div> <div id = "canvas_cont">' + canvasHTML + '</div> </div> </div>');
+                    '<div class="text-center">' +
+                    'Load an image by pasting a copied image into the canvas with <code>ctrl + v</code>, or dragging a local image file' +
+                    '</div> <div id = "canvas_cont">' + canvasHTML + '</div> </div> </div>');
                 element.append(template);
                 $compile(template)(scope);
 
-                                scope.merge = function(oldStructure, newStructure){
-                                        var definitionalChange=(oldStructure["hash"] !== newStructure["hash"]);
-                                        _.forIn(newStructure, function(value, key){
-                                                var cvname=null;
-                                                switch(key){
-                                                        case "stereochemistry":
-                                                                cvname="STEREOCHEMISTRY_TYPE";
-                                                                break;
-                                                        case "opticalActivity":
-                                                                cvname="OPTICAL_ACTIVITY";
-                                                                break;
-                                                        default:
-                                                                oldStructure[key]=value;
-                                                }
-                                                if(cvname!==null){
-                                                        CVFields.search(cvname, value).then(function(response){
-                                                                        oldStructure[key]=response[0];
-                                                                });
-                                                }
+                scope.merge = function (oldStructure, newStructure) {
+                    var definitionalChange = (oldStructure["hash"] !== newStructure["hash"]);
+                    _.forIn(newStructure, function (value, key) {
+                        var cvname = null;
+                        switch (key) {
+                            case "stereochemistry":
+                                cvname = "STEREOCHEMISTRY_TYPE";
+                                break;
+                            case "opticalActivity":
+                                cvname = "OPTICAL_ACTIVITY";
+                                break;
+                            default:
+                                oldStructure[key] = value;
+                        }
+                        if (cvname !== null) {
+                            CVFields.search(cvname, value).then(function (response) {
+                                oldStructure[key] = response[0];
+                            });
+                        }
 
-                                        });
-                                        return definitionalChange;
-                                };
+                    });
+                    return definitionalChange;
+                };
 
-                scope.updateMolServer = function(mfile, force, reset){
+                scope.updateMolServer = function (mfile, force, reset) {
                     setLoading(false);
-                        var url = baseurl + 'structure';
+                    var url = baseurl + 'structure';
                     $http.post(url, mfile, {
-                            headers: {
-                                'Content-Type': 'text/plain'
-                            }
-                        }).success(function (data) {
-                            if (force && scope.parent.substanceClass === "polymer") {
-                                scope.parent.polymer.idealizedStructure = data.structure;
-                                scope.structure = data.structure;
-                                CVFields.getCV("POLYMER_SRU_TYPE").then(function (response) {
-                                    var cv = response.data.content[0].terms;
-                                    for (var i in data.structuralUnits) {
-                                       // var cv = response.data.content[0].terms;
-                                        data.structuralUnits[i].type = _.find(cv, ['value', data.structuralUnits[i].type]);
-                                    }
-                                    polymerUtils.setSRUConnectivityDisplay(data.structuralUnits);
+                        headers: {
+                            'Content-Type': 'text/plain'
+                        }
+                    }).success(function (data) {
+                        if (force && scope.parent.substanceClass === "polymer") {
+                            scope.parent.polymer.idealizedStructure = data.structure;
+                            scope.structure = data.structure;
+                            CVFields.getCV("POLYMER_SRU_TYPE").then(function (response) {
+                                var cv = response.data.content[0].terms;
+                                for (var i in data.structuralUnits) {
+                                    // var cv = response.data.content[0].terms;
+                                    data.structuralUnits[i].type = _.find(cv, ['value', data.structuralUnits[i].type]);
+                                }
+                                polymerUtils.setSRUConnectivityDisplay(data.structuralUnits);
 
-                                    //merge amounts with whatever is already there
-                                    var amounts={};
-                                    
-                                    _.chain(scope.parent.polymer.structuralUnits)
-                                     .map(function(sru){
-                                         if(sru.amount){
-                                                 sru.amount.uuid=null;
-                                         }
-                                         amounts[sru.label]=sru.amount;
-                                     })
-                                     .value();
-                                    
-                                    _.chain(data.structuralUnits)
-                                     .map(function(sru){
-                                        var oldAmount = amounts[sru.label];
-                                        if(oldAmount){
-                                               sru.amount=oldAmount;
+                                //merge amounts with whatever is already there
+                                var amounts = {};
+
+                                _.chain(scope.parent.polymer.structuralUnits)
+                                    .map(function (sru) {
+                                        if (sru.amount) {
+                                            sru.amount.uuid = null;
                                         }
-                                     })
-                                     .value();
+                                        amounts[sru.label] = sru.amount;
+                                    })
+                                    .value();
 
-                                    polymerUtils.setSRUFromConnectivityDisplay(data.structuralUnits);
-                                    scope.parent.polymer.structuralUnits = data.structuralUnits;
-                                });
-                            }
-                            if (scope.parent.structure) {
-                        	if(data.structure){
-                                data.structure.id = scope.parent.structure.id;
-                        	}
-                            } else {
-                                scope.parent.structure = {};
-                            }
-                            var defChange = scope.merge(scope.parent.structure, data.structure);
+                                _.chain(data.structuralUnits)
+                                    .map(function (sru) {
+                                        var oldAmount = amounts[sru.label];
+                                        if (oldAmount) {
+                                            sru.amount = oldAmount;
+                                        }
+                                    })
+                                    .value();
 
-                            if (defChange) {
-                                scope.parent.moieties = [];
-                                _.forEach(data.moieties, function (m) {
-                                    m["$$new"] = true;
-                                    //this is used to make a cv element out of the moiety units, which are re-written as strings with each round trip
-                                    if(!_.isObject(m.countAmount.type)){
-                                        var temp = {value: m.countAmount.type, display: m.countAmount.type};
-                                        m.countAmount.type = temp;
-                                    }
-                                    if(!_.isObject(m.countAmount.units)){
-                                        var temp = {value: m.countAmount.units, display: m.countAmount.units};
-                                        m.countAmount.units = temp;
-                                    }
-                                    var moi = {};
-                                    scope.merge(moi, m);
-                                    scope.parent.moieties.push(moi);
-                                });
-                            }
-
-
+                                polymerUtils.setSRUFromConnectivityDisplay(data.structuralUnits);
+                                scope.parent.polymer.structuralUnits = data.structuralUnits;
+                            });
+                        }
+                        if (scope.parent.structure) {
                             if (data.structure) {
-                                _.set(scope.parent, 'q', data.structure.smiles);
-                            if (reset){
+                                data.structure.id = scope.parent.structure.id;
+                            }
+                        } else {
+                            scope.parent.structure = {};
+                        }
+                        var defChange = scope.merge(scope.parent.structure, data.structure);
+
+                        if (defChange) {
+                            scope.parent.moieties = [];
+                            _.forEach(data.moieties, function (m) {
+                                m["$$new"] = true;
+                                //this is used to make a cv element out of the moiety units, which are re-written as strings with each round trip
+                                if (!_.isObject(m.countAmount.type)) {
+                                    var temp = {
+                                        value: m.countAmount.type,
+                                        display: m.countAmount.type
+                                    };
+                                    m.countAmount.type = temp;
+                                }
+                                if (!_.isObject(m.countAmount.units)) {
+                                    var temp = {
+                                        value: m.countAmount.units,
+                                        display: m.countAmount.units
+                                    };
+                                    m.countAmount.units = temp;
+                                }
+                                var moi = {};
+                                scope.merge(moi, m);
+                                scope.parent.moieties.push(moi);
+                            });
+                        }
+
+
+                        if (data.structure) {
+                            _.set(scope.parent, 'q', data.structure.smiles);
+                            if (reset) {
                                 scope.sketcher.setMolfile(data.structure.molfile);
                             }
                         }
 
-                        });
+                    });
                 };
                 scope.updateMol = function (force) {
-                    scope.updateMolServer(scope.mol,force,false);
+                    scope.updateMolServer(scope.mol, force, false);
                 };
-                scope.$parent.updateMol=scope.updateMol;
-                
+                scope.$parent.updateMol = scope.updateMol;
+
                 scope.sketcher = new JSDraw("sketcherForm");
                 scope.sketcher.options.data = scope.mol;
                 scope.sketcher.setMolfile(scope.mol);
 
-                if(afterSketcherMade){
-                	afterSketcherMade();
+                if (afterSketcherMade) {
+                    afterSketcherMade();
                 }
-		scope.clean = function (mol){
+                scope.clean = function (mol) {
 
-		  //remove "mul" from multiple amount
-		  mol = mol.replace(/M[ ]*SMT.*mul.*/g,"@")
-			   .replace(/\n/g,"|_|")
-			   .replace(/[@][|][_][|]/g,"")
-			   .replace(/[|][_][|]/g,"\n");
+                    //remove "mul" from multiple amount
+                    mol = mol.replace(/M[ ]*SMT.*mul.*/g, "@")
+                        .replace(/\n/g, "|_|")
+                        .replace(/[@][|][_][|]/g, "")
+                        .replace(/[|][_][|]/g, "\n");
 
-			return mol;
-		};
+                    return mol;
+                };
                 // Extract information about charges from jsdraw XML.
                 // This is only needed due to a bug in jsdraw where molfiles don't
                 // produce the right charge components when charges are over 3.
                 // Returns null if no charges found.
-                
-                scope.getMChargeFromXML = function(xml){
-                    var rep = function(v, n){
-                        var t="";
-                        for(var i=0;i<n;i++){
-                            t=t+v;
+
+                scope.getMChargeFromXML = function (xml) {
+                    var rep = function (v, n) {
+                        var t = "";
+                        for (var i = 0; i < n; i++) {
+                            t = t + v;
                         }
                         return t;
                     };
-                
-                    var leftPad = function(v, p){
-                        return rep(" ", p-v.length) + v;
+
+                    var leftPad = function (v, p) {
+                        return rep(" ", p - v.length) + v;
                     };
-                
-                    var aai=1;
+
+                    var aai = 1;
 
                     var charges = _.chain($(xml).find("a[i]"))
-                     .map(function(a){
-                          var ai = $(a).attr("i");
-                          var ac = $(a).attr("c");
-                            if(typeof ac === 'undefined'){
-                            	ac=0;
+                        .map(function (a) {
+                            var ai = $(a).attr("i");
+                            var ac = $(a).attr("c");
+                            if (typeof ac === 'undefined') {
+                                ac = 0;
                             }
                             var o = {
                                 "i": (aai++),
                                 "c": ac - 0
                             };
-                          o.toString=function(){
-                                return leftPad(o.i+"",4) + leftPad(o.c+"",4);
-                          };
-                          return o;
-                     })
-                        .filter(function (a){
-                        	return a.c!=0;
+                            o.toString = function () {
+                                return leftPad(o.i + "", 4) + leftPad(o.c + "", 4);
+                            };
+                            return o;
                         })
-                     .value();
-                
-                    if(charges.length>0){
-                        var chgCount=function(count){
+                        .filter(function (a) {
+                            return a.c != 0;
+                        })
+                        .value();
+
+                    if (charges.length > 0) {
+                        var chgCount = function (count) {
                             return "M  CHG" + leftPad(count + "", 3);
                         };
 
                         return _.chain(charges)
                             .chunk(8)
-                            .map(function(c){ return chgCount(c.length) +
-                                _.chain(c)
-                                    .map(function(ic){return ic.toString();})
+                            .map(function (c) {
+                                return chgCount(c.length) +
+                                    _.chain(c)
+                                    .map(function (ic) {
+                                        return ic.toString();
+                                    })
                                     .value()
-                                       .join("");
+                                    .join("");
                             })
                             .value()
                             .join("\n");
@@ -2897,38 +2954,38 @@
                     return null;
                 };
 
-                scope.getMol = function(){
+                scope.getMol = function () {
 
-                        var chargeLine = scope.getMChargeFromXML(scope.sketcher.getXml());
-                        var mfile = scope.sketcher.getMolfile();
+                    var chargeLine = scope.getMChargeFromXML(scope.sketcher.getXml());
+                    var mfile = scope.sketcher.getMolfile();
 
-                        //can't find charge section
-                        if(mfile.indexOf("M  CHG")<0){
+                    //can't find charge section
+                    if (mfile.indexOf("M  CHG") < 0) {
 
-                                if(chargeLine!==null){
-                                        var lines = mfile.split("\n");
-                                        for(var i=lines.length-1;i>=3;i--){
-                                                if(lines[i]==="M  END"){
-                                                        var old=lines[i];
-                                                        lines[i]=chargeLine;
-                                                        lines[i+1]=old;
-                                                        mfile=lines.join("\n");
-                                                        break;
-                                                }
-                                        }
+                        if (chargeLine !== null) {
+                            var lines = mfile.split("\n");
+                            for (var i = lines.length - 1; i >= 3; i--) {
+                                if (lines[i] === "M  END") {
+                                    var old = lines[i];
+                                    lines[i] = chargeLine;
+                                    lines[i + 1] = old;
+                                    mfile = lines.join("\n");
+                                    break;
                                 }
+                            }
                         }
-                        //alert("using:" + mfile);
-                        return scope.clean(mfile);
+                    }
+                    //alert("using:" + mfile);
+                    return scope.clean(mfile);
                 };
 
                 scope.sketcher.options.ondatachange = function () {
                     scope.mol = scope.getMol();
-                    if(attrs.ajax == 'false') {
-                        $timeout(function() {
+                    if (attrs.ajax == 'false') {
+                        $timeout(function () {
                             _.set(scope.parent, 'q', scope.mol);
                         }, 0);
-                    }else{
+                    } else {
                         scope.updateMol();
                     }
                 };
@@ -2941,25 +2998,27 @@
 
                 if (scope.parent.substanceClass === 'polymer' && (scope.parent.polymer.displayStructure)) {
                     scope.sketcher.setMolfile(scope.parent.polymer.displayStructure.molfile);
-                }else {
-                        if(!_.isUndefined(scope.parent.polymer)){
-                            if(!_.isUndefined(scope.parent.polymer.idealizedStructure)) {
-                                       scope.mol = scope.parent.polymer.idealizedStructure.molfile;
-                                if (!_.isNull(scope.mol)) {
-                                    scope.updateMol();
-                                }
+                } else {
+                    if (!_.isUndefined(scope.parent.polymer)) {
+                        if (!_.isUndefined(scope.parent.polymer.idealizedStructure)) {
+                            scope.mol = scope.parent.polymer.idealizedStructure.molfile;
+                            if (!_.isNull(scope.mol)) {
+                                scope.updateMol();
                             }
+                        }
                     }
                 }
-		if(attrs.load){
-			var load=attrs.load;
-		 	$timeout(function() {
-				scope.sketcher.setMolfile(load);
-			},0);
-		}
+                if (attrs.load) {
+                    var load = attrs.load;
+                    $timeout(function () {
+                        scope.sketcher.setMolfile(load);
+                    }, 0);
+                }
                 if (structureid) {
                     var url = baseurl + 'api/v1/structures/' + structureid;
-                    $http.get( url, {cache: true}).then(function (response) {
+                    $http.get(url, {
+                        cache: true
+                    }).then(function (response) {
                         scope.sketcher.setMolfile(response.data.molfile);
                         _.set(scope.parent, 'q', response.data.smiles);
                         localStorageService.remove('structureid');
@@ -2967,10 +3026,10 @@
                 }
 
                 var sketcherElm = {
-                	"get":function(){
-                		return element[0];
-            }
-        };
+                    "get": function () {
+                        return element[0];
+                    }
+                };
 
                 var CLIPBOARD = new CLIPBOARD_CLASS("clip_canvas", true);
 
@@ -2984,170 +3043,172 @@
                 function CLIPBOARD_CLASS(canvas_id, autoresize) {
                     var _self = this;
                     var canvas = null;
-                    var ctx =null;
+                    var ctx = null;
                     //handlers
-                    document.addEventListener('paste', function(e) {
+                    document.addEventListener('paste', function (e) {
                         _self.paste_auto(e, 'paste');
                     }, false);
 
-                    document.addEventListener('dragstart', function(e){
+                    document.addEventListener('dragstart', function (e) {
                         e = e || event;
                         e.preventDefault();
-                    },false);
+                    }, false);
 
-                    document.addEventListener('dragover', function(e){
+                    document.addEventListener('dragover', function (e) {
                         e = e || event;
                         e.preventDefault();
-                    },false);
+                    }, false);
 
-                    document.addEventListener('dragleave',function(e){
+                    document.addEventListener('dragleave', function (e) {
                         e = e || event;
                         e.preventDefault();
-                    },false);
-                    sketcherElm.get().addEventListener('dragover', function(e){
+                    }, false);
+                    sketcherElm.get().addEventListener('dragover', function (e) {
                         e = e || event;
                         e.stopPropagation();
                         e.preventDefault();
                         sketcherElm.get().parentElement.classList.add('dragover');
-                    },false);
-                    sketcherElm.get().addEventListener('dragleave', function(e){
+                    }, false);
+                    sketcherElm.get().addEventListener('dragleave', function (e) {
                         e = e || event;
                         e.stopPropagation();
                         e.preventDefault();
                         sketcherElm.get().parentElement.classList.remove('dragover');
-                    },false);
+                    }, false);
 
-                    document.addEventListener('drop', function(e) {
+                    document.addEventListener('drop', function (e) {
                         e.stopPropagation();
                         e.preventDefault();
                         sketcherElm.get().parentElement.classList.remove('dragover');
                         _self.paste_auto(e, 'drop');
                     }, false);
 
-                    this.loadImage = function(blob){
-                    	var source=null;
-                    	if(typeof blob  ==="string"){
-                    		source=blob;
-                    	}else{
-                    		var URLObj = window.URL || window.webkitURL;
-                    		source = URLObj.createObjectURL(blob);
-                    	}
+                    this.loadImage = function (blob) {
+                        var source = null;
+                        if (typeof blob === "string") {
+                            source = blob;
+                        } else {
+                            var URLObj = window.URL || window.webkitURL;
+                            source = URLObj.createObjectURL(blob);
+                        }
                         this.paste_createImage(source);
                         return true;
                     }
 
-                    this.paste_auto = function(e, method) {
-                    	var _this=this;
-                    	canvas = document.getElementById(canvas_id);
+                    this.paste_auto = function (e, method) {
+                        var _this = this;
+                        canvas = document.getElementById(canvas_id);
                         ctx = document.getElementById(canvas_id).getContext("2d");
-                        var gotImage=false;
+                        var gotImage = false;
                         var text = null;
                         if (method == 'drop') {
                             var items = e.dataTransfer.files;
 
-                            if(items.length==0){
-                            	for(var ii=0;ii<e.dataTransfer.items.length;ii++){
-                            		if(e.dataTransfer.items[ii].type==="text/html"){
-                            			e.dataTransfer.items[ii].getAsString(function(s){
-                            				if(s.indexOf("<img") ==0){
-                            					var url = JSON.parse(s.split("src=")[1].split(/[ |>]+/)[0].trim());
-                            					if(_this.loadImage(url)){
+                            if (items.length == 0) {
+                                for (var ii = 0; ii < e.dataTransfer.items.length; ii++) {
+                                    if (e.dataTransfer.items[ii].type === "text/html") {
+                                        e.dataTransfer.items[ii].getAsString(function (s) {
+                                            if (s.indexOf("<img") == 0) {
+                                                var url = JSON.parse(s.split("src=")[1].split(/[ |>]+/)[0].trim());
+                                                if (_this.loadImage(url)) {
                                                     scope.invalidStructure = false;
-                            						e.preventDefault();
-                            					}
-                            				}
-    });
-                            		}
-                            	}
-                            	return;
-                            }
-
-                        }else if (method == 'paste'){
-                            var items = e.clipboardData.items;
-                        }
-                        if (!items) return;
-                                for (var i = 0; i < items.length; i++) {
-                                    if (items[i].type.indexOf("image") !== -1) {
-                                        scope.invalidStructure = false;
-                                    	var blob;
-                                        if(method == "drop"){
-                                            blob = items[i];
-                                        }else if(method == "paste") {
-                                            blob = items[i].getAsFile();
-                                        }
-                                        if(_this.loadImage(blob)){
-                    						e.preventDefault();
-                    						gotImage=true;
-                    					}
-                                        break;
-                                    } else if (items[i].type.indexOf("text") !== -1) {
-                                        items[i].getAsString(function (r) {
-                                            if (r) {
-                                                text = r;
-                                                if (!gotImage) {
-                                                    try {
-                                                        if (scope.sketcher.activated) {
-                                                            if (text.indexOf("<div") == -1) {
-                                                                setLoading(true);
-                                                                scope.updateMolServer(text, true, true);
-                                                            }
-                                                        }
-                                                    } catch (e) {
-                                                        if (text.indexOf("<div") == -1) {
-                                                            setLoading(true);
-                                                            scope.updateMolServer(text, true, true);
-                                                        }
-                                                    }
+                                                    e.preventDefault();
                                                 }
                                             }
                                         });
                                     }
                                 }
+                                return;
+                            }
+
+                        } else if (method == 'paste') {
+                            var items = e.clipboardData.items;
+                        }
+                        if (!items) return;
+                        for (var i = 0; i < items.length; i++) {
+                            if (items[i].type.indexOf("image") !== -1) {
+                                scope.invalidStructure = false;
+                                var blob;
+                                if (method == "drop") {
+                                    blob = items[i];
+                                } else if (method == "paste") {
+                                    blob = items[i].getAsFile();
+                                }
+                                if (_this.loadImage(blob)) {
+                                    e.preventDefault();
+                                    gotImage = true;
+                                }
+                                break;
+                            } else if (items[i].type.indexOf("text") !== -1) {
+                                items[i].getAsString(function (r) {
+                                    if (r) {
+                                        text = r;
+                                        if (!gotImage) {
+                                            try {
+                                                if (scope.sketcher.activated) {
+                                                    if (text.indexOf("<div") == -1) {
+                                                        setLoading(true);
+                                                        scope.updateMolServer(text, true, true);
+                                                    }
+                                                }
+                                            } catch (e) {
+                                                if (text.indexOf("<div") == -1) {
+                                                    setLoading(true);
+                                                    scope.updateMolServer(text, true, true);
+                                                }
+                                            }
+                                        }
+                                    }
+                                });
+                            }
+                        }
                     };
                     //draw pasted image to canvas
-                    this.paste_createImage = function(source) {
-                    	scope.fromImage=true;
-                        var myEl = angular.element( document.querySelector( 'canvas' ) );
+                    this.paste_createImage = function (source) {
+                        scope.fromImage = true;
+                        var myEl = angular.element(document.querySelector('canvas'));
                         var pastedImage = new Image();
-                        pastedImage.onload = function() {
+                        pastedImage.onload = function () {
                             if (autoresize === true) {
                                 //resize
                                 canvas.width = pastedImage.width;
                                 canvas.height = pastedImage.height;
 
                                 myEl.addClass('canvas-display');
-                                scope.canvasLabel="Original Image";
+                                scope.canvasLabel = "Original Image";
 
                                 //$compile(angular.element(document.getElementById('canvas-label').innerHTML ="<b>Original Image<b>"))(scope);
                             } else {
                                 //clear canvas
                                 ctx.clearRect(0, 0, canvas.width, canvas.height);
                                 myEl.removeClass('canvas-display');
-                                scope.canvasLabel="Original Image";
+                                scope.canvasLabel = "Original Image";
                             }
                             ctx.fillStyle = "#FFFFFF";
                             ctx.fillRect(0, 0, pastedImage.width, pastedImage.height);
                             ctx.drawImage(pastedImage, 0, 0);
                             var dataURL = canvas.toDataURL();
-                            if(dataURL.length>100000){
-                            	dataURL = canvas.toDataURL('image/jpeg', 100000/dataURL.length);
-                            	console.log(dataURL.length);
+                            if (dataURL.length > 100000) {
+                                dataURL = canvas.toDataURL('image/jpeg', 100000 / dataURL.length);
+                                console.log(dataURL.length);
                             }
                             setLoading(true);
                             //TODO: Change to use angular
                             $.ajax({
                                 url: "/ginas/app/api/v1/foo/ocrStructure",
                                 type: "POST",
-                                headers: {  'Access-Control-Allow-Origin': 'http://localhost:9000' },
+                                headers: {
+                                    'Access-Control-Allow-Origin': 'http://localhost:9000'
+                                },
                                 data: dataURL,
                                 contentType: 'application/json',
-                                success: function(response) {
+                                success: function (response) {
                                     setLoading(false);
                                     var myresp = JSON.parse(response);
                                     scope.sketcher.setMolfile(myresp.molfile);
 
                                 },
-                                error: function(rep, error, t) {
+                                error: function (rep, error, t) {
                                     //error handling
                                     setLoading(false);
                                     scope.invalidStructure = true;
@@ -3155,7 +3216,7 @@
                                 }
                             });
                         };
-                        pastedImage.crossOrigin="anonymous";
+                        pastedImage.crossOrigin = "anonymous";
                         pastedImage.src = source;
                     };
                 }
@@ -3219,7 +3280,10 @@
                             molChanger.setMol(data.structure.molfile);
                             scope.close();
                         } else {
-                            var warning = {type: 'warning', message: 'not a vaild molfile'};
+                            var warning = {
+                                type: 'warning',
+                                message: 'not a vaild molfile'
+                            };
                             scope.warnings.push(warning);
                         }
                     });
@@ -3235,7 +3299,7 @@
                         return response;
                     });
                 };
-                
+
                 scope.getFormat = function (fmt) {
                     var url = baseurl + 'export/' + scope.structureid + '.' + fmt;
                     return $http.get(url, {
@@ -3246,27 +3310,27 @@
                         return response;
                     });
                 };
-                
-                scope.getExportDisplay = function(fmt){
-                	switch (fmt) {
-	                    case "fas":
-	                            return "FASTA";
-	                    case "mol":
-	                            return "Molfile";
-	                    case "sdf":
-	                            return "SD File";   
-	                    default:
-	                            return "Export";          
-                	}
+
+                scope.getExportDisplay = function (fmt) {
+                    switch (fmt) {
+                        case "fas":
+                            return "FASTA";
+                        case "mol":
+                            return "Molfile";
+                        case "sdf":
+                            return "SD File";
+                        default:
+                            return "Export";
+                    }
                 };
 
                 scope.getExport = function () {
-                    scope.formatName=scope.getExportDisplay(scope.format);
-                    if(scope.format2){
-                    	scope.formatName2=scope.getExportDisplay(scope.format2);
+                    scope.formatName = scope.getExportDisplay(scope.format);
+                    if (scope.format2) {
+                        scope.formatName2 = scope.getExportDisplay(scope.format2);
                     }
-                    
-                    if(_.isUndefined(scope.structureid)){
+
+                    if (_.isUndefined(scope.structureid)) {
                         var url = baseurl + 'structure';
                         var mol = molChanger.getMol();
                         $http.post(url, mol, {
@@ -3278,33 +3342,33 @@
                             scope.exportSmiles = response.data.structure.smiles;
                             scope.open();
                         });
-                    }else {
-                    	
-	                        var url = baseurl + 'export/' + scope.structureid + '.' + scope.format;
-	                        $http.get(url, {
-	                            headers: {
-	                                'Content-Type': 'text/plain'
-	                            }
-	                        }).success(function (response) {
-	                        	if(scope.format2){
-	                        		scope.getFormat(scope.format2).then(function(d){
-	                        			scope.exportData2 = d.data;
-	                        		});
-	                        	}
-	                            scope.exportData = response;
-	                            if(scope.format != 'fas') {
-	                                url = baseurl + 'export/' + scope.structureid + '.smiles';
-	                                $http.get(url, {
-	                                    headers: {
-	                                        'Content-Type': 'text/plain'
-	                                    }
-	                                }).success(function (response) {
-	                                    scope.exportSmiles = response;
-	                                });
-	                            }
-	                            
-	                            scope.open();
-	                        });
+                    } else {
+
+                        var url = baseurl + 'export/' + scope.structureid + '.' + scope.format;
+                        $http.get(url, {
+                            headers: {
+                                'Content-Type': 'text/plain'
+                            }
+                        }).success(function (response) {
+                            if (scope.format2) {
+                                scope.getFormat(scope.format2).then(function (d) {
+                                    scope.exportData2 = d.data;
+                                });
+                            }
+                            scope.exportData = response;
+                            if (scope.format != 'fas') {
+                                url = baseurl + 'export/' + scope.structureid + '.smiles';
+                                $http.get(url, {
+                                    headers: {
+                                        'Content-Type': 'text/plain'
+                                    }
+                                }).success(function (response) {
+                                    scope.exportSmiles = response;
+                                });
+                            }
+
+                            scope.open();
+                        });
                     }
                 };
 
@@ -3373,11 +3437,11 @@
 
 
 
-//*****************************************************************
-// Experimental !!!
-//*****************************************************************
+    //*****************************************************************
+    // Experimental !!!
+    //*****************************************************************
 
-    
+
     /*
      * 
      * 
@@ -3404,317 +3468,317 @@
             restrict: 'E',
             replace: true,
             scope: {
-            	substance: '=',
-            	substanceuuid: '@',
-            	showPopup: '@'
+                substance: '=',
+                substanceuuid: '@',
+                showPopup: '@'
             },
             link: function (scope, element, attrs) {
-                
-            	var div="<span ng-class='iclass' ng-click='click()' class='stop-prop' >\n" +
-            	     "<info-popup ng-mouseleave='mouesOut()' ng-mouseover='mouesIn()'  icon='fa-search-plus' show-popup=showPopup trigger='none' >" +
-            	     "  <div style='text-align: center;'>" + 
-		           	 "  <substance-preview substance-views=\"['Preferred Term','img','Approval ID (UNII)','iconButtons']\"" + 
-		           	 "     substanceuuid='" + scope.substanceuuid +  "'>" +
-		           	 "  </substance-preview>" + 
-		             "  </div>" +
+
+                var div = "<span ng-class='iclass' ng-click='click()' class='stop-prop' >\n" +
+                    "<info-popup ng-mouseleave='mouesOut()' ng-mouseover='mouesIn()'  icon='fa-search-plus' show-popup=showPopup trigger='none' >" +
+                    "  <div style='text-align: center;'>" +
+                    "  <substance-preview substance-views=\"['Preferred Term','img','Approval ID (UNII)','iconButtons']\"" +
+                    "     substanceuuid='" + scope.substanceuuid + "'>" +
+                    "  </substance-preview>" +
+                    "  </div>" +
                     "</info-popup>\n";
                 // div += "<span>{{_substance._name}} [{{_substance._approvalIDDisplay}}]</span>\n" + " </span>";
                 div += "</span>";
-            	scope.iclass="";
-            	
-            	
-            	scope.mouesIn=function(){
-            		if(!scope.showPopup){
-            			scope.fromMouse=true;
-            			scope.showPopup=true;
-            		}
-            	};
-            	
-            	scope.mouesOut=function(){
-            		if(scope.fromMouse){
-            			scope.showPopup=false;
-            			scope.fromMouse=false;
-            		}
-            	};
-            	
-            	scope.click=function(){
-            		scope.iclass="keep-open";
-            		scope.fromMouse=false;
-            		scope.showPopup=!scope.showPopup;
-            		setTimeout(function(){
-            			scope.iclass="";
-            			scope.$apply();
-            		},10);
-            	};
-            	
-            	scope.update=function(){
-            		//console.log("Updating");
-            	};
-            	
-            	if(!scope.substance){
-            		var uuid=scope.substanceuuid;
-            		if(uuid){
-            			APIFetcher.fetch(uuid, scope.version)
-            		        	  .then(function(s){
-            		        		  
-            						scope._substance=s;
-            						scope.update();
-            					  });
-            		}
-            	}else{
-            		scope._substance=scope.substance;
-            		scope.update();
-            	}
+                scope.iclass = "";
+
+
+                scope.mouesIn = function () {
+                    if (!scope.showPopup) {
+                        scope.fromMouse = true;
+                        scope.showPopup = true;
+                    }
+                };
+
+                scope.mouesOut = function () {
+                    if (scope.fromMouse) {
+                        scope.showPopup = false;
+                        scope.fromMouse = false;
+                    }
+                };
+
+                scope.click = function () {
+                    scope.iclass = "keep-open";
+                    scope.fromMouse = false;
+                    scope.showPopup = !scope.showPopup;
+                    setTimeout(function () {
+                        scope.iclass = "";
+                        scope.$apply();
+                    }, 10);
+                };
+
+                scope.update = function () {
+                    //console.log("Updating");
+                };
+
+                if (!scope.substance) {
+                    var uuid = scope.substanceuuid;
+                    if (uuid) {
+                        APIFetcher.fetch(uuid, scope.version)
+                            .then(function (s) {
+
+                                scope._substance = s;
+                                scope.update();
+                            });
+                    }
+                } else {
+                    scope._substance = scope.substance;
+                    scope.update();
+                }
                 element.empty().append($compile(div)(scope));
             }
         }
     });
-    
 
-	/*
-	    <substance-preview> Directive
-	    	
-		This will be a basic widget for previewing a substance.
-		
-		A few examples:
-		
-		<!-- From a scope substance object -->
-		<substance-preview substance="someScopeSubstanceJson" ></substance-preview>
-		<!-- From a scope substance uuid -->
-		<substance-preview substanceUUID="5ce23012-506e-47f5-8601-44b7d605a929" ></substance-preview>
-		
-		For now, if you have the two above, you can discover ways of doing it later.
-		
-		Now, we also need to decide what things to show:
-			1. Name
-			2. Structure
-			3. Edit Icon
-			4. Link
-			5. etc ...
-			
-		<substance-preview substance-views="['Preferred Term','img','Approval ID (UNII)']" 
-		                   substanceuuid="f982d178-7bcb-448a-9fd3-25c59e181c7b">
-		                   
-		</substance-preview>
-		
-		The above is an example of how to do that. As of this moment, it will use whatever
-		fetchers are in the js api, and can render those. But there will need to be more
-		room for interaction.                   
-	*/
 
-	ginasApp.directive("substancePreview", function ($compile,APIFetcher) {
+    /*
+        <substance-preview> Directive
+        	
+    	This will be a basic widget for previewing a substance.
+    	
+    	A few examples:
+    	
+    	<!-- From a scope substance object -->
+    	<substance-preview substance="someScopeSubstanceJson" ></substance-preview>
+    	<!-- From a scope substance uuid -->
+    	<substance-preview substanceUUID="5ce23012-506e-47f5-8601-44b7d605a929" ></substance-preview>
+    	
+    	For now, if you have the two above, you can discover ways of doing it later.
+    	
+    	Now, we also need to decide what things to show:
+    		1. Name
+    		2. Structure
+    		3. Edit Icon
+    		4. Link
+    		5. etc ...
+    		
+    	<substance-preview substance-views="['Preferred Term','img','Approval ID (UNII)']" 
+    	                   substanceuuid="f982d178-7bcb-448a-9fd3-25c59e181c7b">
+    	                   
+    	</substance-preview>
+    	
+    	The above is an example of how to do that. As of this moment, it will use whatever
+    	fetchers are in the js api, and can render those. But there will need to be more
+    	room for interaction.                   
+    */
+
+    ginasApp.directive("substancePreview", function ($compile, APIFetcher) {
         return {
             restrict: 'E',
             replace: true,
             scope: {
-            	substance: '=',
+                substance: '=',
                 substanceuuid: '@',
                 substanceViews: '='
             },
             link: function (scope, element, attrs) {
-            	//Set the global helper
+                //Set the global helper
 
-            	
-            	//######################
-            	//HELPER FUNCTIONS START
-            	//######################
-            	const iconButtonMaker= function(){
-        	 				var u={};
-        	 				u.setURL=function(url){
-        	 					u.url=url;
-        	 					return u;
-        	 				};
-        	 				u.setTitle=function(t){
-        	 					u.title=t;
-        	 					return u;
-        	 				};
-        	 				u.setIcon=function(i){
-        	 					u.icon=i;
-        	 					return u;
-        	 				};
-        	 				return u;
-            	 		};
-            
-            	const ViewFetcher=function(){
-            		var vf={};
-            		
-            		vf.name = function(n){
-            			if(n){
-            				vf._name=n;
-            				return vf;
-            			}else{
-            				return vf._name;
-            			}
-            		};
-            		
-            		vf.isSet=false;
-            		
-            		vf.setFunction = function(f){
-            			vf._f=f;
-            			vf.isSet=true;
-            			return this;
-            		};
-            		
-            		vf.make = function(s){
-            			//should be a promise?
-            			return vf._f(s);
-            		};           		
-            		
-            		vf.IDENTITY = function(){
-            			return ViewFetcher().setFunction(function(s){
-            				return JPromise.ofScalar(vf._prepareSubstance(s));
-            			});
-            		};
-            		
-            		vf._prepareSubstance = function(s){
-            				var mods=SubstanceBuilder.fromSimple(s);
-            				mods._urls=[];
-            				
-            				mods._urls.push(iconButtonMaker()
-            					.setURL(baseurl + "substance/" + mods.uuid + "/edit")
-            					.setTitle("Edit Record")
-            					.setIcon("fa-pencil"));
 
-            				
-            				if(mods.structure){
-            					mods._urls.push(iconButtonMaker()
-		            					   .setURL(baseurl + "structure?q=" + mods.structure.id)
-		            					   .setTitle("Search Structure")
-		            					   .setIcon("fa-search"));
-            				}
-            				
-            				if(mods.protein && mods.protein.subunits){
-            					_.chain(mods.protein.subunits)
-            					 .map(function(su){
-            						 mods._urls.push(iconButtonMaker()
-  		            					   .setURL(baseurl + "sequence?id=" + su.uuid)
-  		            					   .setTitle("Sequence Subunit " + su.subunitIndex + " Search")
-  		            					   .setIcon("fa-search"));	 
-            					 })
-            					 .value();
-            				}
-            				
-							mods._urls.push(iconButtonMaker()
-            					.setURL(baseurl + "substance/" + mods.uuid)
-            					.setTitle("View Record")
-            					.setIcon("fa-sign-in"));
-            				
-            				return mods;
-            		};
-            		
-            		vf.fromFetcher = function(f){
-            			if(!f)return vf;
-            			return vf.name(f.name).setFunction(function(s){
-            				var mods=vf._prepareSubstance(s);
-            				return f.fetcher(mods);
-            			});
-            		};
-            		
-            		vf.after = function(m){
-            			var vft=ViewFetcher().name(vf.name());
-            			return vft.setFunction(function(s){
-            									return vf.make(s)            			
-            										     .andThen(function(r){
-            										    	 	return m(r,vft);
-            										     });
-            								   });
-            				
-            		};
-            		
-            		return vf;
-            	};
-            
-            	const kvclean = function (e,vf){
-            		var elm="<div class='row'>" + 
-            		 	 	        "<div ng-hide='hideTitles' class='col-md-12'>" + vf.name() + "</div>" 
-            		 	 	       +"<div class='col-md-12'>" + e + "</div>";
-            		return elm;
-            	};
-            	
-            	const fetchFetcher = function(vf){
-            		var fetcher=FetcherRegistry.getFetcher(vf);
-            		if(fetcher){
-            			return ViewFetcher().name(vf)
-            			                    .fromFetcher(fetcher)
-            			                    .after(kvclean);
-            		}
-            		if(vf==="img"){
-            	 			return ViewFetcher()
-            	 				.fromFetcher(FetcherRegistry.getFetcher("UUID"))
-            	 				.after(function(uu){
-            	 					return "<div><rendered id='" + uu + "'></rendered></div>";
-            	 				});   
-            	 	}
-            	 	if(vf==="iconButtons"){
-            	 			return ViewFetcher()
-            	 				.IDENTITY()
-            	 				.name("TEST")
-            	 				.after(function(s){
-            	 					scope.iconButtons=s._urls;
-            	 					return "											<div class=\"col-md-12 text-center\">\n" + 
-            	 					"											        <ul class=\"list-inline list-unstyled tools\">\n" + 
-            	 					"											            <!-- basic icons -->\n" + 
-            	 					"											            <li ng-repeat=\"u in iconButtons\">\n" + 
-            	 					"											                <a href=\"{{u.url}}\" uib-tooltip=\"{{u.title}}\" target=\"_self\" aria-label=\"{{u.title}}\">\n" + 
-            	 					"											                    <span class=\"sr-only\">\n" + 
-            	 					"											                    {{u.title}}\n" + 
-            	 					"											                    </span>\n" + 
-            	 					"											                    <span class=\"fa {{u.icon}} fa-2x success\"></span>\n" + 
-            	 					"											                </a>                \n" + 
-            	 					"											            </li>\n" + 
-            	 					"											        </ul>\n" + 
-            	 					"											</div>";
-            	 				});   
-            	 	}
-            	};
-            	//######################
-            	//HELPER FUNCTIONS END
-            	//######################
-            	            
-            	scope.allViews=[];
-            	scope.views=[];
-            	
-            	scope.hideTitles=true;
-            	
-            	//calculate views based on specified views
-            	scope.views=_.chain(scope.substanceViews)
-            	 			 .map(fetchFetcher)
-            	 			 .value();
-            	            	                             
-            	scope.update=function(){
-            		element.html("");
-            		_.chain(scope.views)
-            		 .map(function(v){
-            		 	v.make(scope._substance)
-            		 	 .get(function(e){
-	            		 	element.append($compile(e)(scope));
-            		 	 });
-            		 })
-            		 .value();
-            	};                    
-                        
-            	if(!scope.substance){
-            		var uuid=scope.substanceuuid;
-            		if(uuid){
-            			APIFetcher.fetch(uuid, scope.version)
-            		        	  .then(function(s){
-            						scope._substance=s;
-            						scope.update();
-            					  });
-            		}
-            	}else{
-            		scope._substance=scope.substance;
-            		scope.update();
-            	}
+                //######################
+                //HELPER FUNCTIONS START
+                //######################
+                const iconButtonMaker = function () {
+                    var u = {};
+                    u.setURL = function (url) {
+                        u.url = url;
+                        return u;
+                    };
+                    u.setTitle = function (t) {
+                        u.title = t;
+                        return u;
+                    };
+                    u.setIcon = function (i) {
+                        u.icon = i;
+                        return u;
+                    };
+                    return u;
+                };
+
+                const ViewFetcher = function () {
+                    var vf = {};
+
+                    vf.name = function (n) {
+                        if (n) {
+                            vf._name = n;
+                            return vf;
+                        } else {
+                            return vf._name;
+                        }
+                    };
+
+                    vf.isSet = false;
+
+                    vf.setFunction = function (f) {
+                        vf._f = f;
+                        vf.isSet = true;
+                        return this;
+                    };
+
+                    vf.make = function (s) {
+                        //should be a promise?
+                        return vf._f(s);
+                    };
+
+                    vf.IDENTITY = function () {
+                        return ViewFetcher().setFunction(function (s) {
+                            return JPromise.ofScalar(vf._prepareSubstance(s));
+                        });
+                    };
+
+                    vf._prepareSubstance = function (s) {
+                        var mods = SubstanceBuilder.fromSimple(s);
+                        mods._urls = [];
+
+                        mods._urls.push(iconButtonMaker()
+                            .setURL(baseurl + "substance/" + mods.uuid + "/edit")
+                            .setTitle("Edit Record")
+                            .setIcon("fa-pencil"));
+
+
+                        if (mods.structure) {
+                            mods._urls.push(iconButtonMaker()
+                                .setURL(baseurl + "structure?q=" + mods.structure.id)
+                                .setTitle("Search Structure")
+                                .setIcon("fa-search"));
+                        }
+
+                        if (mods.protein && mods.protein.subunits) {
+                            _.chain(mods.protein.subunits)
+                                .map(function (su) {
+                                    mods._urls.push(iconButtonMaker()
+                                        .setURL(baseurl + "sequence?id=" + su.uuid)
+                                        .setTitle("Sequence Subunit " + su.subunitIndex + " Search")
+                                        .setIcon("fa-search"));
+                                })
+                                .value();
+                        }
+
+                        mods._urls.push(iconButtonMaker()
+                            .setURL(baseurl + "substance/" + mods.uuid)
+                            .setTitle("View Record")
+                            .setIcon("fa-sign-in"));
+
+                        return mods;
+                    };
+
+                    vf.fromFetcher = function (f) {
+                        if (!f) return vf;
+                        return vf.name(f.name).setFunction(function (s) {
+                            var mods = vf._prepareSubstance(s);
+                            return f.fetcher(mods);
+                        });
+                    };
+
+                    vf.after = function (m) {
+                        var vft = ViewFetcher().name(vf.name());
+                        return vft.setFunction(function (s) {
+                            return vf.make(s)
+                                .andThen(function (r) {
+                                    return m(r, vft);
+                                });
+                        });
+
+                    };
+
+                    return vf;
+                };
+
+                const kvclean = function (e, vf) {
+                    var elm = "<div class='row'>" +
+                        "<div ng-hide='hideTitles' class='col-md-12'>" + vf.name() + "</div>" +
+                        "<div class='col-md-12'>" + e + "</div>";
+                    return elm;
+                };
+
+                const fetchFetcher = function (vf) {
+                    var fetcher = FetcherRegistry.getFetcher(vf);
+                    if (fetcher) {
+                        return ViewFetcher().name(vf)
+                            .fromFetcher(fetcher)
+                            .after(kvclean);
+                    }
+                    if (vf === "img") {
+                        return ViewFetcher()
+                            .fromFetcher(FetcherRegistry.getFetcher("UUID"))
+                            .after(function (uu) {
+                                return "<div><rendered id='" + uu + "'></rendered></div>";
+                            });
+                    }
+                    if (vf === "iconButtons") {
+                        return ViewFetcher()
+                            .IDENTITY()
+                            .name("TEST")
+                            .after(function (s) {
+                                scope.iconButtons = s._urls;
+                                return "											<div class=\"col-md-12 text-center\">\n" +
+                                    "											        <ul class=\"list-inline list-unstyled tools\">\n" +
+                                    "											            <!-- basic icons -->\n" +
+                                    "											            <li ng-repeat=\"u in iconButtons\">\n" +
+                                    "											                <a href=\"{{u.url}}\" uib-tooltip=\"{{u.title}}\" target=\"_self\" aria-label=\"{{u.title}}\">\n" +
+                                    "											                    <span class=\"sr-only\">\n" +
+                                    "											                    {{u.title}}\n" +
+                                    "											                    </span>\n" +
+                                    "											                    <span class=\"fa {{u.icon}} fa-2x success\"></span>\n" +
+                                    "											                </a>                \n" +
+                                    "											            </li>\n" +
+                                    "											        </ul>\n" +
+                                    "											</div>";
+                            });
+                    }
+                };
+                //######################
+                //HELPER FUNCTIONS END
+                //######################
+
+                scope.allViews = [];
+                scope.views = [];
+
+                scope.hideTitles = true;
+
+                //calculate views based on specified views
+                scope.views = _.chain(scope.substanceViews)
+                    .map(fetchFetcher)
+                    .value();
+
+                scope.update = function () {
+                    element.html("");
+                    _.chain(scope.views)
+                        .map(function (v) {
+                            v.make(scope._substance)
+                                .get(function (e) {
+                                    element.append($compile(e)(scope));
+                                });
+                        })
+                        .value();
+                };
+
+                if (!scope.substance) {
+                    var uuid = scope.substanceuuid;
+                    if (uuid) {
+                        APIFetcher.fetch(uuid, scope.version)
+                            .then(function (s) {
+                                scope._substance = s;
+                                scope.update();
+                            });
+                    }
+                } else {
+                    scope._substance = scope.substance;
+                    scope.update();
+                }
             },
-            template: function(element, scope) {
-		     	return "<div></div>";
-		    }
+            template: function (element, scope) {
+                return "<div></div>";
+            }
         }
     });
-//*****************************************************************
-//Views and General UI
-//*****************************************************************
+    //*****************************************************************
+    //Views and General UI
+    //*****************************************************************
 
     ginasApp.directive("treeView", function ($compile) {
         return {
@@ -3754,54 +3818,54 @@
             restrict: 'E',
             replace: true,
             scope: {
-                eid:   '@',
+                eid: '@',
                 cardTitle: '@',
                 count: '@',
                 audit: '=',
                 initcollapse: '=',
-                
+
             },
-            link: function(scope){
-            	scope.scrollTo = scope.$parent.scrollTo;
-            	scope.getRange = scope.$parent.getRange;
-            	scope.redirectVersion = function(){
-            		scope.$parent.redirectVersion(scope.versionNumber);
-            	};
+            link: function (scope) {
+                scope.scrollTo = scope.$parent.scrollTo;
+                scope.getRange = scope.$parent.getRange;
+                scope.redirectVersion = function () {
+                    scope.$parent.redirectVersion(scope.versionNumber);
+                };
             },
-            template: function(element, scope) {
-		     var content = element[0].innerHTML;
-		     return [
-		        '<div ng-cloak class="row detail-card info fade-ng-cloak ng-cloak" id="{{eid}}">',
-					"<button class=\"btn btn-primary label-offset det\" ng-class=\"(collapse)?'collapsed':''\" ng-init = \"collapse=initcollapse\" ng-click = \"collapse = !collapse\">",
-					"<i ng-show=\"collapse\" class=\"fa fa-caret-right\"></i>",
-					"<i ng-hide=\"collapse\" class=\"fa fa-caret-down\"></i>",
-					"{{cardTitle}}&nbsp;<span ng-if=\"count!=0\" class=\"badge\"> {{count}}</span></button>",
-					"<div class=\"col-md-12 table-responsive card-content\" uib-collapse = \"collapse\">",
-					content, 
-					'</div>',
-				'</div>'
-		      ].join("\n");
-		    }
+            template: function (element, scope) {
+                var content = element[0].innerHTML;
+                return [
+                    '<div ng-cloak class="row detail-card info fade-ng-cloak ng-cloak" id="{{eid}}">',
+                    "<button class=\"btn btn-primary label-offset det\" ng-class=\"(collapse)?'collapsed':''\" ng-init = \"collapse=initcollapse\" ng-click = \"collapse = !collapse\">",
+                    "<i ng-show=\"collapse\" class=\"fa fa-caret-right\"></i>",
+                    "<i ng-hide=\"collapse\" class=\"fa fa-caret-down\"></i>",
+                    "{{cardTitle}}&nbsp;<span ng-if=\"count!=0\" class=\"badge\"> {{count}}</span></button>",
+                    "<div class=\"col-md-12 table-responsive card-content\" uib-collapse = \"collapse\">",
+                    content,
+                    '</div>',
+                    '</div>'
+                ].join("\n");
+            }
         };
     });
-    
+
     ginasApp.directive('clickOutside', function ($document) {
 
         return {
-           restrict: 'A',
-           scope: {
-               clickOutside: '&'
-           },
-           link: function (scope, el, attr) {
+            restrict: 'A',
+            scope: {
+                clickOutside: '&'
+            },
+            link: function (scope, el, attr) {
 
-               $document.on('click', function (e) {
-                   if (el !== e.target && !el[0].contains(e.target)) {
+                $document.on('click', function (e) {
+                    if (el !== e.target && !el[0].contains(e.target)) {
                         scope.$apply(function () {
                             scope.$eval(scope.clickOutside);
                         });
                     }
-               });
-           }
+                });
+            }
         }
 
     });
@@ -3811,40 +3875,40 @@
 
 //Routing intercept
 //this is not strictly angular kosher
-window.onhashchange = function(w){
-	var nhash=w.newURL.split("#")[1];
-	if(nhash.indexOf(":")>=0){
-		var wkeys=nhash.split(":");
-		$("#" + wkeys[0]).val(wkeys[1]);
-		$("#" + wkeys[0]).change();
-		$(".temp-focus").removeClass("temp-focus");
-		$("." + wkeys[2].replace("/","_")).addClass("temp-focus");
-	}
+window.onhashchange = function (w) {
+    var nhash = w.newURL.split("#")[1];
+    if (nhash.indexOf(":") >= 0) {
+        var wkeys = nhash.split(":");
+        $("#" + wkeys[0]).val(wkeys[1]);
+        $("#" + wkeys[0]).change();
+        $(".temp-focus").removeClass("temp-focus");
+        $("." + wkeys[2].replace("/", "_")).addClass("temp-focus");
+    }
 }
 
 /* Add 'Show more...' to Description section on cards in list view
 runs on page load */
-$(function(){
-    $('.list-item .text-block').each(function(event){
+$(function () {
+    $('.list-item .text-block').each(function (event) {
         /* set the max content length after which a show more link will be added */
         var max_length = 250; //show two lines of description by default
 
         /* check for content length */
-        if($(this).html().length > max_length){
+        if ($(this).html().length > max_length) {
 
-            var short_content 	= $(this).html().substr(0,max_length); /* split the content in two parts */
-            var long_content	= $(this).html().substr(max_length);
+            var short_content = $(this).html().substr(0, max_length); /* split the content in two parts */
+            var long_content = $(this).html().substr(max_length);
             var ellipses = "..."
 
             /* alter the html to allow the read more functionality */
-            $(this).html('<span class="less_text">'+short_content+'</span>'+
-                '<span class="ellipses">'+ellipses+'</span>'+
-                '<a href="#" class="show_more"></br>Show More</a>'+
-                '<span class="more_text" style="display:none;">'+long_content+'</span>'+
+            $(this).html('<span class="less_text">' + short_content + '</span>' +
+                '<span class="ellipses">' + ellipses + '</span>' +
+                '<a href="#" class="show_more"></br>Show More</a>' +
+                '<span class="more_text" style="display:none;">' + long_content + '</span>' +
                 '<a href="#" class="show_less" style="display:none;"></br>Show Less</a>');
 
             /* find the a.read_more element within the new html and bind the following code to it */
-            $(this).find('a.show_more').click(function(event){
+            $(this).find('a.show_more').click(function (event) {
                 /* prevent the a from changing the url */
                 event.preventDefault();
                 /* hide the show more button */
@@ -3857,7 +3921,7 @@ $(function(){
 
             });
 
-            $(this).find('a.show_less').click(function(event){
+            $(this).find('a.show_less').click(function (event) {
                 /* prevent the a from changing the url */
                 event.preventDefault();
                 /* hide the show less button */
@@ -3873,37 +3937,37 @@ $(function(){
 });
 
 /* remove info-popups if clicked anywhere outside */
-$(function(){
-	$('body').click(function(event){ 
-		//if any present
-        if($(".popover").length > 0 && 
-		//and if does not have popover parent
-	    event.target.closest('.popover') === null && 
-		//and if does not have info-popup parent
-	    event.target.closest('info-popup') === null){
-			//remove popover div
+$(function () {
+    $('body').click(function (event) {
+        //if any present
+        if ($(".popover").length > 0 &&
+            //and if does not have popover parent
+            event.target.closest('.popover') === null &&
+            //and if does not have info-popup parent
+            event.target.closest('info-popup') === null) {
+            //remove popover div
             $('.popover').remove();
         } else {
-	        return;
-	    }
-	});
+            return;
+        }
+    });
 });
 
 /* controls the "show smiles/inchi" block in the Structure card */
-$(function(){
-    $('.show-smiles-inchi').click(function(event){
+$(function () {
+    $('.show-smiles-inchi').click(function (event) {
         event.preventDefault();
-		$(this).hide();
-		$("#smiles-inchi").show();
-	});
+        $(this).hide();
+        $("#smiles-inchi").show();
+    });
 });
 /* controls the "hide smiles/inchi" block in the Structure card */
-$(function(){
-   $('.hide-smiles-inchi').click(function(event){
+$(function () {
+    $('.hide-smiles-inchi').click(function (event) {
         event.preventDefault();
-		$('#smiles-inchi').hide();
-		$(".show-smiles-inchi").show();
-	});
+        $('#smiles-inchi').hide();
+        $(".show-smiles-inchi").show();
+    });
 });
 
 /* controls the "show/hide references" table on the overview card*/
@@ -3925,154 +3989,157 @@ $(function () {
 });
 
 /* format numbers: 1000 => 1,000 */
-$(function(){
-	$(".badge, .label-default").each(function(){
-		/* if this is a filter on top of the page -- do not apply script
-		since it should be shown as is (can be Year, etc.) */
-		if($(this).parents('.alert-dismissible').length){
-				return;
-		}
-			
-		$(this).text(function(i,old){
-			
-			//if not a valid number -- exit
-			if(isNaN(old)){
-				return;
-			}
+$(function () {
+    $(".badge, .label-default").each(function () {
+        /* if this is a filter on top of the page -- do not apply script
+        since it should be shown as is (can be Year, etc.) */
+        if ($(this).parents('.alert-dismissible').length) {
+            return;
+        }
 
-			// i,old = index, old text
-			// convert to string and trim
-			old = old.toString().trim();
-			var count_i = 0;
-			var new_arr = [];
-			
-			// count from the back of the string-array
-			for(i = old.length-1; i>-1; i--){
-				if(count_i === 3){
-					//add a comma to array 
-					//after each set of 3 elements
-					new_arr.push(",");
-					count_i = 0;
-				}
-				new_arr.push(old[i]);
-				count_i += 1;
-			}
-			//reverse array, join, and return
-			return new_arr.reverse().join("");
+        $(this).text(function (i, old) {
+
+            //if not a valid number -- exit
+            if (isNaN(old)) {
+                return;
+            }
+
+            // i,old = index, old text
+            // convert to string and trim
+            old = old.toString().trim();
+            var count_i = 0;
+            var new_arr = [];
+
+            // count from the back of the string-array
+            for (i = old.length - 1; i > -1; i--) {
+                if (count_i === 3) {
+                    //add a comma to array 
+                    //after each set of 3 elements
+                    new_arr.push(",");
+                    count_i = 0;
+                }
+                new_arr.push(old[i]);
+                count_i += 1;
+            }
+            //reverse array, join, and return
+            return new_arr.reverse().join("");
         });
-	});
-	
+    });
+
 });
 
 
-Number.isFinite = Number.isFinite || function(value) {
+Number.isFinite = Number.isFinite || function (value) {
     return typeof value === 'number' && isFinite(value);
 };
-function restoreVersion(uuid, version){
-    if(confirm("Are you sure you'd like to restore version " + version + "?")){
-        var simpleModal=function(title){
-            var mod={};
-            var mid=("mod-over" + Math.random()).replace(".","");
-            mod._title=title;
-            mod._contents="";
-            mod.id=mid;
-            mod._accept=function(){};
-            mod._reject=function(){};
-            mod.show=function(){
-                var ofun=window["rawModDone"];
-                if(!ofun){
-                    ofun=function(){};
+
+function restoreVersion(uuid, version) {
+    if (confirm("Are you sure you'd like to restore version " + version + "?")) {
+        var simpleModal = function (title) {
+            var mod = {};
+            var mid = ("mod-over" + Math.random()).replace(".", "");
+            mod._title = title;
+            mod._contents = "";
+            mod.id = mid;
+            mod._accept = function () {};
+            mod._reject = function () {};
+            mod.show = function () {
+                var ofun = window["rawModDone"];
+                if (!ofun) {
+                    ofun = function () {};
                 }
-                window["rawModDone"]=function(b,t){
+                window["rawModDone"] = function (b, t) {
                     ofun(b);
-                    if(b===mod.id){
-                        $("#" +mod.id).remove();
-                        if(t){
+                    if (b === mod.id) {
+                        $("#" + mod.id).remove();
+                        if (t) {
                             mod._accept();
-                        }else{
+                        } else {
                             mod._reject();
                         }
                     }
                 };
                 //
-                var raw=(function(){/*
-            <div id="{{mid}}" style="z-index:999999;position:fixed;top:0px;width:100%;height:100%;background: rgba(0, 0, 0, 0.6);">
-               <div style="
-                   text-align: center;
-                   padding: 100px;
-                   max-width:600px;
-                   margin:auto;
-               ">
-                  <div style="color:white;font-weight:bold;">
-                     {{title}}
-                  </div>
-                  <div>
-                     {{contents}}
-                  </div>
-                  <div>
-                     <button onclick="rawModDone('{{mid}}',false)">Cancel</button>
-                     <button onclick="rawModDone('{{mid}}',true)">OK</button>
-                  </div>
-               </div>
-            </div>*/}.toString()).substring(14).replace(/\*\/.*/g,"");
-                raw=raw.replace(/\{\{mid\}\}/g,mod.id)
-                    .replace("{{title}}",mod._title);
-                raw=raw.replace("{{contents}}",mod._contents);
+                var raw = (function () {
+                    /*
+                                <div id="{{mid}}" style="z-index:999999;position:fixed;top:0px;width:100%;height:100%;background: rgba(0, 0, 0, 0.6);">
+                                   <div style="
+                                       text-align: center;
+                                       padding: 100px;
+                                       max-width:600px;
+                                       margin:auto;
+                                   ">
+                                      <div style="color:white;font-weight:bold;">
+                                         {{title}}
+                                      </div>
+                                      <div>
+                                         {{contents}}
+                                      </div>
+                                      <div>
+                                         <button onclick="rawModDone('{{mid}}',false)">Cancel</button>
+                                         <button onclick="rawModDone('{{mid}}',true)">OK</button>
+                                      </div>
+                                   </div>
+                                </div>*/
+                }.toString()).substring(14).replace(/\*\/.*/g, "");
+                raw = raw.replace(/\{\{mid\}\}/g, mod.id)
+                    .replace("{{title}}", mod._title);
+                raw = raw.replace("{{contents}}", mod._contents);
 
                 document.body.appendChild($(raw)[0]);
                 return mod;
             };
-            mod.accept=function(cb){
-                mod._accept=cb;
+            mod.accept = function (cb) {
+                mod._accept = cb;
                 return mod;
             };
-            mod.reject=function(cb){
-                mod._reject=cb;
+            mod.reject = function (cb) {
+                mod._reject = cb;
                 return mod;
             };
-            mod.contents=function(cont){
-                mod._contents=cont;
+            mod.contents = function (cont) {
+                mod._contents = cont;
                 return mod;
             };
-            mod.title=function(title){
-                mod._title=title;
+            mod.title = function (title) {
+                mod._title = title;
                 return mod;
             };
-            mod.rawText=function(raw){
+            mod.rawText = function (raw) {
                 return mod.contents("<textarea style='margin:10px;min-width:300px;min-height:300px;'>" + raw + "</textarea>");
             }
             return mod;
         };
 
-        var setLoading=function(b){
-            angular.element(document.body).scope().isGlobalLoading=b;
+        var setLoading = function (b) {
+            angular.element(document.body).scope().isGlobalLoading = b;
             angular.element(document.body).scope().$apply();
         };
-        try{
+        try {
             setLoading(true);
-            var onError=function(e){
-                if(confirm("There was a problem restoring that version ... would you like to see the error details?")){
+            var onError = function (e) {
+                if (confirm("There was a problem restoring that version ... would you like to see the error details?")) {
                     simpleModal("Error restoring record. Here is some information on the error to share with a system admin / developers.")
-                        .rawText(JSON.stringify(e,null,2))
+                        .rawText(JSON.stringify(e, null, 2))
                         .show();
                 }
             };
 
             return GGlob.SubstanceFinder
                 .get(uuid)
-                .andThen(function(s){
+                .andThen(function (s) {
                     return s.restoreVersion(version);
                 })
-                .get(function(e){
-                    if(!e || e.isError){
+                .get(function (e) {
+                    if (!e || e.isError) {
                         onError(e);
-                    }else{
+                    } else {
                         alert("Version " + version + " restored");
-                        location.href=baseurl + "substance/" + e.uuid;
+                        location.href = baseurl + "substance/" + e.uuid;
                     }
                     setLoading(false);
                 });
-        }catch(e){
+        } catch (e) {
             onError(e);
             setLoading(false);
         }
