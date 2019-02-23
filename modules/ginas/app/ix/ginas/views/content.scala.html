@@ -483,11 +483,12 @@ onclick="removeFacet('@fac.getDrill()','@fac.asLabel()')"
     @defining(FieldedQueryFacet.displayQuery(kind,request().getQueryString("q"))) { keyval =>
                                         @if(keyval!=null){
                                         <div ng-hide="hideall" ng-cloak>
-                                    <span class="center-text"><h4 class="no-margin">Searched for:<em>
+                                    <span class="center-text"><h4 class="no-margin">Searched for:<em lucene-query-friendly-display>
                                         
-                                        <b>@keyval(0)</b> : <span class="query-term">@keyval(1)</span>  <span>@keyval(2)</span>
+                                        <!-- <b>@keyval(0)</b> : <span class="query-term">@keyval(1)</span>  <span>@keyval(2)</span> -->
                                         
-                                    </em></h4></span>
+                                    </em>
+                                </h4></span>
                                     </div>
                                     }
                                         }

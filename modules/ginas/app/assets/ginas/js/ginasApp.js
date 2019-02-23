@@ -588,6 +588,7 @@
         $scope.showTypes = ["Approval_ID", "Display_Name", "CAS", "Name"];
 
         $scope.qmod = "query";
+        
         if ($scope.searchVariables) {
             $scope.searchVariables.query = '';
         }

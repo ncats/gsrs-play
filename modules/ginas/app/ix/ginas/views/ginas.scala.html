@@ -162,48 +162,21 @@
                         <div ng-controller="TypeAheadController">
                             <form class="form-inline main-search" ng-submit="submitq(searchVariables.query, '@ix.ginas.controllers.routes.GinasApp.substances(null)')"
                                 role="search">
-                                <div class="input-group" id="search-bar">
-                                    <input type="text"
-                                        class="form-control"
-                                        id="search"
-                                        aria-label="Search G-SRS"
-                                        title="Search"
-                                        placeholder="Search ..."
-                                        ng-model="searchVariables.query"
-                                        ng-disabled="mainSearchVariables.isShowGuide"
-                                        typeahead-popup-template-url="@play.api.Play.configuration.getString("application.context").getOrElse("")/assets/templates/elements/suggest-popup.html"
-                                        uib-typeahead="r.d as r.d for r in getSuggestions($viewValue)"
-                                        typeahead-on-select="onSelect($item, $model, $label)"
-                                        typeahead-loading="loadingSuggest"
-                                        typeahead-focus-first ="false"
-                                        ng-focus="checkIfKeyPressed()"
-                                        ng-blur="removeKeyPressCheck()"
-                                        autocomplete="off">
-                                    <span class="input-group-btn">
-                                        <div class="btn-group" uib-dropdown>
-                                            <button id="split-button" class="btn btn-default" type="search" aria-label="Search" ng-click="submitq(searchVariables.query, '@ix.ginas.controllers.routes.GinasApp.substances(null)')" ng-disabled="mainSearchVariables.isShowGuide">
-                                                <span class="sr-only">Search G-SRS</span>
-                                                <span class="fa fa-search"></span></button>
-                                            <!-- <button type="button" class="btn btn-default" uib-dropdown-toggle>
-                                                <span class="caret"></span>
-                                                <span class="sr-only">Restrict Search</span>
-                                                                                </button> -->
-                                            <!-- <ul class="dropdown-menu" uib-dropdown-menu role="menu" aria-labelledby="split-button">
-                                                <li role ="menuitem">
-                                                    <a type="search" aria-label="Search" ng-click = "submitq(query, '@ix.ginas.controllers.routes.GinasApp.substances(null)')">Global Search</a>
-                                                </li>
-                                                <li role ="menuitem">
-                                                    <a type="search" ng-class="{disabled: !query}" aria-label="Search" ng-click = "searchLimit = 'names'; submitq(query, '@ix.ginas.controllers.routes.GinasApp.substances(null)')">Restrict to Names <span class="fa fa-search"></span></a>
-                                                </li>
-                                                <li role ="menuitem">
-                                                    <a type="search" ng-class="{disabled: !query}" aria-label="Search" ng-click = "searchLimit = 'codes'; submitq(query, '@ix.ginas.controllers.routes.GinasApp.substances(null)')">Restrict to Codes <span class="fa fa-search"></span></a>
-                                                </li>
-                                                                                </ul> -->
+                                <div class="input-group" id="search-bar"> <input type="text" class="form-control" id="search" aria-label="Search G-SRS"
+                                        title="Search" placeholder="Search ..." ng-model="searchVariables.query" ng-disabled="mainSearchVariables.isShowGuide"
+                                        typeahead-popup-template-url="@play.api.Play.configuration.getString(" application.context").getOrElse("")/assets/templates/elements/suggest-popup.html"
+                                        uib-typeahead="r.d as r.d for r in getSuggestions($viewValue)" typeahead-on-select="onSelect($item, $model, $label)"
+                                        typeahead-loading="loadingSuggest" typeahead-focus-first="false" ng-focus="checkIfKeyPressed()" ng-blur="removeKeyPressCheck()"
+                                        autocomplete="off"> <span class="input-group-btn">
+                                        <div class="btn-group" uib-dropdown> <button id="split-button" class="btn btn-default" type="search"
+                                                aria-label="Search" ng-click="submitq(searchVariables.query, '@ix.ginas.controllers.routes.GinasApp.substances(null)')"
+                                                ng-disabled="mainSearchVariables.isShowGuide"> <span class="sr-only">Search G-SRS</span> <span
+                                                    class="fa fa-search"></span> </button>
+                                            <!-- <button type="button" class="btn btn-default" uib-dropdown-toggle>                                                                                     <span class="caret"></span>                                                                                     <span class="sr-only">Restrict Search</span>                                                                                 </button> -->
+                                            <!-- <ul class="dropdown-menu" uib-dropdown-menu role="menu" aria-labelledby="split-button">                                                                                     <li role ="menuitem">                                                                                         <a type="search" aria-label="Search" ng-click = "submitq(query, '@ix.ginas.controllers.routes.GinasApp.substances(null)')">Global Search</a>                                                                                     </li>                                                                                     <li role ="menuitem">                                                                                         <a type="search" ng-class="{disabled: !query}" aria-label="Search" ng-click = "searchLimit = 'names'; submitq(query, '@ix.ginas.controllers.routes.GinasApp.substances(null)')">Restrict to Names <span class="fa fa-search"></span></a>                                                                                     </li>                                                                                     <li role ="menuitem">                                                                                         <a type="search" ng-class="{disabled: !query}" aria-label="Search" ng-click = "searchLimit = 'codes'; submitq(query, '@ix.ginas.controllers.routes.GinasApp.substances(null)')">Restrict to Codes <span class="fa fa-search"></span></a>                                                                                     </li>                                                                                 </ul> -->
                                         </div>
-                                    </span>
-                                </div>
-                                <div class="relpos fade-ng-cloak ng-hide-animate loader-horizontal" ng-cloak ng-show="loadingSuggest">
-                                </div>
+                                    </span> </div>
+                                <div class="relpos fade-ng-cloak ng-hide-animate loader-horizontal" ng-cloak ng-show="loadingSuggest"> </div>
                             </form>
                         </div>
                         <div class="search-toggle-container">
@@ -240,7 +213,7 @@
                         </div>
                     </div>
                 </div>
-                        <main-search-guide q="searchVariables.query" ng-show="mainSearchVariables.isShowGuide" on-query-submit="submitq(searchVariables.query, '@ix.ginas.controllers.routes.GinasApp.substances(null)', isFromQueryBuilder)" control="mainSearchGuideControl"></main-search-guide>
+                <main-search-guide q="searchVariables.query" ng-show="mainSearchVariables.isShowGuide" on-query-submit="submitq(searchVariables.query, '@ix.ginas.controllers.routes.GinasApp.substances(null)', isFromQueryBuilder)" control="mainSearchGuideControl"></main-search-guide>
                 <div ng-click="closeLarge()" ng-show="mainSearchVariables.isFocus && !mainSearchVariables.isShowGuide" class="null-zone"></div>
                     </div>
                     <div class="search-actions">
@@ -250,7 +223,7 @@
                 <div class="top-bar-content-line">
                     <div id="versionsrs">
                         <code>
-                            <small uib-tooltip="Built on @ix.BuildInfo.TIME v2.3.3 RC2" tooltip-placement="right">version 2.3.3 RC2</small>
+                            <small uib-tooltip="Built on @ix.BuildInfo.TIME v2.3.2 RC1" tooltip-placement="right">version 2.3.2 RC1</small>
                         </code>
         </div>
                     <div class="auth-data">
