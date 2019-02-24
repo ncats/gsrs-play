@@ -2169,7 +2169,7 @@ display:none;
 
 #searchtop.search-top {
     position: absolute;
-    right: 220px;
+    right: 100px;
     left: 0;
     top: 0;
     padding-right: 5px;
@@ -2206,4 +2206,33 @@ display:none;
 }
 .dragover {
     outline: 5px dashed blue;
+}
+
+#menu{
+    margin-bottom:15px;
+}
+
+/*New menu bar - copied from srs.css*/
+#mymenubar {
+    background-image: linear-gradient(to top, #dceaf1 , white);
+    border-top:1px solid #1d84b7;
+    border-bottom: 1px solid #1d84b7;
+    /*color:#FFFFFF;*/
+    color:#1d84b7;
+}
+
+#mymenubar ul li a {
+    color:#1d84b7;
+    font-size:12px;
+    font-weight:bold;
+    padding-top:15px;
+}
+
+#mymenubar > .pull-left li a{
+    padding-top: 18px;
+    padding-bottom: 19px;
+}
+#mymenubar > .pull-left .active>a {
+    background-color: #1d84b7;
+    color: white !important;
 }

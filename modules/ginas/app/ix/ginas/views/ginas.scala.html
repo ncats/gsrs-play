@@ -33,8 +33,7 @@
     <link rel="stylesheet" href='@routes.Assets.at("ginas/css/json-formatter.css")'>
     <link rel="stylesheet" href='@routes.Assets.at("ginas/css/ginas.css")'>
     @if(showMenuCss){
-    <link rel="stylesheet" href='@routes.Assets.at("ginas/css/menu-style.css")'>
-    }
+    <link rel="stylesheet" href='@routes.Assets.at("ginas/css/menu-style.css")'> }
     <link rel="stylesheet" href='@routes.Assets.at("ginas/css/jquery.dataTables.css")'>
 
     <script src='@routes.WebJarAssets.at(WebJarAssets.locate("jquery.min.js"))'></script>
@@ -217,7 +216,7 @@
                 <div ng-click="closeLarge()" ng-show="mainSearchVariables.isFocus && !mainSearchVariables.isShowGuide" class="null-zone"></div>
                     </div>
                     <div class="search-actions">
-                       <a style = "padding-right:120px;" ng-click="openQueryBuilder()">Query Builder</a>
+                       <a ng-click="openQueryBuilder()">Query Builder</a>
             </div>
                 </div>
                 <div class="top-bar-content-line">

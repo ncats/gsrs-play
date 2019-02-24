@@ -14,7 +14,7 @@
             <td class ="url">
                 <citation citation=r></citation>
             </td>
-            <td><a ng-href="app/substances?facet=Reference+Type/{{r.docType}}" target="_self"
+            <td><a ng-href="{{baseurl}}/substances?facet=Reference+Type/{{r.docType}}" target="_self"
                    uib-tooltip="Filter all substances by {{r.docType}}">{{r.docType}}</a></td>
             <td><span ng-repeat="tag in r.tags" class="badge">{{tag}}</span></td>
             <td>

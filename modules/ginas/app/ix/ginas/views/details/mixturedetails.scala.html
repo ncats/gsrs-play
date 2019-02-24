@@ -8,12 +8,13 @@
     
     } {
     @if(sub.mixture.getReferences() != null && sub.mixture.getReferences().size() > 0) {
-        <tr>
+     @*   <tr>
         <td>Definition References</td><td >
             <referencesmanager ref-count substance ="'@sub.getUuid()'" divid ="'@sub.getUuid()'" references = "@GinasApp.getAsJson(sub.mixture.getReferences())"></referencesmanager></td></tr>
         <tr>
         <td class ="'@sub.getUuid()'" colspan="2"></td>
         </tr>
+    *@
     }
 }{
 	

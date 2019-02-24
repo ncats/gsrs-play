@@ -235,6 +235,15 @@
                  if($scope.substance.substanceClass =="chemical"){
                  molChanger.setMol($scope.substance.structure.molfile);
                  }
+	                 	setTimeout(function(){
+	                 	    var oldClass=$scope.substance.substanceClass;
+	                 	    $scope.substance.substanceClass="concept";
+	                 	    $scope.$apply();
+	                 		setTimeout(function(){
+	                 			$scope.substance.substanceClass=oldClass;
+	                 			$scope.$apply();
+	                 		},1);
+	                 	},1);
                  });
                  }
         </script>

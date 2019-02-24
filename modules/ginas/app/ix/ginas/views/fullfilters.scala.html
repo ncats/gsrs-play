@@ -49,6 +49,14 @@
 			</div>
       
 			<div ng-show="filtered">
+			<div class="facet-loading-bar" ng-if="refreshing">
+        		<div class="spinner-loader-container">
+        			<div class="spinner-loader" ></div>
+        		</div>
+        		Loading ...
+        	</div>
+        	<div style="width:100%;text-align:center;" ng-if="facets.length===0 && !refreshing">No Results</div>
+
 				<div ng-cloak class="list-group-item row" ng-repeat="facet in facets | limitTo:quantity">
 					<div class="col-md-1 col-sm-1">
 						<input type="checkbox"
