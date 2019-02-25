@@ -70,7 +70,7 @@ public class CodesValidator extends AbstractValidatorPlugin<Substance> {
                 boolean found=false;
                 for(Keyword keywords :cd.getReferences()){
                     Reference ref =s.getReferenceByUUID(keywords.term);
-                    if("STN".equalsIgnoreCase(ref.citation)){
+                    if("STN (SCIFINDER)".equalsIgnoreCase(ref.docType)){
                         found=true;
                         break;
                     }
@@ -85,7 +85,6 @@ public class CodesValidator extends AbstractValidatorPlugin<Substance> {
                         newRef.citation ="STN";
                         newRef.docType="STN (SCIFINDER)";
                         newRef.publicDomain = true;
-                        newRef.addTag(Reference.PUBLIC_DOMAIN_REF);
 
                         cd.addReference(newRef, s);
                     });
