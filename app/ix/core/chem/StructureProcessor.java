@@ -199,7 +199,6 @@ public class StructureProcessor {
      * @param settings
      */
     static void instrument (StructureProcessorTask settings) {
-			System.out.println("Starting in instrument at " + (new Date()));
         Structure struc = settings.getStructure();
         Collection<Structure> components = settings.getComponents();
         Molecule mol = settings.getMolecule();
@@ -347,7 +346,6 @@ public class StructureProcessor {
             
             try {
                 mstd.standardize(stdmol);
-								System.out.println("completed standardize at "+ (new Date()));
                 /*
                 if (mstd.getFragmentCount() > 1) {
                     Molecule[] frags = stdmol.cloneMolecule().convertToFrags();

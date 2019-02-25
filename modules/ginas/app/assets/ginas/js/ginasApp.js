@@ -1,13 +1,12 @@
 (function () {
     'use strict';
     var ginasApp = angular.module('ginas', ['ngAria', 'ngMessages', 'ngResource', 'ui.bootstrap', 'ui.bootstrap.showErrors',
-        'LocalStorageModule', 'ngTagsInput', 'jsonFormatter', 'ginasForms', 'ginasFormElements', 'ginasAdmin', 'ginasDownloads', 'ginasScheduled', 'diff-match-patch',
-        'angularSpinners', 'filterListener', 'validatorListener', 'ginasFilter'
-
-    ]).run(function ($rootScope, $anchorScroll) {
-        $anchorScroll.yOffset = 150;   // always scroll by 100 extra pixels
-        $rootScope.isGlobalLoading = false;
-    })
+            'LocalStorageModule', 'ngTagsInput', 'jsonFormatter', 'ginasForms', 'ginasFormElements', 'ginasAdmin', 'ginasDownloads', 'ginasScheduled', 'diff-match-patch',
+            'angularSpinners', 'filterListener', 'validatorListener', 'ginasFilter'
+        ]).run(function ($rootScope, $anchorScroll) {
+            $anchorScroll.yOffset = 150; // always scroll by 100 extra pixels
+            $rootScope.isGlobalLoading = false;
+        })
         .config(function (localStorageServiceProvider, $locationProvider) {
             localStorageServiceProvider
                 .setPrefix('ginas');
@@ -17,12 +16,7 @@
                 requireBase: true
             });
         });
-
-
-
-
     ginasApp.factory('Substance', function ($q, CVFields, UUID, polymerUtils, siteList) {
-
         function isCV(ob) {
             if (typeof ob !== "object") return false;
             if (ob === null) return false;
@@ -75,7 +69,6 @@
                                             //  _.set(newcv, 'value', value + ' (not in CV)');
                                         }
                                         sub[field][key] = newcv;
-
                                     }
                                 });
                             }
@@ -96,7 +89,6 @@
                                     newcv = {};
                                     _.set(newcv, 'display', sub[field] + ' (not in CV)');
                                     //  _.set(newcv, 'value', sub[field] + ' (not in CV)');
-
                                 }
                                 sub[field] = newcv;
                             }
@@ -106,9 +98,7 @@
             });
             return sub;
         }
-
         var substance = {};
-
         substance.$$setClass = function (subClass) {
             var substanceClass = subClass;
             substance.substanceClass = substanceClass;
@@ -116,7 +106,10 @@
                 case "chemical":
                     if (!substance.structure) {
                         substance.structure = {};
-                        _.set(substance.structure, 'opticalActivity', { value: "UNSPECIFIED", display: "UNSPECIFIED" });
+                        _.set(substance.structure, 'opticalActivity', {
+                            value: "UNSPECIFIED",
+                            display: "UNSPECIFIED"
+                        });
                         substance.moieties = [];
                     }
                     break;
@@ -160,44 +153,42 @@
                 default:
                     break;
             }
-
             if (!substance.references) {
                 substance.references = [];
             }
-
             if (!substance.access) {
-                substance.access = [{ value: 'protected', display: 'PROTECTED' }];
+                substance.access = [{
+                    value: 'protected',
+                    display: 'PROTECTED'
+                }];
             }
-
             return substance;
         };
-
         substance.$$getClass = function () {
             return substance.substanceClass;
         };
-
         substance.$$changeClass = function (newClass) {
             substance.substanceClass = newClass;
             return substance;
         };
-
         substance.$$setSubstance = function (sub) {
             _.forEach(sub, function (value, key) {
                 _.set(substance, key, value);
             });
-
+            if (sub.protein) {
+                if (sub.protein.proteinSubType) {
+                    sub.protein.proteinSubTypes = sub.protein.proteinSubType.split("|");
+                }
+            }
             substance.$$setClass(substance.$$getClass());
             return $q.when(expandCV(substance));
-
         };
-
         //returns a flattened clone of the substance
         substance.$$flattenSubstance = function () {
             var sub = _.cloneDeep(substance);
             if (sub.q) {
                 delete sub.q;
             }
-
             if (sub.substanceClass === 'protein') {
                 if (_.has(sub.protein, 'disulfideLinks')) {
                     _.forEach(sub.protein.disulfideLinks, function (link, key) {
@@ -210,24 +201,29 @@
                     _.forEach(sub.protein.otherLinks, function (value, key) {
                         var otherLink = {};
                         var sites = _.toArray(value.sites);
-
-
                         // TODO: Previously we would throw away odd-number
-                        // sites, anticipating that other links typically connected 
+                        // sites, anticipating that other links typically connected
                         // sets of 2 residues. This was not a good idea as some
                         // links are between odd numbers of sites. However, some
                         // form of warning should probably be present which makes the
                         // meaning of the sets of otherLinks more clear.
-
                         //if (sites.length % 2 != 0) {
                         //    sites = _.dropRight(sites);
                         //}
-
                         sub.protein.otherLinks[key].sites = sites;
                     });
                 }
+
             }
             sub = flattenCV(sub);
+
+            var st;
+            if (sub.protein) {
+                st = sub.protein.proteinSubTypes;
+            }
+            if (st) {
+                sub.protein.proteinSubType = st.join("|");
+            }
             if (_.has(sub, 'moieties')) {
                 _.forEach(sub.moieties, function (m) {
                     if (!_.has(sub, '$$update') || m["$$new"]) {
@@ -247,7 +243,6 @@
                     sub = _.omit(sub, 'structure');
                 }
             }
-
             if (_.has(sub, 'polymer')) {
                 polymerUtils.setSRUFromConnectivityDisplay(sub.polymer.structuralUnits);
                 _.forEach(sub.polymer.structuralUnits, function (sru) {
@@ -255,10 +250,7 @@
                         delete sru.attachmentMap["$errors"];
                     }
                 });
-
             }
-
-
             if (_.has(sub, 'modifications')) {
                 if (_.has(sub.modifications, 'structuralModifications')) {
                     _.forEach(sub.modifications.structuralModifications, function (mod) {
@@ -268,13 +260,11 @@
                     });
                 }
             }
-
             if (_.has(sub, 'nucleicAcid')) {
                 if (_.has(sub.nucleicAcid, 'sugars')) {
                     _.forEach(sub.nucleicAcid.sugars, function (sugar) {
                         if (sugar.sitesShorthand) {
                             _.unset(sugar, 'sitesShorthand');
-
                         }
                     });
                 }
@@ -330,19 +320,18 @@
             var errors = [];
             var connections = display.split(";");
             var regex = /^\s*[A-Za-z][A-Za-z]*[0-9]*_(R[0-9][0-9]*)[-][A-Za-z][A-Za-z]*[0-9]*_(R[0-9][0-9]*)\s*$/g;
-
-
             var map = {};
-
             for (var i = 0; i < connections.length; i++) {
                 var con = connections[i].trim();
                 if (con === "") continue;
-
                 regex.lastIndex = 0;
                 var res = regex.exec(con);
                 if (res == null) {
                     var text = "Connection '" + con + "' is not properly formatted";
-                    errors.push({ text: text, type: 'warning' });
+                    errors.push({
+                        text: text,
+                        type: 'warning'
+                    });
                 } else {
                     if (!map[res[1]]) {
                         map[res[1]] = [];
@@ -350,7 +339,6 @@
                     map[res[1]].push(res[2]);
                 }
             }
-
             if (errors.length > 0) {
                 map.$errors = errors;
             }
@@ -369,17 +357,16 @@
                 srus[i].attachmentMap = map;
             }
         };
-
         return utils;
     });
-
     ginasApp.service('nameFinder', function ($http) {
         var url = baseurl + "api/v1/substances/search";
-
         var nameFinder = {
             search: function (query) {
                 var promise = $http.get(url, {
-                    params: { "q": "root_names_name:" + query + "*" },
+                    params: {
+                        "q": "root_names_name:" + query + "*"
+                    },
                 }, {
                         headers: {
                             'Content-Type': 'text/plain'
@@ -392,12 +379,13 @@
         };
         return nameFinder;
     });
-
     ginasApp.factory('substanceIDRetriever', ['$http', function ($http) {
         var url = baseurl + "api/v1/substances(";
         var editSubstance = {
             getSubstance: function (editId) {
-                var promise = $http.get(url + editId + ")?view=full", { cache: true }, {
+                var promise = $http.get(url + editId + ")?view=full", {
+                    cache: true
+                }, {
                     headers: {
                         'Content-Type': 'text/plain'
                     }
@@ -409,60 +397,71 @@
         };
         return editSubstance;
     }]);
-
     ginasApp.service('typeaheadService', function ($http) {
         var url = baseurl + "api/v1/suggest";
         var suggest = {
             search: function (query, typePriority, ukeys) {
                 var promise = $http.get(url, {
-                    params: { "q": query }
+                    params: {
+                        "q": query
+                    }
                 }, {
-                        headers: {
-                            'Content-Type': 'text/plain'
-                        }
-                        ///TODO sort by weight///
-                        //TODO search multiple field types//
-                    }).then(function (response) {
-                        if (!ukeys) ukeys = [];
-                        if (!typePriority) typePriority = function (t) { return 0; };
-                        ukeys.length = 0;
+                    headers: {
+                        'Content-Type': 'text/plain'
+                    }
+                    ///TODO sort by weight///
+                    //TODO search multiple field types//
+                }).then(function (response) {
+                    if (!ukeys) ukeys = [];
+                    if (!typePriority) typePriority = function (t) {
+                        return 0;
+                    };
+                    ukeys.length = 0;
 
-                        var pairs = _.chain(response.data)
-                            .map(function (v, k) {
-                                return { "key": k, "values": v, "i": typePriority(k) };
-                            })
-                            .sortBy("i")
-                            .filter(function (kv) {
-                                return kv.i >= 0;
-                            })
-                            .flatMap(function (kvp) {
-                                ukeys.push(kvp.key);
-                                return _.map(kvp.values, function (v) {
-                                    //need to get out the most important part
-                                    //always get the part in first <b> and 
-                                    //extend
-                                    var lim = 20;
-                                    var start = 0;
-                                    var bef = "";
+                    var pairs = _.chain(response.data)
+                        .map(function (v, k) {
+                            return {
+                                "key": k,
+                                "values": v,
+                                "i": typePriority(k)
+                            };
+                        })
+                        .sortBy("i")
+                        .filter(function (kv) {
+                            return kv.i >= 0;
+                        })
+                        .flatMap(function (kvp) {
+                            ukeys.push(kvp.key);
+                            return _.map(kvp.values, function (v) {
+                                //need to get out the most important part
+                                //always get the part in first <b> and 
+                                //extend
+                                var lim = 30;
+                                var start = 0;
+                                var bef = "";
 
-                                    var sindex = v.highlight.indexOf("<b>");
-                                    var eindex = v.highlight.indexOf("</b>") - 3;
-                                    if (eindex > lim) {
-                                        start = sindex - (eindex - lim);
-                                    }
-                                    if (start > 0) {
-                                        bef = "...";
-                                    } else {
-                                        start = 0;
-                                    }
+                                var sindex = v.highlight.indexOf("<b>");
+                                var eindex = v.highlight.indexOf("</b>") - 3;
+                                if (eindex > lim) {
+                                    start = eindex - lim;
+                                }
+                                if (start > 0) {
+                                    bef = "...";
+                                } else {
+                                    start = 0;
+                                }
 
-                                    return { "k": kvp.key, "v": v.key, "d": bef + v.key.substring(start) };
-                                });
-                            })
-                            .value();
+                                return {
+                                    "k": kvp.key,
+                                    "v": v.key,
+                                    "d": bef + v.key.substring(start)
+                                };
+                            });
+                        })
+                        .value();
 
-                        return pairs;
-                    });
+                    return pairs;
+                });
                 return promise;
             }
         };
@@ -475,15 +474,19 @@
 
         this.load = function (field) {
             $http.get(url, {
-                params: { "q": field.toUpperCase() }
+                params: {
+                    "q": field.toUpperCase()
+                }
 
-            }, { cache: true }, {
-                    headers: {
-                        'Content-Type': 'text/plain'
-                    }
-                }).success(function (response) {
-                    options.data = response;
-                });
+            }, {
+                cache: true
+            }, {
+                headers: {
+                    'Content-Type': 'text/plain'
+                }
+            }).success(function (response) {
+                options.data = response;
+            });
         };
 
         this.search = function ($q) {
@@ -579,16 +582,23 @@
             readAsText: readAsText
         };
     }]);
-
-    ginasApp.controller("TypeAheadController", function ($rootScope, $scope, $resource, $location, $compile, $uibModal, $http, $window, $anchorScroll, $timeout, polymerUtils,
-        localStorageService, Substance, UUID, substanceSearch, substanceIDRetriever, CVFields, molChanger, toggler, resolver,
-        spinnerService, typeaheadService) {
+    ginasApp.controller("TypeAheadController", function ($rootScope, $scope, $location, typeaheadService) {
         $scope.types = [];
 
         $scope.showTypes = ["Approval_ID", "Display_Name", "CAS", "Name"];
 
         $scope.qmod = "query";
+        
+        if ($scope.searchVariables) {
+            $scope.searchVariables.query = '';
+        }
 
+        if ($location.search()['q'] &&
+            !$location.search()['type'] &&
+            $location.search()['cutoff'] !== null &&
+            $location.path().indexOf('structure') === -1) {
+            $scope.searchVariables[$scope.qmod] = $location.search()['q'];
+        }
         $scope.init = function (qmod) {
             $scope.qmod = qmod;
         }
@@ -601,7 +611,10 @@
 
 
         $scope.onSelect = function ($item, $model, $label) {
-            $scope[$scope.qmod] = $item.v;
+            if ($scope.searchVariables) {
+                $scope.searchVariables.isSearchKeyed = false;
+                $scope.searchVariables[$scope.qmod] = '"' + $item.v + '"';
+            }
         };
 
         $scope.getSuggestions = function (query) {
@@ -616,8 +629,7 @@
         };
 
     });
-
-    ginasApp.controller("GinasController", function ($rootScope, $scope, $resource, $location, $compile, $uibModal, $http, $window, $anchorScroll, $timeout, polymerUtils,
+    ginasApp.controller("GinasController", function ($rootScope, $scope, $document, $location, $compile, $uibModal, $http, $window, $anchorScroll, $timeout, polymerUtils,
         localStorageService, Substance, UUID, substanceSearch, substanceIDRetriever, CVFields, molChanger, toggler, resolver,
         substanceFactory,
         spinnerService, typeaheadService, subunitParser) {
@@ -630,16 +642,26 @@
         $scope.noResults = false;
         $scope.show = false;
         $scope.sequence = "";
+        $scope.searchVariables = {
+            isSearchKeyed: false
+        };
+        var currentKeyPressFunction;
         $scope.cleanSequence = function (seqType) {
             $scope.sequence = subunitParser.cleanSequence($scope.sequence, _.lowerCase(seqType));
         }
 
         $scope.preload = function (seqType) {
-            $scope.seqType = _.capitalize(seqType);
-            subunitParser.getResidues(seqType);
+            if ("protein" === seqType.toLowerCase()) {
+                $scope.seqType = "Protein";
+                subunitParser.getResidues("protein");
+            } else if ("nucleicacid" === seqType.toLowerCase()) {
+                $scope.seqType = "NucleicAcid";
+                subunitParser.getResidues("nucleicAcid");
+            } else {
+                $scope.seqType = _.capitalize(seqType);
+                subunitParser.getResidues("protein");
+            }
         }
-
-
         $window.SDFFields = {};
 
         $scope.getClass = function (path) {
@@ -653,15 +675,29 @@
             var ret = typeaheadService.search(query);
             return ret;
         };
-
-        $scope.submitq = function (query, action) {
+        $scope.checkIfKeyPressed = function () {
+            currentKeyPressFunction = $document.onkeypress;
+            $document[0].onkeypress = function () {
+                $scope.searchVariables.isSearchKeyed = true;
+                if (currentKeyPressFunction) {
+                    currentKeyPressFunction();
+                }
+            }
+        }
+        $scope.removeKeyPressCheck = function () {
+            $document[0].onkeypress = currentKeyPressFunction;
+        }
+        $scope.submitq = function (query, action, isFromQueryBuilder) {
             // if (query.indexOf("\"") < 0 && query.indexOf("*") < 0 && query.indexOf(":") < 0 && query.indexOf(" AND ") < 0 && query.indexOf(" OR ") < 0) {
             //     $scope.q = "\"" + query + "\"";
             // } else {
             //     $scope.q = query;
             // }
-            $scope.q = query;
-
+            if (!isFromQueryBuilder && $scope.searchVariables.isSearchKeyed && query.indexOf('"') < 0 && query.indexOf("*") < 0 && query.indexOf(":") < 0 && query.indexOf(" AND ") < 0 && query.indexOf(" OR ") < 0) {
+                $scope.q = "\"" + query + "\"";
+            } else {
+                $scope.q = query;
+            }
             switch ($scope.searchLimit) {
                 case "global":
                     break;
@@ -680,30 +716,39 @@
             //a terminal "/", but we want to remove that slash, which
             //we do with the following regex.
             var base = baseurl.replace(/.$/g, "");
-
-            //We only want the part of the URL _before_ the base path.
-            //The reason is that angular is trying to be smart
-            //and preserve all paths to be from the base path, so you can't give
-            //it a full path, because it will append the base path.
-            whereiam = whereiam.split(base)[0];
+            if (base && base.length > 0) {
+                //We only want the part of the URL _before_ the base path.
+                //The reason is that angular is trying to be smart
+                //and preserve all paths to be from the base path, so you can't give
+                //it a full path, because it will append the base path.
+                whereiam = whereiam.split(base)[0];
+            } else {
+                whereiam = whereiam.replace(/(^[^?]*).*$/g, "$1");
+                if (whereiam[whereiam.length - 1] == '/') {
+                    whereiam = whereiam.substring(0, whereiam.length - 1);
+                }
+            }
 
             //The action already has the base path built in, so this 
             //is the "new" absolute base path + the action we want
             var nav = whereiam + action;
 
+            var rq = $scope.q;
+
             $location.search({});
-            $location.search("q", $scope.q);
+            $location.search("q", rq);
             $location.hash("");
 
             //This just gets angular's encoding of the query portion of the URL,
             //which will be explicitly added.
             var qpart = _.chain(($location.absUrl().split("?")))
-                .filter(function (a, b) { return b; }) //get rid of first element
+                .filter(function (a, b) {
+                    return b;
+                }) //get rid of first element
                 .value()
                 .join("?");
 
-
-            window.location = nav + "?" + qpart;
+            window.location = nav + "?" + qpart.replace(";", "%3B");
         };
 
         if (typeof $window.loadjson !== "undefined" &&
@@ -843,8 +888,7 @@
         //The server knows how things can be sorted, we need to either ajax
         //(which can cause latency problems), or we can have it pre-stored
         //server-side, and injected.
-        $scope.sortValues = [
-            {
+        $scope.sortValues = [{
                 "value": "default",
                 "display": "Relevance"
             },
@@ -871,13 +915,23 @@
             {
                 "value": "$root_lastEdited",
                 "display": "Newest Change"
+            },
+            {
+                "value": "$root_structure_mwt",
+                "display": "Highest Molecular Weight"
+            },
+            {
+                "value": "^root_structure_mwt",
+                "display": "Lowest Molecular Weight"
             }
         ];
 
         var suppliedOrder = _.find($scope.sortValues, {
             value: $location.search()["order"]
         });
-        $scope.selectedSort = suppliedOrder || { value: "Sort By" };
+        $scope.selectedSort = suppliedOrder || {
+            value: "Sort By"
+        };
 
         $scope.showDeprecated = $location.search()["showDeprecated"] || "false";
 
@@ -1058,7 +1112,54 @@
                 backdrop: 'static'
             });
         };
-
+        $scope.openImgModal = function (uuid, imgUrl) {
+            var approveURL = baseurl + 'api/v1/substances(' + uuid + ')/names';
+            $scope.image = imgUrl;
+            $scope.setSysNames(uuid)
+            $scope.getSmilesInchi(uuid);
+            $scope.modalInstance = $uibModal.open({
+                templateUrl: baseurl + "assets/templates/modals/image-modal.html",
+                scope: $scope,
+                windowClass: 'image-window',
+                size: 'image'
+            });
+        };
+        $scope.setSysNames = function (uuid) {
+            var approveURL = baseurl + 'api/v1/substances(' + uuid + ')/names';
+            $http.get(approveURL, {
+                cache: false
+            }, {
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            }).then(function (response) {
+                var namelist = [];
+                for (var i = 0; i < response.data.length; i++) {
+                    if (response.data[i].type == 'sys') {
+                        namelist.push(response.data[i].name);
+                    }
+                }
+                $scope.sysNames = namelist;
+            });
+        };
+        $scope.getSmilesInchi = function (uuid) {
+            var url = baseurl + 'export/' + uuid + '.smiles';
+            $http.get(url, {
+                headers: {
+                    'Content-Type': 'text/plain'
+                }
+            }).success(function (response) {
+                $scope.smiles = response;
+            });
+            url = baseurl + 'api/v1/substances(' + uuid + ')structure!$inchikey()';
+            $http.get(url, {
+                headers: {
+                    'Content-Type': 'text/plain'
+                }
+            }).success(function (response) {
+                $scope.inchikey = response;
+            });
+        };
         $scope.close = function () {
             $scope.modalInstance.close();
         };
@@ -1123,8 +1224,12 @@
             //**************************
 
             _.chain(angular.element(document.body).scope().substance.names)
-                .filter(function (n) { return !n.uuid; })
-                .forEach(function (n) { n.uuid = angular.element(document.body).injector().get("UUID").newID(); })
+                .filter(function (n) {
+                    return !n.uuid;
+                })
+                .forEach(function (n) {
+                    n.uuid = angular.element(document.body).injector().get("UUID").newID();
+                })
                 .value();
 
             //**************************
@@ -1250,7 +1355,9 @@
             var approveURL = baseurl + "api/v1/substances(" + keyid + ")/@approve";
 
             $scope.submitting = true;
-            $http.get(approveURL, { cache: false }, {
+            $http.get(approveURL, {
+                cache: false
+            }, {
                 headers: {
                     'Content-Type': 'application/json'
                 }
@@ -1259,6 +1366,7 @@
                 url = baseurl + "assets/templates/modals/update-success.html";
                 $scope.postRedirect = response.data.uuid;
                 $scope.open(url);
+                $scope.submitpaster(response.data);
             }, function (response) {
                 var messages = [];
                 var msg = {
@@ -1315,6 +1423,7 @@
                     $scope.postRedirect = response.data.uuid;
                     $scope.close(url1);
                     $scope.open(url);
+                    $scope.submitpaster(response.data);
                 }, function (response) {
                     $scope.errorsArray = $scope.parseErrorArray(response.data.validationMessages);
                     url = baseurl + "assets/templates/modals/submission-failure.html";
@@ -1368,6 +1477,11 @@
                 molChanger.setMol($scope.substance.polymer.idealizedStructure.molfile);
             }
         };
+        $scope.browseSubstances = function () {
+            $scope.updateNav = false;
+            $window.location.search = null;
+            $window.location.href = baseurl + 'substances/';
+        };
 
         $scope.viewSubstance = function () {
             $scope.updateNav = false;
@@ -1375,7 +1489,12 @@
             $window.location.href = baseurl + 'substance/' + $scope.postRedirect.split('-')[0];
             //  $window.location.search =null;
         };
-
+        $scope.editNewSubstance = function () {
+            $scope.updateNav = false;
+            $window.location.search = null;
+            $window.location.href = baseurl + 'substance/' + $scope.postRedirect.split('-')[0] + '/edit';
+            //  $window.location.search =null;
+        };
         $scope.addSameSubstanceType = function () {
             $scope.updateNav = false;
             $window.location.search = null;
@@ -1400,7 +1519,14 @@
 
         $scope.submitpaster = function (input) {
             $scope.substanceClass = $location.$$search.kind;
-            Substance.$$setSubstance(JSON.parse(input)).then(function (data) {
+            if (!$scope.substanceClass) {
+                $scope.substanceClass = $scope.substance.substanceClass;
+            }
+            var inp = input;
+            if (typeof inp == "string") {
+                inp = JSON.parse(inp);
+            }
+            Substance.$$setSubstance(inp).then(function (data) {
                 $scope.substance = data;
                 if ($scope.substance.substanceClass == "chemical") {
                     molChanger.setMol($scope.substance.structure.molfile);
@@ -1410,12 +1536,20 @@
                     var url = baseurl + "assets/templates/modals/paste-redirect-modal.html";
                     $scope.open(url);
                 }
+                setTimeout(function () {
+                    var oldClass = $scope.substance.substanceClass;
+                    $scope.substance.substanceClass = "concept";
+                    $scope.$apply();
+                    setTimeout(function () {
+                        $scope.substance.substanceClass = oldClass;
+                        $scope.$apply();
+                    }, 1);
+                }, 1);
             });
 
         };
 
-        $scope.bugSubmit = function (bugForm) {
-        };
+        $scope.bugSubmit = function (bugForm) {};
 
         $scope.setEditId = function (editid) {
             localStorageService.set('editID', editid);
@@ -1450,6 +1584,7 @@
             }
             return false;
         }
+
         function flattenCV2(sub) {
             for (var v in sub) {
                 if (isCV2(sub[v])) {
@@ -1549,9 +1684,15 @@
                 }
             });
         };
-    })
-
-
+    });
+    ginasApp.directive('modalScopeBinding', function () {
+        return {
+            link: function ($scope, element, attr) {
+                var modalScopeVariableName = attr.modalScopeBinding;
+                $scope[modalScopeVariableName] = element[0].innerHTML;
+            }
+        }
+    });
     ginasApp.directive('loading', function ($http) {
         return {
             template: "<div class=\"sk-folding-cube\">\n" +
@@ -1757,7 +1898,9 @@
                 };
 
                 var httpDoer = function (burl) {
-                    return $http.get(burl, { cache: true }, {
+                    return $http.get(burl, {
+                        cache: true
+                    }, {
                         headers: {
                             'Content-Type': 'text/plain'
                         }
@@ -1821,7 +1964,9 @@
                     });
             },
             getIndex: function (uuid, refuuid, version) {
-                return $http.get(url + uuid + ")/references", { cache: true }, {
+                return $http.get(url + uuid + ")/references", {
+                    cache: true
+                }, {
                     headers: {
                         'Content-Type': 'text/plain'
                     }
@@ -1993,6 +2138,11 @@
 
                 scope.getClass = function (index) {
                     return referencesCtrl.getClass(index);
+                };
+
+                scope.baseurl = baseurl;
+                if (scope.baseurl[scope.baseurl.length - 1] === '/') {
+                    scope.baseurl = scope.baseurl.substring(0, scope.baseurl.length - 1);
                 }
             },
             templateUrl: baseurl + "assets/templates/reference-table.html"
@@ -2026,9 +2176,9 @@
                         links.push(link);
                     });
 
-                    var templateString = angular.element('<div class ="row reftable"><div class ="col-md-8">'
-                        + _.join(links, ",")
-                        + ' </div><div class="col-md-4"><span class="btn btn-primary pull-right" type="button" uib-tooltip="Show all references" ng-click="toggle()"><i class="fa fa-long-arrow-down"></i></span><div></div>');
+                    var templateString = angular.element('<div class ="row reftable"><div class ="col-md-8">' +
+                        _.join(links, ",") +
+                        ' </div><div class="col-md-4"><span class="btn btn-primary pull-right" type="button" uib-tooltip="Show all references" ng-click="toggle()"><i class="fa fa-long-arrow-down"></i></span><div></div>');
                     element.append(angular.element(templateString));
                     $compile(templateString)(scope);
                 });
@@ -2072,16 +2222,17 @@
                         var link = '<a ng-click="showActive(' + i + ')" uib-tooltip="view reference">' + i + '</a>';
                         links.push(link);
                     });
-
-                    var templateString = angular.element('<div class ="row reftable"><div class ="col-md-8">'
-                        + "(" + links.length + ")"
-                        + ' </div><div class="col-md-4"><span class="btn btn-primary pull-right" type="button" uib-tooltip="Show all references" ng-click="toggle()"><i class="fa fa-long-arrow-down"></i></span><div></div>');
+                    scope.buttonLabel = "view";
+                    var templateString = angular.element('<div class ="reftable">' +
+                        '<div style = "float:left" class =" center-text">' +
+                        '</div><div style = "float:left"><button class="btn btn-primary reference-button" type="button" uib-tooltip="Show all references" ng-click="toggle()" >{{buttonLabel}} ' + links.length + '<br/>reference(s)</button></div></div>');
                     element.append(angular.element(templateString));
                     $compile(templateString)(scope);
                 });
 
                 scope.toggle = function () {
                     referencesCtrl.toggle(scope, attrs.divid);
+                    scope.buttonLabel = scope.buttonLabel === 'view' ? 'hide' : 'view';
                 };
 
                 scope.showActive = function (index) {
@@ -2148,7 +2299,7 @@
     });
 
     /*    ginasApp.directive('comment', function () {
-    
+
             return {
                 restrict: 'E',
                 replace: true,
@@ -2168,7 +2319,9 @@
         var fetcher = {
             fetchCurrentVersion: function (uuid) {
                 var url2 = versionurl.replace("$UUID$", uuid);
-                return $http.get(url2, { cache: true }, {
+                return $http.get(url2, {
+                    cache: true
+                }, {
                     headers: {
                         'Content-Type': 'text/plain'
                     }
@@ -2182,7 +2335,9 @@
                 }
 
                 var url2 = url + uuid + ")";
-                return $http.get(url2, { cache: true }, {
+                return $http.get(url2, {
+                    cache: true
+                }, {
                     headers: {
                         'Content-Type': 'text/plain'
                     }
@@ -2197,7 +2352,9 @@
                             return fetcher.fetch(uuid);
                         } else {
                             var url2 = url + uuid + ")/@edits";
-                            return $http.get(url2, { cache: true }, {
+                            return $http.get(url2, {
+                                cache: true
+                            }, {
                                 headers: {
                                     'Content-Type': 'text/plain'
                                 }
@@ -2205,14 +2362,18 @@
                                 console.log("ERROR");
                                 console.log(response);
                                 var oversion = _.chain(response.data)
-                                    .filter(function (edit) { return version + "" === edit.version; })
+                                    .filter(function (edit) {
+                                        return version + "" === edit.version;
+                                    })
                                     .value();
 
                                 if (oversion.length >= 1) {
                                     var nurl = oversion[0].oldValue;
                                     nurl = editurl.replace("$UUID$", nurl.split("(")[1].split(")")[0]);
 
-                                    return $http.get(nurl, { cache: true }, {
+                                    return $http.get(nurl, {
+                                        cache: true
+                                    }, {
                                         headers: {
                                             'Content-Type': 'text/plain'
                                         }
@@ -2304,15 +2465,17 @@
                             element.html(template).show();
                             $compile(element.contents())(scope);
                         });
-                    } /*else if (scope.acidClass === 'plain') {
+                    }
+                    /*else if (scope.acidClass === 'plain') {
 
-                        $templateRequest(baseurl + "assets/templates/tooltips/tooltip-template-plain.html").then(function (html) {
-                            template = angular.element(html);
-                            element.html(template).show();
-                            $compile(element.contents())(scope);
-                        });
+                                           $templateRequest(baseurl + "assets/templates/tooltips/tooltip-template-plain.html").then(function (html) {
+                                               template = angular.element(html);
+                                               element.html(template).show();
+                                               $compile(element.contents())(scope);
+                                           });
 
-                    }*/ else {
+                                       }*/
+                    else {
 
                         $templateRequest(baseurl + "assets/templates/tooltips/tooltip-template.html").then(function (html) {
                             template = angular.element(html);
@@ -2518,9 +2681,8 @@
             return sk.sketcher.getSmiles();
         };
     });
-
-    ginasApp.directive('sketcher', function ($compile, $http, $timeout, UUID, polymerUtils, CVFields, localStorageService, molChanger, Substance) {
-        return {
+    ginasApp.directive('sketcher', function ($compile, $http, $timeout, UUID, polymerUtils, CVFields, localStorageService, molChanger, Substance, $rootScope) {
+        var t = {
             restrict: 'E',
             replace: true,
             scope: {
@@ -2530,12 +2692,39 @@
             },
 
             link: function (scope, element, attrs) {
+
+                var setLoading = function (b) {
+                    $rootScope.isGlobalLoading = b;
+                    try {
+                        $timeout(function () {
+                            $rootScope.$apply();
+                        });
+                    } catch (error) {
+                        console.error(error);
+                    }
+
+                };
+
+                scope.showCanvas = true;
+                scope.fromImage = false;
+                scope.canvasLabel = "";
+
                 var url = baseurl + 'structure';
 
                 if (!_.isUndefined(scope.parent.structure)) {
                     scope.mol = scope.parent.structure.molfile;
                 }
-                var template = angular.element('<div id="sketcherForm" dataformat="molfile"></div>');
+                var canvasHTML = '<div class="text-center" id = "canvas-wrapper" ng-show = "canvasLabel != \'\'" >' +
+                    '<div id = "canvas-label" class=" col-md-12" style = "text-align:center;padding-bottom:5px;padding-top:5px"  ><b>{{canvasLabel}}</b> &nbsp ' +
+                    '<a class="btn btn-primary" ng-show="fromImage&&showCanvas" ng-click="showCanvas=!showCanvas" class="">Hide</a>' +
+                    '<a class="btn btn-primary" ng-show="fromImage&&!showCanvas" ng-click="showCanvas=!showCanvas" class="">Show</a>' +
+                    '</div><div class=" col-md-12" text-center" ng-show = "invalidStructure" ng-init = "invalidStructure = false"><b style = "color:red">Structure not detectable</b></span></div>' +
+                    '<canvas height="1" ng-show="showCanvas" id="clip_canvas" style="max-width:800px;"></canvas>' +
+                    '</div>';
+                var template = angular.element('<div><div id="sketcherForm" dataformat="molfile"></div> <div class = "col-md-12" id = "testing">' +
+                    '<div class="text-center">' +
+                    'Load an image by pasting a copied image into the canvas with <code>ctrl + v</code>, or dragging a local image file' +
+                    '</div> <div id = "canvas_cont">' + canvasHTML + '</div> </div> </div>');
                 element.append(template);
                 $compile(template)(scope);
 
@@ -2563,9 +2752,10 @@
                     return definitionalChange;
                 };
 
-                scope.updateMol = function (force) {
+                scope.updateMolServer = function (mfile, force, reset) {
+                    setLoading(false);
                     var url = baseurl + 'structure';
-                    $http.post(url, scope.mol, {
+                    $http.post(url, mfile, {
                         headers: {
                             'Content-Type': 'text/plain'
                         }
@@ -2607,7 +2797,9 @@
                             });
                         }
                         if (scope.parent.structure) {
-                            data.structure.id = scope.parent.structure.id;
+                            if (data.structure) {
+                                data.structure.id = scope.parent.structure.id;
+                            }
                         } else {
                             scope.parent.structure = {};
                         }
@@ -2619,11 +2811,17 @@
                                 m["$$new"] = true;
                                 //this is used to make a cv element out of the moiety units, which are re-written as strings with each round trip
                                 if (!_.isObject(m.countAmount.type)) {
-                                    var temp = { value: m.countAmount.type, display: m.countAmount.type };
+                                    var temp = {
+                                        value: m.countAmount.type,
+                                        display: m.countAmount.type
+                                    };
                                     m.countAmount.type = temp;
                                 }
                                 if (!_.isObject(m.countAmount.units)) {
-                                    var temp = { value: m.countAmount.units, display: m.countAmount.units };
+                                    var temp = {
+                                        value: m.countAmount.units,
+                                        display: m.countAmount.units
+                                    };
                                     m.countAmount.units = temp;
                                 }
                                 var moi = {};
@@ -2635,8 +2833,15 @@
 
                         if (data.structure) {
                             _.set(scope.parent, 'q', data.structure.smiles);
+                            if (reset) {
+                                scope.sketcher.setMolfile(data.structure.molfile);
+                            }
                         }
+
                     });
+                };
+                scope.updateMol = function (force) {
+                    scope.updateMolServer(scope.mol, force, false);
                 };
                 scope.$parent.updateMol = scope.updateMol;
 
@@ -2699,11 +2904,23 @@
                         .value();
 
                     if (charges.length > 0) {
-                        var mCharge = "M  CHG" + leftPad(charges.length + "", 3)
-                            + _.chain(charges)
-                                .map(function (c) { return c.toString(); })
-                                .join("");
-                        return mCharge;
+                        var chgCount = function (count) {
+                            return "M  CHG" + leftPad(count + "", 3);
+                        };
+
+                        return _.chain(charges)
+                            .chunk(8)
+                            .map(function (c) {
+                                return chgCount(c.length) +
+                                    _.chain(c)
+                                    .map(function (ic) {
+                                        return ic.toString();
+                                    })
+                                    .value()
+                                    .join("");
+                            })
+                            .value()
+                            .join("\n");
                     }
                     return null;
                 };
@@ -2770,17 +2987,295 @@
                 }
                 if (structureid) {
                     var url = baseurl + 'api/v1/structures/' + structureid;
-                    $http.get(url, { cache: true }).then(function (response) {
+                    $http.get(url, {
+                        cache: true
+                    }).then(function (response) {
                         scope.sketcher.setMolfile(response.data.molfile);
                         _.set(scope.parent, 'q', response.data.smiles);
                         localStorageService.remove('structureid');
                     });
                 }
 
+
+                var sketcherElm = {
+                    "get": function () {
+                        return element[0];
+                    }
+                };
+
+                var CLIPBOARD = new CLIPBOARD_CLASS("clip_canvas", true);
+
+
+                /**
+                 * image pasting into canvas
+                 *
+                 * @param {string} canvas_id - canvas id
+                 * @param {boolean} autoresize - if canvas will be resized
+                 */
+                function CLIPBOARD_CLASS(canvas_id, autoresize) {
+                    var _self = this;
+                    var canvas = null;
+                    var ctx = null;
+                    //handlers
+                    document.addEventListener('paste', function (e) {
+                        _self.paste_auto(e, 'paste');
+                    }, false);
+
+                    document.addEventListener('dragstart', function (e) {
+                        e = e || event;
+                        e.preventDefault();
+                    }, false);
+
+                    document.addEventListener('dragover', function (e) {
+                        e = e || event;
+                        e.preventDefault();
+                    }, false);
+
+                    document.addEventListener('dragleave', function (e) {
+                        e = e || event;
+                        e.preventDefault();
+                    }, false);
+                    sketcherElm.get().addEventListener('dragover', function (e) {
+                        e = e || event;
+                        e.stopPropagation();
+                        e.preventDefault();
+                        sketcherElm.get().parentElement.classList.add('dragover');
+                    }, false);
+                    sketcherElm.get().addEventListener('dragleave', function (e) {
+                        e = e || event;
+                        e.stopPropagation();
+                        e.preventDefault();
+                        sketcherElm.get().parentElement.classList.remove('dragover');
+                    }, false);
+
+                    document.addEventListener('drop', function (e) {
+                        e.stopPropagation();
+                        e.preventDefault();
+                        sketcherElm.get().parentElement.classList.remove('dragover');
+                        _self.paste_auto(e, 'drop');
+                    }, false);
+
+                    // local pointer of "this" keyword for the surrounding
+                    // function
+                    var _thisfun = this;
+
+                    // supplier of the load event for an image, but does not actually
+                    // load yet, until specifically called (this is a function that returns
+                    // a function)
+                    this.loadImage = function(blob){
+                    	var source=null;
+                    	if(typeof blob  ==="string"){
+                    		source=blob;
+                    	}else{
+                    		var URLObj = window.URL || window.webkitURL;
+                    		source = URLObj.createObjectURL(blob);
+                    	}
+
+                    	return function(){
+                    		_thisfun.paste_createImage(source);
+                    		return true;
+                    	};
+                    }
+
+                    //method to receive pasted/droped data
+                    this.paste_auto = function(e, method) {
+                    	var _this=this;
+                    	canvas = document.getElementById(canvas_id);
+
+                        ctx = document.getElementById(canvas_id).getContext("2d");
+                        var gotImage = false;
+                        var text = null;
+
+                        //specifically handles drop
+                        if (method == 'drop') {
+                            var items = e.dataTransfer.files;
+
+                            //if there are no files dropped, there could be html/text dropped
+                            //handle those, butonly those that have embedded src tags
+                            //then do no other processing
+                            if(items.length==0){
+                            	for(var ii=0;ii<e.dataTransfer.items.length;ii++){
+                            		if(e.dataTransfer.items[ii].type==="text/html"){
+                            			e.dataTransfer.items[ii].getAsString(function(s){
+                            				if(s.indexOf("<img") ==0){
+                            					var url = JSON.parse(s.split("src=")[1].split(/[ |>]+/)[0].trim());
+                            					if(_this.loadImage(url)()){
+                                                    scope.invalidStructure = false;
+                                                    e.preventDefault();
+                                                }
+                                            }
+                                        });
+                                    }
+                                }
+                                return;
+                            }
+
+                        }else if (method == 'paste'){
+                        	// get the items from the clipboard if the method is
+                        	// paste, but not if it's a drop event
+                            var items = e.clipboardData.items;
+                        }
+
+                        //cancel processing if items is empty
+                        if (!items) return;
+
+
+                        var activated=false;
+
+                        //we only consider going forward if the sketcher is active. The sketcher is only active if
+                        //1. There is no item in the page that has the :focus property (e.g. an input / textarea) AND
+                        //2. The method is NOT paste (e.g. drop, which works regardless of focus) OR the sketcher is flagged as active
+                        activated= (method!=='paste' || scope.sketcher.activated) && ($(':focus').length==0);
+                    	if (activated) {
+                    		// this function will load text if it's received
+                    		// and will be called later
+                    		var loadText=function (r) {
+                                if (r) {
+                                    var text = r;
+                                        try {
+                                            if (text.indexOf("<div") == -1) {
+                                                setLoading(true);
+                                                scope.updateMolServer(text, true, true);
+                                            }
+                                        } catch (e) {
+                                            if (text.indexOf("<div") == -1) {
+                                                setLoading(true);
+                                                scope.updateMolServer(text, true, true);
+                                            }
+                                        }
+                                }
+                            };
+                            // this method queues up (but does not load) an image if it's received
+                            // and will be called later. You must call the function returned
+                            // by this method to actually activate the event.
+                            var loadImage=function(img){
+                            	scope.invalidStructure = false;
+                            	var blob;
+                                if(method == "drop"){
+                                    blob = img;
+                                }else if(method == "paste") {
+                                    blob =img.getAsFile();
+                                }
+                                return _this.loadImage(blob);
+                            }
+                            //map of the clipboard elements by type
+                    		var clip={};
+
+                    		//iterate through the items, put the image
+                    		//and plain text elements into the clip map
+                    		for (var i = 0; i < items.length; i++) {
+                    			if (items[i].type.indexOf("image") !== -1) {
+                    				//if(!clip["image"])clip["image"]=[];
+                    				clip["image"]=items[i];
+                    			}else if (items[i].type.indexOf("text/plain") !== -1) {
+                    				clip["text"]=items[i];
+                    			}
+                    		}
+
+                    		//If there's text but no image, try to interpret the text
+                    		if(clip["text"] && ! clip["image"]){
+                    			clip["text"].getAsString(loadText);
+        						e.preventDefault();
+
+        				    //If there's image but no text, try to interpret the image
+                    		}else if(clip["image"] && ! clip["text"]){
+                    			loadImage(clip["image"])();
+                    			e.preventDefault();
+
+                    	    //If there's image and text, a choice must be made, but the browser will
+                    	    //invalidate the items after the callback, so we must queue up the image
+                    	    //to be loaded first, and only call it to be loaded after we make a decision
+                    		//about the text
+
+                    		}else if(clip["image"] && clip["text"]){
+
+                    			//this queues up the image to be loaded, calling
+                    			//the callback will load the image
+                    			var callback=loadImage(clip["image"]);
+
+                    			//async call to get the text element copied
+                    			clip["text"].getAsString(function(r){
+                    				//if the text "///" exists, that probably means there's a file URL present,
+                    				//which is typically part of a paste event when an image is copied locally on some
+                    				//platforms. Don't interpret this as text.
+                    				if(r.indexOf("///")>-1){
+                    					//load as image
+                    					callback();
+                    				//otherwise it's probably text that was important, try to interpret it
+                    				}else{
+                    					loadText(r);
+                    				}
+                    			});
+                    			//we will always cancel the event if we made it this far, even if nothing meaningful comes from it.
+                    			//Since the activation check is present, this is almost always okay.
+                    			e.preventDefault();
+                    		}
+
+                        }
+                    };
+                    //draw pasted image to canvas
+                    this.paste_createImage = function (source) {
+                        scope.fromImage = true;
+                        var myEl = angular.element(document.querySelector('canvas'));
+                        var pastedImage = new Image();
+                        pastedImage.onload = function () {
+                            if (autoresize === true) {
+                                //resize
+                                canvas.width = pastedImage.width;
+                                canvas.height = pastedImage.height;
+
+                                myEl.addClass('canvas-display');
+                                scope.canvasLabel = "Original Image";
+
+                                //$compile(angular.element(document.getElementById('canvas-label').innerHTML ="<b>Original Image<b>"))(scope);
+                            } else {
+                                //clear canvas
+                                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                                myEl.removeClass('canvas-display');
+                                scope.canvasLabel = "Original Image";
+                            }
+                            ctx.fillStyle = "#FFFFFF";
+                            ctx.fillRect(0, 0, pastedImage.width, pastedImage.height);
+                            ctx.drawImage(pastedImage, 0, 0);
+                            var dataURL = canvas.toDataURL();
+                            if(dataURL.length>100000){
+                            	dataURL = canvas.toDataURL('image/jpeg', 100000/dataURL.length);
+                            	console.log(dataURL.length);
+                            }
+                            setLoading(true);
+                            //TODO: Change to use angular
+                            $.ajax({
+                                url: "/ginas/app/api/v1/foo/ocrStructure",
+                                type: "POST",
+                                headers: {
+                                    'Access-Control-Allow-Origin': 'http://localhost:9000'
+                                },
+                                data: dataURL,
+                                contentType: 'application/json',
+                                success: function (response) {
+                                    setLoading(false);
+                                    var myresp = JSON.parse(response);
+                                    scope.sketcher.setMolfile(myresp.molfile);
+
+                                },
+                                error: function (rep, error, t) {
+                                    //error handling
+                                    setLoading(false);
+                                    scope.invalidStructure = true;
+                                    console.log(error);
+                                }
+                            });
+                        };
+                        pastedImage.crossOrigin = "anonymous";
+                        pastedImage.src = source;
+                    };
+                }
             }
         };
-    });
 
+
+        return t;
+    });
     ginasApp.directive('modalButton', function ($compile, $templateRequest, $http, $uibModal, molChanger, FileReader) {
         return {
             scope: {
@@ -2835,7 +3330,10 @@
                             molChanger.setMol(data.structure.molfile);
                             scope.close();
                         } else {
-                            var warning = { type: 'warning', message: 'not a vaild molfile' };
+                            var warning = {
+                                type: 'warning',
+                                message: 'not a vaild molfile'
+                            };
                             scope.warnings.push(warning);
                         }
                     });
@@ -3033,10 +3531,9 @@
                     "     substanceuuid='" + scope.substanceuuid + "'>" +
                     "  </substance-preview>" +
                     "  </div>" +
-                    "</info-popup>\n" +
-                    "<span>{{_substance._name}} [{{_substance._approvalIDDisplay}}]</span>\n" +
-                    "</span>";
-
+                    "</info-popup>\n";
+                // div += "<span>{{_substance._name}} [{{_substance._approvalIDDisplay}}]</span>\n" + " </span>";
+                div += "</span>";
                 scope.iclass = "";
 
 
@@ -3060,7 +3557,6 @@
                     scope.showPopup = !scope.showPopup;
                     setTimeout(function () {
                         scope.iclass = "";
-                        //console.log("resetting class");
                         scope.$apply();
                     }, 10);
                 };
@@ -3083,43 +3579,42 @@
                     scope._substance = scope.substance;
                     scope.update();
                 }
-
-                element.append($compile(div)(scope));
+                element.empty().append($compile(div)(scope));
             }
         }
     });
 
 
-	/*
-	    <substance-preview> Directive
-	    	
-		This will be a basic widget for previewing a substance.
-		
-		A few examples:
-		
-		<!-- From a scope substance object -->
-		<substance-preview substance="someScopeSubstanceJson" ></substance-preview>
-		<!-- From a scope substance uuid -->
-		<substance-preview substanceUUID="5ce23012-506e-47f5-8601-44b7d605a929" ></substance-preview>
-		
-		For now, if you have the two above, you can discover ways of doing it later.
-		
-		Now, we also need to decide what things to show:
-			1. Name
-			2. Structure
-			3. Edit Icon
-			4. Link
-			5. etc ...
-			
-		<substance-preview substance-views="['Preferred Term','img','Approval ID (UNII)']" 
-		                   substanceuuid="f982d178-7bcb-448a-9fd3-25c59e181c7b">
-		                   
-		</substance-preview>
-		
-		The above is an example of how to do that. As of this moment, it will use whatever
-		fetchers are in the js api, and can render those. But there will need to be more
-		room for interaction.                   
-	*/
+    /*
+        <substance-preview> Directive
+        	
+    	This will be a basic widget for previewing a substance.
+    	
+    	A few examples:
+    	
+    	<!-- From a scope substance object -->
+    	<substance-preview substance="someScopeSubstanceJson" ></substance-preview>
+    	<!-- From a scope substance uuid -->
+    	<substance-preview substanceUUID="5ce23012-506e-47f5-8601-44b7d605a929" ></substance-preview>
+    	
+    	For now, if you have the two above, you can discover ways of doing it later.
+    	
+    	Now, we also need to decide what things to show:
+    		1. Name
+    		2. Structure
+    		3. Edit Icon
+    		4. Link
+    		5. etc ...
+    		
+    	<substance-preview substance-views="['Preferred Term','img','Approval ID (UNII)']" 
+    	                   substanceuuid="f982d178-7bcb-448a-9fd3-25c59e181c7b">
+    	                   
+    	</substance-preview>
+    	
+    	The above is an example of how to do that. As of this moment, it will use whatever
+    	fetchers are in the js api, and can render those. But there will need to be more
+    	room for interaction.                   
+    */
 
     ginasApp.directive("substancePreview", function ($compile, APIFetcher) {
         return {
@@ -3245,8 +3740,8 @@
 
                 const kvclean = function (e, vf) {
                     var elm = "<div class='row'>" +
-                        "<div ng-hide='hideTitles' class='col-md-12'>" + vf.name() + "</div>"
-                        + "<div class='col-md-12'>" + e + "</div>";
+                        "<div ng-hide='hideTitles' class='col-md-12'>" + vf.name() + "</div>" +
+                        "<div class='col-md-12'>" + e + "</div>";
                     return elm;
                 };
 
@@ -3546,8 +4041,8 @@ $(function () {
 /* format numbers: 1000 => 1,000 */
 $(function () {
     $(".badge, .label-default").each(function () {
-		/* if this is a filter on top of the page -- do not apply script
-		since it should be shown as is (can be Year, etc.) */
+        /* if this is a filter on top of the page -- do not apply script
+        since it should be shown as is (can be Year, etc.) */
         if ($(this).parents('.alert-dismissible').length) {
             return;
         }
@@ -3588,3 +4083,115 @@ Number.isFinite = Number.isFinite || function (value) {
     return typeof value === 'number' && isFinite(value);
 };
 
+function restoreVersion(uuid, version) {
+    if (confirm("Are you sure you'd like to restore version " + version + "?")) {
+        var simpleModal = function (title) {
+            var mod = {};
+            var mid = ("mod-over" + Math.random()).replace(".", "");
+            mod._title = title;
+            mod._contents = "";
+            mod.id = mid;
+            mod._accept = function () {};
+            mod._reject = function () {};
+            mod.show = function () {
+                var ofun = window["rawModDone"];
+                if (!ofun) {
+                    ofun = function () {};
+                }
+                window["rawModDone"] = function (b, t) {
+                    ofun(b);
+                    if (b === mod.id) {
+                        $("#" + mod.id).remove();
+                        if (t) {
+                            mod._accept();
+                        } else {
+                            mod._reject();
+                        }
+                    }
+                };
+                //
+                var raw = (function () {
+                    /*
+                                <div id="{{mid}}" style="z-index:999999;position:fixed;top:0px;width:100%;height:100%;background: rgba(0, 0, 0, 0.6);">
+                                   <div style="
+                                       text-align: center;
+                                       padding: 100px;
+                                       max-width:600px;
+                                       margin:auto;
+                                   ">
+                                      <div style="color:white;font-weight:bold;">
+                                         {{title}}
+                                      </div>
+                                      <div>
+                                         {{contents}}
+                                      </div>
+                                      <div>
+                                         <button onclick="rawModDone('{{mid}}',false)">Cancel</button>
+                                         <button onclick="rawModDone('{{mid}}',true)">OK</button>
+                                      </div>
+                                   </div>
+                                </div>*/
+                }.toString()).substring(14).replace(/\*\/.*/g, "");
+                raw = raw.replace(/\{\{mid\}\}/g, mod.id)
+                    .replace("{{title}}", mod._title);
+                raw = raw.replace("{{contents}}", mod._contents);
+
+                document.body.appendChild($(raw)[0]);
+                return mod;
+            };
+            mod.accept = function (cb) {
+                mod._accept = cb;
+                return mod;
+            };
+            mod.reject = function (cb) {
+                mod._reject = cb;
+                return mod;
+            };
+            mod.contents = function (cont) {
+                mod._contents = cont;
+                return mod;
+            };
+            mod.title = function (title) {
+                mod._title = title;
+                return mod;
+            };
+            mod.rawText = function (raw) {
+                return mod.contents("<textarea style='margin:10px;min-width:300px;min-height:300px;'>" + raw + "</textarea>");
+            }
+            return mod;
+        };
+
+        var setLoading = function (b) {
+            angular.element(document.body).scope().isGlobalLoading = b;
+            angular.element(document.body).scope().$apply();
+        };
+        try {
+            setLoading(true);
+            var onError = function (e) {
+                if (confirm("There was a problem restoring that version ... would you like to see the error details?")) {
+                    simpleModal("Error restoring record. Here is some information on the error to share with a system admin / developers.")
+                        .rawText(JSON.stringify(e, null, 2))
+                        .show();
+                }
+            };
+
+            return GGlob.SubstanceFinder
+                .get(uuid)
+                .andThen(function (s) {
+                    return s.restoreVersion(version);
+                })
+                .get(function (e) {
+                    if (!e || e.isError) {
+                        onError(e);
+                    } else {
+                        alert("Version " + version + " restored");
+                        location.href = baseurl + "substance/" + e.uuid;
+                    }
+                    setLoading(false);
+                });
+        } catch (e) {
+            onError(e);
+            setLoading(false);
+        }
+    }
+}

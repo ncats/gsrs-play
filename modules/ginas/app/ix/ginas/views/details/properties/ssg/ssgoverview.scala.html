@@ -1,0 +1,38 @@
+@import ix.ginas.controllers.GinasApp
+@import be.objectify.deadbolt.java.views.html._
+@import views.html._
+@import be.objectify.deadbolt.java.views.html._
+@import ix.ncats.controllers.security.IxDynamicResourceHandler
+@import ix.ginas.models.v1.Substance
+
+@(sub: Substance)
+
+<tr>
+    <td>Record UNII</td>
+    <td>
+        <div class= "monospace">@sub.getApprovalIDDisplay()</div>
+    </td>
+</tr>
+<tr>
+    <td>Record Status</td>
+    <td>
+        <code class="monospace-code">@sub.getDisplayStatus()</code>
+    </td>
+</tr>
+<tr>
+    <td>Record Version</td>
+    <td>
+        <code class="monospace-code">
+        @sub.version
+        </code>
+    </td>
+</tr>
+@if(sub.isDeprecated()) {
+    <tr>
+        <td>Record Status</td>
+        <td>
+            <code class="alert-important text-uppercase">Record is Deprecated</code>
+        </td>
+    </tr>
+}
+

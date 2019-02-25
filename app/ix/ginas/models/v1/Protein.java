@@ -1,22 +1,19 @@
 package ix.ginas.models.v1;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
-import javax.persistence.CascadeType;
-import javax.persistence.Entity;
-import javax.persistence.JoinTable;
-import javax.persistence.Lob;
-import javax.persistence.ManyToMany;
-import javax.persistence.OneToMany;
-import javax.persistence.OneToOne;
-import javax.persistence.OrderBy;
-import javax.persistence.Table;
-import javax.persistence.Transient;
+
+import javax.persistence.*;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -26,13 +23,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import ix.core.models.BeanViews;
-import ix.core.models.Group;
 import ix.core.models.Indexable;
 import ix.core.util.ModelUtils;
+import ix.ginas.models.GinasAccessReferenceControlled;
 import ix.ginas.models.GinasCommonSubData;
-
 import ix.utils.Global;
-import ix.ginas.models.GinasSubstanceDefinitionAccess;
 import play.Logger;
 
 @SuppressWarnings("serial")
@@ -42,7 +37,7 @@ public class Protein extends GinasCommonSubData {
 	@Indexable(facet = true, name = "Protein Type")
 	public String proteinType;
 
-	@Indexable(facet = true, name = "Protein Subtype")
+
 	public String proteinSubType;
 
 	@Indexable(facet = true, name = "Sequence Origin")
@@ -157,10 +152,59 @@ public class Protein extends GinasCommonSubData {
 	@OrderBy("subunitIndex asc")
 	public List<Subunit> subunits = new ArrayList<Subunit>();
 
+
+	/**
+	 * This is something that should have existed in earlier versions but did not.
+	 * Basically the subtypes _shoud_ have been a list or set to begin with,
+	 * but were accidentally stored as a single string.
+	 * @return
+	 */
+	@JsonIgnore
+	@Indexable(facet = true, name = "Protein Subtype")
+	public List<String> getProteinSubtypes(){
+		return Optional.ofNullable(this.proteinSubType)
+			    .flatMap(new Function<String,Optional<Stream<String>>>(){
+					@Override
+					public Optional<Stream<String>> apply(String arg0) {
+						return Optional.of(Arrays.stream(arg0.split("\\|")));
+					}
+			    })
+			    .orElse(Stream.empty())
+			    .collect(Collectors.toList());
+	}
+
+	/**
+	 * This is a setter for some future version where protein subtypes are allowed
+	 * to be lists rather than single entities.
+	 * @param subtypes
+	 */
+	@JsonIgnore
+	public void setProteinSubtypes(List<String> subtypes){
+		if(subtypes !=null){
+			this.proteinSubType = subtypes.stream().collect(Collectors.joining("|"));
+		}
+	}
+
 	@OneToMany(mappedBy = "owner", cascade = CascadeType.ALL)
 	public List<OtherLinks> otherLinks = new ArrayList<OtherLinks>();
 
 	public Protein() {
+	}
+
+	/**
+	 * mark our child subunits as ours.
+	 * Mostly used so we know what kind of type
+	 * this subunit is by walking up the tree
+	 * to inspect its parent (us).
+	 */
+	//@PostLoad
+	@PreUpdate
+	@PrePersist
+	public void adoptChildSubunits(){
+		List<Subunit> subunits=this.subunits;
+		for(Subunit s: subunits){
+			s.setParent(this);
+		}
 	}
 
 	@JsonIgnore
@@ -251,7 +295,13 @@ public class Protein extends GinasCommonSubData {
 				return o1.subunitIndex - o2.subunitIndex;
 			}
 		});
+		adoptChildSubunits();
 		return this.subunits;
+	}
+
+	public void setSubunits(List<Subunit> subunits) {
+		this.subunits = subunits;
+		adoptChildSubunits();
 	}
 
 	@Override
@@ -307,4 +357,26 @@ public class Protein extends GinasCommonSubData {
 	public ProteinSubstance getProteinSubstance() {
 		return this.proteinSubstance;
 	}
+
+	 @Override
+	   	@JsonIgnore
+	   	public List<GinasAccessReferenceControlled> getAllChildrenCapableOfHavingReferences() {
+	   		List<GinasAccessReferenceControlled> temp = new ArrayList<GinasAccessReferenceControlled>();
+
+	   		if(this.glycosylation!=null){
+	   				temp.addAll(glycosylation.getAllChildrenAndSelfCapableOfHavingReferences());
+	   		}
+	   		if(this.subunits!=null){
+	   			for(Subunit s : this.subunits){
+	   				temp.addAll(s.getAllChildrenAndSelfCapableOfHavingReferences());
+	   			}
+	   		}
+	   		if(this.otherLinks!=null){
+	   			for(OtherLinks ol : this.otherLinks){
+	   				temp.addAll(ol.getAllChildrenAndSelfCapableOfHavingReferences());
+	   			}
+	   		}
+
+	   		return temp;
+	   	}
 }

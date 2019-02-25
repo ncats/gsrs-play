@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 
+import ix.core.util.IOUtil;
 import org.reflections.Reflections;
 
 import com.avaje.ebean.Transaction;
@@ -266,7 +267,7 @@ public class Global extends GlobalSettings {
 	public static String getRef(String type, Object id) {
 		Global g = getInstance();
 		try {
-			String name = g.getResource(Class.forName(type));
+			String name = g.getResource(IOUtil.getGinasClassLoader().loadClass(type));
 			if (name == null)
 				throw new IllegalArgumentException("Class " + type + " isn't a NamedResource!");
 			return getNamespace() + "/" + name + "(" + id + ")";

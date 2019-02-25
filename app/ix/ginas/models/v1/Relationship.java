@@ -1,19 +1,15 @@
 package ix.ginas.models.v1;
 
-import javax.persistence.Basic;
-import javax.persistence.CascadeType;
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.Lob;
-import javax.persistence.OneToOne;
-import javax.persistence.PrePersist;
-import javax.persistence.PreUpdate;
-import javax.persistence.Table;
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.persistence.*;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import ix.core.models.Indexable;
 import ix.ginas.models.CommonDataElementOfCollection;
+import ix.ginas.models.GinasAccessReferenceControlled;
 import ix.ginas.models.utils.JSONConstants;
 import ix.ginas.models.utils.JSONEntity;
 import ix.ginas.models.utils.RelationshipUtil;
@@ -152,8 +148,45 @@ public class Relationship extends CommonDataElementOfCollection {
                 '}';
     }
 
+    /**
+     * Test if another relationship is <i>essentially</i> equivalent to this relationship.
+     *
+     * Here, this means:
+     *
+     * 1. It has equivalent reference to a substance
+     * 2. It has the same relationship type
+     *
+     *
+     * @param other
+     * @return
+     */
     @JsonIgnore
+    public boolean isEquivalentBaseRelationship(Relationship other){
+    	if (other.type.equals(this.type) && other.relatedSubstance.isEquivalentTo(this.relatedSubstance)) {
+			return true;
+		}
+    	return false;
+    }
+
     public String toSimpleString(){
     	return type + ":" + relatedSubstance.refPname;
+    }
+
+	@Override
+	@JsonIgnore
+	public List<GinasAccessReferenceControlled> getAllChildrenCapableOfHavingReferences() {
+		List<GinasAccessReferenceControlled> temp = new ArrayList<GinasAccessReferenceControlled>();
+		if(this.amount!=null){
+			temp.addAll(this.amount.getAllChildrenAndSelfCapableOfHavingReferences());
+		}
+		if(this.relatedSubstance!=null){
+			temp.addAll(this.relatedSubstance.getAllChildrenAndSelfCapableOfHavingReferences());
+		}
+		return temp;
+	}
+	@PostLoad
+	public void fixWhitespaceIssues(){
+
+        this.type = RelationshipUtil.standardizeType(this);
     }
 }

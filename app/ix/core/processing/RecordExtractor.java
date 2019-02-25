@@ -3,6 +3,7 @@ package ix.core.processing;
 import ix.core.controllers.PayloadFactory;
 import ix.core.models.Payload;
 import ix.core.stats.Estimate;
+import ix.core.util.IOUtil;
 
 import java.io.Closeable;
 import java.io.InputStream;
@@ -112,7 +113,7 @@ public abstract class RecordExtractor<K> implements Closeable {
 		}
 		public static RecordExtractor getInstanceOfExtractor(String className){
 			try{
-				Class<?> clazz = Class.forName(className);
+				Class<?> clazz = IOUtil.getGinasClassLoader().loadClass(className);
 				Constructor<?> ctor = clazz.getConstructor(InputStream.class);
 				RecordExtractor object = (RecordExtractor) ctor.newInstance(new Object[] { null });
 				return object;

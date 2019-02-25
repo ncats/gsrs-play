@@ -28,7 +28,7 @@
                         </div>
                         <div class="col-md-6">
                             <div class="pull-right">
-                                <button ng-if="substance.substanceClass!=='concept' && !substance.approvalID" ng-disabled="!canApprove()" class="btn btn-primary" ng-click="approveSubstanceConfirm()">
+                                <button ng-if="substance.substanceClass!=='concept' && !substance.approvalID && substance.definitionType.value!=='ALTERNATIVE'" ng-disabled="!canApprove()" class="btn btn-primary" ng-click="approveSubstanceConfirm()">
                                     Approve
                                 </button>
                                 <button ng-disabled="validating" class="btn btn-primary" ng-click="submitSubstanceConfirm()">
@@ -235,6 +235,15 @@
                  if($scope.substance.substanceClass =="chemical"){
                  molChanger.setMol($scope.substance.structure.molfile);
                  }
+	                 	setTimeout(function(){
+	                 	    var oldClass=$scope.substance.substanceClass;
+	                 	    $scope.substance.substanceClass="concept";
+	                 	    $scope.$apply();
+	                 		setTimeout(function(){
+	                 			$scope.substance.substanceClass=oldClass;
+	                 			$scope.$apply();
+	                 		},1);
+	                 	},1);
                  });
                  }
         </script>

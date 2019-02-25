@@ -25,7 +25,12 @@
 			@if(sub.protein.proteinSubType != null) {
 				<tr>
 					<td>Protein Sub Type</td>
-					<td class="monospace">@GinasApp.getCV.getDisplay("PROTEIN_SUBTYPE", sub.protein.proteinSubType)</td>
+					<td class="monospace">
+					@{sub.protein.getProteinSubtypes()
+					             .map(st=>GinasApp.getCV.getDisplay("PROTEIN_SUBTYPE", st))
+					             .mkString(" ")}
+
+					</td>
 				</tr>
 			}
 			@if(sub.protein.sequenceOrigin != null) {
@@ -42,7 +47,27 @@
 			}
 			
 			@overview(sub)
+			@if(sub.protein.getReferences() != null && sub.protein.getReferences().size() > 0) {
+			<tr>
+
+				<td  >
+					<a href ng-click = "showAuditInfo=!showAuditInfo"   ng-show = "!showAuditInfo" ng-hide = "showAuditInfo"  >Show Definitional References <i class="fa fa-caret-down" aria-hidden="true"></i></a>
+					<a ng-click = "showAuditInfo=!showAuditInfo"  ng-show = "showAuditInfo" ng-hide = "!showAuditInfo" >Hide Definitional References <i class="fa fa-caret-up" aria-hidden="true"></i></a>
+				</td>
+
+			</tr>
+			}
 		</table>
 	</div>
 	@overviewexport(sub)
+</div>
+
+<div ng-show="showAuditInfo">
+	<label>References:</label>
+	<referencesmanager reftable hide-header="true"
+					   show='["cit"]'
+					   substance ="'@sub.uuid'"
+					   version ="'@sub.version'"
+					   sreferences = "@GinasApp.getAsJson(sub.protein.getReferences())" >
+	</referencesmanager>
 </div>

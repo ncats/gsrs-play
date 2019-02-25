@@ -7,6 +7,7 @@ import javax.persistence.*;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import ix.ginas.models.GinasAccessReferenceControlled;
 import ix.ginas.models.GinasCommonSubData;
 
 @Entity
@@ -73,4 +74,18 @@ public class Mixture extends GinasCommonSubData {
 		return m;
 	}*/
 
+    @Override
+	@JsonIgnore
+	public List<GinasAccessReferenceControlled> getAllChildrenCapableOfHavingReferences() {
+		List<GinasAccessReferenceControlled> temp = new ArrayList<GinasAccessReferenceControlled>();
+		if(parentSubstance!=null){
+			temp.addAll(parentSubstance.getAllChildrenAndSelfCapableOfHavingReferences());
+		}
+		if(components!=null){
+			for(Component c: components){
+				temp.addAll(c.getAllChildrenAndSelfCapableOfHavingReferences());
+			}
+		}
+		return temp;
+	}
 }

@@ -86,7 +86,7 @@
                     }).error(function (data){
                     	alert('error updating CV terms');
                    	 	return data;
-                    });
+                   });
                 } else {
                     promise = $http.post(baseurl + 'api/v1/vocabularies', domainobj, {
                         headers: {
@@ -99,7 +99,7 @@
                 }
                 return promise.finally(function(t){
                 	$rootScope.isGlobalLoading = false;
-                    });
+                });
             },
 
             addCV: function (field, newcv) {
@@ -178,7 +178,8 @@
     ginasFormElements.factory('searchService', function ($http, $q, $timeout) {
 
         var service = {
-            getSearchFields: _getSearchFields
+            getSearchFields: _getSearchFields,
+            getSearchFieldsDictionary: _getSearchFieldsDictionary
         }
 
         return service;
@@ -219,7 +220,40 @@
                     "type":"timestamp",
                     "description":"The date that the record was last edited"
                     }
-                    ]
+                    ]   
+                });
+            })
+
+            return deferred.promise;
+        }
+
+        function _getSearchFieldsDictionary() {
+            var deferred = $q.defer();
+
+            $timeout(function () {
+                deferred.resolve({
+                 data: {
+                    "root_names_name": {
+                        "title":"Any Name",
+                        "type":"text"
+                    },
+                    "root_codes_code": {
+                        "title":"Any Code",
+                        "type":"text",
+                    },
+                    "root_approvalID": {
+                        "title":"Approval ID (UNII)",
+                        "type":"text"
+                    },
+                    "root_structure_mwt": {
+                        "title":"Molecular Weight",
+                        "type":"float"
+                    },
+                    "root_lastEdited": {
+                        "title":"Last Edited Date",
+                        "type":"timestamp",
+                    }
+                 } 
                 });
             })
 
@@ -384,7 +418,7 @@
                 tagRemove: '&?' //called when tag is removed
             },
             link: function (scope, element, attrs, ngModelCtrl) {
-
+                
                 //this function returns different templates, based on input. all above scope variables are callable
                 //doing this first makes sure everything is attached to the scope before compiling the directive
                 var templateurl;
@@ -509,7 +543,7 @@
                                     scope.obj = cv;
                                 } else {
                                     alert(scope.obj.new + ' exists in the cv');
-                                    scope.obj = {};
+                                    //scope.obj = {};
                                 }
                             } else {
                                 scope.obj = undefined;
@@ -897,7 +931,7 @@
                 };
 
                 scope.selectTypeahead = function($item, $model, $label, $event){
-                    scope.q = $item.key;
+                    scope.q = $item.v;
                     scope.fetch();
                 };
 ;
@@ -1047,7 +1081,7 @@
                         }
                         element.replaceWith($compile(
                             '<a class="btn btn-primary download-button fa-lg"tabindex="0" role="button" download="results.' + fileType +
-                            '" href="' + scope.url + '" target = "_self" id ="download">' +
+                            '" href="' + scope.url + '" target = "_self" id ="download" >' +
                             '<i class="fa fa-download" uib-tooltip="Download Results"></i>' +
                             '</a>'
                         )(scope));

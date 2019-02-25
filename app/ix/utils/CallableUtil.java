@@ -10,6 +10,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 
+import ix.core.util.IOUtil;
 import ix.utils.CallableUtil.TypedCallable;
 
 
@@ -57,9 +58,13 @@ public class CallableUtil {
 		
 		String sig=sl.getImplMethodSignature();
 		DeferredThrower<Exception> dt= new DeferredThrower<>();
-		Class<?> ret= retTypes.computeIfAbsent(sig, s->dt.tryCall(()->{
-				return Class.forName(sig.substring(sig.indexOf(")")).substring(2).replace('/', '.').replace(";", ""));
-			}));
+		Class<?> ret= retTypes.computeIfAbsent(sig, s->dt.tryCall(()->
+			IOUtil.getGinasClassLoader()
+			      .loadClass(sig.substring(sig.indexOf(")"))
+			    		        .substring(2)
+			    		        .replace('/', '.')
+			    		        .replace(";", ""))
+			));
 		dt.throwIfNecessary();
 		return ret;
 

@@ -3,6 +3,7 @@ package ix.ginas.models.v1;
 import ix.ginas.models.utils.JSONEntity;
 import ix.ginas.models.utils.JSONConstants;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import javax.persistence.*;
@@ -12,6 +13,7 @@ import com.fasterxml.jackson.annotation.JsonView;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import ix.core.models.Indexable;
+import ix.ginas.models.GinasAccessReferenceControlled;
 import ix.ginas.models.GinasCommonSubData;
 
 @JSONEntity(name = "amount", title = "Amount", isFinal = true)
@@ -78,4 +80,11 @@ public class Amount extends GinasCommonSubData {
     	return val; 
     }
     
+	@Override
+	@JsonIgnore
+	public List<GinasAccessReferenceControlled> getAllChildrenCapableOfHavingReferences() {
+		List<GinasAccessReferenceControlled> temp = new ArrayList<GinasAccessReferenceControlled>();
+		return temp;
+	}
+
 }

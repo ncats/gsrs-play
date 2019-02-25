@@ -42,8 +42,7 @@ public class RemovePublicIndReferences extends AbstractValidatorPlugin<Substance
         r.publicDomain=false;
         Group g= AdminFactory.getGroupByName("protected");
         if(g==null){
-            g=new Group();
-            g.name="protected";
+            g=new Group("protected");
 
         }
 

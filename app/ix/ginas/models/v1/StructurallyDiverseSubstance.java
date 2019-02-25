@@ -7,6 +7,8 @@ import ix.ginas.models.v1.Substance.SubstanceClass;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import javax.persistence.*;
+
+import java.util.List;
 import java.util.Set;
 
 @Entity
@@ -30,4 +32,14 @@ public class StructurallyDiverseSubstance extends Substance implements GinasSubs
     public GinasAccessReferenceControlled getDefinitionElement(){
         return structurallyDiverse;
     }
+
+    @Override
+	@JsonIgnore
+	public List<GinasAccessReferenceControlled> getAllChildrenCapableOfHavingReferences(){
+		List<GinasAccessReferenceControlled> temp = super.getAllChildrenCapableOfHavingReferences();
+		if(this.structurallyDiverse!=null){
+			temp.addAll(this.structurallyDiverse.getAllChildrenAndSelfCapableOfHavingReferences());
+		}
+		return temp;
+	}
 }

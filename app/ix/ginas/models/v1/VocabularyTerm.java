@@ -10,11 +10,13 @@ import javax.persistence.Inheritance;
 import javax.persistence.ManyToOne;
 import javax.persistence.PreUpdate;
 import javax.persistence.Table;
+import javax.persistence.Version;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
+import ix.core.SingleParent;
 import ix.core.models.IxModel;
 import ix.ginas.models.EmbeddedKeywordList;
 import ix.ginas.models.serialization.KeywordDeserializer;
@@ -28,15 +30,24 @@ import ix.ginas.models.serialization.KeywordListSerializer;
 @Table(name="ix_ginas_vocabulary_term")
 @Inheritance
 @DiscriminatorValue("VOCAB")
+@SingleParent
 public class VocabularyTerm extends IxModel{
 	/**
 	 * 
 	 */
-
 	@ManyToOne(cascade = CascadeType.PERSIST)
 	private ControlledVocabulary owner;
 
-	@JsonIgnore
+
+	/**
+	 * At some point, this was set to be ignored.
+	 *
+	 * It's not clear why it was, but it's no longer ignored now
+	 * to allow for reordering on saves
+	 *
+	 * @return
+	 */
+	//@JsonIgnore
 	public Long getId(){
 		return this.id;
 	};

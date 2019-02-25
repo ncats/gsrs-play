@@ -13,6 +13,7 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import ix.core.util.ModelUtils;
+import ix.ginas.models.GinasAccessReferenceControlled;
 import ix.ginas.models.GinasCommonSubData;
 
 @SuppressWarnings("serial")
@@ -68,4 +69,12 @@ public class SiteContainer extends GinasCommonSubData{
 		return ModelUtils.shorthandNotationFor(sites);
 	}
 	
+	 @Override
+	   	@JsonIgnore
+	   	public List<GinasAccessReferenceControlled> getAllChildrenCapableOfHavingReferences() {
+	   		List<GinasAccessReferenceControlled> temp = new ArrayList<GinasAccessReferenceControlled>();
+
+	   		return temp;
+	   	}
+
 }

@@ -4,7 +4,9 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.Date;
-import java.util.UUID;
+import java.util.List;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import javax.persistence.Basic;
 import javax.persistence.CascadeType;
@@ -13,6 +15,7 @@ import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.Lob;
 import javax.persistence.ManyToOne;
+import javax.persistence.PostLoad;
 import javax.persistence.PreUpdate;
 import javax.persistence.Table;
 
@@ -23,8 +26,11 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import ix.core.SingleParent;
 import ix.core.models.Indexable;
 import ix.core.models.Keyword;
+import ix.core.util.EntityUtils.EntityWrapper;
 import ix.ginas.models.EmbeddedKeywordList;
+import ix.ginas.models.GinasAccessReferenceControlled;
 import ix.ginas.models.GinasCommonData;
+import ix.ginas.models.GinasCommonSubData;
 import ix.ginas.models.serialization.KeywordDeserializer;
 import ix.ginas.models.serialization.KeywordListSerializer;
 import ix.ginas.models.utils.JSONConstants;
@@ -176,4 +182,37 @@ public class Reference extends GinasCommonData {
 		return LocalDateTime.ofInstant(documentDate.toInstant(), ZoneId.systemDefault())
 							.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME);
 	}
+
+
+	@JsonIgnore
+	public List<GinasAccessReferenceControlled> getElementsReferencing(){
+		Reference _this = this;
+		return this.owner.getAllChildrenCapableOfHavingReferences()
+		          .stream()
+		          .filter(new Predicate<GinasAccessReferenceControlled>(){
+					@Override
+					public boolean test(GinasAccessReferenceControlled arg0) {
+						return arg0.getReferencesAsUUIDs().contains(_this.uuid);
+					}
+		          })
+		          .collect(Collectors.toList());
+	}
+
+	public Keyword asKeyword(){
+		return new Keyword (GinasCommonSubData.REFERENCE, uuid.toString());
+	}
+
+	//USED FOR DEBUGGING
+//	@PostLoad
+//	public void whatever(){
+//		List<GinasAccessReferenceControlled> used = getElementsRefrencing();
+//		if(used.isEmpty()){
+//			System.out.println(this.owner.getName() + "\t" + this.uuid + "\t" + "<NO REFERENCES>");
+//		}else{
+//			for(GinasAccessReferenceControlled thing: used){
+//				EntityWrapper ew = EntityWrapper.of(thing);
+//				System.out.println(this.owner.getName() + "\t" + this.uuid + "\t" + thing.getClass().toString() + "\t" + ew.getId().orElse(null));
+//			}
+//		}
+//	}
 }

@@ -1,3 +1,4 @@
+@import play.api.Play.current
 @import ix.core.models.Keyword
 @import ix.ginas.models.v1.Reference
 @import ix.ginas.controllers.v1.ReferenceFactory 
@@ -32,7 +33,7 @@
 	     }
             </td>
             <td>
-               <a ng-href = "app/substances?facet=Reference+Type/@r.docType" target="_self" uib-tooltip="Filter all substances by '@r.docType'">@r.docType</a>
+               <a ng-href = "{{baseurl}}/substances?facet=Reference+Type/@r.docType" target="_self" uib-tooltip="Filter all substances by '@r.docType'">@r.docType</a>
             </td>
             <td>
                @r.documentDate

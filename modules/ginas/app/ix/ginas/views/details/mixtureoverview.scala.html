@@ -16,7 +16,24 @@
 				</td>
 			</tr>
 			@overview(sub)
+			@if(sub.mixture.getReferences() != null && sub.mixture.getReferences().size() > 0) {
+			<tr>
+				<td>
+					<a href ng-click = "showAuditInfo=!showAuditInfo"   ng-show = "!showAuditInfo" ng-hide = "showAuditInfo"  >Show Definitional References <i class="fa fa-caret-down" aria-hidden="true"></i></a>
+					<a ng-click = "showAuditInfo=!showAuditInfo"  ng-show = "showAuditInfo" ng-hide = "!showAuditInfo" >Hide Definitional References <i class="fa fa-caret-up" aria-hidden="true"></i></a>
+				</td>
+			</tr>
+			}
 		</table>
 	</div>
 	@overviewexport(sub)
+</div>
+<div ng-show="showAuditInfo">
+	<label>References:</label>
+	<referencesmanager reftable hide-header="true"
+					   show='["cit"]'
+					   substance ="'@sub.uuid'"
+					   version ="'@sub.version'"
+					   sreferences = "@GinasApp.getAsJson(sub.mixture.getReferences())" >
+	</referencesmanager>
 </div>

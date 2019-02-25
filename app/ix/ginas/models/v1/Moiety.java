@@ -1,5 +1,7 @@
 package ix.ginas.models.v1;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 import javax.persistence.CascadeType;
@@ -16,6 +18,7 @@ import com.fasterxml.jackson.annotation.JsonUnwrapped;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
 import ix.ginas.models.CommonDataElementOfCollection;
+import ix.ginas.models.GinasAccessReferenceControlled;
 import ix.ginas.models.serialization.MoietyDeserializer;
 import ix.ginas.models.utils.JSONEntity;
 
@@ -95,4 +98,15 @@ public class Moiety extends CommonDataElementOfCollection {
 		super.forceUpdate();
 	}
 	
+	@Override
+	@JsonIgnore
+	public List<GinasAccessReferenceControlled> getAllChildrenCapableOfHavingReferences() {
+		List<GinasAccessReferenceControlled> temp = new ArrayList<GinasAccessReferenceControlled>();
+		temp.addAll(structure.getAllChildrenAndSelfCapableOfHavingReferences());
+		if(count!=null){
+			temp.addAll(count.getAllChildrenAndSelfCapableOfHavingReferences());
+		}
+		return temp;
+	}
+
 }

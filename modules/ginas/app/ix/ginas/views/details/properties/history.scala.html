@@ -1,13 +1,18 @@
 @import ix.ginas.controllers.GinasApp
 
+@import be.objectify.deadbolt.java.views.html._
+@import ix.ncats.controllers.security.IxDynamicResourceHandler
+
 @(sub: ix.ginas.models.v1.Substance)
 			                	<div>
 		                            <div class="row">
 		                            		<div class="col-md-1">
+		                            		</div>
+		                            		<div class="col-md-1">
 		                            			<h4>Version</h4>
 		                            		</div>
 		                            		<div class="col-md-3">
-		                            			<h4>Change Reason</h4>
+		                            			<h4>Version Comments</h4>
 		                            		</div>
 		                            		<div class="col-md-2">
 		                            			<h4>Editor</h4>
@@ -17,11 +22,13 @@
 		                            		</div>
 		                            		<div class="col-md-1">
 		                            		</div>
-	                                       @* <div class="col-md-1">
-	                                        </div>*@
 		                            </div>
 		                            @for(edit<-sub.getEdits()){
 		                            	<div class="row striped">
+		                            		<div class="col-md-1">
+		                            			<div ><a class="btn btn-primary pull-right reference-button" href="@ix.ginas.controllers.routes.GinasApp.substanceVersion(GinasApp.getId(sub), edit.version)" target="_self">View</a></div>
+
+		                            		</div>
 		                            		<div class="col-md-1">
 		                            			@edit.version
 		                            		</div>
@@ -35,11 +42,12 @@
 		                            			@edit.getCreatedDate()
 		                            		</div>
 		                            		<div class="col-md-1">
-		                            			<div><a href="@ix.ginas.controllers.routes.GinasApp.substanceVersion(GinasApp.getId(sub), edit.version)" target="_self">View</a></div>
+
+		                            			@dynamic(name = IxDynamicResourceHandler.IS_ADMIN, handler = new ix.ncats.controllers.security.IxDeadboltHandler()) {
+		                            				<div><button class="btn btn-warning pull-right reference-button" onclick="restoreVersion('@sub.uuid','@edit.version')">Restore</button></div>
+		                            			}
 		                            		</div>
-	                                       @* <div class="col-md-1">
-	                                            <div><a href="@edit.getDiffLink()" target="_blank">Compare</a></div>
-	                                        </div>*@
+
 		                            	</div>
 		                            }
 	                            </div>

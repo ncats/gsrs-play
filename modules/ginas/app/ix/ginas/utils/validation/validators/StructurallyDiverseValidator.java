@@ -49,15 +49,16 @@ public class StructurallyDiverseValidator extends AbstractValidatorPlugin<Substa
                     if (hasParent && hasTaxon) {
                         callback.addMessage(GinasProcessingMessage
                                 .WARNING_MESSAGE("Structurally diverse organism substance typically should not specify both a parent and taxonomic information"));
-                    }
-                }
-
             }
             if (cs.structurallyDiverse.sourceMaterialType == null
                     || cs.structurallyDiverse.sourceMaterialType.equals("")) {
                 callback.addMessage(GinasProcessingMessage
-                        .ERROR_MESSAGE("Structurally diverse substance must specify a sourceMaterialType"));
+                            .ERROR_MESSAGE("Organism Structurally diverse substance must specify a sourceMaterialType"));
             }
+            }
+
+        }
+
         if(!cs.structurallyDiverse.part.isEmpty()) {
             ValidationUtils.validateReference(cs, cs.structurallyDiverse, callback, ValidationUtils.ReferenceAction.FAIL);
         }

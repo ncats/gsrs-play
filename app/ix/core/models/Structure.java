@@ -212,8 +212,7 @@ public class Structure extends BaseModel implements ForceUpdatableModel{
     
     public Integer ezCenters; // counter of E/Z centers
     public Integer charge; // formal charge
-    
-    @Indexable(name = "Molecular Weight", dranges = { 0, 200, 400, 600, 800, 1000 }, format = "%1$.0f")
+    @Indexable(name = "Molecular Weight", dranges = { 0, 200, 400, 600, 800, 1000 }, format = "%1$.0f", sortable=true)
     public Double mwt; // molecular weight
 
     @ManyToMany(cascade = CascadeType.ALL)

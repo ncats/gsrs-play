@@ -12,6 +12,7 @@ import javax.persistence.Table;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import ix.core.SingleParent;
+import ix.ginas.models.GinasAccessReferenceControlled;
 import ix.ginas.models.GinasCommonSubData;
 
 @SuppressWarnings("serial")
@@ -85,5 +86,17 @@ public class Sugar extends GinasCommonSubData {
 		m.put("sugar", sugar);
 		return m;
 	}*/
+
+
+	  @Override
+	   	@JsonIgnore
+	   	public List<GinasAccessReferenceControlled> getAllChildrenCapableOfHavingReferences() {
+	   		List<GinasAccessReferenceControlled> temp = new ArrayList<GinasAccessReferenceControlled>();
+
+	   		if(this.siteContainer!=null){
+	   			temp.addAll(siteContainer.getAllChildrenAndSelfCapableOfHavingReferences());
+	   		}
+	   		return temp;
+	   	}
 
 }

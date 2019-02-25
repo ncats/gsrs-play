@@ -8,6 +8,7 @@ import java.util.Objects;
 import ix.core.EntityProcessor;
 import ix.core.processors.ReflectionEntityProcessor;
 import ix.core.util.EntityUtils.EntityInfo;
+import ix.core.util.IOUtil;
 import ix.utils.Tuple;
 import play.Application;
 import play.Logger;
@@ -45,7 +46,7 @@ public class EntityProcessorFactory extends AccumlatingInternalMapEntityResource
 		}
 		
 		private EntityProcessor getEntityProcessor() throws Exception{
-			Class<?> processorCls = Class.forName(processorClassName);
+			Class<?> processorCls = IOUtil.getGinasClassLoader().loadClass(processorClassName);
 			if(with!=null){
 				Constructor c=processorCls.getConstructor(Map.class);
 				return (EntityProcessor) c.newInstance(with);

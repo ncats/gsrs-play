@@ -33,4 +33,14 @@ public class PolymerSubstance extends Substance implements GinasSubstanceDefinit
     public GinasAccessReferenceControlled getDefinitionElement(){
         return polymer;
     }
+
+    @Override
+   	@JsonIgnore
+   	public List<GinasAccessReferenceControlled> getAllChildrenCapableOfHavingReferences(){
+   		List<GinasAccessReferenceControlled> temp = super.getAllChildrenCapableOfHavingReferences();
+   		if(this.polymer!=null){
+   			temp.addAll(this.polymer.getAllChildrenAndSelfCapableOfHavingReferences());
+   		}
+   		return temp;
+   	}
 }

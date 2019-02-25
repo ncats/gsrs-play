@@ -13,7 +13,7 @@
         <div class="input-group">
             <input type="text" class="form-control" ng-model="query" id="struc-search" placeholder="Search ..." name="search" aria-labelledby="{{field}}-label"
                    typeahead-popup-template-url="app/assets/templates/elements/suggest-popup.html" uib-typeahead="r.d as r.d for r in getSuggestions($viewValue)"
-                   typeahead-on-select="onSelect($item, $model, $label)" typeahead-loading="loadingSuggest" typeahead-focus-first="false"
+                   typeahead-loading="loadingSuggest" typeahead-focus-first="false"
                    typeahead-on-select="selectTypeahead($item, $event);" autocomplete="off">
             <span class="input-group-btn">
                 <button class="btn btn-default" ng-click="$parent.q=query;fetch()" uib-tooltip="search for substance" aria-label="Search">

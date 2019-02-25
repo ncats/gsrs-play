@@ -74,7 +74,7 @@ public class ChemUtils {
 	public static void checkChargeBalance(Structure newstr, List<GinasProcessingMessage> gpm) {
 		if (newstr.charge != 0) {
 			GinasProcessingMessage mes = GinasProcessingMessage
-					.WARNING_MESSAGE("Structure is not charged balanced, net charge of: " + newstr.charge);
+					.WARNING_MESSAGE("Structure is not charge-balanced, net charge of: " + newstr.charge);
 			gpm.add(mes);
 		}
 	}

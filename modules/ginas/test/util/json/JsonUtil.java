@@ -3,9 +3,9 @@ package util.json;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.fge.jsonpatch.JsonPatch;
-import com.github.fge.jsonpatch.JsonPatchException;
-import com.github.fge.jsonpatch.diff.JsonDiff;
+import com.flipkart.zjsonpatch.JsonDiff;
+import com.flipkart.zjsonpatch.JsonPatch;
+import com.flipkart.zjsonpatch.JsonPatchApplicationException;
 import ix.core.models.Edit;
 
 import java.io.File;
@@ -80,7 +80,7 @@ public class JsonUtil {
                 String key = jn.get("path").asText();
                 String normalizedPath = normalizePath(op,key,before);
 				JsonNode jsAfter=after.at(normalizePath(op,key,before));
-                if(key.endsWith("/-")){
+                if(key.endsWith("/-") || key.matches(".+/\\d+$")){
                 	//this will make jsAfter an entire object
 					//break this down into its parts
 					Iterator<String> iter = jsAfter.fieldNames();
@@ -249,11 +249,11 @@ public class JsonUtil {
     			}
     		}
     		try {
-    			JsonPatch jp=JsonPatch.fromJson((new ObjectMapper()).valueToTree(changes));
-    			
+//    			JsonPatch jp=JsonPatch.fromJson((new ObjectMapper()).valueToTree(changes));
+				JsonNode patch = (new ObjectMapper()).valueToTree(changes);
     			//System.out.println("THE PATCH:" + jp);
-				return jp.apply(oldJson);
-			} catch (JsonPatchException | IOException e) {
+				return JsonPatch.apply(patch, oldJson);
+			} catch (JsonPatchApplicationException e) {
 				e.printStackTrace();
 			}
     		return null;

@@ -20,7 +20,6 @@ import javax.persistence.PreUpdate;
 import javax.persistence.Table;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
@@ -31,6 +30,7 @@ import ix.core.models.Indexable;
 import ix.core.models.Keyword;
 import ix.ginas.models.CommonDataElementOfCollection;
 import ix.ginas.models.EmbeddedKeywordList;
+import ix.ginas.models.GinasAccessReferenceControlled;
 import ix.ginas.models.GinasCommonData;
 import ix.ginas.models.serialization.KeywordDeserializer;
 import ix.ginas.models.serialization.KeywordListSerializer;
@@ -312,4 +312,16 @@ public class Name extends CommonDataElementOfCollection {
 		this.name=name;
 	}
 	
+	@Override
+	@JsonIgnore
+	public List<GinasAccessReferenceControlled> getAllChildrenCapableOfHavingReferences() {
+		List<GinasAccessReferenceControlled> temp = new ArrayList<GinasAccessReferenceControlled>();
+		if(this.nameOrgs!=null){
+			for(NameOrg nos:this.nameOrgs){
+				temp.addAll(nos.getAllChildrenAndSelfCapableOfHavingReferences());
+			}
+		}
+		return temp;
+	}
+
 }

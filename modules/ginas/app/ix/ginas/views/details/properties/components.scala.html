@@ -3,11 +3,6 @@
 @import ix.ginas.models.v1.Component
 
 @(components: List[Component])
-<button class="btn btn-primary label-offset det" ng-init = "componentscollapse =true" ng-click = "componentscollapse = !componentscollapse">
-    <i ng-show="componentscollapse" class="fa fa-caret-right"></i>
-    <i ng-hide="componentscollapse" class="fa fa-caret-down"></i>
-    Components&nbsp;<span class="badge"> @components.length</span></button>
-<div class="col-md-12" uib-collapse = "componentscollapse">
 @defining(GinasApp.getComponentsByType(components, "MAY_BE_PRESENT_ANY_OF")) { comp =>
     @if(comp.length > 0) {
         <div class="row">
@@ -43,4 +38,3 @@
         </div>
     }
 }
-</div>

@@ -277,6 +277,7 @@ public class GinasUtils {
 				return null;
 			String line=null;
 			ObjectMapper mapper = new ObjectMapper();
+			while(true){
 			try {
 				line = buff.readLine();
 				if (line == null) {
@@ -289,12 +290,16 @@ public class GinasUtils {
 //				ByteArrayInputStream bis = new ByteArrayInputStream(toks[2].getBytes(StandardCharsets.UTF_8));
 //
 //				return mapper.readTree(bis);
+					if(toks ==null || toks.length <2){
+						continue;
+					}
 
 				return mapper.readTree(toks[2]);
 			} catch (Exception e) {
 				e.printStackTrace();
 				throw e;
 			}
+		}
 		}
 
 		@Override

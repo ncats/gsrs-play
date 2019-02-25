@@ -12,6 +12,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.deser.DeserializationProblemHandler;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import ix.core.util.IOUtil;
 import play.*;
 import play.mvc.Http.MultipartFormData;
 import play.db.ebean.*;
@@ -98,7 +99,8 @@ public class ControlledVocabularyFactory extends EntityFactory {
 
 	public static void loadCVJson(InputStream is) {
 		JsonFactory f = new JsonFactory();
-		ObjectMapper mapper = new ObjectMapper ();
+		ObjectMapper mapper = IOUtil.createNewGinasClassLoaderBackedMapper();
+
 		mapper.addHandler(new DeserializationProblemHandler() {
 			public boolean handleUnknownProperty
 					(DeserializationContext ctx, JsonParser parser,
@@ -136,7 +138,7 @@ public class ControlledVocabularyFactory extends EntityFactory {
 				
 				termType=cvValue.at("/vocabularyTermType").asText();
 				
-				ControlledVocabulary cv =  (ControlledVocabulary) mapper.treeToValue(cvValue, Class.forName(termType));
+				ControlledVocabulary cv =  (ControlledVocabulary) mapper.treeToValue(cvValue, IOUtil.getGinasClassLoader().loadClass(termType));
 				//if there was an ID with this object, get rid of it
 				//it was added by mistake
 				cv.id=null;
@@ -320,7 +322,7 @@ public class ControlledVocabularyFactory extends EntityFactory {
 			
 			JsonNode vocabType = json.get("vocabularyTermType");
 			if(vocabType!=null && !vocabType.isNull() && !vocabType.isMissingNode()){
-				c = (Class<ControlledVocabulary>)Class.forName(vocabType.asText());
+				c = (Class<ControlledVocabulary>) IOUtil.getGinasClassLoader().loadClass(vocabType.asText());
 			}
 			
 		
@@ -353,7 +355,7 @@ public class ControlledVocabularyFactory extends EntityFactory {
 		JsonNode json = request().body().asJson();
 		String str = json.get("vocabularyTermType").asText();
 		try {
-			Class<? extends ControlledVocabulary> c = (Class<? extends ControlledVocabulary>)Class.forName(str);
+			Class<? extends ControlledVocabulary> c = (Class<? extends ControlledVocabulary>)IOUtil.getGinasClassLoader().loadClass(str);
 			return updateEntity(json, c);
 		}catch(Exception e){
 			e.printStackTrace();

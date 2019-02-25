@@ -164,6 +164,12 @@ public class SubstanceProcessor implements EntityProcessor<Substance>{
         }
         addKewIfPossible(s);
         if(newInsert) {
+            //depending on how this substance was created
+            //it might have been from copying and pasting old json
+            //of an already existing substance
+            //which might have the change reason set so force it to be null for new inserts
+            s.changeReason=null;
+
         addWaitingRelationships(s);
     }
     }

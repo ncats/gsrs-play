@@ -136,4 +136,19 @@ public class ChemicalSubstance extends Substance implements GinasSubstanceDefini
     public GinasAccessReferenceControlled getDefinitionElement(){
         return structure;
     }
+
+	@Override
+	@JsonIgnore
+	public List<GinasAccessReferenceControlled> getAllChildrenCapableOfHavingReferences(){
+		List<GinasAccessReferenceControlled> temp = super.getAllChildrenCapableOfHavingReferences();
+		if(this.structure!=null){
+			temp.addAll(this.structure.getAllChildrenAndSelfCapableOfHavingReferences());
+		}
+		if(this.moieties!=null){
+			for(Moiety m: this.moieties){
+				temp.addAll(m.getAllChildrenAndSelfCapableOfHavingReferences());
+			}
+		}
+		return temp;
+	}
 }

@@ -1,8 +1,14 @@
 package ix.ginas.models.v1;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import javax.persistence.*;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import ix.core.SingleParent;
+import ix.ginas.models.GinasAccessReferenceControlled;
 import ix.ginas.models.GinasCommonSubData;
 
 @Entity
@@ -21,4 +27,17 @@ public class Material extends GinasCommonSubData {
     public Boolean defining;
 
     public Material () {}
+
+    @Override
+	@JsonIgnore
+	public List<GinasAccessReferenceControlled> getAllChildrenCapableOfHavingReferences() {
+		List<GinasAccessReferenceControlled> temp = new ArrayList<GinasAccessReferenceControlled>();
+		if(amount!=null){
+			temp.addAll(amount.getAllChildrenAndSelfCapableOfHavingReferences());
+		}
+		if(monomerSubstance!=null){
+			temp.addAll(monomerSubstance.getAllChildrenAndSelfCapableOfHavingReferences());
+		}
+		return temp;
+	}
 }

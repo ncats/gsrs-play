@@ -2,8 +2,8 @@ package ix.test.util;
 
 import static org.junit.Assert.assertTrue;
 
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
+import java.net.URI;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -11,10 +11,22 @@ import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.BitSet;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
+import java.util.function.Function;
+import java.util.jar.Attributes;
+import java.util.jar.JarEntry;
+import java.util.jar.JarOutputStream;
+import java.util.jar.Manifest;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import ix.ginas.utils.GinasGlobal;
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.SystemUtils;
+
+import javax.tools.*;
 
 /**
  * Created by katzelda on 4/12/16.
@@ -116,5 +128,165 @@ public class TestUtil {
         });
     }
     
-    
+    /**
+     * A Builder that takes a bunch of java code
+     * either as files or raw Strings and can compile them
+     * and put the compiled {@code .class} files in the specified output
+     * directory.
+     */
+    public static class JavaCompilerBuilder{
+
+        private File outputDir;
+        private List<SimpleJavaFileObject> javaFiles = new ArrayList<>();
+
+        private volatile boolean compiled=false;
+
+        public JavaCompilerBuilder(){
+            this(null);
+        }
+
+        /**
+         * Create a new instance and put all the compiled
+         * class files in the specified root directory
+         * @param outputDir
+         */
+        public JavaCompilerBuilder(File outputDir){
+            if(outputDir !=null){
+                outputDir.mkdirs();
+            }
+            this.outputDir = outputDir;
+        }
+
+        public JavaCompilerBuilder addClass(String fullyQualifiedJavaClassname, File javaSource){
+            javaFiles.add(new MyJavaFileObject(fullyQualifiedJavaClassname, javaSource));
+            return this;
+        }
+        public JavaCompilerBuilder addClass(String fullyQualifiedJavaClassname, String javaSource){
+            javaFiles.add(new JavaStringObject(fullyQualifiedJavaClassname, javaSource));
+            return this;
+        }
+
+        public JavaCompilerBuilder compile() throws IOException{
+            JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
+
+
+            DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<>();
+
+            StandardJavaFileManager fileManager =
+                    compiler.getStandardFileManager(diagnostics, null, null);
+
+
+            fileManager.setLocation(StandardLocation.CLASS_OUTPUT, outputDir ==null? null : Collections.singleton(outputDir));
+
+
+            JavaCompiler.CompilationTask task = compiler.getTask(null,
+                    fileManager, diagnostics, null, null, javaFiles);
+
+            if(!task.call()){
+                throw new IOException("error compiling source : " + diagnostics.getDiagnostics().toString());
+            }
+            compiled=true;
+            return this;
+        }
+
+        public void makeJar(File outputJar) throws IOException{
+            if(!compiled){
+                compile();
+            }
+            File parentFolder = outputJar.getParentFile();
+            if(parentFolder !=null){
+                parentFolder.mkdirs();
+            }
+            Manifest manifest = new Manifest();
+            manifest.getMainAttributes().put(Attributes.Name.MANIFEST_VERSION, "1.0");
+
+            try(JarOutputStream out = new JarOutputStream(new FileOutputStream(outputJar), manifest)){
+                if(outputDir ==null){
+                    walkDir(out, new File(""),nameConverter());
+                }else{
+                    walkDir(out, outputDir, nameConverter());
+                }
+            }
+
+        }
+
+        private Function<File, String> nameConverter(){
+            //output jar needs to use relative paths for package root
+            //if we don't convert ot relative the path will be the absolute path
+            //which means the classloader won't find the .class files because they
+            //aren't in the expected location.
+
+            Function<File, File> convertToRelative;
+            if(outputDir ==null){
+                convertToRelative = Function.identity();
+            }else {
+                convertToRelative = f -> outputDir.toPath().relativize(f.toPath()).toFile();
+            }
+            if(SystemUtils.IS_OS_WINDOWS){
+                return convertToRelative.andThen( f-> f.getPath().replace('\\', '/'));
+            }
+            return convertToRelative.andThen(File::getPath);
+        }
+        private void walkDir(JarOutputStream out, File dir, Function<File, String> nameConverter) throws IOException{
+            if(dir.isDirectory()){
+                String name = nameConverter.apply(dir);
+//                if(!name.isEmpty()) {
+                    if (!name.endsWith("/")) {
+                        name += "/";
+                    }
+                    JarEntry entry = new JarEntry(name);
+                    out.putNextEntry(entry);
+                    out.closeEntry();
+//                }
+                File[] children = dir.listFiles();
+                if(children !=null){
+                    for(File child : children){
+                        walkDir(out, child, nameConverter);
+                    }
+                }
+            }else{
+                String name = nameConverter.apply(dir);
+                JarEntry entry = new JarEntry(name);
+                out.putNextEntry(entry);
+                //apache IOUtils buffers for us so don't need tomake BufferedInputStream
+                try(InputStream in = new FileInputStream(dir)) {
+                    IOUtils.copy(in, out);
+                }
+                out.closeEntry();
+            }
+        }
+    }
+   private  static class JavaStringObject extends SimpleJavaFileObject {
+        private final String source;
+
+
+        public JavaStringObject(String fullClassNameWithPackage, String source) {
+            super(URI.create("string:///" + fullClassNameWithPackage.replaceAll("\\.", "/") +
+                    Kind.SOURCE.extension), Kind.SOURCE);
+            this.source = source;
+        }
+
+        @Override
+        public CharSequence getCharContent(boolean ignoreEncodingErrors)
+                throws IOException {
+            return source;
+        }
+    }
+
+    private static class MyJavaFileObject extends SimpleJavaFileObject {
+        private final File source;
+
+
+        public MyJavaFileObject(String fullClassNameWithPackage, File source) {
+            super(URI.create("file:///" + fullClassNameWithPackage.replaceAll("\\.", "/") +
+                    Kind.SOURCE.extension), Kind.SOURCE);
+            this.source = source;
+        }
+
+        @Override
+        public Reader openReader(boolean ignoreEncodingErrors) throws IOException {
+            return new BufferedReader(new FileReader(source));
+        }
+    }
+
 }

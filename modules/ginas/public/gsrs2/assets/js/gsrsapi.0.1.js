@@ -61,8 +61,13 @@ var GSRSAPI={
               },
               error: function(rep, error, t) {
                 console.log(error + "\t" + t);
-                cb({isError:true, message:error, type:t });
-
+                var err={isError:true, message:error, type:t };
+                if(rep.responseJSON){
+                	err.response=rep.responseJSON;
+                }else if(rep.responseText){
+                	err.response=rep.responseText;
+                }
+                cb(err);
                 //cb(""); //for now
               }
             });
@@ -415,6 +420,48 @@ var GSRSAPI={
                 });
               return req.execute();
             };
+            simple.versions = function() {
+                  var req = Request.builder()
+                    .url(g_api.GlobalSettings.getBaseURL() + "substances(" + simple.uuid + ")/@edits");
+                  return req.execute()
+                  			.andThen(function(e){
+                  				if(!e || e.isError){
+                  					return [];
+                  				}
+                  				return e;
+                  			})
+                  			.andThen(function(r){
+                  				return r.sort(function(a,b){
+                  					return a.created-b.created;
+                  				});
+                  			});
+            };
+            simple.getVersion = function(v) {
+                return simple.versions()
+                             .andThen(function(vs){
+                            	 try{
+                            		 return _.filter(vs,{"version":v+""})[0];
+                            	 }catch(e){
+                            		 return {"isError":true,"type":"cannot find element"};
+                            	 }
+                             })
+                             .andThen(function(b){
+                            	 console.log(b.oldValue);
+                            	 return Request.builder()
+                                 				  .url(b.oldValue)
+                                 				  .execute();
+                             });
+            };
+            simple.restoreVersion= function(version){
+            	 return simple.getVersion(version)
+	                         .andThen(function(old){
+	                            return simple.patch()
+	                                    .mutateTo(old)
+			                            .replace("/changeReason","reverted to version " + version)
+			                            .replace("/version",simple.version)
+	       					            .apply();
+	                         });
+            };
             simple.fetch = function(field, lambda) {
               var ret = simple._cache[field];
               var p = null;
@@ -508,6 +555,14 @@ var GSRSAPI={
               return data.addToPatch(b);
             };
 
+            b.mutateTo = function(newjson){
+            	return b.change({
+                    op: "replace",
+                    path: "",
+                    value: newjson
+                  });
+            };
+
             //should return a promise
             b.apply = function(simpleSub) {
               return simpleSub.full()
@@ -518,7 +573,6 @@ var GSRSAPI={
                     .url(g_api.GlobalSettings.getBaseURL() + "substances")
                     .method("PUT")
                     .body(rr);
-
                   return g_api.httpProcess(req);
                 });
             };

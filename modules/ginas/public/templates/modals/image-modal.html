@@ -1,0 +1,34 @@
+<div class="modal-body modal-image-body">
+
+    <img class = "img-responsive structure-image-margins" src = "{{image}}" /><br/>
+    <div class = "modal-image-names">
+        <div class = "full-width" ng-init = "toshow = 1">
+            <ul class = "nav nav-pills full-nav">
+                <li class = "nav-item" ng-class = "{active: toshow==1}">
+                    <a class="nav-link" href ng-click = "toshow = 1">Systematic Names</a>
+                </li>
+                <li class = "nav-item" ng-class = "{active: toshow==2}">
+                    <a class="nav-link" href ng-click = "toshow = 2">SMILES</a>
+                </li>
+                <li class = "nav-item" ng-class = "{active: toshow==3}">
+                    <a class="nav-link" href ng-click = "toshow = 3">InChi</a>
+                </li>
+        </div>
+        <div ng-show = "toshow==1">
+            <div class = "panel-title">Systematic Names:</div>
+            <ul>
+                <li ng-show="sysNames.length == 0"><i>None recorded</i></li>
+                <li ng-repeat = "name in sysNames">{{name}}</li>
+            </ul>
+        </div>
+        <div ng-show = "toshow==2" >
+            <div class = "panel-title">SMILES:</div>
+            <div class = "sequence-edit padded "> {{smiles}}</div>
+        </div>
+        <div ng-show = "toshow==3">
+            <div class = "panel-title">InChi:</div>
+            <div class = "sequence-edit padded ">{{inchikey}}<br/><br/>{{inchi}}</div>
+        </div>
+    </div>
+
+</div>

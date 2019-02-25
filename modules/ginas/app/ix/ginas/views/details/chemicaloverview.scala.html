@@ -17,13 +17,34 @@
 			</tr>
 
 			@overview(sub)
+			@if(sub.structure.getReferences() != null && sub.structure.getReferences().size() > 0) {
+            <tr>
+                <td>
+                    <a href ng-click = "showAuditInfo=!showAuditInfo"   ng-show = "!showAuditInfo" ng-hide = "showAuditInfo"  >Show Definitional References <i class="fa fa-caret-down" aria-hidden="true"></i></a>
+                    <a ng-click = "showAuditInfo=!showAuditInfo"  ng-show = "showAuditInfo" ng-hide = "!showAuditInfo" >Hide Definitional References <i class="fa fa-caret-up" aria-hidden="true"></i></a>
+                </td>
+            </tr>
+			}
 		</table>
 
 	</div>
 	@overviewexport(sub)
 </div>
 <div class = "row">
-	<div class = "col-md-12">
+	<div class = "col-md-6">
 
 	</div>
+	<div class = "col-md-6">
+
+	</div>
+</div>
+
+<div ng-show="showAuditInfo">
+	<label>References:</label>
+    <referencesmanager reftable hide-header="true"
+                       show='["cit"]'
+                       substance ="'@sub.uuid'"
+                       version ="'@sub.version'"
+                       sreferences = "@GinasApp.getAsJson(sub.structure.getReferences())" >
+    </referencesmanager>
 </div>

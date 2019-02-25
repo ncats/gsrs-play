@@ -210,7 +210,7 @@ public class NamesValidator extends AbstractValidatorPlugin<Substance> {
                         .getSubstancesWithExactName(100, 0, n.name);
                 if (sr != null && !sr.isEmpty()) {
                     Substance s2 = sr.iterator().next();
-                    if (!s2.getUuid().toString().equals(s.getUuid().toString())) {
+                    if (!s2.getOrGenerateUUID().toString().equals(s.getOrGenerateUUID().toString())) {
                         GinasProcessingMessage mes = GinasProcessingMessage
                                 .ERROR_MESSAGE(
                                         "Name '"

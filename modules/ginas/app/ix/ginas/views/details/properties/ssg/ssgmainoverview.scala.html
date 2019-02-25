@@ -1,0 +1,69 @@
+@import ix.ginas.controllers.GinasApp
+@import be.objectify.deadbolt.java.views.html._
+@import views.html._
+@import be.objectify.deadbolt.java.views.html._
+@import ix.ncats.controllers.security.IxDynamicResourceHandler
+@import ix.ginas.models.v1.SpecifiedSubstanceGroup1Substance
+
+@(sub: ix.ginas.models.v1.Substance)
+<div class="row">
+    <div class="col-md-7" >
+        <table class="table kv-table" id="moiety-table">
+            <tr>
+                <td>Substance Class</td>
+                <td class="monospace flexbox">
+                    @if(sub.substanceClass.equals(ix.ginas.models.v1.Substance.SubstanceClass.specifiedSubstanceG1)){
+                        Specified Substance Group 1
+                    }
+                    @if(sub.substanceClass.equals(ix.ginas.models.v1.Substance.SubstanceClass.specifiedSubstanceG2)){
+                        Specified Substance Group 2
+                    }
+                    @if(sub.substanceClass.equals(ix.ginas.models.v1.Substance.SubstanceClass.specifiedSubstanceG3)){
+                        Specified Substance Group 3
+                    }
+                    @if(sub.substanceClass.equals(ix.ginas.models.v1.Substance.SubstanceClass.specifiedSubstanceG4)){
+                        Specified Substance Group 4
+                    }
+                    @*
+                    <info-popup class="flexbox">
+                    <div class="info-popup-container">
+                    <div>
+
+                    </div>
+
+                    </div>
+                    </info-popup>
+                    *@
+                </td>
+            </tr>
+            @ssgoverview(sub)
+
+            @if(sub.substanceClass.equals(ix.ginas.models.v1.Substance.SubstanceClass.specifiedSubstanceG1)){
+                @defining(sub.asInstanceOf[SpecifiedSubstanceGroup1Substance]) { spsub =>
+                    @if(spsub.specifiedSubstance.getReferences() != null && spsub.specifiedSubstance.getReferences().size() > 0) {
+                        <tr>
+                            <td>
+                                <a href ng-click = "showAuditInfo=!showAuditInfo"   ng-show = "!showAuditInfo" ng-hide = "showAuditInfo"  >Show Definitional References <i class="fa fa-caret-down" aria-hidden="true"></i></a>
+                                <a ng-click = "showAuditInfo=!showAuditInfo"  ng-show = "showAuditInfo" ng-hide = "!showAuditInfo" >Hide Definitional References <i class="fa fa-caret-up" aria-hidden="true"></i></a>
+                            </td>
+                        </tr>
+                    }
+                }
+            }
+        </table>
+    </div>
+</div>
+
+@if(sub.substanceClass.equals(ix.ginas.models.v1.Substance.SubstanceClass.specifiedSubstanceG1)){
+    @defining(sub.asInstanceOf[SpecifiedSubstanceGroup1Substance]) { spsub =>
+        <div ng-show="showAuditInfo">
+            <label>References:</label>
+            <referencesmanager reftable hide-header="true"
+            show='["cit"]'
+            substance ="'@sub.uuid'"
+            version ="'@sub.version'"
+            sreferences = "@GinasApp.getAsJson(spsub.specifiedSubstance.getReferences())" >
+            </referencesmanager>
+        </div>
+    }
+}

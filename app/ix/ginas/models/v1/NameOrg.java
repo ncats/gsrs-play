@@ -1,17 +1,22 @@
 package ix.ginas.models.v1;
 
+import java.util.ArrayList;
 import java.util.Date;
-import javax.persistence.*;
+import java.util.List;
+
+import javax.persistence.CascadeType;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.ManyToOne;
+import javax.persistence.Table;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonView;
-import com.fasterxml.jackson.annotation.JsonProperty;
 
 import ix.core.SingleParent;
-import ix.core.models.Indexable;
+import ix.ginas.models.GinasAccessReferenceControlled;
 import ix.ginas.models.GinasCommonSubData;
-import ix.ginas.models.utils.JSONEntity;
 import ix.ginas.models.utils.JSONConstants;
+import ix.ginas.models.utils.JSONEntity;
 
 @Entity
 @Table(name="ix_ginas_nameorg")
@@ -38,4 +43,9 @@ public class NameOrg extends GinasCommonSubData {
     public NameOrg (String nameOrg) {
         this.nameOrg = nameOrg;
     }
+	@Override
+   	@JsonIgnore
+	public List<GinasAccessReferenceControlled> getAllChildrenCapableOfHavingReferences() {
+		return new ArrayList<>();
+	}
 }

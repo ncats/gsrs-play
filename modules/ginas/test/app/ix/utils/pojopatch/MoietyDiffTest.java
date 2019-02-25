@@ -4,11 +4,11 @@ import static org.junit.Assert.assertEquals;
 
 import java.util.UUID;
 
+import com.flipkart.zjsonpatch.JsonDiff;
 import org.junit.Test;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.fge.jsonpatch.diff.JsonDiff;
 
 import ix.AbstractGinasServerTest;
 import ix.ginas.models.v1.GinasChemicalStructure;

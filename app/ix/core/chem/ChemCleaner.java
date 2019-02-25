@@ -1,15 +1,91 @@
 package ix.core.chem;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
+import ix.core.util.CachedSupplier;
 import ix.core.util.StreamUtil;
+import ix.utils.FortranLikeParserHelper.LineParser;
+import ix.utils.FortranLikeParserHelper.LineParser.ParsedOperation;
+import ix.utils.Tuple;
 
 public class ChemCleaner {
+
+
+	private static LineParser MOLFILE_COUNT_LINE_PARSER=new LineParser("aaabbblllfffcccsssxxxrrrpppiiimmmvvvvvv");
+
+	private static char[] alpha="aAbBcCdDeEfFgGhHiIjJkKlLmMnNoOpPqQrRsStTuUvVwWxWyYzZ0123456789".toCharArray();
+	private static String[] nalpha=IntStream.range(0, alpha.length)
+			.mapToObj(i->""+alpha[i])
+			.map(a->""+a+a+a+a)
+			.toArray(i->new String[i]);
+	private static LineParser CHG_LINE_PARSER=CachedSupplier.of(()->{
+		StringBuilder sb = new StringBuilder();
+		sb.append("......???");
+
+		for(int i=0;i<nalpha.length;i+=2){
+			sb.append(nalpha[i]);
+			sb.append(nalpha[i+1]);
+		}
+		return new LineParser(sb.toString());
+	}).get();
+
+	//										  new LineParser("......nnnaaaabbbbccccdddd");
+
+	private static Pattern NEW_LINE_PATTERN = Pattern.compile("\n");
+
+	public static String cleanMolfileWithTypicalWhiteSpaceIssues(String molfile){
+		String[] lines=NEW_LINE_PATTERN.split(molfile);
+		lines[3]=MOLFILE_COUNT_LINE_PARSER.parseAndOperate(lines[3])
+				.remove("iii")
+				.set("mmm", "999")
+				.set("vvvvvv", "V2000")
+				.toLine();
+
+		return Arrays.stream(lines)
+				.map(l->{
+					if(l.startsWith("M  END")){
+						return "M  END"; //ignore anything after the M  END line start, as it sometimes is added by accident in a few tools
+					}else if(l.startsWith("M  CHG")){
+						List<String> nlist = new ArrayList<>();
+
+
+						ParsedOperation po=CHG_LINE_PARSER.parseAndOperate(l);
+						int ccount=po.getAsInt("???");
+						if(ccount>8){
+							po.set("???", "8");
+						}
+
+						for(int i=16;i<Math.min(ccount*2,nalpha.length);i+=2){
+							po.remove(nalpha[i]);
+							po.remove(nalpha[i+1]);
+						}
+						nlist.add(0,po.toLine().trim());
+						if(ccount>8){
+							String b = ("A" +l.substring(73)).trim().substring(1);
+							for(int j=0;j<b.length();j+=64){
+								int endIndex=Math.min(b.length(),j+64);
+								int scount=(int)Math.ceil((endIndex-j)/8.0);
+								String nsection = b.substring(j, endIndex);
+								ParsedOperation no=CHG_LINE_PARSER.parseAndOperate("M  CHG").set("???", ""+scount);
+								nlist.add(CHG_LINE_PARSER.parseAndOperate(no.toLine().trim()+nsection).toLine().trim());
+							}
+						}
+						return nlist.stream().collect(Collectors.joining("\n"));
+
+					}
+					return l;
+				})
+				.collect(Collectors.joining("\n"));
+
+	}
+
 	/**
 	 * Returns a cleaner form of a molfile, with some common jsdraw
 	 * polymer parts re-interpreted
@@ -84,7 +160,7 @@ public class ChemCleaner {
 			mfile+=add;
 		}
 		mfile+="M  END";
-		return mfile;
+		return cleanMolfileWithTypicalWhiteSpaceIssues(mfile);
 	}
 	
 	public static String removeSGroups(String mol){
@@ -92,4 +168,5 @@ public class ChemCleaner {
   				.filter(l->!l.matches("^M  S.*$"))
   				.collect(Collectors.joining("\n"));
 	}
+
 }

@@ -43,9 +43,9 @@
 
                     crosscheckAccesses(accessOptions);
 
-                    //bump English and United States up to the top
+                    //bump Protected, English and United States up to the top
                     scope.accessOptions = _.orderBy(accessOptions, function (cv) {
-                        return cv.display == 'English' || cv.display == 'United States';
+                        return cv.display == 'English' || cv.display == 'United States' || cv.display == 'PROTECTED';
                     }, ['desc']);
                 });
             }

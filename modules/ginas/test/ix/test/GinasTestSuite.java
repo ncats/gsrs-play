@@ -101,6 +101,7 @@ public class GinasTestSuite extends Suite{
         int beginPort = Integer.parseInt(System.getProperty("beginPort", "9001"));
         int endPort = Integer.parseInt(System.getProperty("endPort", "9005"));
         int numThreads = Integer.parseInt(System.getProperty("numThreads", "3"));
+        System.out.println("begin port = " + beginPort + "  end port = " + endPort + " numThreads = " + numThreads);
         DifferentPortExecutorService executorService = new DifferentPortExecutorService(beginPort, endPort, numThreads);
 
         MessageFormat format = new MessageFormat(System.getenv("command"));

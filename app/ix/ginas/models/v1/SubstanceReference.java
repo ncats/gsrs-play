@@ -1,5 +1,7 @@
 package ix.ginas.models.v1;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -8,7 +10,10 @@ import javax.persistence.Entity;
 import javax.persistence.PostLoad;
 import javax.persistence.Table;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import ix.core.util.GinasPortalGun;
+import ix.ginas.models.GinasAccessReferenceControlled;
 import ix.ginas.models.GinasCommonSubData;
 import ix.ginas.models.utils.JSONEntity;
 
@@ -145,4 +150,12 @@ public class SubstanceReference extends GinasCommonSubData {
     public boolean isReferencingSubstance(Substance s){
     	return this.isEquivalentTo(s.asSubstanceReference());
     }
+
+
+	@Override
+	@JsonIgnore
+	public List<GinasAccessReferenceControlled> getAllChildrenCapableOfHavingReferences() {
+		List<GinasAccessReferenceControlled> temp = new ArrayList<GinasAccessReferenceControlled>();
+		return temp;
+	}
 }

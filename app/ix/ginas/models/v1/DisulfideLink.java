@@ -11,6 +11,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import ix.core.IgnoredModel;
 import ix.core.models.Indexable;
+import ix.ginas.models.GinasAccessReferenceControlled;
 import ix.ginas.models.GinasCommonSimplifiedSubData;
 
 
@@ -60,5 +61,9 @@ public class DisulfideLink extends GinasCommonSimplifiedSubData {
 	
     public DisulfideLink () {}
     
-    
+    @Override
+    @JsonIgnore
+	public List<GinasAccessReferenceControlled> getAllChildrenCapableOfHavingReferences() {
+		return new ArrayList<>();
+	}
 }

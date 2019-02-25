@@ -9,7 +9,10 @@ import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import ix.core.SingleParent;
+import ix.ginas.models.GinasAccessReferenceControlled;
 import ix.ginas.models.GinasCommonSubData;
 import ix.ginas.models.utils.JSONEntity;
 
@@ -31,4 +34,18 @@ public class PhysicalModification extends GinasCommonSubData {
     @JSONEntity(title = "Modification Group")
     public String modificationGroup = "1";
     public PhysicalModification () {}
+
+
+
+    @Override
+   	@JsonIgnore
+   	public List<GinasAccessReferenceControlled> getAllChildrenCapableOfHavingReferences() {
+   		List<GinasAccessReferenceControlled> temp = new ArrayList<GinasAccessReferenceControlled>();
+   		if(this.parameters!=null){
+   			for(PhysicalParameter p: parameters){
+   				temp.addAll(p.getAllChildrenAndSelfCapableOfHavingReferences());
+   			}
+   		}
+   		return temp;
+   	}
 }

@@ -463,7 +463,6 @@ public class GinasApp extends App {
             }
             if("Record Status".equals(name())){
 	            if (Substance.STATUS_APPROVED.equalsIgnoreCase(label)) {
-	            	System.out.println(name());
 	                return "Validated (UNII)";
 	            }
 	            if ("non-approved".equalsIgnoreCase(label)) {
@@ -609,6 +608,7 @@ public class GinasApp extends App {
         String type = request().getQueryString("type");
         Logger.debug("Substances: rows=" + rows + " page=" + page);
         SearchType stype = SearchType.valueFor(type);
+
 
 //        return F.Promise.promise( ()-> {
         try {
@@ -777,9 +777,14 @@ public class GinasApp extends App {
                 //Not ideal, but gets around user problem
                 Stream<Substance> mstream = getExportStream(collectionID);
 
+                //GSRS-699 REALLY filter out anything that isn't public unless we are looking at private data
+                if(publicOnlyBool){
+                    mstream = mstream.filter(s-> s.getAccess().isEmpty());
+                }
 
+                Stream<Substance> effectivelyFinalStream = mstream;
                 ExportProcess p = new ExportProcessFactory().getProcess(emd,
-                        () -> mstream);
+                        () -> effectivelyFinalStream);
 
                 p.run(out -> Unchecked.uncheck(() -> getSubstanceExporterFor(extension, out, publicOnlyBool)));
 
@@ -1177,7 +1182,7 @@ public class GinasApp extends App {
             processor = new GinasNucleicSequenceResultProcessor();
         }
         try {
-            SearchResultContext context = sequence(seq, identity, rows, page, ct, processor);
+            SearchResultContext context = sequence(seq, identity, rows, page, ct,seqType , processor);
 
             return App.fetchResult(context, rows, page, new SubstanceResultRenderer());
         } catch (Exception ex) {

@@ -4,6 +4,8 @@ import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
 import javax.persistence.Inheritance;
 
+import ix.core.SingleParent;
+
 /**
  * Created by peryeata on 2/17/16.
  */
@@ -11,6 +13,7 @@ import javax.persistence.Inheritance;
 @Entity
 @Inheritance
 @DiscriminatorValue("SYS")
+@SingleParent
 public class CodeSystemVocabularyTerm extends VocabularyTerm{
     
     String systemCategory;

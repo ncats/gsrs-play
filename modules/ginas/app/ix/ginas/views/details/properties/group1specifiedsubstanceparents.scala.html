@@ -1,0 +1,20 @@
+@import ix.ginas.controllers.GinasApp
+@import ix.ginas.controllers.v1.SubstanceFactory
+@import ix.ginas.models.v1.SpecifiedSubstanceGroup1Substance;
+
+
+@(parents: List[SpecifiedSubstanceGroup1Substance])
+
+@if(parents.length > 0) {
+
+    <h3 class = "panel-title">This record has the following Group 1 Specified Substance forms:</h3>
+    <div class="row">
+        <div class = "row">
+            @for(c <- parents) {
+            <div class="col-md-3">
+                @subref(c.asSubstanceReference())
+            </div>
+            }
+        </div>
+    </div>
+}
