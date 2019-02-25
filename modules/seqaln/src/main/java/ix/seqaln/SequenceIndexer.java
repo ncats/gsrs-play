@@ -302,9 +302,12 @@ public class SequenceIndexer {
                 if (iden < aln.iden) d = 1;
                 else if (iden > aln.iden) d = -1;
             }
-            if (d == 0)
+            if (d == 0) {
+                if(segment ==null && aln.segment ==null){
+                    return 0;
+                }
                 d = segment.qi - aln.segment.qi;
-
+            }
             return d;
         }
 
