@@ -368,12 +368,12 @@
                         "q": "root_names_name:" + query + "*"
                     },
                 }, {
-                    headers: {
-                        'Content-Type': 'text/plain'
-                    }
-                }).then(function (response) {
-                    return response.data.content;
-                });
+                        headers: {
+                            'Content-Type': 'text/plain'
+                        }
+                    }).then(function (response) {
+                        return response.data.content;
+                    });
                 return promise;
             }
         };
