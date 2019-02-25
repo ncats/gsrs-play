@@ -2996,6 +2996,7 @@
                     });
                 }
 
+
                 var sketcherElm = {
                     "get": function () {
                         return element[0];
@@ -3054,34 +3055,51 @@
                         _self.paste_auto(e, 'drop');
                     }, false);
 
-                    this.loadImage = function (blob) {
-                        var source = null;
-                        if (typeof blob === "string") {
-                            source = blob;
-                        } else {
-                            var URLObj = window.URL || window.webkitURL;
-                            source = URLObj.createObjectURL(blob);
-                        }
-                        this.paste_createImage(source);
-                        return true;
+                    // local pointer of "this" keyword for the surrounding
+                    // function
+                    var _thisfun = this;
+
+                    // supplier of the load event for an image, but does not actually
+                    // load yet, until specifically called (this is a function that returns
+                    // a function)
+                    this.loadImage = function(blob){
+                    	var source=null;
+                    	if(typeof blob  ==="string"){
+                    		source=blob;
+                    	}else{
+                    		var URLObj = window.URL || window.webkitURL;
+                    		source = URLObj.createObjectURL(blob);
+                    	}
+
+                    	return function(){
+                    		_thisfun.paste_createImage(source);
+                    		return true;
+                    	};
                     }
 
-                    this.paste_auto = function (e, method) {
-                        var _this = this;
-                        canvas = document.getElementById(canvas_id);
+                    //method to receive pasted/droped data
+                    this.paste_auto = function(e, method) {
+                    	var _this=this;
+                    	canvas = document.getElementById(canvas_id);
+
                         ctx = document.getElementById(canvas_id).getContext("2d");
                         var gotImage = false;
                         var text = null;
+
+                        //specifically handles drop
                         if (method == 'drop') {
                             var items = e.dataTransfer.files;
 
-                            if (items.length == 0) {
-                                for (var ii = 0; ii < e.dataTransfer.items.length; ii++) {
-                                    if (e.dataTransfer.items[ii].type === "text/html") {
-                                        e.dataTransfer.items[ii].getAsString(function (s) {
-                                            if (s.indexOf("<img") == 0) {
-                                                var url = JSON.parse(s.split("src=")[1].split(/[ |>]+/)[0].trim());
-                                                if (_this.loadImage(url)) {
+                            //if there are no files dropped, there could be html/text dropped
+                            //handle those, butonly those that have embedded src tags
+                            //then do no other processing
+                            if(items.length==0){
+                            	for(var ii=0;ii<e.dataTransfer.items.length;ii++){
+                            		if(e.dataTransfer.items[ii].type==="text/html"){
+                            			e.dataTransfer.items[ii].getAsString(function(s){
+                            				if(s.indexOf("<img") ==0){
+                            					var url = JSON.parse(s.split("src=")[1].split(/[ |>]+/)[0].trim());
+                            					if(_this.loadImage(url)()){
                                                     scope.invalidStructure = false;
                                                     e.preventDefault();
                                                 }
@@ -3092,46 +3110,107 @@
                                 return;
                             }
 
-                        } else if (method == 'paste') {
+                        }else if (method == 'paste'){
+                        	// get the items from the clipboard if the method is
+                        	// paste, but not if it's a drop event
                             var items = e.clipboardData.items;
                         }
+
+                        //cancel processing if items is empty
                         if (!items) return;
-                        for (var i = 0; i < items.length; i++) {
-                            if (items[i].type.indexOf("image") !== -1) {
-                                scope.invalidStructure = false;
-                                var blob;
-                                if (method == "drop") {
-                                    blob = items[i];
-                                } else if (method == "paste") {
-                                    blob = items[i].getAsFile();
-                                }
-                                if (_this.loadImage(blob)) {
-                                    e.preventDefault();
-                                    gotImage = true;
-                                }
-                                break;
-                            } else if (items[i].type.indexOf("text") !== -1) {
-                                items[i].getAsString(function (r) {
-                                    if (r) {
-                                        text = r;
-                                        if (!gotImage) {
-                                            try {
-                                                if (scope.sketcher.activated) {
-                                                    if (text.indexOf("<div") == -1) {
-                                                        setLoading(true);
-                                                        scope.updateMolServer(text, true, true);
-                                                    }
-                                                }
-                                            } catch (e) {
-                                                if (text.indexOf("<div") == -1) {
-                                                    setLoading(true);
-                                                    scope.updateMolServer(text, true, true);
-                                                }
+
+
+                        var activated=false;
+
+                        //we only consider going forward if the sketcher is active. The sketcher is only active if
+                        //1. There is no item in the page that has the :focus property (e.g. an input / textarea) AND
+                        //2. The method is NOT paste (e.g. drop, which works regardless of focus) OR the sketcher is flagged as active
+                        activated= (method!=='paste' || scope.sketcher.activated) && ($(':focus').length==0);
+                    	if (activated) {
+                    		// this function will load text if it's received
+                    		// and will be called later
+                    		var loadText=function (r) {
+                                if (r) {
+                                    var text = r;
+                                        try {
+                                            if (text.indexOf("<div") == -1) {
+                                                setLoading(true);
+                                                scope.updateMolServer(text, true, true);
+                                            }
+                                        } catch (e) {
+                                            if (text.indexOf("<div") == -1) {
+                                                setLoading(true);
+                                                scope.updateMolServer(text, true, true);
                                             }
                                         }
-                                    }
-                                });
+                                }
+                            };
+                            // this method queues up (but does not load) an image if it's received
+                            // and will be called later. You must call the function returned
+                            // by this method to actually activate the event.
+                            var loadImage=function(img){
+                            	scope.invalidStructure = false;
+                            	var blob;
+                                if(method == "drop"){
+                                    blob = img;
+                                }else if(method == "paste") {
+                                    blob =img.getAsFile();
+                                }
+                                return _this.loadImage(blob);
                             }
+                            //map of the clipboard elements by type
+                    		var clip={};
+
+                    		//iterate through the items, put the image
+                    		//and plain text elements into the clip map
+                    		for (var i = 0; i < items.length; i++) {
+                    			if (items[i].type.indexOf("image") !== -1) {
+                    				//if(!clip["image"])clip["image"]=[];
+                    				clip["image"]=items[i];
+                    			}else if (items[i].type.indexOf("text/plain") !== -1) {
+                    				clip["text"]=items[i];
+                    			}
+                    		}
+
+                    		//If there's text but no image, try to interpret the text
+                    		if(clip["text"] && ! clip["image"]){
+                    			clip["text"].getAsString(loadText);
+        						e.preventDefault();
+
+        				    //If there's image but no text, try to interpret the image
+                    		}else if(clip["image"] && ! clip["text"]){
+                    			loadImage(clip["image"])();
+                    			e.preventDefault();
+
+                    	    //If there's image and text, a choice must be made, but the browser will
+                    	    //invalidate the items after the callback, so we must queue up the image
+                    	    //to be loaded first, and only call it to be loaded after we make a decision
+                    		//about the text
+
+                    		}else if(clip["image"] && clip["text"]){
+
+                    			//this queues up the image to be loaded, calling
+                    			//the callback will load the image
+                    			var callback=loadImage(clip["image"]);
+
+                    			//async call to get the text element copied
+                    			clip["text"].getAsString(function(r){
+                    				//if the text "///" exists, that probably means there's a file URL present,
+                    				//which is typically part of a paste event when an image is copied locally on some
+                    				//platforms. Don't interpret this as text.
+                    				if(r.indexOf("///")>-1){
+                    					//load as image
+                    					callback();
+                    				//otherwise it's probably text that was important, try to interpret it
+                    				}else{
+                    					loadText(r);
+                    				}
+                    			});
+                    			//we will always cancel the event if we made it this far, even if nothing meaningful comes from it.
+                    			//Since the activation check is present, this is almost always okay.
+                    			e.preventDefault();
+                    		}
+
                         }
                     };
                     //draw pasted image to canvas
@@ -3159,9 +3238,9 @@
                             ctx.fillRect(0, 0, pastedImage.width, pastedImage.height);
                             ctx.drawImage(pastedImage, 0, 0);
                             var dataURL = canvas.toDataURL();
-                            if (dataURL.length > 100000) {
-                                dataURL = canvas.toDataURL('image/jpeg', 100000 / dataURL.length);
-                                console.log(dataURL.length);
+                            if(dataURL.length>100000){
+                            	dataURL = canvas.toDataURL('image/jpeg', 100000/dataURL.length);
+                            	console.log(dataURL.length);
                             }
                             setLoading(true);
                             //TODO: Change to use angular
