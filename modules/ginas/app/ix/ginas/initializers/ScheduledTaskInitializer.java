@@ -54,10 +54,12 @@ public abstract class ScheduledTaskInitializer implements Initializer {
             this.cron = suppliedCron;
         }
         Object autoRun = m.get("autorun");
-        if(autoRun instanceof Boolean){
+        if(autoRun ==null){
+            enabled = false;
+        }else if(autoRun instanceof Boolean){
             enabled = (Boolean) autoRun;
         }else {
-            enabled = Boolean.parseBoolean((String) m.get("autorun"));
+            enabled = Boolean.parseBoolean(autoRun.toString());
         }
         return this;
     }
