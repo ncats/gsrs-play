@@ -7,6 +7,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URLDecoder;
 
 /**
  * Created by katzelda on 3/29/18.
@@ -25,13 +26,21 @@ public class OpsinResolver extends AbstractStructureResolver{
 
     @Override
     public Structure resolve(String name) {
+    	try{
+    		//This shouldn't be needed, but for some reason it comes in URLEncoded
+
         String smiles = nts.parseToSmiles(name);
+
         if(smiles !=null){
             try {
                 return this.resolve(new ByteArrayInputStream(smiles.getBytes()), "smiles");
             } catch (IOException e) {
                 return null;
             }
+
+	        }
+    	}catch(Exception e){
+    		e.printStackTrace();
 
         }
         return null;

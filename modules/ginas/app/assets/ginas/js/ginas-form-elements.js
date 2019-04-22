@@ -415,7 +415,8 @@
                 //change functions happen before the field is set, so you can't get the new value without a watch
                 required: '=?',  //optional variable that enables required form validation
                 values: '=?' ,  //array that can be passed with a custom cv for dropdowns and multi select
-                tagRemove: '&?' //called when tag is removed
+                tagRemove: '&?', //called when tag is removed
+                isDisabled: '=?'
             },
             link: function (scope, element, attrs, ngModelCtrl) {
                 
@@ -654,8 +655,12 @@
             if (loading) {
                 spinnerService.show(loading);
             }
-            var url = baseurl + "resolve/" + name;
-            return $http.get(url, {cache: true}, {
+            var url = baseurl + "resolve";
+            return $http.get(url, {
+            	cache: true,
+            	params: {"name": name}
+            },
+            {
                 headers: {
                     'Content-Type': 'text/plain'
                 }
@@ -908,8 +913,10 @@
                 };
 
                 scope.stage = true;
+                scope.externalLink = '';
 
                 scope.fetch = function (term, skip) {
+                    scope.externalLink = '';
                     if (_.isUndefined(scope.referenceobj) || scope.referenceobj == null) {
                         scope.referenceobj = {};
                     }
@@ -941,6 +948,7 @@
                 };
 
                 scope.createSubref = function (selectedItem) {
+                    scope.externalLink = baseurl + "substance/"+selectedItem.uuid;
                     var temp = {};
                     temp.refuuid = selectedItem.uuid;
                     temp.refPname = selectedItem._name;
@@ -1091,7 +1099,7 @@
                     }
                 }
              },
-            template: '<a class="btn btn-primary download-button fa-lg" tabindex="0" role="button" ng-keypress = "make();" ng-click ="make()" uib-tooltip="Download Results"><i class="fa fa-download" ></i></a>'
+            template: '<a class="btn btn-primary download-button fa-lg" tabindex="0" role="button"  name = "download results" ng-keypress = "make();" ng-click ="make()" uib-tooltip="Download Results"><i class="fa fa-download" ></i></a>'
         };
     });
 

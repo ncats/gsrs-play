@@ -14,6 +14,7 @@ GET	 /enantiomer/:id	ix.ncats.controllers.App.enantiomer(id: String)
 
 ## resolve a given name to 
 GET	 /resolve/*name	ix.ncats.controllers.App.resolve(name: String)
+GET	 /resolve	ix.ncats.controllers.App.resolve(name: String)
 
 # cache methods
 GET	/cache/@summary	ix.ncats.controllers.App.cacheSummary

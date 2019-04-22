@@ -26,15 +26,16 @@ public class Parameter extends GinasCommonSubData {
 	//TP: added 05-19-2016
     //Needed for some properties
 	@OneToOne(cascade=CascadeType.ALL)
-    private SubstanceReference referencedSubstance;
+	public SubstanceReference referencedSubstance;
 	
     @JSONEntity(title = "Parameter Name", isRequired = true)
     @Column(nullable=false)
-    private String name;
+    public String name;
     
     @JSONEntity(title = "Parameter Type", values = "JSONConstants.ENUM_PROPERTY_TYPE", isRequired = true)
-    private String type;
+    public String type;
 
+    @Indexable(name="type")
     public String getType() {
         return type;
     }
@@ -45,10 +46,12 @@ public class Parameter extends GinasCommonSubData {
 
     @JSONEntity(title = "Parameter Value")
     @OneToOne(cascade=CascadeType.ALL)
-    private Amount value;
+    public Amount value;
 
     public Parameter () {}
 
+
+    @Indexable(name="name")
     public String getName() {
         return name;
     }
@@ -57,6 +60,7 @@ public class Parameter extends GinasCommonSubData {
         this.name = name;
     }
 
+    @Indexable(name="value")
     public Amount getValue() {
         return value;
     }

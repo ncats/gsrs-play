@@ -7,9 +7,13 @@ import static ix.core.search.ArgumentAdapter.getLastStringOrElse;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
+import gov.nih.ncats.chemkit.api.Chemical;
 import ix.core.chem.StructureProcessorTask;
 import ix.core.controllers.search.SearchRequest;
 import org.reflections.Reflections;
@@ -55,11 +59,8 @@ import play.Application;
 import play.Logger;
 import play.Play;
 import play.db.ebean.Model;
-import play.mvc.BodyParser;
-import play.mvc.Call;
-import play.mvc.Controller;
-import play.mvc.Result;
-import tripod.molvec.algo.StructureImageExtractor;
+import play.mvc.*;
+import tripod.molvec.Molvec;
 
 public class RouteFactory extends Controller {
     private static final int MAX_POST_PAYLOAD = 1024*1024*10;
@@ -364,10 +365,12 @@ public class RouteFactory extends Controller {
 //        System.out.println("base64 =" +base64Encoded);
         byte[] data = Base64.getDecoder().decode(base64Encoded);
         String mol;
-        try {
-             mol =new StructureImageExtractor(data).getChemical().toMol();
+        CompletableFuture<String> chemicalCompletableFuture = Molvec.ocrAsync(data);
 
-//             System.out.println("parsed mol=\n" +mol);
+        try {
+            mol = chemicalCompletableFuture.get(10, TimeUnit.SECONDS);
+
+             System.out.println("parsed mol=\n" +mol);
             StructureProcessorTask.Builder taskBuilder = new StructureProcessorTask.Builder()
                     .mol(mol)
                     .query(true)
@@ -375,6 +378,10 @@ public class RouteFactory extends Controller {
                     ;
 
             return ok(EntityMapper.FULL_ENTITY_MAPPER().toJson(taskBuilder.build().instrument()));
+        }catch(TimeoutException toe){
+            //timeout!!
+            chemicalCompletableFuture.cancel(true);
+            return Results.notFound();
         }catch(Exception e){
             return _apiInternalServerError(e);
         }

@@ -85,6 +85,9 @@ public abstract class BaseModel extends Model{
 	
 	@JsonProperty("_matchContext")
 	public Map<String,Object> getMatchContextProperties(){
+		if(matchContext ==null){
+			return null;
+		}
         return matchContext.get();
     }
 	

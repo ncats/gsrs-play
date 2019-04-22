@@ -12,6 +12,7 @@ import javax.persistence.Table;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import ix.core.models.Indexable;
 import ix.ginas.models.CommonDataElementOfCollection;
 import ix.ginas.models.GinasAccessReferenceControlled;
 import ix.ginas.models.utils.JSONEntity;
@@ -55,6 +56,7 @@ public class Property extends CommonDataElementOfCollection {
     public Property() {
     }
 
+    @Indexable(name="name")
     public String getName() {
         return name;
     }
@@ -71,6 +73,7 @@ public class Property extends CommonDataElementOfCollection {
         this.type = type;
     }
 
+    @Indexable(name="propertyType")
     public String getPropertyType() {
         return propertyType;
     }
@@ -79,6 +82,7 @@ public class Property extends CommonDataElementOfCollection {
         this.propertyType = propertyType;
     }
 
+    @Indexable(name="value")
     public Amount getValue() {
         return value;
     }
@@ -87,6 +91,7 @@ public class Property extends CommonDataElementOfCollection {
         this.value = value;
     }
 
+    @Indexable(name="referencedSubstance")
     public SubstanceReference getReferencedSubstance() {
         return referencedSubstance;
     }
@@ -95,6 +100,7 @@ public class Property extends CommonDataElementOfCollection {
         this.referencedSubstance = referencedSubstance;
     }
 
+    @Indexable(name="defining")
     public Boolean isDefining() {
         return defining;
     }
@@ -103,6 +109,7 @@ public class Property extends CommonDataElementOfCollection {
         this.defining = defining;
     }
 
+    @Indexable(name="parameters")
     public List<Parameter> getParameters() {
         return parameters;
     }
