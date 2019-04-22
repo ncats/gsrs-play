@@ -153,9 +153,20 @@ public class InheritanceTypeIdResolver implements TypeIdResolver {
         return idFromValueAndType(null, baseType.getRawClass());
     }
 
-    @Override
-    public JavaType typeFromId(String s) {
-        return typeFromId(null, s);
+    //katzelda 2018-11-10
+    //note this implementation has several methods
+    //that are not annotated with @Override but actually
+    //override interface methods
+    //there are also some methods also not annotated that don't implement interface methods.
+    //This is because the TypeIdResolver made API incompatiable changes adding and removing
+    //these methods.  There appears to be a classpath issue where some of our dependencies
+    //now require a newer version of the Jackson library but sometimes we load the jar
+    //from a different dependency.  This way no matter which version of the interface we load
+    //it will compile. We implement both versions before and after the interface change
+    //but remove the override annotation to avoid compiler issues.
+
+    public String getDescForKnownTypeIds() {
+        return "inheritance type for base " + baseType;
     }
 
     private String computeNameFor(Class<?> cls){
@@ -185,8 +196,9 @@ public class InheritanceTypeIdResolver implements TypeIdResolver {
         return computeNameFor(javaType.getRawClass());
 
     }
-
-    @Override
+    public JavaType typeFromId(String s) {
+        return typeFromId(null, s);
+    }
     public JavaType typeFromId(DatabindContext databindContext, String s) {
         JavaType type = typeMap.get(s);
 

@@ -1,6 +1,7 @@
 package ix.ginas.models;
 
 import java.util.LinkedHashSet;
+import java.util.Objects;
 import java.util.Set;
 
 import javax.persistence.MappedSuperclass;
@@ -18,7 +19,7 @@ import ix.ginas.models.v1.Reference;
 import ix.ginas.models.v1.Substance;
 
 @MappedSuperclass
-public class GinasCommonSubData extends GinasCommonData implements GinasAccessReferenceControlled{
+public abstract class GinasCommonSubData extends GinasCommonData implements GinasAccessReferenceControlled{
 	
 	/**
 	 * 
@@ -48,10 +49,31 @@ public class GinasCommonSubData extends GinasCommonData implements GinasAccessRe
    
 	@Override
 	public void addReference(String refUUID){
+    	//dup check
+		boolean isDup = hasDupReference(refUUID);
+
+		if(!isDup) {
 		this.internalReferences.add(new Keyword(GinasCommonSubData.REFERENCE,
 				refUUID
 		));
-		setReferences(new LinkedHashSet<Keyword>(this.internalReferences));
+			setReferences(new LinkedHashSet<>(this.internalReferences));
+		}
+	}
+
+	private boolean hasDupReference(String refUUID){
+		if(refUUID==null){
+			return false;
+		}
+		//can't use java 8 here because our ebean class enhancer is java 7
+		for(Keyword k : internalReferences){
+			if(!GinasCommonSubData.REFERENCE.equals(k.label)){
+				continue;
+			}
+			if(refUUID.equals(k.term)){
+				return true;
+			}
+		}
+		return false;
 	}
 	@Override
 	public void addReference(Reference r){

@@ -41,7 +41,7 @@
                             }
                         </ul>
                         
-                        <div ng-show="subunitsearch">
+                        <div class="subunit-list" ng-show="subunitsearch">
                         		@for(subunit <- prot.protein.getSubunits()) {
                         			<div>
 		                               	<a href="@ix.ginas.controllers.routes.GinasApp.sequence(subunit.uuid.toString())" target="_self" uib-tooltip="Sequence Subunit @subunit.subunitIndex Search" aria-label="Structure Subunit @subunit.subunitIndex Search">

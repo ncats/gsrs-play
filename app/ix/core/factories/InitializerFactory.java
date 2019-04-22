@@ -4,6 +4,7 @@ import java.util.Set;
 
 import ix.core.initializers.Initializer;
 import ix.core.util.CachedSupplier;
+import ix.core.util.IOUtil;
 import ix.utils.Tuple;
 import play.Application;
 
@@ -21,8 +22,9 @@ public class InitializerFactory extends InternalMapEntityResourceFactory<Initial
 	@Override
 	public void initialize(Application app) {
 		this.getStandardResourceStream(app, "ix.core.initializers")
+
 			.map(m->Tuple.of((String)m.get("class"),m))
-			.map(Tuple.kmap(n->CachedSupplier.ofThrowing(()->Class.forName(n).newInstance())))
+			.map(Tuple.kmap(n->CachedSupplier.ofThrowing(()-> IOUtil.getGinasClassLoader().loadClass(n).newInstance())))
 			.filter(p->!p.k().getThrown().isPresent())
 			.map(Tuple.kmap(o->(Initializer)o.get()))
 			.map(t->t.k().initializeWith(t.v()))

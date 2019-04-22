@@ -24,6 +24,7 @@ public class IxDynamicResourceHandler implements DynamicResourceHandler {
 	public static final String CAN_APPROVE = "canApprove";
 	public static final String CAN_REGISTER = "canRegister";
 	public static final String CAN_UPDATE = "canUpdate";
+	public static final String CAN_DELETE = "canDelete";
 	public static final String CAN_SEARCH = "canSearch";
 	public static final String IS_ADMIN = "isAdmin";
 	public static final String IS_USER_PRESENT = "isUserPresent";
@@ -41,6 +42,11 @@ public class IxDynamicResourceHandler implements DynamicResourceHandler {
 						Role.SuperDataEntry
 						));
 		handlers.put(CAN_UPDATE,
+				new SimpleRoleDynamicResourceHandler(
+						Role.Updater,
+						Role.SuperUpdate
+						));
+		handlers.put(CAN_DELETE,
 				new SimpleRoleDynamicResourceHandler(
 						Role.Updater,
 						Role.SuperUpdate

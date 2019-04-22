@@ -48,7 +48,7 @@ public class Keyword extends Value {
     }
     
     public String toString(){
-    	String ret="Keyword ";
+    	String ret="Keyword id = " + id + " ";
     	if(this.label==null){
     		return ret +  "NO_LABEL:" + this.term;
     	}else{

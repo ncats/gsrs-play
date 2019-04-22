@@ -17,6 +17,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ThreadPoolExecutor;
 
+import ix.core.util.IOUtil;
 import ix.ginas.exporters.SubstanceExporterFactory;
 import org.apache.poi.util.DefaultTempFileCreationStrategy;
 import org.apache.poi.util.TempFile;
@@ -70,7 +71,7 @@ public class GinasSubstanceExporterFactoryPlugin implements Plugin {
 
         for(String clazz :app.configuration().getStringList("ix.ginas.exportFactories",new ArrayList<String>())){
             try{
-                Class<SubstanceExporterFactory> exporter = (Class<SubstanceExporterFactory>) Class.forName(clazz);
+                Class<SubstanceExporterFactory> exporter = (Class<SubstanceExporterFactory>) IOUtil.getGinasClassLoader().loadClass(clazz);
                 exporters.add(exporter.newInstance());
             }catch(Exception e){
                 Logger.error("Error initializing exporter:" + clazz);

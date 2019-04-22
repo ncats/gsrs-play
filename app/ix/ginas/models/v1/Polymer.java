@@ -11,6 +11,7 @@ import javax.persistence.Table;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import ix.ginas.models.GinasAccessReferenceControlled;
 import ix.ginas.models.GinasCommonSubData;
 
 @Entity
@@ -43,4 +44,29 @@ public class Polymer extends GinasCommonSubData {
     public PolymerSubstance getPolymerSubstance(){
         return this.owner;
     }
+    @Override
+   	@JsonIgnore
+   	public List<GinasAccessReferenceControlled> getAllChildrenCapableOfHavingReferences() {
+   		List<GinasAccessReferenceControlled> temp = new ArrayList<GinasAccessReferenceControlled>();
+   		if(this.monomers!=null){
+   			for(Material m: monomers){
+   				temp.addAll(m.getAllChildrenAndSelfCapableOfHavingReferences());
+   			}
+   		}
+   		if(this.structuralUnits!=null){
+   			for(Unit u: structuralUnits){
+   				temp.addAll(u.getAllChildrenAndSelfCapableOfHavingReferences());
+   			}
+   		}
+   		if(this.classification!=null){
+   				temp.addAll(classification.getAllChildrenAndSelfCapableOfHavingReferences());
+   		}
+   		if(this.displayStructure!=null){
+				temp.addAll(displayStructure.getAllChildrenAndSelfCapableOfHavingReferences());
+		}
+   		if(this.idealizedStructure!=null){
+			temp.addAll(idealizedStructure.getAllChildrenAndSelfCapableOfHavingReferences());
+   		}
+   		return temp;
+   	}
 }

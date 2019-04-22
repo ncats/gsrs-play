@@ -151,7 +151,7 @@ Code	Deprecated	/codes/?/deprecated	boolean	A boolean marking for whether the el
 Code	Last Edited	/codes/?/lastEdited	number	A UNIX timestamp marking when the record was last edited (or sometimes exported) to form the record (or element) in its current state.	last Edited
 Code	Last Edited By	/codes/?/lastEditedBy	string	A string representing a user or entity which last edited the record (or element).	last Edited By
 Code	References	/codes/?/references	array <string>	A list of reference uuids, which refer back to the root record's references, essentially acting as footnotes. The included references are considered to be the supporting origins of the data element in question.	references
-Code	Code Type	/codes/?/type	string	The type of the name (e.g. "bn" for "brand name", "cn" for "common name", and "sys" for "systematic name", etc).	type
+Code	Code Type	/codes/?/type	string	The type of the code (e.g. "PRIMARY" for a primary code, "SECONDARY" for a secondary code, and "SUPERSEDED" for a code which has been superseded by another code, etc).	type
 Code	Url	/codes/?/url	string	The url to further information regarding this code.	url
 Code	Uuid	/codes/?/uuid	string	A Universally Unique Identifier (also sometimes called a GUID) for the element. Most GSRS elements have a uuid to be used for tracking, processing and referencing a record (and any element of that record).	uuid
 Glycosylation	Access	/protein/glycosylation/access	array <string>	Marking the record or element as belonging to certain groups for use in tracking which groups should receive visibility, export and/or inclusion in specific reports.	access

@@ -20,8 +20,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.github.fge.jsonpatch.diff.JsonDiff;
 
+import com.flipkart.zjsonpatch.JsonDiff;
 import ix.core.ResourceReference;
 import ix.core.UserFetcher;
 import ix.core.util.EntityUtils.EntityWrapper;

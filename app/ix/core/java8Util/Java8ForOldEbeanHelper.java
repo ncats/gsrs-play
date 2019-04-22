@@ -26,6 +26,11 @@ import ix.core.util.EntityUtils;
 import ix.core.util.EntityUtils.EntityWrapper;
 import ix.core.util.EntityUtils.Key;
 import ix.core.util.EntityUtils.MethodMeta;
+import ix.ginas.models.v1.NucleicAcid;
+import ix.ginas.models.v1.ProteinSubstance;
+import ix.ginas.models.v1.Subunit;
+import org.jcvi.jillion.core.residue.aa.ProteinSequence;
+import org.jcvi.jillion.core.residue.nt.NucleotideSequence;
 
 /**
  * This class was created so Ebean enchanced classes using Play 2.3 can use Java
@@ -73,7 +78,22 @@ public class Java8ForOldEbeanHelper {
 
 		ew.streamSequenceFieldAndValues(d->true).map(p->p.v()).filter(s->s instanceof String).forEach(str->{
 			try {
+				boolean added=false;
+				Object value = ew.getValue();
+				if(value instanceof Subunit){
+					Object parent = ((Subunit)value).getParent();
+					if(parent !=null){
+						added=true;
+						if(parent instanceof NucleicAcid){
+							epa.getSequenceIndexer().add(k.getIdString(),NucleotideSequence.of(str.toString()));
+						}else{
+							epa.getSequenceIndexer().add(k.getIdString(), ProteinSequence.of(str.toString()));
+						}
+					}
+				}
+				if(!added){
 				epa.getSequenceIndexer().add(k.getIdString(), str.toString());
+				}
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
@@ -163,7 +183,7 @@ public class Java8ForOldEbeanHelper {
 	}
 
 	/**
-	 * Recursively call {@link EntityPersistAdapter#reindex(Object, boolean)} 
+	 * Recursively call {@link EntityPersistAdapter#reindex(EntityWrapper, boolean)}
 	 * for all objects in object tree
 	 * 
 	 * @param epa

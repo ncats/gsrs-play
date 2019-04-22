@@ -31,13 +31,16 @@
     </div>
 
     <div class="row form-row2">
-        <div class="col-md-4">
+        <div class="col-md-3">
             <gsrs-input type="dropdown"  ng-model="application.appSubType" field="appSubType" label="Application Sub Type" cv="APPLICATION_SUB_TYPE" formname=formApp></gsrs-input>
+        </div>
+        <div class="col-md-2">
+            <gsrs-input type="dropdown"  ng-model="application.publicDomain" field="publicDomain" label="Public Domain" cv="PUBLIC_DOMAIN" formname=formApp></gsrs-input>
         </div>
         <div class="col-md-4">
             <gsrs-input type="text" ng-model="application.divisionClassDesc" field="divisionClassDesc" label="Division Class Desc" formname=formApp></gsrs-input>
         </div>
-        <div class="col-md-4">
+        <div class="col-md-3">
             <gsrs-input type="text" ng-model="application.submitDate" field="submitDate" label="Submit Date" formname=formApp></gsrs-input>
         </div>
     </div>

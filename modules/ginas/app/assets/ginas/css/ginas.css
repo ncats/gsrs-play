@@ -3,20 +3,22 @@
 body {
     position: relative;
     background-color: #F8F8F8;
-    min-width: 997px;
     /*padding-top: 75px;*/
 }
 
 body, html {
     min-height: 100%;
     height: 100%;
-    min-width: 997px;
 }
 
 @-moz-document url-prefix() {
     fieldset {
         display: table-cell;
     }
+}
+
+.container-fluid {
+    background-color: white;
 }
 
 .panel-body {
@@ -32,8 +34,8 @@ body, html {
 }
 
 #left-menu{
+    padding-top: .7%;
     height: 50px;
-    margin-top: -5px;
 }
 
 #right-menu{
@@ -44,13 +46,59 @@ body, html {
 	margin-left:20px;
 }
 
+.top-bar {
+    width: 100%;
+    position: relative;
+}
+
+.top-bar-content {
+    position: absolute;
+    left: 315px;
+    right: 0;
+    bottom: 0;
+}
+
+.top-bar-content-line {
+    height: 40px;
+    position: relative;
+}
+
+.top-bar-content-line .auth-data {
+    display: inline-block;
+    position: absolute;
+    right: 0;
+    top: 0;
+    padding: 5px 0 5px 10px;
+    overflow: hidden;
+}
+
+.top-bar-content-line .search-actions {
+    position: absolute;
+    right: 0;
+    display: inline-block;
+    vertical-align: top;
+    padding-top: 11px;
+}
+
+.logo-container {
+    width: 315px;
+    padding: 0 15px 0 0;
+    float: left;
+}
+
+.logo-container img {
+    width: 300px;
+    height: auto;
+    vertical-align: middle;
+}
+
 #logo{
-    height: 60px;
-    width: auto;
+    height: 80px;
 }
 
 #search-bar {
-    padding-top: 8px;
+    padding-top: 4px;
+    width: 100%;
 }
 
 #content {
@@ -95,7 +143,7 @@ nav#breadcrumb {
 
 .det:hover {
     background-color: #337ab7;
-    cursor: default;
+    cursor: hand;
 }
 
 #struc-label {
@@ -228,7 +276,10 @@ nav#main-pagination {
     z-index: 1000;
     display: none;
     background-color: #f9f9f9;
-      width: 150% !important;
+  }
+
+  #searchtop .custom-popup-wrapper {
+    width: 100% !important;
   }
 
   .custom-popup-wrapper > .message {
@@ -251,6 +302,14 @@ nav#main-pagination {
 .uib-typeahead-match>a{
     white-space: normal !important;
   }
+
+.custom-popup-wrapper.type-ahead-wrapper>div {
+    /*
+    // This was previously useful for making sure that the full size of the screen was taken
+    // up by the type-ahead suggestions. But doesn't work now.
+    margin-right: -48px;
+    */
+}
 
 /* END TYPEAHEAD CSS *!/*/
 
@@ -1072,6 +1131,49 @@ del{
     white-space: pre;
 }
 
+
+/*classes for reference card tables to adjust styling for nested detail and reference tables*/
+.amt-card  .amt{
+    word-break:break-word;
+    white-space:normal;
+}
+
+.relationship-details {
+    max-width: 350px;
+    word-wrap: break-word;
+}
+
+.relationship-related-record {
+    max-width: 350px;
+    word-break: break-word;
+}
+
+.moreDetails {
+    border-top:0px solid white;
+    padding-left:7px;
+    padding-right:7px;
+    margin-bottom:10px;
+}
+
+.moreDetails th{
+    border-top: 0px solid white !important;
+}
+
+.main-relationship-tr{
+    border-top: 2px solid lightgrey !important;
+}
+
+.ref-table-td{
+    border-top:0px solid white !important;
+}
+
+.relationship-subtable-tr{
+    border-bottom: 1px solid #ddd !important;
+    border-top-width:0px;
+}
+
+
+
 .diff{
     white-space: normal;
 }
@@ -1629,7 +1731,11 @@ span.nowrap-list {
   }
 
   .active-search .main-search {
-      padding-right: 25px;
+      padding-right: 43px;
+  }
+
+  .active-search #search-bar {
+    padding-left: 7px;
   }
 
   .search-close {
@@ -1638,7 +1744,7 @@ span.nowrap-list {
 
   .search-close {
     position: absolute;
-    top: 10px;
+    top: 5px;
     right: 15px;
     z-index: 100003;
     opacity: 0;
@@ -1661,6 +1767,13 @@ span.nowrap-list {
       animation-name: fade-in;
       animation-delay: 350ms;
       animation-duration: 200ms;
+  }
+
+  .active-search .null-zone {
+    position: fixed;
+    top: 80px;
+    bottom: 0;
+    width: 100%;
   }
 
   .deactivate-search {
@@ -1686,12 +1799,19 @@ span.nowrap-list {
     animation-duration: .35s;
 }
 
-.search-help-toggle,  .search-guide-toggle{
+.search-help-toggle,  .search-guide-toggle, .search-toggle-container{
     display: none;
 }
 
 .active-search .search-help-toggle, .active-search .search-guide-toggle {
     display: inline;
+}
+
+.active-search .search-toggle-container {
+    margin-top: -4px;
+    display: block;
+    background-color: white;
+    padding: 10px 0;
 }
 
 .search-help .heading {
@@ -1736,7 +1856,7 @@ span.nowrap-list {
   }
 
   .active-search .form-inline .input-group .input-group-btn {
-      width: 63px;
+      width: 65px;
   }
 
   .active-search ul:not(.uib-datepicker-popup):not(.dropdown-menu) > li > a {
@@ -1926,26 +2046,193 @@ td.no-sort{
 
 }
 
-
-#mymenubar{
-	color: #1d84b7;
-}
-#mymenubar ul li a {
-    color: #1d84b7;
-    font-size: 12px;
-    margin-top: 5px;
-    font-weight: bold;
-    margin-right: 14px;
+/*allow hidden overflow to hierarchy tree and re-create original styling for 2 line rows*/
+.jstree-container-ul{
+    max-width:100%;
 }
 
-#menu{
+.tree-content-overflow{
+    width: 100%;
+    display: inline-block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+substance-line{
+    float:left;
+    padding-right:5px;
+}
+.jstree-anchor{
+    width:100%;
+    max-width:95%;
+    height:auto !important;
+    line-height:20px !important;
+}
+.jstree-themeicon.jstree-themicon-custom{
+    width:0px; !important
+display:none;
+}
+
+.jstree-default.jstree-wholerow{
+    height:auto;
+}
+
+.jstree-overflow{
+    max-height:500px;
+    overflow:auto;
+}
+.jstree-themeicon-custom{
+    display: none !important;
+    width:0px !important;
+}
+.jstree-right{
+    width:200px;
+    max-width:26%;
+    float:right;
+    text-align:right;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.jstree-left{
+    width:70%;
+    float:left;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.jstree-wholerow:hover{
+    background-color:#e7f4f9 !important;
+}
+.jstree-wholerow.double-row{
+    height:45px !important;
+}
+.wholerow-alt{
+    background-color:#f2f2f2;
+}
+.hierarchy-id{
+    font-family: monospace;
+    color:#a61d3f;
+    font-size:11pt;
+}
+.jstree-anchor{
+    cursor: default;
+}
+/*Classes for detail page modal enlarged structure image*/
+.modal-image-body{
+    height:100%;
+    padding:0px;
+}
+.image-window{
+    top:0;
+}
+.modal-image-names{
+    padding:15px;
+    padding-top:0px;
+    display:inline-block;
+    margin-top:-10px;
+    width:100%;
+    max-width:700px;
+}
+
+@media(min-width: 722px){
+    .modal-image {
+        min-width: 700px;
+    }
+}
+.hierarchy-loading{
+    display:none;
+    padding-left:15px;
+}
+
+.structure-image-margins{
+    margin-top:-9%;
+    margin-bottom:-2%;
+}
+
+.structure-toggle{
+    padding:8px;
 	margin-bottom:15px;
 }
 
-#versionsrs {
-    text-align: left;
+.full-nav > li{
+    width:33%;
+    text-align:center;
+    margin-bottom:20px;
+}
+
+.inline-block {
     display: inline-block;
-    vertical-align: bottom;
-    margin-bottom: 5px;
-    margin-left: 10px;
+}
+
+.auto-width {
+    width: auto;
+}
+
+#searchtop.search-top {
+    position: absolute;
+    right: 100px;
+    left: 0;
+    top: 0;
+    padding-right: 5px;
+}
+
+#searchtop .form-inline .input-group .input-group-btn {
+    width: 40px
+}
+
+.subunit-list{
+	clear:both;
+}
+
+.stereo-button{
+	margin-top: 9%;
+    position: absolute;
+    z-index:9;
+}
+
+.clip-canvas {
+    padding-left: 0;
+    padding-right: 0;
+    margin-left: auto;
+    margin-right: auto;
+    display: block;
+    height:0px;
+    width:0px;
+    max-width:800px;
+}
+.canvas-display{
+    height:auto !important;
+    width: auto !important;
+    border:1px solid lightgrey;
+}
+.dragover {
+    outline: 5px dashed blue;
+}
+
+#menu{
+    margin-bottom:15px;
+}
+
+/*New menu bar - copied from srs.css*/
+#mymenubar {
+    background-image: linear-gradient(to top, #dceaf1 , white);
+    border-top:1px solid #1d84b7;
+    border-bottom: 1px solid #1d84b7;
+    /*color:#FFFFFF;*/
+    color:#1d84b7;
+}
+
+#mymenubar ul li a {
+    color:#1d84b7;
+    font-size:12px;
+    font-weight:bold;
+    padding-top:15px;
+}
+
+#mymenubar > .pull-left li a{
+    padding-top: 18px;
+    padding-bottom: 19px;
+}
+#mymenubar > .pull-left .active>a {
+    background-color: #1d84b7;
+    color: white !important;
 }

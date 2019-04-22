@@ -1,0 +1,21 @@
+@import ix.ginas.controllers.GinasApp
+@import ix.ginas.controllers.v1.SubstanceFactory
+@import ix.ginas.models.v1.MixtureSubstance
+
+@(parents: List[MixtureSubstance])
+
+
+@if(parents.length > 0) {
+
+    <h3 class = "panel-title">This substance is a component of the following mixtures:</h3>
+    <div class="row">
+            <!-- <h5>The following mixtures contain this record:</h5>-->
+        <div class = "row">
+        @for(c <- parents) {
+            <div class="col-md-3">
+            @subref(c.asSubstanceReference())
+            </div>
+        }
+        </div>
+    </div>
+}

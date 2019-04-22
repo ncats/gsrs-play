@@ -1,5 +1,8 @@
 package ix.ginas.models.v1;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import javax.persistence.CascadeType;
 import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
@@ -9,7 +12,10 @@ import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import ix.core.SingleParent;
+import ix.ginas.models.GinasAccessReferenceControlled;
 import ix.ginas.models.GinasCommonSubData;
 
 @Entity
@@ -32,4 +38,14 @@ public class Component extends GinasCommonSubData {
     public SubstanceReference substance;
 
     public Component () {}
+
+	@Override
+	@JsonIgnore
+	public List<GinasAccessReferenceControlled> getAllChildrenCapableOfHavingReferences() {
+		List<GinasAccessReferenceControlled> temp = new ArrayList<GinasAccessReferenceControlled>();
+		if(substance!=null){
+			temp.addAll(substance.getAllChildrenAndSelfCapableOfHavingReferences());
+		}
+		return temp;
+	}
 }

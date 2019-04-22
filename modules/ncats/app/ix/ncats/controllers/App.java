@@ -16,7 +16,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.function.Predicate;
@@ -26,7 +25,6 @@ import java.util.stream.Collectors;
 
 import javax.imageio.ImageIO;
 
-import ix.ginas.models.v1.Substance;
 import ix.ncats.resolvers.*;
 import org.freehep.graphicsio.svg.SVGGraphics2D;
 
@@ -42,11 +40,13 @@ import gov.nih.ncgc.chemical.Chemical;
 import gov.nih.ncgc.chemical.ChemicalAtom;
 import ix.core.chem.Chem;
 import gov.nih.ncgc.chemical.ChemicalGroup;
+import gov.nih.ncgc.chemical.ChemicalReader;
 import gov.nih.ncgc.chemical.ChemicalFactory;
 import gov.nih.ncgc.chemical.ChemicalRenderer;
 import gov.nih.ncgc.chemical.DisplayParams;
 import gov.nih.ncgc.jchemical.Jchemical;
 import gov.nih.ncgc.nchemical.NchemicalRenderer;
+import gov.nih.ncgc.nchemical.NchemicalReader;
 import ix.core.adapters.EntityPersistAdapter;
 import ix.core.chem.ChemCleaner;
 import ix.core.chem.EnantiomerGenerator;
@@ -79,7 +79,6 @@ import ix.core.search.text.TextIndexer.Facet;
 import ix.core.util.CachedSupplier;
 import ix.core.util.ConfigHelper;
 import ix.core.util.Java8Util;
-import ix.core.util.StopWatch;
 import ix.core.util.TimeUtil;
 import ix.ncats.controllers.auth.Authentication;
 import ix.ncats.controllers.security.IxDynamicResourceHandler;
@@ -899,12 +898,12 @@ public class App extends Authentication {
 		render.addDisplayProperty("TOP_TEXT");
 		render.addDisplayProperty("BOTTOM_TEXT");
 		ByteArrayOutputStream bos = new ByteArrayOutputStream ();       
-		
-		
+
 		if (format.equals("svg")) {
 			SVGGraphics2D svg = new SVGGraphics2D
 					(bos, new Dimension (size, size));
 			svg.startExport();
+
 			render.renderChem(svg, chem, size, size, false);
 			svg.endExport();
 			svg.dispose();
@@ -1327,11 +1326,11 @@ public class App extends Authentication {
     }
 
     public static SearchResultContext sequence(final String seq, final double identity,
-            final CutoffType ct, final int min, final ResultProcessor processor){
+											   final CutoffType ct, final int min, final ResultProcessor processor, String seqType){
         SequenceSeachTask task = new SequenceSeachTask(){
             @Override
             public void search(ResultProcessor processor2) throws Exception {
-                processor.setResults(min, EntityPersistAdapter.getSequenceIndexer().search(seq, identity, ct));
+                processor.setResults(min, EntityPersistAdapter.getSequenceIndexer().search(seq, identity, ct, seqType));
             }
         };
         return search(task,processor);
@@ -1362,8 +1361,8 @@ public class App extends Authentication {
                                                final int rows, 
                                                final int page,
                                                CutoffType ct, 
-                                               final ResultProcessor processor) {
-        return sequence(seq, identity, ct, rows * page, processor);
+											   String seqType, final ResultProcessor processor) {
+        return sequence(seq, identity, ct, rows * page, processor, seqType);
     }
 
     

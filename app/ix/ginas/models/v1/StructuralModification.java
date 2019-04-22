@@ -1,6 +1,7 @@
 package ix.ginas.models.v1;
 
 import ix.core.SingleParent;
+import ix.ginas.models.GinasAccessReferenceControlled;
 import ix.ginas.models.GinasCommonSubData;
 import ix.ginas.models.utils.JSONEntity;
 
@@ -68,4 +69,22 @@ public class StructuralModification extends GinasCommonSubData {
     
     
     public StructuralModification () {}
+
+    @Override
+   	@JsonIgnore
+   	public List<GinasAccessReferenceControlled> getAllChildrenCapableOfHavingReferences() {
+   		List<GinasAccessReferenceControlled> temp = new ArrayList<GinasAccessReferenceControlled>();
+
+   		if(this.siteContainer!=null){
+   			temp.addAll(siteContainer.getAllChildrenAndSelfCapableOfHavingReferences());
+   		}
+   		if(this.extentAmount!=null){
+			temp.addAll(extentAmount.getAllChildrenAndSelfCapableOfHavingReferences());
+		}
+   		if(this.molecularFragment!=null){
+			temp.addAll(molecularFragment.getAllChildrenAndSelfCapableOfHavingReferences());
+		}
+
+   		return temp;
+   	}
 }

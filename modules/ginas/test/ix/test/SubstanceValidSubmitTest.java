@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import com.flipkart.zjsonpatch.JsonDiff;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -16,7 +17,6 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.github.fge.jsonpatch.diff.JsonDiff;
 
 import ix.AbstractGinasServerTest;
 import ix.test.server.RestSession;

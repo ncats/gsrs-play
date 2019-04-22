@@ -14,11 +14,10 @@
                     </gsrs-input>
                 </div>
                 <div class="col-md-3">
-                    <gsrs-input type="dropdown"
-                                ng-model="parent.protein.proteinSubType"
+                  <gsrs-input type="multi"
+                              ng-model=parent.protein.proteinSubTypes
                                 field="proteinSubType"
-                                cv="PROTEIN_SUBTYPE"
-                                label="Protein Subtype">
+                              cv="PROTEIN_SUBTYPE">
                     </gsrs-input>
                 </div>
                 <div class="col-md-2">
@@ -38,6 +37,10 @@
                     </gsrs-input>
                 </div>
                 <div class="col-md-1 pull-right">
+                    <!-- <modal-form-button type="access"
+                                       referenceobj="parent.protein"
+                                       parent="parent">
+                    </modal-form-button> -->
                     <access-management obj-to-manage-access="parent.protein">
                     </access-management>
                 </div>

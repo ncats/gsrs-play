@@ -15,7 +15,7 @@
             </div>
         </div>
         <div class="collapse navbar-collapse navbar-default" id="mymenubar">
-            <ul class="nav navbar-nav pull-left" id = "left-menu">
+            <ul class="nav navbar-nav pull-left">
                 <li ng-class="getClass('substances')"><a ng-href="@ix.ginas.controllers.routes.GinasApp.substances()" target="_self"><span>Browse Substances</span></a></li>
                 @subjectPresent(new ix.ncats.controllers.security.IxDeadboltHandler()) {
                     <li ng-class="getClass('register')"><a ng-href="@ix.ginas.controllers.routes.GinasApp.register()" target="_self"><span>
@@ -80,13 +80,13 @@
                     <ul class="nav navbar-nav pull-right">
                 @dynamic(name = IxDynamicResourceHandler.IS_USER_PRESENT, handler = new ix.ncats.controllers.security.IxDeadboltHandler()) {
                     <li>
-                        <a class="btn btn-default navbar-btn" ng-href= "@play.api.Play.configuration.getString("application.context").getOrElse("/ginas/app")/profile"
+                                <a class="btn btn-default navbar-btn" ng-href= "@play.api.Play.configuration.getString("application.context").getOrElse("")/profile"
                         id ="profile-button" target="_self" role="button">
                             <i class="fa fa-user"></i>  @ix.ncats.controllers.auth.Authentication.getUser().username</a>
                     </li>
 
                     @if(!ix.ginas.controllers.GinasApp.isSingleSignOn()) {
-                        <li><a class="btn btn-default navbar-btn" ng-href= "@play.api.Play.configuration.getString("application.context").getOrElse("/ginas/app")/logout"
+                                <li><a class="btn btn-default navbar-btn" ng-href= "@play.api.Play.configuration.getString("application.context").getOrElse("")/logout"
                         id ="logout-button" target="_self" role="button">
                             Logout</a></li>
                     }
@@ -95,7 +95,7 @@
  				@if(!ix.ginas.controllers.GinasApp.isSingleSignOn()) {
 	                @subjectNotPresent(new ix.ncats.controllers.security.IxDeadboltHandler()) {
 	                    <li>
-	                        <a class="btn btn-default navbar-btn" ng-href= "@play.api.Play.configuration.getString("application.context").getOrElse("/ginas/app")/login"
+                                    <a class="btn btn-default navbar-btn" ng-href= "@play.api.Play.configuration.getString("application.context").getOrElse("")/login"
 	                        id ="login-button" target="_self">
 	                            Login</a>
 	                    </li>

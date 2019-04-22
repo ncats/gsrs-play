@@ -1,5 +1,8 @@
 package ix.ginas.models.v1;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import javax.persistence.Basic;
 import javax.persistence.CascadeType;
 import javax.persistence.Embeddable;
@@ -8,11 +11,13 @@ import javax.persistence.FetchType;
 import javax.persistence.OneToOne;
 import javax.persistence.PreUpdate;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import ix.core.models.Indexable;
 import ix.ginas.models.EmbeddedKeywordList;
+import ix.ginas.models.GinasAccessReferenceControlled;
 import ix.ginas.models.GinasCommonSubData;
 import ix.ginas.models.serialization.KeywordDeserializer;
 import ix.ginas.models.serialization.KeywordListSerializer;
@@ -43,4 +48,14 @@ public class PolymerClassification extends GinasCommonSubData {
 		super.updateImmutables();
 		this.polymerSubclass= new EmbeddedKeywordList(this.polymerSubclass);
 	}
+
+    @Override
+   	@JsonIgnore
+   	public List<GinasAccessReferenceControlled> getAllChildrenCapableOfHavingReferences() {
+   		List<GinasAccessReferenceControlled> temp = new ArrayList<GinasAccessReferenceControlled>();
+   		if(this.parentSubstance!=null){
+   				temp.addAll(parentSubstance.getAllChildrenAndSelfCapableOfHavingReferences());
+   		}
+   		return temp;
+   	}
 }

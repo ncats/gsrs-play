@@ -12,6 +12,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import ix.core.models.Indexable;
 import ix.core.models.Keyword;
 import ix.ginas.models.EmbeddedKeywordList;
+import ix.ginas.models.GinasAccessReferenceControlled;
 import ix.ginas.models.GinasCommonSubData;
 import ix.ginas.models.serialization.KeywordDeserializer;
 import ix.ginas.models.serialization.KeywordListSerializer;
@@ -87,4 +88,22 @@ public class StructurallyDiverse extends GinasCommonSubData {
 		super.updateImmutables();
 		this.part= new EmbeddedKeywordList(this.part);
 	}
+
+    @Override
+   	@JsonIgnore
+   	public List<GinasAccessReferenceControlled> getAllChildrenCapableOfHavingReferences() {
+   		List<GinasAccessReferenceControlled> temp = new ArrayList<GinasAccessReferenceControlled>();
+
+   		if(this.hybridSpeciesPaternalOrganism!=null){
+   			temp.addAll(hybridSpeciesPaternalOrganism.getAllChildrenAndSelfCapableOfHavingReferences());
+   		}
+   		if(this.hybridSpeciesMaternalOrganism!=null){
+			temp.addAll(hybridSpeciesMaternalOrganism.getAllChildrenAndSelfCapableOfHavingReferences());
+		}
+   		if(this.parentSubstance!=null){
+			temp.addAll(parentSubstance.getAllChildrenAndSelfCapableOfHavingReferences());
+		}
+
+   		return temp;
+   	}
 }

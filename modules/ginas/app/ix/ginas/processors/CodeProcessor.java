@@ -2,6 +2,7 @@ package ix.ginas.processors;
 
 import ix.core.EntityProcessor;
 import ix.core.util.ConfigHelper;
+import ix.core.util.IOUtil;
 import ix.ginas.datasource.CodeSystemMeta;
 import ix.ginas.datasource.DefaultCodeSystemUrlGenerator;
 import ix.ginas.models.v1.Code;
@@ -24,7 +25,7 @@ public class CodeProcessor implements EntityProcessor<Code>{
 				System.out.println("config =\n" + Play.application().configuration().asMap());
 				throw new IllegalStateException("could not find " + key + " in config file");
 			}
-			Class<?> cls =  Class.forName(classname);
+			Class<?> cls = IOUtil.getGinasClassLoader().loadClass(classname);
 			codeSystemData = (CodeSystemUrlGenerator) ConfigHelper.readFromJson("ix.codeSystemUrlGenerator.json", cls);
 
 		}catch(Exception e){

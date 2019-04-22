@@ -6,12 +6,14 @@
 
 
 @(relationships: List[Relationship], title: String, id:String, full:Boolean = true)
-<div class="col-md-12 table-responsive" uib-collapse = "@title.replace(' ', '.')">
+
+
+
+<div class=" table-responsive" uib-collapse = "@title.replace(' ', '.')" ng-controller = "GinasController">
     <table class="table ref-datatable">
         <thead>
             <tr>
                 <th>Related Record</th>
-                <th>Mediator Record</th>
                 <th>Type</th>
                 @if(full){
                 <th>Details</th>
@@ -22,65 +24,27 @@
 
         @for(r <- relationships) {
 
-            <tr>
-                <td>
+            <tr class = "main-relationship-tr" >
+                <td class = "relationship-related-record" >
                 	@if(r.relatedSubstance != null && r.relatedSubstance.getLinkingID() != null) {
 	                    @subref(r.relatedSubstance)
                     }else{
                     	@subref(r.relatedSubstance)
                 	}
                 </td>
-
-                <td>
-                    @if(r.mediatorSubstance != null){
-                        @subref(r.mediatorSubstance)
-                    }
-                </td>
-
                 <td>@GinasApp.getCV.getDisplay("RELATIONSHIP_TYPE", r.`type`)</td>
+
                 @if(full) {
 
-                    <td>
-                        @if(r.hasComments()) {
-                            <div class="row">
-                                <div class="md-col-m6">
-                                    <label>Comments:</label>
-                                </div>
-                                <div class="md-col-m6">
-                                    <span class="key-value">@r.comments</span>
-                                </div>
+                    <td class = "relationship-details" >
+
+                        @defining("more"+(((5000*Math.random())).toInt+"")) { sug =>
+
+
+                            <div  ng-init="@sug = false">
+                                <button class="btn btn-primary reference-button ng-binding" type="button" ng-click="@sug =! @sug">{{ @sug == true ? 'hide' : 'show' }}</button>
                             </div>
-                        }
-                        @if(r.interactionType != null) {
-                            <div class="row">
-                                <div class="md-col-m6">
-                                    <label>Interaction Type:</label>
-                                </div>
-                                <div class="md-col-m6">
-                                    <span class="key-value">@r.interactionType</span>
-                                </div>
-                            </div>
-                        }
-                        @if(r.qualification != null) {
-                            <div class="row">
-                                <div class="md-col-m6">
-                                    <label>Qualification:</label>
-                                </div>
-                                <div class="md-col-m6">
-                                    <span class="key-value">@r.qualification</span>
-                                </div>
-                            </div>
-                        }
-                        @if(r.amount != null) {
-                            <div class="row">
-                                <div class="md-col-m6">
-                                    <label>Amount:</label>
-                                </div>
-                                <div class="md-col-m6">
-                                    <amount value="@GinasApp.getAsJson(r.amount)"></amount>
-                                </div>
-                            </div>
-                        }
+
                     </td>
 
                     <td>
@@ -90,10 +54,81 @@
                             none
                         }
                     </td>
-                }
-            </tr>
 
-            <tr><td class ="'@r.getUuid()'" colspan = "8"></td></tr>
+            </tr>
+    <tr class ="details_'@r.getUuid()'" ng-show = "@sug" ng-hide = "!@sug">
+        <td colspan = '4' class = "ref-table-td">
+            <table class="table moreDetails">
+                <tr class = "relationship-subtable-tr">
+                    <th>Mediator Substance</th>
+                    <th>Details</th>
+
+                </tr>
+                <td>
+                    @if(r.mediatorSubstance != null){
+                            <div class = "relationship-details">
+                        @subref(r.mediatorSubstance)
+                            </div>
+
+                        }else{
+                        none
+                    }
+                </td>
+                    <td>
+
+                    @if(r.interactionType != null) {
+                    <div>
+                        <div >
+                            <label>Interaction Type</label>
+                                </div>
+                        <div>
+                            <span class="key-value">@r.interactionType</span>
+                                </div>
+                            </div>
+                        }
+
+                    @if(r.hasComments()) {
+                    <div>
+                        <div>
+                            <label>Comments:</label>
+                                </div>
+                        <div>
+                            <span class="key-value">@r.comments</span>
+                                </div>
+                            </div>
+                        }
+                        @if(r.qualification != null) {
+                    <div >
+                        <div >
+                                    <label>Qualification:</label>
+                                </div>
+                        <div >
+                                    <span class="key-value">@r.qualification</span>
+                                </div>
+                            </div>
+                        }
+                        @if(r.amount != null) {
+                    <div >
+                        <div >
+                                    <label>Amount:</label>
+                                </div>
+                        <div >
+                            <amount class = "amt-card" value="@GinasApp.getAsJson(r.amount)"></amount>
+                                </div>
+                            </div>
+                        }
+                    </td>
+
+                </tr>
+            </table>
+                    </td>
+    </tr>
+                }
+    }else{
+            </tr>
+            }
+
+            <tr class = "relationship-subtable-tr" ><td class ="'@r.getUuid()' ref-table-td" colspan = "8"></td></tr>
 
             <tr ng-if="audit==true"><td colspan = "8">Created by <code>@r.createdBy</code> on <code>@r.created</code> , Edited by <code>@r.lastEditedBy</code> on <code>@r.lastEdited</code></td></tr>
         }

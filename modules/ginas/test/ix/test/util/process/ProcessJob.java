@@ -50,11 +50,13 @@ public class ProcessJob extends FutureTask<Integer> {
             }
             System.out.println("starting job " + builder.command());
             p = builder.start();
-            int ret= p.waitFor();
+            try {
+                return p.waitFor();
+            }finally {
             if(postProcessor !=null){
                 postProcessor.run();
             }
-            return ret;
+            }
         }
     }
 

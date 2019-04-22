@@ -4,6 +4,7 @@
 @import be.objectify.deadbolt.java.views.html._
 @import ix.ncats.controllers.security.IxDynamicResourceHandler
 @import ix.core.util.ConfigHelper
+@import play.api.Play.current
 @(sub: Substance)(contentThumb: Html)(contentDetails: Html)(contentFooter: Html)
 
 <div ng-controller="ListViewController" class="panel panel-default sub-list">
@@ -27,7 +28,21 @@
         @defining(((5000*Math.random())).toInt+"") { sug =>
         
         @if(ConfigHelper.getBoolean("ix.ginas.list.hierarchy.enabled",false)){
+        <div class = "row">
+            <div class = "col-md-3">
+                <span><strong>Substance Hierarchy</strong></span>
+            </div>
+            <div class = "col-md-9">
+                <div id = "loading_@sub.uuid" class = "hierarchy-loading"> <img src = "@play.api.Play.configuration.getString("application.context").getOrElse("")/assets/javascripts/vakata-jstree-a6a0d0d/dist/themes/default/throbber.gif" /> Loading...</div>
+            </div>
+        </div>
+            <div class = "row">
+            <div class = "col-md-12">
+
         <div id="tree_@sub.uuid@sug"></div>
+            </div>
+        </div>
+
         }
         
         @contentFooter
@@ -42,6 +57,63 @@
         	
         	var elmID1='tree_@sub.uuid@sug';
         	var elmID="#" + elmID1;
+            var lastID = "";
+            var lastProp = "";
+            var parentRemap = [];
+            //assign relationship and prune self referential relationships
+            for(var i=(dat1.length-1);i>=0;i--){
+                var subref=dat1[i].value.value;
+                dat1[i].relationship = "";
+                if((subref.refuuid == lastID) && (lastProp.includes("HAS ACTIVE MOIETY"))){
+                    parentRemap.push([dat1[i+1].id,dat1[i].id]);
+                    dat1.splice(i+1,1);
+                    dat1[i].relationship += "{ACTIVE MOIETY}";
+                }
+                if(dat1[i].value.type.includes("HAS ACTIVE MOIETY")){
+                    dat1[i].relationship += "{ACTIVE FORM}";
+                }else if(dat1[i].value.type.includes("IS SALT/SOLVATE OF")){
+                    dat1[i].relationship += "{SALT/SOLVATE}";
+                }else if(dat1[i].value.type.includes("IS SUBCONCEPT OF")){
+                    dat1[i].relationship += "{SUBCONCEPT}";
+                }else if(dat1[i].value.type.includes("IS G1SS CONSTITUENT OF")){
+                    dat1[i].relationship += "{G1SS}";
+                }
+
+
+                dat1[i].refuuid = dat1[i].value.value.refuuid;
+                lastID = dat1[i].refuuid;
+                lastProp = dat1[i].value.type;
+            }
+            //further remove self referential relationships with both salt and moiety relationship.
+            dat1.sort(function(a, b) {
+                var textA = a.refuuid.toUpperCase();
+                var textB = b.refuuid.toUpperCase();
+                if(textA == textB){
+                    return (a.parent < b.parent) ? -1 : (a.parent > b.parent) ? 1 : 0;
+                }else{
+                    return (textA < textB) ? -1 : (textA > textB) ? 1 : 0;
+                }
+            });
+
+            //delete duplicates entries with both active moiety and salt/ solvate relationships.
+            for(var i=(dat1.length-1);i>=0;i--) {
+                if(i != dat1.length-1){
+                    if((dat1[i].value.value.refuuid == dat1[i+1].value.value.refuuid)){
+                        if((dat1[i].parent == dat1[i+1].parent)){
+                            if(dat1[i].value.type.includes("HAS ACTIVE MOIETY") && dat1[i+1].value.type.includes("IS SALT/SOLVATE OF")){
+                                parentRemap.push([dat1[i].id,dat1[i+1].id]);
+                                dat1.splice(i,1);
+                            }else if(dat1[i+1].value.type.includes("HAS ACTIVE MOIETY") && dat1[i].value.type.includes("IS SALT/SOLVATE OF")){
+                                parentRemap.push([dat1[i+1].id,dat1[i].id]);
+                                dat1.splice(i+1,1);
+                            }
+                        }
+                    }
+                }
+            }
+            dat1.sort(function(a, b) {
+                return a.id - b.id;
+            });
         	var domID = function(i){
              	return "D" +i + elmID1  + dat1[i].value.value.refuuid;
              };
@@ -50,23 +122,45 @@
             $(elmID).jstree({ 'core' : {
             	"animation" : 0,
                 "check_callback" : true,
-                "themes" : { "stripes" : true },
+                    expand_selected_onload : false,
+                    "state": { "opened" : false },
                 'data' :
                 function(node, cb){
-                    var data = dat1;
+            	    //format displayed text and wrap in unique element for tree insertion
+                    for(var i=dat1.length -1;i>=0;i--){
                    
-                    for(var i=0;i<data.length;i++){
-
-               		 	var subref=data[i].value.value;
-                    	data[i].text="<span id='" +domID(i) + "' >" + data[i].text + "</span>";
+                       // Use parentRemap to change records where parent equals deleted record
+                        for(var k = 0; k < parentRemap.length; k++ ){
+                            if(dat1[i].parent == parentRemap[k][0]){
+                                dat1[i].parent = parentRemap[k][1];
+                            }
+                        }
+                        var subref=dat1[i].value.value;
+                        var raw = "";
+                        var aID = "";
+                        if(subref.hasOwnProperty("approvalID")){
+                            aID= ""+subref.approvalID+"";
+                        }else{
+                            var matches = dat1[i].text.match(/\[(.*?)\]/);
+                            if(matches.length > 0){
+                                aID = matches[0].slice(1, -1);
+                            }else{
+                                aID = "PENDING RECORD";
+                            }
+                        }
+                        raw  += subref.refPname;
+                        if(i === 0){
+                            dat1[i].state={selected:true};
+                        }
                     	if(subref.refuuid==="@sub.uuid.toString()"){
-                    		data[i].state={selected:true};
-                    		data[i].text="<b>" + data[i].text + "</b>";
+                            raw = "<b>" + raw + "</b>";
                     	}
+                        raw = "<span class = 'jstree-left' > <a href = '@play.api.Play.configuration.getString("application.context").getOrElse("")/substance/"+subref.linkingID+"' class = 'substance-detail-link'>"+raw+"</a></span>";
+                        raw += "<span  class = 'jstree-right'  ><span class = 'hierarchy-id'>"+aID+"</span><br/> <i>"+dat1[i].relationship+"</i></span>";
+                        dat1[i].text="<span id='" +domID(i) + "' class = 'tree-content-overflow'>" + raw +"</span>";
+                        dat1[i].display = raw;
                     }
-                    cb.call(this, data);
-                    
-                    
+                    cb.call(this, dat1);
                    
                 }
 
@@ -75,33 +169,103 @@
                 "wholerow"
               ]
             
-            }).on('loaded.jstree', function() {
-            	$(elmID).jstree('open_all');
+            }).on('activate_node.jstree', function() {
+                $('.hierarchy-loading').css("display", "none");
+            })
+                .on('loaded.jstree', function() {
+                    //loop through records which are visible when collapsed and apply styles and substanceline infobox
+                for(var i=0;i<dat1.length;i++) {
+                    if(dat1[i].parent == "#"){
+                        if (dat1[i].relationship != "") {
+                            $("#" + domID(i)).parent("a").prev("i").prev(".jstree-wholerow").addClass("double-row");
+                        }
+                        if ((i == 1) || (i % 2 != 0)) {
+                            $("#" + domID(i)).parent("a").prev("i").prev(".jstree-wholerow").addClass("wholerow-alt");
+                        }
+                        var subref=dat1[i].value.value;
+                        var div="<substance-line substanceuuid=\"" + subref.refuuid + "\"></substance-line>";
+                        $target=$("#" + domID(i));
+                        if($target.hasOwnProperty("0")){
+                            angular.element($target).injector().invoke(function($compile) {
+                                var $scope = angular.element($target).scope();
+                                $target.html(dat1[i].display);
+                                $target.prepend($compile(div)($scope));
+                                $scope.$apply();
+                            });
+                        }
+                    }
+                    $('#tree_@sub.uuid@sug .jstree-icon').addClass('toggle_@sub.uuid@sug');
+                }
+
+                //trigger loading icon before tree click event bubbles
+                   $(".toggle_@sub.uuid@sug").mousedown(function(e) {
+                       switch (e.which) {
+                           case 1:
+                               $('#loading_@sub.uuid').css("display", "block");
+                       }
+
+                    });
+                $(elmID).jstree('close_all');
+                //prevent default jstree click behavior
+                $(".substance-detail-link").click(function(e) {
+                    e.stopPropagation();
+                });
+                $("info-popup").click(function(e) {
+                    e.stopPropagation();
+                });
+                //re-generate info-popup with substance summary box after the table is collapsed and re-opened / rendered.
+            }).on('after_close.jstree', function (e, data) {
+                $('#loading_@sub.uuid').css("display", "none");
+                //turn on/off overflow when there isn't enough room for substanceLine tooltip
+                if($('#tree_@sub.uuid@sug').height() >= 500){
+                    $('#tree_@sub.uuid@sug').addClass('jstree-overflow');
+                }else{
+                    $('#tree_@sub.uuid@sug').removeClass('jstree-overflow');
+                }
+            }).
+            on('after_open.jstree', function (e, data) {
+
             	for(var i=0;i<dat1.length;i++){
-            		//This should become its own directive
+                    if(dat1[i].relationship != ""){
+                        $("#"+domID(i)).parent("a").prev("i").prev(".jstree-wholerow").addClass("double-row");
+                    }
+                    if((i == 1) || (i%2 != 0)){
+                        $("#"+domID(i)).parent("a").prev("i").prev(".jstree-wholerow").addClass("wholerow-alt");
+                    }
             		 var subref=dat1[i].value.value;
-            		 var divO="<info-popup><div style='text-align: center;' class='stop-prop'>" + 
-            		           "<substance-preview substance-views=\"['Preferred Term','img','Approval ID (UNII)','iconButtons']\"" + 
-		                   	   "     substanceuuid='" + subref.refuuid +  "'>" +
-		                   	   "</substance-preview>" + 
-            		             "</div></info-popup>";
             		 var div="<substance-line substanceuuid=\"" + subref.refuuid + "\"></substance-line>";
                      $target=$("#" + domID(i));
+                    if($target.hasOwnProperty("0")){
                      angular.element($target).injector().invoke(function($compile) {
                          var $scope = angular.element($target).scope();
-                         $target.html("");
+                            $target.html(dat1[i].display);
                          $target.prepend($compile(div)($scope));
-                         // Finally, refresh the watch expressions in the new element
                          $scope.$apply();
                        });
-                     
+                    }
             	}
             	$("info-popup").click(function(e) {
              	   e.stopPropagation();
              	});
-            	
+                $(".substance-detail-link").click(function(e) {
+                   e.stopPropagation();
+                });
+                    $('#tree_@sub.uuid@sug .jstree-icon').addClass('toggle_@sub.uuid@sug');
+                    $('.hierarchy-loading').css("display", "none");
+                    $(".toggle_@sub.uuid@sug").mousedown(function(e) {
+                        $('#loading_@sub.uuid').css("display", "block");
+
             });
-            
+
+                    if($('#tree_@sub.uuid@sug').height() >= 500){
+                        $('#tree_@sub.uuid@sug').addClass('jstree-overflow');
+                    }else{
+                        $('#tree_@sub.uuid@sug').removeClass('jstree-overflow');
+                    }
+
+            }
+            );
+
         });
         </script>
         }

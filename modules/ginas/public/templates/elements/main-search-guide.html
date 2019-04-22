@@ -1,41 +1,46 @@
 <div class="search-guide">
-    <form ng-submit="runQuery()">
+<form ng-submit="runQuery()">
+    <div class="spaced-line">
+        I would like to search
+    </div>
+    <div ng-repeat="query in mainSearchGuideVariables.queries">
         <div class="spaced-line">
-            I would like to search
+            <form class="form-inline" ng-submit="runQuery()">
+                in&nbsp;
+                <select ng-model="query.field" class="form-control inline-block auto-width"
+                		ng-change="selectFieldOption(query, query.field)"
+                        ng-options="option as option.display for option in mainSearchGuideVariables.fieldOptions"
+                >
+                </select>
+                
+                <div ng-if="query.field.isOther" style="margin-top: 10px; max-width: 600px">
+                    <input class="form-control" style="max-width: 400px; display: inline-block;" ng-keyup="processOtherField(query.field)"  ng-blur="processOtherField(query.field)" placeholder="Field name" ng-model="query.field.field">
+                    <span class="search-error" ng-if="!query.field.field">
+                    	Required
+                    </span>
+                </div>
+            </form>
         </div>
-        <div ng-repeat="query in mainSearchGuideVariables.queries">
+        <div ng-repeat="term in query.terms">
             <div class="spaced-line">
                 <form class="form-inline" ng-submit="runQuery()">
-                    in
-                    <select ng-model="query.field" class="form-control"
-                            ng-change="selectFieldOption(query, query.field)"
-                            ng-options="option as option.display for option in mainSearchGuideVariables.fieldOptions track by option.field"
+                    <select class="form-control" 
+                        ng-if="term.options"
+                        ng-model="term.queryOption"
+                    	ng-change="selectQueryOption(query, term, $index)"
+                        ng-options="option as option.display for option in term.options track by option.value"
+                    
                     >
                     </select>
-
-                    <input ng-if="query.field.isOther" class="form-control" ng-model="query.field.field">
-                </form>
-            </div>
-            <div ng-repeat="term in query.terms">
-                <div class="spaced-line">
-                    <form class="form-inline" ng-submit="runQuery()">
-                        <select class="form-control"
-                                ng-if="term.options"
-                                ng-model="term.queryOption"
-                                ng-change="selectQueryOption(query, term, $index)"
-                                ng-options="option as option.display for option in term.options track by option.value"
-
-                        >
-                        </select>
-                        <span ng-if="term.type != 'end'">
+                    <span ng-if="term.type != 'end'">
                         <span ng-if="query.type != 'timestamp'">
                             &nbsp;
-                            <input class="form-control" ng-model="term.value" ng-change="validateQuery()">
+                            <input class="form-control" ng-model="term.value" ng-change="processValueChange()">
                         </span>
                         <span ng-if="query.type == 'timestamp'">
                             <div class="input-group">
                                 <input type="text" class="form-control" uib-datepicker-popup="MM/dd/yyyy" ng-model="term.value" is-open="term.datePickerOpened"
-                                       datepicker-options="dateOptions" ng-required="true" close-text="Close" ng-change="validateQuery()" />
+                                    datepicker-options="dateOptions" ng-required="true" close-text="Close" ng-change="processValueChange()" />
                                 <span class="input-group-btn">
                                     <button type="button" class="btn btn-default" ng-click="openSearchDatePicker(term)">
                                         <i class="glyphicon glyphicon-calendar"></i>
@@ -44,25 +49,25 @@
                             </div>
                         </span>
                     </span>
-                        <span class="search-error" ng-if="!term.isValid">
+                    <span class="search-error" ng-if="!term.isValid">
                     	{{term.errorMessage}}
                     </span>
-
-                    </form>
-                </div>
-            </div>
-            <div class="spaced-line">
-                <form class="form-inline" ng-submit="runQuery()">
-                    <select class="form-control" ng-model="query.selectedBool"
-                            ng-change="selectBooleanOperatorOption(query)"
-                            ng-options="option as option.display for option in mainSearchGuideVariables.booleanOperatorOptions track by option.value"
-                    >
-                    </select>
+                    
                 </form>
             </div>
         </div>
         <div class="spaced-line">
-            <button class="btn btn-primary" ng-disabled="!mainSearchGuideVariables.isSearchValid" ng-click="runQuery()">Run query</button>
+            <form class="form-inline" ng-submit="runQuery()">
+                <select class="form-control" ng-model="query.selectedBool" 
+                        ng-change="selectBooleanOperatorOption(query)"
+                        ng-options="option as option.display for option in mainSearchGuideVariables.booleanOperatorOptions track by option.value"
+                >
+                </select>
+            </form>
         </div>
-    </form>
+    </div>
+    <div class="spaced-line">
+        <button class="btn btn-primary" ng-disabled="!mainSearchGuideVariables.isSearchValid" ng-click="runQuery()">Run query</button>
+    </div>
+</form>
 </div>

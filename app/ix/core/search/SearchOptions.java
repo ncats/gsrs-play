@@ -17,6 +17,7 @@ import ix.core.controllers.RequestOptions;
 import ix.core.util.CachedSupplier;
 import ix.core.util.EntityUtils;
 import ix.core.util.EntityUtils.EntityInfo;
+import ix.core.util.IOUtil;
 import ix.core.util.StreamUtil;
 import ix.utils.Util;
 import play.Logger;
@@ -167,7 +168,7 @@ public class SearchOptions implements RequestOptions {
 		     	ofSingleString("filter", a->filter=a, ()->filter),
 		     	ofSingleString("kind", a->{
 		     		try{
-		     			setKind(Class.forName(a));
+		     			setKind(IOUtil.getGinasClassLoader().loadClass(a));
 		     		}catch(Exception e){
 		     			Logger.error("Unknown kind:" + a, e);
 		     		}

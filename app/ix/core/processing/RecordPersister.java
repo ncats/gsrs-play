@@ -1,6 +1,7 @@
 package ix.core.processing;
 
 import ix.core.plugins.GinasRecordProcessorPlugin.TransformedRecord;
+import ix.core.util.IOUtil;
 
 import java.lang.reflect.Constructor;
 
@@ -9,7 +10,7 @@ public abstract class RecordPersister<K,T>{
 
 		public static RecordPersister getInstanceOfPersister(String className) {
 			try{
-				Class<?> clazz = Class.forName(className);
+				Class<?> clazz = IOUtil.getGinasClassLoader().loadClass(className);
 				Constructor<?> ctor = clazz.getConstructor();
 				RecordPersister object = (RecordPersister) ctor.newInstance();
 				return object;

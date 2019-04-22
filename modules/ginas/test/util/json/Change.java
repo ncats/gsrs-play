@@ -1,5 +1,8 @@
 package util.json;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.JsonNode;
 
 import java.util.Objects;
@@ -7,16 +10,27 @@ import java.util.Objects;
 /**
  * Created by katzelda on 2/26/16.
  */
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class Change {
 
     public enum ChangeType {
-        REMOVED,
-        ADDED,
-        REPLACED
+        REMOVED("remove"),
+        ADDED("add"),
+        REPLACED("replace")
+        ;
+
+        private String op;
+
+        ChangeType(String op){
+            this.op = op;
+        }
+
+
     }
 
     private final String key;
     private final String newValue, oldValue;
+
     private final ChangeType type;
 
     
@@ -45,17 +59,30 @@ public class Change {
     public String getKey() {
         return key;
     }
-
+    @JsonProperty("value")
     public String getNewValue() {
         return newValue;
+    }
+
+    public String getPath(){
+        String value = getKey();
+        if(value.charAt(0) == '/'){
+            return value.substring(1);
+        }
+        return value;
     }
 
     public String getOldValue() {
         return oldValue;
     }
 
+    @JsonIgnore
     public ChangeType getType() {
         return type;
+    }
+
+    public String getOp(){
+        return type.op;
     }
 
     public boolean equals(Object object) {

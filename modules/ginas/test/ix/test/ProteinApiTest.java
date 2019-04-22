@@ -30,7 +30,7 @@ public class ProteinApiTest extends AbstractGinasServerTest {
         //JsonNode entered = parseJsonFile(resource);
         try( RestSession session = ts.newRestSession(ts.getFakeUser1())) {
             SubstanceAPI api = new SubstanceAPI(session);
-            String seq="ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+            String seq="ABCDEFGHI";
             ProteinSubstance ps = makeProteinSubstance(seq, 0);
             String uuid = ps.getOrGenerateUUID().toString();
             EntityMapper em = EntityFactory.EntityMapper.FULL_ENTITY_MAPPER();
@@ -46,7 +46,7 @@ public class ProteinApiTest extends AbstractGinasServerTest {
    	public void globalSequenceSimilaritySearchShouldReturnAllSlightlyModifiedSequences() throws Exception {
         //JsonNode entered = parseJsonFile(resource);
         try( RestSession session = ts.newRestSession(ts.getFakeUser1())) {
-        	String seq="ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        	String seq="ABCDEFGHIABCDEFGHI";
         	SubstanceAPI api = new SubstanceAPI(session);
         	int totsize=101;
             for(int i=0;i<totsize;i++){

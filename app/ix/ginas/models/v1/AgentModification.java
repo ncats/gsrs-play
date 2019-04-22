@@ -1,14 +1,20 @@
 package ix.ginas.models.v1;
 
-import ix.core.SingleParent;
-import ix.ginas.models.GinasCommonSubData;
-import ix.ginas.models.utils.JSONEntity;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
+import ix.core.SingleParent;
+import ix.ginas.models.GinasAccessReferenceControlled;
+import ix.ginas.models.GinasCommonSubData;
+import ix.ginas.models.utils.JSONEntity;
 
 @JSONEntity(title = "Agent Modification", isFinal = true)
 @Entity
@@ -36,4 +42,17 @@ public class AgentModification extends GinasCommonSubData {
     @JSONEntity(title = "Modification Group")
     public String modificationGroup = "1";
     public AgentModification () {}
+
+    @Override
+    @JsonIgnore
+	public List<GinasAccessReferenceControlled> getAllChildrenCapableOfHavingReferences() {
+		List<GinasAccessReferenceControlled> temp = new ArrayList<GinasAccessReferenceControlled>();
+		if(amount!=null){
+			temp.addAll(amount.getAllChildrenAndSelfCapableOfHavingReferences());
+		}
+		if(agentSubstance!=null){
+			temp.addAll(agentSubstance.getAllChildrenAndSelfCapableOfHavingReferences());
+		}
+		return temp;
+	}
 }

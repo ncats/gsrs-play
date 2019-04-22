@@ -194,9 +194,12 @@ public class ProteinUtils {
 	public static Optional<List<DisulfideLink>> predictDisulfideLinks(Protein p){
 		String subtype = p.proteinSubType;
 		
-		
-		
-		List<int[]> predicted=KNOWN_DISULFIDE_PATTERNS.get().get(subtype);
+		List<int[]> predicted=p.getProteinSubtypes().stream()
+		 .map(st->KNOWN_DISULFIDE_PATTERNS.get().get(st))
+		 .filter(li->li!=null)
+		 .findFirst()
+		 .orElse(null);
+
 		if(predicted==null)return Optional.empty();
 		
 		

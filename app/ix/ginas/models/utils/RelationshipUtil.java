@@ -1,6 +1,7 @@
 package ix.ginas.models.utils;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import ix.core.models.Group;
 import ix.core.models.Keyword;
 import ix.core.util.EntityUtils;
 import ix.ginas.models.v1.Relationship;
@@ -88,6 +89,14 @@ Exception Details:
         }
         return r.type;
     }
+
+    public static  String standardizeType(Relationship r){
+        if(r.type.contains(RELATIONSHIP_INV_CONST)){
+            String[] split = r.type.split(RELATIONSHIP_INV_CONST);
+            return split[0].trim() + "->" +split[1].trim();
+        }
+        return r.type.trim();
+    }
     /**
      * Returns true if this relationship is invertible
      * @return
@@ -119,17 +128,14 @@ Exception Details:
         }
         Relationship r=new Relationship();
         r.type=reverseRelationship(other.type);
-        r.setAccess(other.getAccess());
+        Set<Group> groups = new LinkedHashSet<>();
+        for(Group g : other.getAccess()){
+            groups.add(g);
+        }
+        r.setAccess(groups);
 
         r.comments = other.comments;
-        Set<Keyword> keywords = new LinkedHashSet<>();
-        for(Keyword k : other.getReferences()){
-            try {
-                keywords.add(EntityUtils.EntityWrapper.of(k).getClone());
-            } catch (JsonProcessingException e) {
-                e.printStackTrace();
-            }
-        }
+
         if(other.amount !=null) {
             try {
                 r.amount = EntityUtils.EntityWrapper.of(other.amount).getClone();
@@ -139,11 +145,23 @@ Exception Details:
             }
         }
 
+        //GSRS-684 copy over qualification and interactionType
+        if(other.qualification !=null){
+            //new String so ebean sees it's a new object
+            //just in case...
+            r.qualification = new String(other.qualification);
+        }
+        if(other.interactionType !=null){
+            //new String so ebean sees it's a new object
+            //just in case...
+            r.interactionType = new String(other.interactionType);
+        }
+
         return r;
     }
     
     public static String reverseRelationship(String type){
     	String[] types=RELATIONSHIP_SPLIT_REGEX.split(type);
-        return types[1] + RELATIONSHIP_INV_CONST + types[0];
+        return types[1].trim() + RELATIONSHIP_INV_CONST + types[0].trim();
     }
 }

@@ -2,11 +2,7 @@
 @import ix.ginas.controllers.v1.SubstanceFactory
 @import ix.ginas.models.v1.SpecifiedSubstanceComponent
 @(components: List[SpecifiedSubstanceComponent])
-<button class="btn btn-primary label-offset det" ng-click = "componentscollapse = !componentscollapse">
-    <i ng-show="componentscollapse" class="fa fa-caret-right"></i>
-    <i ng-hide="componentscollapse" class="fa fa-caret-down"></i>
-    Constituents &nbsp;<span class="badge"> @components.length</span></button>
-<div class="col-md-12" uib-collapse = "componentscollapse">
+
     @if(components.length > 0) {
     <table class="table table-striped" id="namesTable">
         <thead>
@@ -30,4 +26,3 @@
         }
     </table>
 }
-</div>

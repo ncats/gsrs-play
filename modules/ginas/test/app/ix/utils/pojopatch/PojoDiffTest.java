@@ -16,15 +16,20 @@ import org.junit.runners.Parameterized;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.fge.jsonpatch.JsonPatch;
-import com.github.fge.jsonpatch.diff.JsonDiff;
+import com.flipkart.zjsonpatch.JsonDiff;
+import com.flipkart.zjsonpatch.JsonPatch;
 
 import ix.AbstractGinasTest;
 import ix.core.controllers.EntityFactory;
 import ix.core.models.Author;
+import ix.core.models.Keyword;
 import ix.core.util.EntityUtils.EntityWrapper;
+import ix.core.util.RunOnly;
+import ix.ginas.models.EmbeddedKeywordList;
+import ix.ginas.models.v1.Name;
 import ix.ginas.models.v1.Parameter;
 import ix.ginas.models.v1.Property;
+import ix.test.SubstanceJsonUtil;
 import ix.utils.pojopatch.PojoDiff;
 import ix.utils.pojopatch.PojoPatch;
 
@@ -61,8 +66,8 @@ public class PojoDiffTest extends AbstractGinasTest{
 		    		EntityWrapper<T> ew2=EntityWrapper.of(o2);
 		    		JsonNode oldOne = ew1.toFullJsonNode();
 		    		JsonNode newOne = ew2.toFullJsonNode();
-		    		JsonPatch jp=JsonDiff.asJsonPatch(oldOne, newOne);
-		    		JsonNode modifiedOne=jp.apply(oldOne);
+		    		JsonNode jp= JsonDiff.asJson(oldOne, newOne);
+		    		JsonNode modifiedOne= JsonPatch.apply(jp, oldOne);
 		    		T tnew=ew1.getEntityInfo().fromJsonNode(modifiedOne);
 		    		
 		    		PojoPatch<T> patch = PojoDiff.getDiff(o1,tnew);
@@ -92,7 +97,7 @@ public class PojoDiffTest extends AbstractGinasTest{
 	public static List<Object[]> params(){
 		List<Object[]> list = new ArrayList<>();
 		for(PatchType type: PatchType.values()){
-			list.add(new Object[]{type+" serailize nether",type,false,false});
+			list.add(new Object[]{type+" serailize neither",type,false,false});
 			list.add(new Object[]{type+" serailize both",type,true,true});
 			list.add(new Object[]{type+" serailize first",type,true,false});
 			list.add(new Object[]{type+" serailize second",type,false,true});
@@ -152,6 +157,78 @@ public class PojoDiffTest extends AbstractGinasTest{
 
         assertEquals(expected.getName(), old.getName());
         assertEquals(expected.id, old.id);
+    }
+
+    @Test
+    public void embeddedKeywordListAddToBeginningAndEndShouldBeEquivalent() throws Exception {
+
+    	EmbeddedKeywordList oldList = new EmbeddedKeywordList();
+    	oldList.add(new Keyword("KEY","VALUE1"));
+    	oldList.add(new Keyword("KEY","VALUE2"));
+
+    	EmbeddedKeywordList newList = new EmbeddedKeywordList();
+    	newList.add(new Keyword("KEY","VALUE0"));
+    	newList.add(new Keyword("KEY","VALUE1"));
+    	newList.add(new Keyword("KEY","VALUE2"));
+    	newList.add(new Keyword("KEY","VALUE3"));
+
+
+    	oldList=getChanged(oldList, newList);
+
+    	assertEquals(oldList.size(), newList.size());
+
+    	for(int i=0;i<oldList.size();i++){
+    		assertEquals(oldList.get(i), newList.get(i));
+    	}
+
+    }
+
+    @Test
+    public void embeddedReferenceUUIDsToBeginningAndEndShouldWork() throws Exception {
+    	Name oldName = new Name();
+    	UUID onID = oldName.getOrGenerateUUID();
+    	oldName.addReference("00000000-0000-0000-0000-000000000001");
+
+
+    	Name newName = new Name();
+    	newName.setUuid(onID);
+    	newName.addReference("00000000-0000-0000-0000-000000000000");
+    	newName.addReference("00000000-0000-0000-0000-000000000001");
+    	newName.addReference("00000000-0000-0000-0000-000000000002");
+
+    	oldName=getChanged(oldName, newName);
+
+    	assertEquals(oldName.uuid, newName.uuid);
+
+    	assertEquals(newName.getReferences().size(),oldName.getReferences().size());
+
+    	assertTrue(oldName.getReferences().containsAll(newName.getReferences()));
+    	assertTrue(newName.getReferences().containsAll(oldName.getReferences()));
+
+    }
+
+    @Test
+    public void embeddedLanguagesToBeginningAndEndShouldWork() throws Exception {
+    	Name oldName = new Name();
+    	UUID onID = oldName.getOrGenerateUUID();
+    	oldName.addLanguage("en");
+
+
+    	Name newName = new Name();
+    	newName.setUuid(onID);
+    	newName.addLanguage("es");
+    	newName.addLanguage("fr");
+    	newName.addLanguage("en");
+
+    	oldName=getChanged(oldName, newName);
+
+    	assertEquals(oldName.uuid, newName.uuid);
+
+    	assertEquals(newName.languages.size(),oldName.languages.size());
+
+    	assertTrue(oldName.languages.containsAll(newName.languages));
+    	assertTrue(newName.languages.containsAll(oldName.languages));
+
     }
 
     @Test

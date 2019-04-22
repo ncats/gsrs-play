@@ -7,13 +7,9 @@ import static ix.core.search.ArgumentAdapter.getLastStringOrElse;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
-import gov.nih.ncats.chemkit.api.Chemical;
 import ix.core.chem.StructureProcessorTask;
 import ix.core.controllers.search.SearchRequest;
 import org.reflections.Reflections;
@@ -59,8 +55,11 @@ import play.Application;
 import play.Logger;
 import play.Play;
 import play.db.ebean.Model;
-import play.mvc.*;
-import tripod.molvec.Molvec;
+import play.mvc.BodyParser;
+import play.mvc.Call;
+import play.mvc.Controller;
+import play.mvc.Result;
+import tripod.molvec.algo.StructureImageExtractor;
 
 public class RouteFactory extends Controller {
     private static final int MAX_POST_PAYLOAD = 1024*1024*10;
@@ -362,16 +361,13 @@ public class RouteFactory extends Controller {
         String raw =  new String(request().body().asRaw().asBytes());
 
         String base64Encoded = raw.substring(raw.indexOf(',')+1);
-        System.out.println("base64 =" +base64Encoded);
+//        System.out.println("base64 =" +base64Encoded);
         byte[] data = Base64.getDecoder().decode(base64Encoded);
         String mol;
-        CompletableFuture<Chemical> chemicalCompletableFuture = Molvec.ocrAsync(data);
-
         try {
-            mol = chemicalCompletableFuture.get(10, TimeUnit.SECONDS)
-                     .toMol();
+             mol =new StructureImageExtractor(data).getChemical().toMol();
 
-             System.out.println("parsed mol=\n" +mol);
+//             System.out.println("parsed mol=\n" +mol);
             StructureProcessorTask.Builder taskBuilder = new StructureProcessorTask.Builder()
                     .mol(mol)
                     .query(true)
@@ -379,11 +375,7 @@ public class RouteFactory extends Controller {
                     ;
 
             return ok(EntityMapper.FULL_ENTITY_MAPPER().toJson(taskBuilder.build().instrument()));
-        }catch(TimeoutException toe){
-            //timeout!!
-            chemicalCompletableFuture.cancel(true);
-            return Results.notFound();
-        }catch(Exception e) {
+        }catch(Exception e){
             return _apiInternalServerError(e);
         }
 

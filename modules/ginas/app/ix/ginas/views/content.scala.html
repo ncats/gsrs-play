@@ -103,7 +103,7 @@ request().getQueryString("q") != null) { searchFlag =>
                 @request().getQueryString("type") match {
                 case "sequence" => {
                                     <span><h4>Sequence Query:&nbsp;
-                                        <a target="_self" href='@ix.ginas.controllers.routes.GinasApp.sequence(request().getQueryString("q"))'><code>@ix.ginas.controllers.GinasFactory.getSequence(request().getQueryString("q"), 15)</code> (edit search)</a> </h4>
+                                        <a target="_self" href='@ix.ginas.controllers.routes.GinasApp.sequence(request().getQueryString("q"),request().getQueryString("seqType"))'><code>@ix.ginas.controllers.GinasFactory.getSequence(request().getQueryString("q"), 15)</code> (edit search)</a> </h4>
                                     </span> <div id="searching"></div>
                 }
                 case "Substructure" => {
@@ -483,11 +483,11 @@ onclick="removeFacet('@fac.getDrill()','@fac.asLabel()')"
     @defining(FieldedQueryFacet.displayQuery(kind,request().getQueryString("q"))) { keyval =>
                                         @if(keyval!=null){
                                         <div ng-hide="hideall" ng-cloak>
-                                    <span class="center-text"><h4 class="no-margin">Searched for:<em>
+                                    <span class="center-text"><h4 class="no-margin">You searched<em lucene-query-friendly-display></em><!-- <em>
                                         
                                         <b>@keyval(0)</b> : <span class="query-term">@keyval(1)</span>  <span>@keyval(2)</span>
                                         
-                                    </em></h4></span>
+                                    </em></h4></span> -->
                                     </div>
                                     }
                                         }

@@ -5,6 +5,7 @@ import static play.mvc.Http.Status.OK;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.charset.Charset;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -163,7 +164,7 @@ public class BrowserSession extends AbstractSession<WSResponse>{
     		return this;
     	}
     	public WebRequest get(){
-    		wq.setCharset("UTF-8");
+    		wq.setCharset(Charset.forName("UTF-8"));
     		return wq;
     	}
 

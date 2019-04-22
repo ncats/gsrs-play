@@ -1,9 +1,13 @@
 package ix.ginas.models.v1;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.persistence.*;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
+import ix.ginas.models.GinasAccessReferenceControlled;
 import ix.ginas.models.GinasCommonSubData;
 
 @Entity
@@ -57,5 +61,19 @@ public class SpecifiedSubstanceGroup1 extends GinasCommonSubData {
 			m.put("parentSubstance", parentSubstance.toMap());
 		return m;
 	}*/
+
+	 @Override
+	   	@JsonIgnore
+	   	public List<GinasAccessReferenceControlled> getAllChildrenCapableOfHavingReferences() {
+	   		List<GinasAccessReferenceControlled> temp = new ArrayList<GinasAccessReferenceControlled>();
+
+	   		if(this.constituents!=null){
+	   			for(SpecifiedSubstanceComponent s : this.constituents){
+	   				temp.addAll(s.getAllChildrenAndSelfCapableOfHavingReferences());
+	   			}
+	   		}
+
+	   		return temp;
+	   	}
 
 }

@@ -1,11 +1,13 @@
 package ix.ginas.controllers.plugins;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.type.TypeFactory;
 import ix.core.models.Group;
 import ix.core.models.Predicate;
 import ix.core.models.Principal;
 import ix.core.util.CachedSupplier;
 import ix.core.util.EntityUtils;
+import ix.core.util.IOUtil;
 import ix.ginas.models.v1.Substance;
 import ix.ginas.utils.views.cards.CardConsumer;
 import ix.ginas.utils.views.cards.CardViewFetcher;
@@ -92,7 +94,10 @@ public class CardViewPlugin implements Plugin {
 
     public void onStart(){
         INSTANCE = this;
-        ObjectMapper mapper = new ObjectMapper();
+        //This makes a ObjectMapper with our custom classloader
+        //so we could load cards that are defined with classes
+        //from external plugins
+        ObjectMapper mapper = IOUtil.createNewGinasClassLoaderBackedMapper();
         String key = "cardView.substanceDetails";
         List<Map<String, Object>> objectList = app.configuration().getObjectList(key);
         if(objectList ==null){

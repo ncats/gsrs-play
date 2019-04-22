@@ -26,4 +26,14 @@ public class SpecifiedSubstanceGroup1Substance extends Substance implements Gina
     public GinasAccessReferenceControlled getDefinitionElement(){
         return specifiedSubstance;
     }
+
+    @Override
+   	@JsonIgnore
+   	public List<GinasAccessReferenceControlled> getAllChildrenCapableOfHavingReferences(){
+   		List<GinasAccessReferenceControlled> temp = super.getAllChildrenCapableOfHavingReferences();
+   		if(this.specifiedSubstance!=null){
+   			temp.addAll(this.specifiedSubstance.getAllChildrenAndSelfCapableOfHavingReferences());
+   		}
+   		return temp;
+   	}
 }

@@ -3,17 +3,17 @@ package ix.ginas.models.v1;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.persistence.Basic;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.Lob;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import ix.ginas.models.CommonDataElementOfCollection;
+import ix.ginas.models.GinasAccessReferenceControlled;
 import ix.ginas.models.utils.JSONEntity;
 
 @JSONEntity(title = "Property", isFinal = true)
@@ -42,12 +42,8 @@ public class Property extends CommonDataElementOfCollection {
     private SubstanceReference referencedSubstance;
     
     
-    // Should we add in the comments field?
-    //
-    // @JSONEntity(title = "Comments")
-    // @Lob
-    // @Basic(fetch=FetchType.EAGER)
-    // public String comments;
+
+
 
     @JSONEntity(title = "Defining")
     private Boolean defining;
@@ -128,7 +124,26 @@ public class Property extends CommonDataElementOfCollection {
     	
     }
     
-    
+    @JsonIgnore
+	@Override
+	public List<GinasAccessReferenceControlled> getAllChildrenCapableOfHavingReferences() {
+
+		List<GinasAccessReferenceControlled> temp = new ArrayList<GinasAccessReferenceControlled>();
+		if(this.value!=null){
+			temp.addAll(this.value.getAllChildrenAndSelfCapableOfHavingReferences());
+		}
+		if(this.parameters!=null){
+			for(Parameter p : this.parameters){
+				temp.addAll(p.getAllChildrenAndSelfCapableOfHavingReferences());
+			}
+		}
+		if(this.referencedSubstance!=null){
+			temp.addAll(this.referencedSubstance.getAllChildrenAndSelfCapableOfHavingReferences());
+		}
+		return temp;
+	}
+
+
     
     
 }

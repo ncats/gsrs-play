@@ -1,20 +1,25 @@
 package ix.ginas.processors;
 
 import com.avaje.ebean.Ebean;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import ix.core.EntityProcessor;
 import ix.core.adapters.EntityPersistAdapter;
 import ix.core.adapters.InxightTransaction;
+import ix.core.models.Keyword;
 import ix.core.util.EntityUtils;
 import ix.core.util.SemaphoreCounter;
+import ix.core.util.EntityUtils.EntityWrapper;
 import ix.ginas.controllers.v1.SubstanceFactory;
 import ix.ginas.models.v1.Reference;
 import ix.ginas.models.v1.Relationship;
 import ix.ginas.models.v1.Substance;
 import ix.ginas.models.v1.SubstanceReference;
+import ix.utils.Tuple;
 import play.db.ebean.Model;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 /**
  * Processor to handle both sides of the Relationship.
@@ -144,10 +149,24 @@ public class RelationshipProcessor implements EntityProcessor<Relationship>{
 				}
 				Reference ref1 = Reference.SYSTEM_GENERATED();
 				ref1.citation="Generated from relationship on:'" + oldSub.refPname + "'";
-				r.addReference(ref1.getOrGenerateUUID().toString());
 
+				r.addReference(ref1, newSub);
 				newSub.relationships.add(r);
-				newSub.references.add(ref1);
+//				newSub.references.add(ref1);
+
+				//GSRS-736 copy over references
+				//with new UUIDs
+
+				for(Keyword kw : obj.getReferences()){
+					Reference origRef =obj.fetchOwner().getReferenceByUUID(kw.getValue());
+					try {
+						Reference newRef = EntityUtils.EntityWrapper.of(origRef).getClone();
+						newRef.uuid =null; //blank out UUID soit generates a new one on save
+						r.addReference(newRef, newSub);
+					} catch (JsonProcessingException e) {
+						e.printStackTrace();
+					}
+				}
 				return r;
 			}
 		}
@@ -195,9 +214,10 @@ public class RelationshipProcessor implements EntityProcessor<Relationship>{
 		}
 
 		//Do we need this?
-		System.out.println(EntityUtils.EntityWrapper.of(obj).toFullJsonNode());
+//		System.out.println(EntityUtils.EntityWrapper.of(obj).toFullJsonNode());
 		if(obj.isAutomaticInvertible()){
 			List<Relationship> rel;
+
 			if(obj.isGenerator()) {
 				rel = new ArrayList<>(finder.where().eq("originatorUuid",
 						obj.getOrGenerateUUID().toString()).findList());
@@ -205,6 +225,19 @@ public class RelationshipProcessor implements EntityProcessor<Relationship>{
 				rel = new ArrayList<>(finder.where().eq("originatorUuid",
 						obj.originatorUuid).findList());
 			}
+
+			//This isn't complete, but handles the most common incomplete migration / old style
+			//handling issues that happen from inverted relationships that don't use the originatorUUID
+			if(rel.size()<2){
+				Substance relatedSubstance = SubstanceFactory.getFullSubstance(obj.relatedSubstance);
+				List<Relationship> candidates = relatedSubstance.relationships.stream()
+								.filter(r->r.isAutomaticInvertible() && r.fetchInverseRelationship().isEquivalentBaseRelationship(obj))
+								.collect(Collectors.toList());
+				if(candidates.size()==1){
+					rel.add(candidates.get(0));
+				}
+			}
+
 
 			for(Relationship r1 : rel){
 				if(r1.getOrGenerateUUID().equals(obj.getOrGenerateUUID())){
@@ -216,7 +249,7 @@ public class RelationshipProcessor implements EntityProcessor<Relationship>{
 
 				//we make a new one each time because it does some clone stuff
 				//and we don't want to reuse reference objects..I don't think
-				//there shouldn't be more than 1 anyway unless here's an error
+				//there shouldn't be more than 1 anyway unless there's an error
 				//so it's not much of a performance hit to do it inside the loop
 
 				Relationship inverse = obj.fetchInverseRelationship();
@@ -224,12 +257,90 @@ public class RelationshipProcessor implements EntityProcessor<Relationship>{
 				r1.setComments(inverse.comments);
 				r1.type = new String(inverse.type);
 				r1.amount = inverse.amount;
-				r1.setReferences(inverse.getReferences());
+
+				//GSRS-684 and GSRS-730 copy over qualification and interactionType
+				if(inverse.qualification !=null){
+					//new String so ebean sees it's a new object
+					//just in case...
+					r1.qualification = new String(inverse.qualification);
+				}
+				if(inverse.interactionType !=null){
+					//new String so ebean sees it's a new object
+					//just in case...
+					r1.interactionType = new String(inverse.interactionType);
+				}
+
+				//GSRS-736 completely remove and then re-add references withnew UUID?
+				//TODO do this here or a new processor ?
+				Substance r1Owner = r1.fetchOwner();
+				Substance objOwner = obj.fetchOwner();
+				if(r1Owner !=null) {
+
+					List<Reference> refsToRemove = new ArrayList<Reference>();
+
+					//TODO: fix this to remove the actual references from the substance
+					Set<Keyword> keepRefs= r1.getReferences()
+											 .stream()
+										     .map(r->r1Owner.getReferenceByUUID(r.term))
+										     .map(r->Tuple.of("SYSTEM".equals(r.docType),r))
+										     .filter(t->{
+										    	 if(!t.k()){
+										    		 Reference toRemove=t.v();
+										    		 long dependencies=toRemove.getElementsReferencing()
+										    		 		 .stream()
+										    		 		 .map(elm->EntityWrapper.of(elm))
+										    		 		 .filter(ew->!r1.uuid.equals(ew.getId().orElse(null)))
+										    		 		 .count();
+										    		 if(dependencies<=0){
+										    			 refsToRemove.add(toRemove);
+										    		 }
+										    	 }
+										    	 return t.k();
+										     })
+										     .map(t->t.v())
+											 .map(ref->ref.asKeyword())
+											 .collect(Collectors.toSet());
+
+
+					r1.setReferences(keepRefs);
+
+
+					r1Owner.references.removeAll(refsToRemove);
+					for(Reference ref1: refsToRemove){
+						ref1.delete();
+					}
+
+
+					for (Keyword k : obj.getReferences()) {
+
+						Reference ref = objOwner.getReferenceByUUID(k.getValue());
+						if("SYSTEM".equals(ref.docType)){
+							continue;
+						}
+
+						System.out.println("adding ref" +  ref);
+						if(ref!=null){
+							try {
+								Reference newRef = EntityUtils.EntityWrapper.of(ref).getClone();
+								newRef.uuid =null;
+								r1.addReference(newRef, r1Owner);
+							} catch (JsonProcessingException e) {
+								e.printStackTrace();
+							}
+						}
+					}
+				}
+//				r1.setReferences(new LinkedHashSet<>());
+//				for(Keyword k : inverse.getReferences()){
+////					Keyword copy = new Keyword(k.label, k.term);
+//					r1.addReference(k.term);
+//				}
+//				r1.setReferences(inverse.getReferences());
 
 				if(notWorkingOn(r1.getOrGenerateUUID().toString())) {
-					final Substance osub = r1.fetchOwner();
-					if (osub != null) {
-						EntityPersistAdapter.performChangeOn(osub, osub2 -> {
+//					final Substance osub = r1.fetchOwner();
+					if (r1Owner != null) {
+						EntityPersistAdapter.performChangeOn(r1Owner, osub2 -> {
 							r1.forceUpdate();
 							osub2.forceUpdate();
 							return Optional.of(osub2);

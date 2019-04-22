@@ -1,5 +1,8 @@
 package ix.ginas.models.v1;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import javax.persistence.*;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -9,6 +12,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import ix.core.SingleParent;
 import ix.core.models.Indexable;
 import ix.ginas.models.utils.JSONEntity;
+import ix.ginas.models.GinasAccessReferenceControlled;
 import ix.ginas.models.GinasCommonSubData;
 
 @Entity
@@ -30,4 +34,15 @@ public class PhysicalParameter extends GinasCommonSubData {
     public String toString(){
         return parameterName + "," + amount.toString();
     }
+
+
+    @Override
+   	@JsonIgnore
+   	public List<GinasAccessReferenceControlled> getAllChildrenCapableOfHavingReferences() {
+   		List<GinasAccessReferenceControlled> temp = new ArrayList<GinasAccessReferenceControlled>();
+   		if(this.amount!=null){
+   				temp.addAll(amount.getAllChildrenAndSelfCapableOfHavingReferences());
+   		}
+   		return temp;
+   	}
 }

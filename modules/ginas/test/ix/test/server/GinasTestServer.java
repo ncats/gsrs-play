@@ -664,7 +664,7 @@ public class GinasTestServer extends ExternalResource{
     */
 
     @Override
-    protected void before() throws Throwable {
+    public void before() throws Throwable {
         testSpecificConfig = ConfigFactory.empty();
 
         exportDir.create();
@@ -877,7 +877,7 @@ public class GinasTestServer extends ExternalResource{
     }
 
     @Override
-    protected void after() {
+    public void after() {
         stop();
         testSpecificConfig = ConfigFactory.empty();
         exportDir.delete();
@@ -976,6 +976,7 @@ public class GinasTestServer extends ExternalResource{
 //                });
 //        System.out.println("after");
         try {
+
 
             ts = new TestServer(port, fakeApplication(new Configuration(config.withoutPath("akka")).asMap()));
             ts.start();

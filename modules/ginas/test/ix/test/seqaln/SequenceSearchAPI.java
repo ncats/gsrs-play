@@ -79,14 +79,25 @@ public class SequenceSearchAPI {
             while(!status.determined && tries < 5){
                 Thread.sleep(1_000);
                 tries++;
+                JsonNode sess=session.get(status.url).asJson();
+                try{
+                	status = mapper.treeToValue(sess, SearchResultJson.class);
+                }catch(Exception e){
+                	System.err.println(sess.toString());
+                	throw e;
+                }
 
-                status = mapper.treeToValue(session.get(status.url).asJson(), SearchResultJson.class);
                 }
 
             if(status.finished){
                 JsonNode resultsNode= session.get(status.results).asJson();
 //                System.out.println(resultsNode);
+                try{
                 return mapper.treeToValue(resultsNode, SearchResultActual.class);
+                }catch(Exception e){
+                	System.err.println(resultsNode.toString());
+                	throw e;
+                }
             }
 
 //            System.out.println("search result = " + node);
@@ -207,6 +218,7 @@ public class SequenceSearchAPI {
         public String path;
         public String uri;
         public String sha1;
+        public String message;
         public int total, count, skip, top;
         public String query;
         //TODO include facets
@@ -260,6 +272,7 @@ public class SequenceSearchAPI {
             public boolean determined;
             public boolean finished;
             public int count;
+            public String message;
 
             public String generatingUrl;
             public String url;

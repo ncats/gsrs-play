@@ -1,8 +1,6 @@
 package ix.ginas.utils.validation.validators;
 
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -21,13 +19,21 @@ import ix.utils.Tuple;
  * Created by peryeata on 8/28/18.
  */
 public class RelationshipModificationValidator extends AbstractValidatorPlugin<Substance> {
+    private static Collection<Role> ALLOWED_ROLES = Arrays.asList(Role.Admin, Role.SuperUpdate);
+
     @Override
     public void validate(Substance s, Substance objold, ValidatorCallback callback) {
 
 
-        if(objold == null)return;
+    	if(objold == null){
+    		return;
+		}
 
-        if(!this.getCurrentUser().hasRole(Role.Admin)){
+		//disjoint returns true if collections don't have anything in common
+    	//So only those users WITHOUT any of the roles will have to have this
+    	//validation
+		if(Collections.disjoint(ALLOWED_ROLES, this.getCurrentUser().getRoles())){
+
             Map<UUID, Relationship> oldRelationships = Optional.ofNullable(objold.relationships)
                     .map(r->r.stream())
                     .orElse(Stream.empty())
@@ -64,7 +70,6 @@ public class RelationshipModificationValidator extends AbstractValidatorPlugin<S
             //Return false if they are the same (looking for change)
             return !r1.getDefinitionalHash().equals(r2temp.getDefinitionalHash());
         } catch (JsonProcessingException e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
             return true;
         }

@@ -15,6 +15,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import ix.core.History;
 import ix.core.controllers.EntityFactory.EntityMapper;
+import ix.core.util.IOUtil;
 import ix.utils.Util;
 
 @Entity
@@ -52,7 +53,7 @@ public class BackupEntity extends IxModel{
 	
 	public Class<?> getKind(){
 		try {
-			return Class.forName(kind);
+			return IOUtil.getGinasClassLoader().loadClass(kind);
 		} catch (ClassNotFoundException e) {
 			return null;
 		}

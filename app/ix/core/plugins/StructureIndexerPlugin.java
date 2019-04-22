@@ -3,6 +3,7 @@ package ix.core.plugins;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -121,7 +122,18 @@ public class StructureIndexerPlugin extends Plugin {
 		
 		
 		public static Molecule getStandardized(Molecule m){
+			List<MolBond> anyBonds = new ArrayList<MolBond>();
+	    	for(MolBond mb: m.getBondArray()){
+	    		if(mb.getType()==MolBond.ANY){ //any
+	    			anyBonds.add(mb);
+	    			mb.setType(MolBond.SINGLE_OR_AROMATIC); //single or aromatic
+	    		}
+	    	}
 			m.aromatize();
+	    	for(MolBond mb2:anyBonds){
+	    		mb2.setType(MolBond.ANY);
+	    	}
+
 			return standardizeCharges(m);
 			
 		}

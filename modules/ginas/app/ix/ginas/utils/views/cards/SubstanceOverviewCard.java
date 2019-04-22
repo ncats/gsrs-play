@@ -6,6 +6,7 @@ import ix.ginas.models.v1.NucleicAcidSubstance;
 import ix.ginas.models.v1.PolymerSubstance;
 import ix.ginas.models.v1.ProteinSubstance;
 import ix.ginas.models.v1.StructurallyDiverseSubstance;
+import ix.ginas.models.v1.SpecifiedSubstanceGroup1Substance;
 import ix.ginas.models.v1.Substance;
 import play.twirl.api.Html;
 
@@ -40,6 +41,8 @@ public class SubstanceOverviewCard extends AngularCardCard{
 			return ix.ginas.views.html.details.mixtureoverview.render((MixtureSubstance)s);
 		}else if(s instanceof PolymerSubstance){
 			return ix.ginas.views.html.details.polymeroverview.render((PolymerSubstance)s);
+		}else if(s instanceof SpecifiedSubstanceGroup1Substance){
+            return ix.ginas.views.html.details.properties.ssg.ssgmainoverview.render(s);
 		}else{
 			//all others should be concepts (?)
 			//return ix.ginas.views.html.details.overview.render(s);

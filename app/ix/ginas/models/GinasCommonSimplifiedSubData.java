@@ -20,7 +20,7 @@ import ix.ginas.models.serialization.PrincipalDeserializer;
 
 @SuppressWarnings("serial")
 @MappedSuperclass
-public class GinasCommonSimplifiedSubData extends GinasCommonSubData implements GinasAccessReferenceControlled{
+public abstract class GinasCommonSimplifiedSubData extends GinasCommonSubData implements GinasAccessReferenceControlled{
 	 	@JsonIgnore
 	    public Set<Keyword> getReferences(){
 	    	return super.getReferences();

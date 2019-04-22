@@ -6,7 +6,6 @@ import ix.core.plugins.SequenceIndexerPlugin;
 import ix.core.util.CachedSupplier;
 import ix.core.util.StreamUtil;
 import ix.core.validator.GinasProcessingMessage;
-import ix.core.validator.ValidationMessage;
 import ix.core.validator.ValidatorCallback;
 import ix.ginas.controllers.v1.SubstanceFactory;
 import ix.ginas.models.v1.NucleicAcid;
@@ -14,10 +13,8 @@ import ix.ginas.models.v1.NucleicAcidSubstance;
 import ix.ginas.models.v1.ProteinSubstance;
 import ix.ginas.models.v1.Substance;
 import ix.ginas.models.v1.Subunit;
-import ix.ginas.utils.GinasUtils;
 import ix.ginas.utils.NucleicAcidUtils;
 import ix.ginas.utils.validation.ValidationUtils;
-import ix.seqaln.SequenceIndexer;
 import ix.seqaln.SequenceIndexer.CutoffType;
 import ix.utils.Tuple;
 
@@ -121,15 +118,30 @@ public class NucleicAcidValidator extends AbstractValidatorPlugin<Substance> {
     		NucleicAcidSubstance nucleicAcidSubstance, ValidatorCallback callback) {
 
         try {
-            for (Subunit su : nucleicAcidSubstance.nucleicAcid.subunits) {
-                Payload payload = _payload.get().createPayload("Sequence Search",
-                        "text/plain", su.sequence);
+        	nucleicAcidSubstance.nucleicAcid.subunits
+            .stream()
+            .collect(Collectors.groupingBy(su->su.sequence))
+            .entrySet()
+            .stream()
+            .map(Tuple::of)
+            .map(t->t.v())
+            .map(l->l.stream().map(su->Tuple.of(su.subunitIndex,su).withKSortOrder())
+         		   			 .sorted()
+         		   			 .map(t->t.v())
+         		   			 .collect(Collectors.toList()))
+            .forEach(subs->{
+         	   try{
+         		   Subunit su=subs.get(0);
+         		   String suSet = subs.stream().map(su1->su1.subunitIndex+"").collect(Collectors.joining(","));
+
+         	   Payload payload = _payload.get()
+         			                     .createPayload("Sequence Search","text/plain", su.sequence);
 
                 String msgOne = "There is 1 substance with a similar sequence to subunit ["
-                        + su.subunitIndex + "]:";
+                        + suSet + "]:";
 
                 String msgMult = "There are ? substances with a similar sequence to subunit ["
-                        + su.subunitIndex + "]:";
+                        + suSet + "]:";
 
                 List<Function<String,List<Tuple<Double,Tuple<NucleicAcidSubstance,Subunit>>>>> searchers = new ArrayList<>();
 
@@ -145,6 +157,7 @@ public class NucleicAcidValidator extends AbstractValidatorPlugin<Substance> {
 				                      .filter(t->!t.v().k().getOrGenerateUUID().equals(nucleicAcidSubstance.getOrGenerateUUID()))
 				                      .collect(Collectors.toList());
                 	}catch(Exception e){
+                	    e.printStackTrace();
                 		Logger.warn("Problem performing sequence search on lucene index", e);
                 		return new ArrayList<>();
                 	}
@@ -154,7 +167,7 @@ public class NucleicAcidValidator extends AbstractValidatorPlugin<Substance> {
                 searchers.add(seq->{
                 	return StreamUtil.forEnumeration(_seqIndexer.get()
 							.getIndexer()
-							.search(seq, SubstanceFactory.SEQUENCE_IDENTITY_CUTOFF, CutoffType.GLOBAL))
+							.search(seq, SubstanceFactory.SEQUENCE_IDENTITY_CUTOFF, CutoffType.GLOBAL, "NucleicAcid"))
                      .map(suResult->{
                     	 return Tuple.of(suResult.score,SubstanceFactory.getSubstanceAndSubunitFromSubunitID(suResult.id));
                      })
@@ -167,7 +180,7 @@ public class NucleicAcidValidator extends AbstractValidatorPlugin<Substance> {
                     	 NucleicAcidSubstance ps=(NucleicAcidSubstance)t.v().k();
                     	 return Tuple.of(t.k(), Tuple.of(ps, t.v().v()));
                      })
-
+                     //TODO: maybe sort by the similarity?
                      .collect(Collectors.toList());
                 });
 
@@ -224,8 +237,11 @@ public class NucleicAcidValidator extends AbstractValidatorPlugin<Substance> {
                              dupMessage.addLinks(links);
                              callback.addMessage(dupMessage);
                          });
+         	   }catch(Exception e){
+         		   e.printStackTrace();
+         	   }
+            });
 
-            }
         } catch (Exception e) {
         	Logger.error("Problem executing duplicate search function", e);
             callback.addMessage(GinasProcessingMessage

@@ -40,6 +40,7 @@ public class ResaveBackupsTaskInitializer extends ScheduledTaskInitializer
 		l.message("Initializing creating new backups");
 		ProcessListener listen = ProcessListener.onCountChange((sofar, total) ->
 		{
+
 			if (total != null)
 			{
 				l.message("Resaving backups:" + sofar + " of " + total);

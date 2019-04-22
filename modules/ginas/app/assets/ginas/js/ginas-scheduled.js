@@ -6,6 +6,7 @@
     //This is the controller for the list view for chemicals
     module.controller('ListViewController', function ($scope, $http, $timeout,$interval,$uibModal) {
         $scope.showLarge=false;
+
     });
 
 
@@ -99,7 +100,6 @@
         		
         	}
         	if(!n.running && n.lastFinished){
-        		console.log("how");
         		n.lastDurationHuman=humanizeDuration(n.lastFinished-n.lastStarted, { round: true });
         	}
         }
@@ -128,12 +128,10 @@
         $scope.execute = function () {
             $http.get($scope.state["@execute"])
                  .then(function (dat) {
-                	 console.log("executed");
                 	 $scope.refresh();
                 	 });
         };
         $scope.cancel = function () {
-            console.log("cancelled");
             $http.get($scope.state["@cancel"])
                 .then(function (dat) {
                     $scope.refresh();
