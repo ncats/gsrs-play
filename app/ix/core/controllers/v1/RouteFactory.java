@@ -6,18 +6,15 @@ import static ix.core.search.ArgumentAdapter.getLastIntegerOrElse;
 import static ix.core.search.ArgumentAdapter.getLastStringOrElse;
 
 import java.lang.reflect.InvocationTargetException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.NoSuchElementException;
-import java.util.Optional;
-import java.util.Set;
-import java.util.TreeSet;
-import java.util.UUID;
+import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
+import gov.nih.ncats.chemkit.api.Chemical;
+import ix.core.chem.StructureProcessorTask;
 import ix.core.controllers.search.SearchRequest;
 import org.reflections.Reflections;
 
@@ -62,10 +59,8 @@ import play.Application;
 import play.Logger;
 import play.Play;
 import play.db.ebean.Model;
-import play.mvc.BodyParser;
-import play.mvc.Call;
-import play.mvc.Controller;
-import play.mvc.Result;
+import play.mvc.*;
+import tripod.molvec.Molvec;
 
 public class RouteFactory extends Controller {
     private static final int MAX_POST_PAYLOAD = 1024*1024*10;
@@ -354,6 +349,48 @@ public class RouteFactory extends Controller {
         }
     }
 
+
+
+    @BodyParser.Of(value = BodyParser.Raw.class, maxLength = 500_000)
+    public static Result ocrStructure(String contextIgnored){
+
+//        if (request().body().isMaxSizeExceeded()) {
+//            return _apiBadRequest("Structure is too large!");
+//        }
+
+
+        String raw =  new String(request().body().asRaw().asBytes());
+
+        String base64Encoded = raw.substring(raw.indexOf(',')+1);
+        System.out.println("base64 =" +base64Encoded);
+        byte[] data = Base64.getDecoder().decode(base64Encoded);
+        String mol;
+        CompletableFuture<Chemical> chemicalCompletableFuture = Molvec.ocrAsync(data);
+
+        try {
+            mol = chemicalCompletableFuture.get(10, TimeUnit.SECONDS)
+                     .toMol();
+
+             System.out.println("parsed mol=\n" +mol);
+            StructureProcessorTask.Builder taskBuilder = new StructureProcessorTask.Builder()
+                    .mol(mol)
+                    .query(true)
+                    .standardize(false)
+                    ;
+
+            return ok(EntityMapper.FULL_ENTITY_MAPPER().toJson(taskBuilder.build().instrument()));
+        }catch(TimeoutException toe){
+            //timeout!!
+            chemicalCompletableFuture.cancel(true);
+            return Results.notFound();
+        }catch(Exception e) {
+            return _apiInternalServerError(e);
+        }
+
+
+
+
+    }
     /**
      * <p>
      * Accepts an HTTP POST request with a structure search payload, storing the
@@ -484,6 +521,25 @@ public class RouteFactory extends Controller {
         }
     }
 
+    @Dynamic(value = IxDynamicResourceHandler.CAN_DELETE, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
+    public static Result deleteFlex (String context, String someid) {
+        try {
+        	InstantiatedNamedResource nr = _registry.get()
+                    .getResource(context);
+        	Object id = nr.resolveID(someid).orElse(null);
+
+            return _registry.get()
+                    .getResource(context)
+                    .delete(id);
+
+        }catch (Exception ex) {
+            Logger.trace("["+context+"]", ex);
+            return _apiInternalServerError (ex);
+        }
+    }
+
+
+
     public static Result getFlex (String context, String someid, String expand) {
         try {
         	InstantiatedNamedResource nr = _registry.get()
@@ -540,7 +596,21 @@ public class RouteFactory extends Controller {
                     .getResource(context)
                     .get(EntityFactory.toUUID(uuid), expand);
         }catch (Exception ex) {
-            Logger.error("["+context+"]", ex);
+            Logger.trace("["+context+"]", ex);
+            return _apiInternalServerError (ex);
+        }
+    }
+
+    @Dynamic(value = IxDynamicResourceHandler.CAN_DELETE, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
+    public static Result deleteUUID (String context, String uuid) {
+        try {
+            return _registry.get()
+                    .getResource(context)
+                    .delete(EntityFactory.toUUID(uuid));
+
+
+        }catch (Exception ex) {
+            Logger.trace("["+context+"]", ex);
             return _apiInternalServerError (ex);
         }
     }
