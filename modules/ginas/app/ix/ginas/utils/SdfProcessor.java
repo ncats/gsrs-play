@@ -27,14 +27,23 @@ public class SdfProcessor implements SubstanceProcessor<Chemical, ChemicalSubsta
             //this will avoid duplicates if our display name is also listed under "names"
 
             String[] props = NAME_SPLIT_PATTERN.split(n);
+            //GSRS-917 names property doesn't always have all fields so check for nulls/ length
+            if(props ==null || props[0] ==null || props[0].trim().isEmpty()){
+                return;
+            }
 //            System.out.println("name = \""+n+"\" props = " + Arrays.toString(props));
-            builder.addName(props[0], name -> {
+            builder.addName(props[0].trim(), name -> {
+                if(props.length >=2) {
                 for(String lang : NAME_LANG_SPLIT_PATTERN.split(props[1])) {
-                    name.addLanguage(lang);
+                        String trimmedLanguage = lang.trim();
+                        if(!trimmedLanguage.isEmpty()) {
+                            name.addLanguage(lang.trim());
+                        }
                 }
                 if(props.length >=3){
-                    name.displayName=Boolean.parseBoolean(props[2]);
+                        name.displayName = Boolean.parseBoolean(props[2].trim());
 
+                    }
                 }
                 //default to english if nothing set?
                 //TODO should we default to the default locale language ?
