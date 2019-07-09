@@ -1,5 +1,6 @@
 package ix.core.java8Util;
 
+import java.io.IOException;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Method;
@@ -11,6 +12,7 @@ import java.util.concurrent.Callable;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
+import java.util.regex.Pattern;
 
 import javax.persistence.PostLoad;
 import javax.persistence.PostPersist;
@@ -20,6 +22,7 @@ import javax.persistence.PrePersist;
 import javax.persistence.PreRemove;
 import javax.persistence.PreUpdate;
 
+import gov.nih.ncats.chemkit.api.ChemicalBuilder;
 import ix.core.EntityProcessor;
 import ix.core.adapters.EntityPersistAdapter;
 import ix.core.util.EntityUtils;
@@ -29,7 +32,9 @@ import ix.core.util.EntityUtils.MethodMeta;
 import ix.ginas.models.v1.NucleicAcid;
 import ix.ginas.models.v1.ProteinSubstance;
 import ix.ginas.models.v1.Subunit;
+import org.jcvi.jillion.core.residue.aa.AminoAcid;
 import org.jcvi.jillion.core.residue.aa.ProteinSequence;
+import org.jcvi.jillion.core.residue.nt.Nucleotide;
 import org.jcvi.jillion.core.residue.nt.NucleotideSequence;
 
 /**
@@ -85,9 +90,11 @@ public class Java8ForOldEbeanHelper {
 					if(parent !=null){
 						added=true;
 						if(parent instanceof NucleicAcid){
-							epa.getSequenceIndexer().add(k.getIdString(),NucleotideSequence.of(str.toString()));
+							epa.getSequenceIndexer().add(k.getIdString(),NucleotideSequence.of(
+									Nucleotide.cleanSequence(str.toString(), "N")));
 						}else{
-							epa.getSequenceIndexer().add(k.getIdString(), ProteinSequence.of(str.toString()));
+							epa.getSequenceIndexer().add(k.getIdString(), ProteinSequence.of(
+									AminoAcid.cleanSequence(str.toString(), "X")));
 						}
 					}
 				}
@@ -99,6 +106,11 @@ public class Java8ForOldEbeanHelper {
 			}
 		});
 	}
+
+	public static void makeChemkitCall() throws IOException {
+		ChemicalBuilder.createFromSmiles("O=C=O").build().toSmiles();
+	}
+
 	public static void makeStructureIndexesForBean(EntityPersistAdapter epa, EntityWrapper<?> ew){
 		Key k = ew.getKey();
 

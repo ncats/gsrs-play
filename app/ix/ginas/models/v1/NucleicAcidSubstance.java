@@ -10,10 +10,16 @@ import javax.persistence.Transient;
 
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
+import java.util.function.Consumer;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import ix.core.models.DefinitionalElement;
 import ix.ginas.models.GinasAccessReferenceControlled;
 import ix.ginas.models.GinasSubstanceDefinitionAccess;
+import org.jcvi.jillion.core.residue.nt.Nucleotide;
+import org.jcvi.jillion.core.residue.nt.NucleotideSequence;
 
 @Entity
 @Inheritance
@@ -128,5 +134,22 @@ public class NucleicAcidSubstance extends Substance implements GinasSubstanceDef
 			temp.addAll(this.nucleicAcid.getAllChildrenAndSelfCapableOfHavingReferences());
 		}
 		return temp;
+	}
+
+	@Override
+	protected void additionalDefinitionalElements(Consumer<DefinitionalElement> consumer) {
+		if(nucleicAcid ==null || nucleicAcid.subunits ==null){
+			return;
+		}
+		for(Subunit s : this.nucleicAcid.subunits){
+			if(s !=null && s.sequence !=null){
+				NucleotideSequence seq = NucleotideSequence.of(Nucleotide.cleanSequence(s.sequence));
+				UUID uuid = s.getOrGenerateUUID();
+				consumer.accept(DefinitionalElement.of("subunitIndex."+ uuid, s.subunitIndex==null? null: Integer.toString(s.subunitIndex)));
+				consumer.accept(DefinitionalElement.of("subunitSeq."+ uuid , seq.toString()));
+				consumer.accept(DefinitionalElement.of("subunitSeqLength."+ uuid , Long.toString(seq.getLength())));
+
+			}
+		}
 	}
 }

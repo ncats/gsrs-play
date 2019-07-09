@@ -40,4 +40,11 @@ public class Note extends CommonDataElementOfCollection {
 
 		return temp;
 	}
+
+    @Override
+    public String toString() {
+        return "Note{" +
+                "note='" + note + '\'' +
+                '}';
+    }
 }

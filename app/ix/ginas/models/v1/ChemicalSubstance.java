@@ -1,8 +1,7 @@
 package ix.ginas.models.v1;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
+import java.util.function.Consumer;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -20,6 +19,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import gov.nih.ncgc.chemical.Chemical;
+import ix.core.models.DefinitionalElement;
 import ix.core.validator.GinasProcessingMessage;
 import ix.core.models.BeanViews;
 import ix.core.models.Indexable;
@@ -151,4 +151,54 @@ public class ChemicalSubstance extends Substance implements GinasSubstanceDefini
 		}
 		return temp;
 	}
+
+    @Override
+    protected void additionalDefinitionalElements(Consumer<DefinitionalElement> consumer) {
+        /*
+        Key->Value
+structure.properties.lychi4->"<EXAMPLE_LYCHI>"
+structure.properties.stereoChemistry->"RACEMIC"
+structure.properties.opticalActivity->"(+/-)"
+
+For each Moiety:
+structure.moieties[<lychi4>].lychi4->"<EXAMPLE_LYCHI>"
+structure.moieties[<lychi4>].stereoChemistry->"RACEMIC"
+structure.moieties[<lychi4>].opticalActivity->"(+/-)"
+structure.moieties[<lychi4>].countAmount->"4 to 5 per mol"
+
+
+         */
+
+        addStructureDefinitionalElementsFor(structure, "structure.properties",consumer, Collections.newSetFromMap(new IdentityHashMap<>()));
+    }
+
+    private void addStructureDefinitionalElementsFor(Structure structure, String prefix, Consumer<DefinitionalElement> consumer, Set<Structure> visited){
+        if(structure != null){
+            String l4 = structure.getLychiv4Hash();
+            visited.add(structure);
+            if(l4 !=null){
+                consumer.accept(DefinitionalElement.of(prefix+ ".lychi4", l4));
+            }
+            if(structure.stereoChemistry !=null){
+                consumer.accept(DefinitionalElement.of(prefix+ ".stereoChemistry", structure.stereoChemistry.toString()));
+            }
+            //opticalActivity
+            if(structure.opticalActivity !=null){
+                consumer.accept(DefinitionalElement.of(prefix+ ".opticalActivity", structure.opticalActivity.toValue()));
+            }
+            List<Moiety> sorted = new ArrayList<>(moieties);
+            Collections.sort(sorted);
+
+            for(Moiety moiety : sorted){
+                Structure moietyStructure = moiety.structure;
+                if(moietyStructure == null || visited.contains(moietyStructure)){
+                    continue;
+                }
+                String lychi = moietyStructure.getLychiv4Hash();
+                consumer.accept(DefinitionalElement.of("structure.moieties."+lychi + ".countAmount" , moiety.getCountAmount().toString()));
+
+                addStructureDefinitionalElementsFor(moietyStructure, "structure.moieties."+lychi, consumer, visited);
+            }
+        }
+    }
 }

@@ -1,5 +1,6 @@
 package ix.ginas.models.v1;
 
+import java.math.BigInteger;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -17,20 +18,11 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import gov.nih.ncgc.chemical.Chemical;
 import gov.nih.ncgc.chemical.ChemicalFactory;
 import gov.nih.ncgc.jchemical.JchemicalReader;
+import ix.core.models.*;
 import ix.core.util.IOUtil;
 import ix.core.util.InheritanceTypeIdResolver;
 import ix.core.validator.GinasProcessingMessage;
 import ix.core.validator.GinasProcessingMessage.Link;
-import ix.core.models.Backup;
-import ix.core.models.BeanViews;
-import ix.core.models.ChangeReason;
-import ix.core.models.DataValidated;
-import ix.core.models.DataVersion;
-import ix.core.models.Edit;
-import ix.core.models.Indexable;
-import ix.core.models.Keyword;
-import ix.core.models.Principal;
-import ix.core.models.ProcessingJob;
 import ix.core.plugins.GinasRecordProcessorPlugin;
 import ix.core.util.EntityUtils.EntityWrapper;
 import ix.core.util.TimeUtil;
@@ -970,9 +962,12 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
      */
     @JsonIgnore
     public List<Note> getDisplayNotes(){
-        List<Note> displayNotes = new ArrayList<Note>();
+        List<Note> displayNotes = new ArrayList<>();
         for(Note n: this.notes){
-            if(n.note.length() < 1500){
+            //null note (or in oracle's case empty string is saved as null too)
+            //we still want to display because there might be a reference or something
+            if(n !=null && (n.note == null || n.note.length() < 1500)){
+//            if( n.note.length() < 1500){
                 displayNotes.add(n);
             }
         }
@@ -1397,5 +1392,64 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
     	return temp;
     }
 
+    @JsonIgnore
+    @Transient
+    public DefinitionalElements getDefinitionalElements(){
+        EntityWrapper.of(this).toFullJsonNode();
+        List<DefinitionalElement> elements = new ArrayList<>();
 
+        //Commenting out for now, but some thought should be given to whether
+        //we sometimes want this ...
+        /*
+        String approvalID = this.getApprovalID();
+        if(approvalID !=null){
+            elements.add(DefinitionalElement.of("approvalID", approvalID));
+        }
+        Optional<Name> name = getDisplayName();
+        if(name.isPresent()){
+            Name displayName = name.get();
+            elements.add(DefinitionalElement.of("displayName.name", displayName.getName()));
+        }
+        */
+        //because we can't add lambdas in this version of Play...
+        additionalDefinitionalElements(new Consumer<DefinitionalElement>() {
+            @Override
+            public void accept(DefinitionalElement definitionalElement) {
+                elements.add(definitionalElement);
+            }
+        });
+
+        return new DefinitionalElements(elements);
+    }
+
+    /**
+     * Override this method to add any additional {@link DefinitionalElement} objects
+     * to this Substance.
+     * @param consumer the consumer to consume each of the additional {@link DefinitionalElement}
+     *                 to add for this Substance.
+     */
+    protected void additionalDefinitionalElements(Consumer<DefinitionalElement> consumer){
+
+    }
+
+//    @PostLoad
+//    public void printHash(){
+//        DefinitionalElements definitionalElements = getDefinitionalElements();
+//        System.out.println("definitional hash " +getDisplayName().get().stdName + definitionalElements.getElements());
+//        System.out.println("definitional hash " +getDisplayName().get().stdName + " = " + toHexString(definitionalElements.getDefinitionalHash()));
+//    }
+
+    public static String toHexString(byte[] bytes) {
+        StringBuilder hexString = new StringBuilder();
+
+        for (int i = 0; i < bytes.length; i++) {
+            String hex = Integer.toHexString(0xFF & bytes[i]);
+            if (hex.length() == 1) {
+                hexString.append('0');
+            }
+            hexString.append(hex);
+        }
+
+        return hexString.toString();
+    }
 }

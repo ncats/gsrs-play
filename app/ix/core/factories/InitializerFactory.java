@@ -25,6 +25,7 @@ public class InitializerFactory extends InternalMapEntityResourceFactory<Initial
 
 			.map(m->Tuple.of((String)m.get("class"),m))
 			.map(Tuple.kmap(n->CachedSupplier.ofThrowing(()-> IOUtil.getGinasClassLoader().loadClass(n).newInstance())))
+				.peek(p-> p.k().getThrown().ifPresent(t-> t.printStackTrace()))
 			.filter(p->!p.k().getThrown().isPresent())
 			.map(Tuple.kmap(o->(Initializer)o.get()))
 			.map(t->t.k().initializeWith(t.v()))

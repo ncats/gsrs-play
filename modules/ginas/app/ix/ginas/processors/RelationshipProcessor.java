@@ -230,12 +230,18 @@ public class RelationshipProcessor implements EntityProcessor<Relationship>{
 			//handling issues that happen from inverted relationships that don't use the originatorUUID
 			if(rel.size()<2){
 				Substance relatedSubstance = SubstanceFactory.getFullSubstance(obj.relatedSubstance);
+				//GSRS-860 sometimes when grabbing substance json from public data
+				//and loading it on local system and then making edits without pulling latest version from GSRS
+				//we edit/ remove references that were system generated or point to other substances
+				//that weren't also loaded so check to make sure we have the related substance
+				if(relatedSubstance !=null && relatedSubstance.relationships !=null) {
 				List<Relationship> candidates = relatedSubstance.relationships.stream()
 								.filter(r->r.isAutomaticInvertible() && r.fetchInverseRelationship().isEquivalentBaseRelationship(obj))
 								.collect(Collectors.toList());
 				if(candidates.size()==1){
 					rel.add(candidates.get(0));
 				}
+			}
 			}
 
 
