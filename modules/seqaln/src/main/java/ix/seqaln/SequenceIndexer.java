@@ -422,6 +422,7 @@ public class SequenceIndexer {
     public static final String FIELD_ID = "_ID";
     public static final String FIELD_SEQ = "_SEQ";
     public static final String FIELD_FP = "_FP";
+    public static final String FIELD_FP_K = "_FP_K";
 
     public static final String FIELD_TAGS = "_TAG";
     public static final String FIELD_SOURCE = "_SOURCE";
@@ -591,32 +592,40 @@ public class SequenceIndexer {
 
     public static class KmerFingerprintWrapper{
     	public String id;
-    	public Kmers.HoloFingerprint fp;
     	public int length;
 
-    	//public Kmers.HoloFingerprint onemerfp;
+    	public Map<Integer, Kmers.HoloFingerprint> kmap = new HashMap<>();
+
 
     	public static KmerFingerprintWrapper of(String id, Kmers.HoloFingerprint fp, int length){
     		KmerFingerprintWrapper k= new KmerFingerprintWrapper();
     		k.id=id;
-    		k.fp=fp;
     		k.length=length;
-    		//k.onemerfp=onemers;
+    		return k;
+    	}
+    	public static KmerFingerprintWrapper of(String id, int length){
+    		KmerFingerprintWrapper k= new KmerFingerprintWrapper();
+    		k.id=id;
+    		k.length=length;
     		return k;
     	}
 
-    	public Kmers.HoloFingerprint kMers(){
-    		return this.fp;
+    	public KmerFingerprintWrapper addHolo(int k, Kmers.HoloFingerprint hfp){
+    		this.kmap.put(k, hfp);
+    		return this;
     	}
-    	public int hammingDistanceKmers(Kmers.HoloFingerprint q){
-    		return q.hammingDistanceTo(this.fp);
+    	public static KmerFingerprintWrapper create(String id,String seq, int upTo){
+    		KmerFingerprintWrapper kwrap = new KmerFingerprintWrapper();
+
+    		for(int i=1;i<=upTo;i++){
+    			final int K = i;
+       		 	Kmers kmers = Kmers.create(seq, i);
+       		 	kwrap.kmap.put(i,kmers.holoFingerPrint());
     	}
-//    	public Kmers.HoloFingerprint oneMers(){
-//			return this.onemerfp;
-//		}
-//    	public int hammingDistanceOnemers(Kmers.HoloFingerprint q){
-//    		return q.hammingDistanceTo(this.onemerfp);
-//    	}
+    		kwrap.length=seq.length();
+    		kwrap.id=id;
+    		return kwrap;
+    	}
     }
 
 
@@ -657,8 +666,18 @@ public class SequenceIndexer {
         try {
             Document doc = new Document ();
             int myKmerSize = getKmerSizeFor(tags);
+
+            KmerFingerprintWrapper kwrap = KmerFingerprintWrapper.create(id, seq, myKmerSize);
             Kmers kmers = Kmers.create(seq, myKmerSize);
-            //Kmers onemers = Kmers.create(seq, 1);
+            StringBuilder ks = new StringBuilder();
+
+            for(int i=1;i<=myKmerSize;i++){
+            	if(i>1)ks.append(",");
+            	ks.append(i);
+            	doc.add(new StringField (FIELD_FP +"_" + i, kwrap.kmap.get(i).encode(),YES));
+            }
+            doc.add(new StringField (FIELD_FP_K, ks.toString(),YES));
+
 
             StringField idf = new StringField (FIELD_ID, id, YES);
 
@@ -666,7 +685,9 @@ public class SequenceIndexer {
             doc.add(idf);
             doc.add(new IntField (FIELD_LENGTH, seq.length(), YES));
             doc.add(new StoredField (FIELD_SEQ, seq.toString())); //why toString?
-            doc.add(new StringField (FIELD_FP, kmers.holoFingerPrint().encode(),YES));
+
+
+
            // doc.add(new StringField (FIELD_FP_1MER, onemers.holoFingerPrint().encode(),YES));
 
 
@@ -808,19 +829,27 @@ public class SequenceIndexer {
 
     protected void search (IndexSearcher kmerSearcher,
             BlockingQueue<Result> results,
-            String query, double identity, int gap, CutoffType rt, String seqType)
+            String query, double identityStart, int gap, CutoffType rt, String seqType)
                     throws Exception {
+
 
         final int K = getKmerSizeForType(seqType);
         Kmers kmers = Kmers.create(query, K);
+        KmerFingerprintWrapper qwrap = KmerFingerprintWrapper.create("q", query, K);
 
+
+
+        if(rt==CutoffType.SUB){
+        	identityStart=Math.max(identityStart, 0.9); //only consider cases where the cutoff is 0.9 or above
+        }
+        double identity=identityStart;
 
         Kmers.HoloFingerprint fpkmer = kmers.holoFingerPrint();
 
         Map<StringAndDouble, String> seqMap = new TreeMap<>();
 
 
-        List<String> tags= new ArrayList<String>();
+        List<String> tags= new ArrayList<>();
 		if(seqType!=null){
 			//This isn't good, but we're doing this weird right now
 			//and the seqType that gets in from the application isn't always what's expected
@@ -836,9 +865,7 @@ public class SequenceIndexer {
 
         if(useFingerprints && (rt==CutoffType.GLOBAL || rt==CutoffType.SUB)){
         		int maxDistance = (int)Math.ceil(query.length()*(1-identity));
-        		int pen = K;
 
-        		int maxKmerDistance = maxDistance*(pen);
 
         		int lowerBoundLength = (int)Math.floor(query.length()*identity);
         		int upperBoundLength = (int)Math.ceil(query.length()/identity);
@@ -847,18 +874,31 @@ public class SequenceIndexer {
         		}
 
 
-
         		List<KmerFingerprintWrapper> res = getFPSequencesWithBounds(lowerBoundLength,upperBoundLength,tags);
         		for(KmerFingerprintWrapper tup: res){
-        			int fudge=0;
+        			StringAndDouble score = null;
         			int d=tup.length-query.length();
+        			int fudge=0;
         			if(d>=0 && rt==CutoffType.SUB){
         				fudge=d;
         			}
-        			int[] hammingKd=tup.fp.hammingMoreAndLessDistanceTo(fpkmer);
+        			for(int i=1;i<=K;i++){
+        				Kmers.HoloFingerprint kqi=qwrap.kmap.get(i);
+                		int maxKmerDistance = maxDistance*(i);
+
+            			int[] hammingKd=tup.kmap.get(i).hammingMoreAndLessDistanceTo(kqi);
         			if((hammingKd[0] <= maxKmerDistance + fudge &&
         			    hammingKd[1] <= maxKmerDistance  )){
-        				StringAndDouble score = StringAndDouble.from(tup.id,hammingKd[0]+hammingKd[1]);
+            				//must have at least one kmer in agreement
+            				if(tup.kmap.get(i).sharedCount(kqi)>0){
+            					score = StringAndDouble.from(tup.id,hammingKd[0]+hammingKd[1]);
+            				}
+            			}else{
+            				score=null;
+            				break;
+            			}
+        			}
+        			if(score!=null){
         				seqMap.computeIfAbsent(score, k->getSeq(k.s));
         			}
         		}
@@ -905,47 +945,28 @@ public class SequenceIndexer {
         ResidueSequence querySeq = alignmentHelper.toSequence(query);
 
         Map<String,Result> _cachedResults = new ConcurrentHashMap<String,Result>();
+        int qlength=query.length();
 
-        seqMap.entrySet().stream()
-              .parallel()
-              .forEach(entry->{
-            	  try{
-	               	//if(true)continue;
+        List<Result> alignedResults = seqMap.entrySet().parallelStream()
+                .filter(e->{
+                            if(rt!=CutoffType.GLOBAL){
+                                return true;
+                            }
+                    //Don't bother doing the alignment if it's a global cutoff and the lengths
+                    //of the strings would make it impossible for there to be overlap
+                    int tlength= e.getValue().length();
+                    return Math.min(qlength, tlength) >= Math.max(qlength, tlength)*identity;
+                } )
+              .map(entry-> {
 
 	              	String tseq = entry.getValue();
+                      //this is a computationally intensive operation
+                      //and concurrentHashMap will block
 
-
-	              	Result result=_cachedResults.computeIfAbsent(tseq, k->{
+                      Result cachedResult= _cachedResults.computeIfAbsent(tseq, k -> {
 	              		Result r= new Result(entry.getKey().s,querySeq.toString(), tseq);
 	              		r.setScore(-1, rt);
-	              		return r;
-	              	});
-	              	//Result result=new Result(resultC.id,resultC.query,resultC.target);
-
-	              	if(result.score>=0 && result.score<identity){
-	              		return;
-	              	}else if(result.score>=identity){
-	              		Result resultCopy=new Result(entry.getKey().s,result.query,result.target);
-	              		resultCopy.alignments.addAll(result.alignments);
-	              		resultCopy.setScore(result.score,result.scoreType);
-	              		results.put(resultCopy);
-                return;
-            }
-
-
-	              	//Don't bother doing the alignment if it's a global cutoff and the lengths
-	              	//of the strings would make it impossible for there to be overlap
-	              	int tlength=tseq.length();
-	              	int qlength=query.length();
-	              	if(rt==CutoffType.GLOBAL){
-	      	        	if(Math.min(qlength, tlength) < Math.max(qlength, tlength)*identity){
-	      	        		return;
-                }
-            }
-
-
-
-
+                                  try {
 
 	                  ResidueSequence targetSeq;
 	                  try {
@@ -953,25 +974,15 @@ public class SequenceIndexer {
 	                  }catch(Exception e){
 	                      //prob a bad seq
 	                      e.printStackTrace();
-	                      return;
+                                          return r;
 	                  }
+                                      long start=System.nanoTime();
 	                  PairwiseSequenceAlignment alignment = alignmentHelper.align(querySeq, targetSeq, gap, rt);
+                                      long end=System.nanoTime();
 
-	                  //double score;
-	                  if(rt == CutoffType.SUB){
-	                  	DirectedRange trange=alignment.getSubjectRange();
+                                      r.setScore(alignment.getPercentIdentity(), rt);
 
-	                  	ResidueSequence targetSeq2 = alignmentHelper.toSequence(targetSeq.toBuilder(trange.asRange()).build().toString());
-
-	                      PairwiseSequenceAlignment alignment2 = alignmentHelper.align(querySeq, targetSeq2, gap, CutoffType.GLOBAL);
-	                  	result.setScore(alignment2.getPercentIdentity(),rt);
-
-                }else {
-	                      result.setScore(alignment.getPercentIdentity(),rt);
-                    }
-
-
-	                  if(result.score >= identity){
+                                      if (r.score >= identity) {
 
 	                      ResidueSequence gappedQuery = alignment.getGappedQueryAlignment();
 	                      ResidueSequence gappedSubject = alignment.getGappedSubjectAlignment();
@@ -988,12 +999,16 @@ public class SequenceIndexer {
 	                      StringBuilder middleBuilder = new StringBuilder(alignment.getAlignmentLength());
 	                      StringBuilder bottomBuilder = new StringBuilder(alignment.getAlignmentLength());
 
+                                          int len =query.length();
 	                      int matched=0;
 	                      while(qIter.hasNext()){
 	                          Residue q = qIter.next();
 	                          Residue s = sIter.next();
 	                          if(q.isGap()){
 	                              qGaps++;
+                                                  if(matched>0){
+                                                	  len++;
+                                                  }
 	                              middleBuilder.append(' ');
 	                          }else if(s.isGap()){
 	                              sGaps++;
@@ -1024,13 +1039,62 @@ public class SequenceIndexer {
 	                              matched/(double)query.length(), qbits, tbits);
 
 
-                result.alignments.add(aln);
-	                      results.put(result);
+                                          r.alignments.add(aln);
+                                          if (rt == CutoffType.SUB) {
+                                        	  double dd=matched / (double) len;
+                                        	  r.setScore(dd, rt);
             }
-
+                                      }
             	  }catch(Exception e){
             		  e.printStackTrace();
+                                      r.setScore(-1, rt);
+
+                                  }
+                          return r;
+                              });
+                      //we have to make a copy with the  correct ID of the substance we are aligning
+                  //but we can re-use the alignments
+
+                          Result resultCopy=new Result(entry.getKey().s,cachedResult.query,cachedResult.target);
+	              		resultCopy.alignments.addAll(cachedResult.alignments);
+	              		resultCopy.setScore(cachedResult.score,cachedResult.scoreType);
+	              		return resultCopy;
+
             	  }
+
+              )
+                      .filter(result -> result.score>=identity)
+
+                      .collect(Collectors.toList());
+        for(Result r : alignedResults) {
+            results.put(r);
+        }
+//	              	System.out.println(entry.getKey() + " score = " + result.score);
+//	              	//Result result=new Result(resultC.id,resultC.query,resultC.target);
+//
+//	              	if(result.score>=0 && result.score<identity){
+//	              		return;
+//	              	}else if(result.score>=identity){
+//	              		Result resultCopy=new Result(entry.getKey().s,result.query,result.target);
+//	              		resultCopy.alignments.addAll(result.alignments);
+//	              		resultCopy.setScore(result.score,result.scoreType);
+//	              		results.put(resultCopy);
+//	              		return;
+//	              	}
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//	                  }
+
+//            	  }catch(Exception e){
+//            		  e.printStackTrace();
+//            	  }
                   //Sub alignment score
                   // (local alignment score, multiplied by the fraction of the
                   //  residues found in the query)
@@ -1049,7 +1113,7 @@ public class SequenceIndexer {
                   //
                  // double sub=iden*score/(double)query.length();
 
-              });
+//              });
 
         /*
             if(maxaln!=null){
@@ -1209,13 +1273,22 @@ public class SequenceIndexer {
                                     	      .map(d->{
                                     	    	  try{
                                     	    	//  System.out.println("Fetching...");
-                                    	    	String fpenc=d.get(FIELD_FP);
                                     	    	//String fp1enc=d.get(FIELD_FP_1MER);
                                     	    	String id=d.get(FIELD_ID);
                                     	    	int len=Integer.parseInt(d.get(FIELD_LENGTH));
+                                    	    	KmerFingerprintWrapper kwrap = KmerFingerprintWrapper.of(id, len);
+
+                                    	    	String ks = d.get(FIELD_FP_K);
+                                    	    	if(ks ==null){
+                                    	    	    return null;
+                                                }
+                                    	    	for(String k:ks.split(",")){
+                                    	    		String fpenc=d.get(FIELD_FP + "_" + k);
                                     	    	Kmers.HoloFingerprint fp=Kmers.HoloFingerprint.decode(fpenc);
-                                    	    	//System.out.println("Fetched.");
-                                    	    	return KmerFingerprintWrapper.of(id, fp,len);
+                                    	    		kwrap.addHolo(Integer.parseInt(k), fp);
+                                    	    	}
+
+                                    	    	return kwrap;
                                     	    	  }catch(Exception e){
                                     	    		  e.printStackTrace();
                                     	    		  return null;

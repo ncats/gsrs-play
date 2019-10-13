@@ -161,6 +161,14 @@ public class Kmers implements Comparator<String> {
             }
             return ml;
         }
+        public int sharedCount(HoloFingerprint other){
+        	int sum=0;
+        	for(int i=0;i<fp.length;i++){
+                int hammingpart=Math.min(fp[i],other.fp[i]);
+                sum+=hammingpart;
+            }
+        	return sum;
+        }
     }
 
 

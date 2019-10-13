@@ -47,12 +47,12 @@ public class MixtureLychiIndexValueMaker implements IndexValueMaker<Substance>{
 	public void extractLychis(ChemicalSubstance s, Consumer<IndexableValue> consumer) {
 		
 		//consumer.accept(IndexableValue.simpleStringValue("root_structure_properties_term", lychi3));
-		consumer.accept(IndexableValue.simpleStringValue("root_structure_properties_term", s.structure.getLychiv3Hash()));
-		consumer.accept(IndexableValue.simpleStringValue("root_structure_properties_term", s.structure.getLychiv4Hash()));
+		consumer.accept(IndexableValue.simpleStringValue("root_structure_properties_term", s.structure.getStereoInsensitiveHash()));
+		consumer.accept(IndexableValue.simpleStringValue("root_structure_properties_term", s.structure.getExactHash()));
 		
 		s.moieties.stream().forEach(m->{
-			consumer.accept(IndexableValue.simpleStringValue("root_moieties_structure_properties_term", m.structure.getLychiv3Hash()));
-			consumer.accept(IndexableValue.simpleStringValue("root_moieties_structure_properties_term", m.structure.getLychiv4Hash()));
+			consumer.accept(IndexableValue.simpleStringValue("root_moieties_structure_properties_term", m.structure.getStereoInsensitiveHash()));
+			consumer.accept(IndexableValue.simpleStringValue("root_moieties_structure_properties_term", m.structure.getExactHash()));
 		});
 		
 	}

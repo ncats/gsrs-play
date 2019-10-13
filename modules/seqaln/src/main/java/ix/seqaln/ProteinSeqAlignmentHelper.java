@@ -15,13 +15,13 @@ class ProteinSeqAlignmentHelper implements SequenceAlignmentHelper<AminoAcid, Pr
 
     @Override
     public PairwiseAlignmentBuilder<AminoAcid, ProteinSequence, ProteinPairwiseSequenceAlignment> createAlignmentBuilder(ProteinSequence query, ProteinSequence target) {
-        return PairwiseAlignmentBuilder.createProtienAlignmentBuilder(query, target, MATRIX);
+        return PairwiseAlignmentBuilder.createProteinAlignmentBuilder(query, target, MATRIX);
     }
 
     private static AminoAcidSubstitutionMatrix MATRIX = (a, b) -> a==b? 1: 0;
 
     @Override
     public ProteinSequence toSequence(String seq) {
-        return ProteinSequence.of(seq);
+        return ProteinSequence.of(AminoAcid.cleanSequence(seq, "X"));
     }
 }

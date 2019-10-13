@@ -21,7 +21,7 @@ public class ChemicalDuplicateFinder implements DuplicateFinder<Substance> {
         if(sub instanceof ChemicalSubstance){
             ChemicalSubstance cs = (ChemicalSubstance)sub;
          // System.out.println("Dupe chack");
-            String hash = cs.structure.getLychiv3Hash();
+            String hash = cs.structure.getStereoInsensitiveHash();
             
             dupeList = new LinkedHashSet<>(SubstanceFactory.finder.get()
                                               .where()
@@ -31,7 +31,7 @@ public class ChemicalDuplicateFinder implements DuplicateFinder<Substance> {
             
             //
             if(dupeList.size()<max){
-                String hash2 = cs.structure.getLychiv3Hash();
+                String hash2 = cs.structure.getStereoInsensitiveHash();
                 dupeList.addAll(SubstanceFactory.finder.get()
                                             .where()
                                             .eq("moieties.structure.properties.term", hash2)

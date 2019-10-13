@@ -160,10 +160,9 @@ public class ExportProcessFactory {
                          }
                      })
                     .filter(m-> m.started !=null) // this shouldn't happen anymore but just incase...
-                     .sorted((m1,m2)->{
-                    	 //Newest first
-                    	return (int) (m2.started-m1.started);
-                     })
+                //newest first
+                // GSRS-920 fixed sorting which used to break on int overflow when users had lots of old and new files
+                .sorted(Comparator.comparing(ExportMetaData::getStarted).reversed())
                      .collect(Collectors.toList());
     }
 

@@ -1,19 +1,16 @@
 package ix.ncats.resolvers;
 
-import chemaxon.formats.MolExporter;
-import gov.nih.ncgc.chemical.Chemical;
+import gov.nih.ncats.molwitch.Chemical;
 import ix.core.util.ConfigHelper;
 import play.Logger;
 
 import java.io.*;
 import java.net.*;
 import java.util.Objects;
-import java.util.Properties;
 
 import ix.core.models.Structure;
 import ix.core.chem.StructureProcessor;
 
-import chemaxon.formats.MolImporter;
 
 public abstract class AbstractStructureResolver implements Resolver<Structure> {
     static final int MAX_TRIES = 5;
@@ -78,10 +75,8 @@ public abstract class AbstractStructureResolver implements Resolver<Structure> {
         if(!isValid){
             return null;
         }
-        MolImporter mi = new MolImporter (new ByteArrayInputStream(builder.toString().getBytes()));
-        try {
             Structure struc =
-                StructureProcessor.instrument(mi.read(), null, true);
+                StructureProcessor.instrument(builder.toString(), null, true);
             //katzelda - April 2018
             //sometimes we have an invalid mol file
             //jchem and cdk will silently just make an empty object
@@ -95,10 +90,7 @@ public abstract class AbstractStructureResolver implements Resolver<Structure> {
 
             struc.save();
             return struc;
-        }
-        finally {
-            mi.close();
-        }
+
     }
 
     protected abstract UrlAndFormat[] resolvers (String name)

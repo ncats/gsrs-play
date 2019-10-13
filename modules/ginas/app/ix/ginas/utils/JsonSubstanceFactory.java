@@ -4,8 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import gov.nih.ncgc.chemical.Chemical;
-import gov.nih.ncgc.chemical.ChemicalFactory;
+import gov.nih.ncats.molwitch.Chemical;
 import ix.core.validator.GinasProcessingMessage;
 import ix.core.models.Structure;
 import ix.ginas.models.v1.*;
@@ -50,9 +49,7 @@ public class JsonSubstanceFactory {
 
 
                         try {
-                            ((ChemicalSubstance) sub).structure.smiles = ChemicalFactory.DEFAULT_CHEMICAL_FACTORY()
-                                    .createChemical(((ChemicalSubstance) sub).structure.molfile, Chemical.FORMAT_MOL)
-                                    .export(Chemical.FORMAT_SMILES);
+                            ((ChemicalSubstance) sub).structure.smiles = Chemical.parseMol(((ChemicalSubstance) sub).structure.molfile).toSmiles();
                         } catch (Exception e) {
 
                         }

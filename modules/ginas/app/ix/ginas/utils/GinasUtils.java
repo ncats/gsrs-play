@@ -18,8 +18,6 @@ import com.avaje.ebean.Transaction;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import gov.nih.ncgc.chemical.ChemicalFactory;
-import gov.nih.ncgc.jchemical.JchemicalReader;
 import ix.core.validator.GinasProcessingMessage;
 import ix.core.UserFetcher;
 import ix.core.models.ProcessingRecord;
@@ -53,7 +51,6 @@ public class GinasUtils {
 		APPROVAL_ID_GEN = aPPROVAL_ID_GEN;
 	}
 
-	public static ChemicalFactory DEFAULT_FACTORY = new JchemicalReader();
 	public static String NULL_MOLFILE = "\n\n\n  0  0  0     0  0            999 V2000\nM  END\n\n$$$$";
 
 

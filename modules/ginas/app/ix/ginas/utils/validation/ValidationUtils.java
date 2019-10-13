@@ -19,6 +19,7 @@ import ix.core.controllers.AdminFactory;
 import ix.core.models.*;
 import ix.core.plugins.PayloadPlugin;
 import ix.core.util.CachedSupplier;
+import ix.ginas.controllers.v1.ReferenceFactory;
 import ix.ginas.controllers.v1.SubstanceFactory;
 import ix.ginas.models.EmbeddedKeywordList;
 import ix.ginas.models.GinasAccessReferenceControlled;
@@ -441,8 +442,16 @@ public class ValidationUtils {
 			for (Keyword ref : references) {
 				Reference r = s.getReferenceByUUID(ref.getValue());
 				if (r == null) {
+					//GSRS-933 more informative error message if you can find the Reference
+					Reference dbReference = ReferenceFactory.getReference(ref.getValue());
+					if(dbReference !=null) {
+						callback.addMessage(GinasProcessingMessage.ERROR_MESSAGE("Reference  type: \"" + dbReference.docType +
+								"\" citation: \"" + dbReference.citation + "\"  uuid \""
+								+ ref.getValue() + "\" not found on substance."));
+					}else{
 					callback.addMessage(GinasProcessingMessage.ERROR_MESSAGE("Reference \""
 							+ ref.getValue() + "\" not found on substance."));
+					}
 					worked.set(false);
 				}
 			}
@@ -1545,13 +1554,34 @@ public class ValidationUtils {
 					moietiesForSub.add(m2);
 				}
 			}
-			if (cs.moieties == null
-					|| cs.moieties.size() != moietiesForSub.size()) {
+
+			  if (cs.moieties != null
+	            		&& !cs.moieties.isEmpty()
+	                    && cs.moieties.size() != moietiesForSub.size()) {
 
 				GinasProcessingMessage mes = GinasProcessingMessage
 						.WARNING_MESSAGE("Incorrect number of moieties")
 						.appliableChange(true);
 				gpm.add(mes);
+				strat.processMessage(mes);
+				switch (mes.actionType) {
+				case APPLY_CHANGE:
+					cs.moieties = moietiesForSub;
+					mes.appliedChange = true;
+					break;
+				case FAIL:
+					break;
+				case DO_NOTHING:
+				case IGNORE:
+				default:
+					break;
+				}
+			}else if (cs.moieties == null || cs.moieties.isEmpty()) {
+
+                GinasProcessingMessage mes = GinasProcessingMessage
+                        .INFO_MESSAGE("No moieties found in submission. They will be generated automatically.")
+                        .appliableChange(true);
+                gpm.add(mes);
 				strat.processMessage(mes);
 				switch (mes.actionType) {
 				case APPLY_CHANGE:
@@ -1601,8 +1631,8 @@ public class ValidationUtils {
 
 		String oldhash = null;
 		String newhash = null;
-		oldhash = oldstr.getLychiv4Hash();
-		newhash = newstr.getLychiv4Hash();
+		oldhash = oldstr.getExactHash();
+		newhash = newstr.getExactHash();
 		// Should always use the calculated pieces
 		// TODO: Come back to this and allow for SOME things to be overloaded
 		if (true || !newhash.equals(oldhash)) {

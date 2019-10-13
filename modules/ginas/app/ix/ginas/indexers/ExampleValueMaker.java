@@ -121,9 +121,9 @@ public class ExampleValueMaker implements IndexValueMaker<Substance>{
 	public void addSSSRCountFacet(Substance s, Consumer<IndexableValue> consumer){
 
 		if(s instanceof ChemicalSubstance){
-			int sssr=s.toChemical().getComponents().stream()
-					.map(c->c.getBondCount()-c.getAtomCount()+1)
-					.collect(Collectors.summingInt(i->i));
+			int sssr=s.toChemical().connectedComponentsAsStream()
+					.mapToInt(c->c.getBondCount()-c.getAtomCount()+1)
+					.sum();
 			
 			consumer.accept(IndexableValue.simpleFacetLongValue(SSSR_FACET
 					,sssr
@@ -152,10 +152,8 @@ public class ExampleValueMaker implements IndexValueMaker<Substance>{
 			AtomicDouble ctot=new AtomicDouble();
 			AtomicDouble tot=new AtomicDouble();
 			
-			Arrays.stream(s.toChemical()
-					.getAtomArray())
-					.forEach(ca->{
-						double m=ca.getMass();
+			s.toChemical().atoms().forEach(ca->{
+						double m=ca.getExactMass();
 						if("C".equals(ca.getSymbol())){
 							ctot.addAndGet(m);
 						}

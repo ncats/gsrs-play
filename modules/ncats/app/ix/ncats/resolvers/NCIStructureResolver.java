@@ -17,7 +17,7 @@ public class NCIStructureResolver extends AbstractStructureResolver {
     @Override
     protected AbstractStructureResolver.UrlAndFormat[] resolvers (String name) throws MalformedURLException {
         return  new AbstractStructureResolver.UrlAndFormat[] {
-            new AbstractStructureResolver.UrlAndFormat(new URL (NCI_RESOLVER1+"/"+Util.URLEncode(name)+"/sdf"), "sdf"),
+           // new AbstractStructureResolver.UrlAndFormat(new URL (NCI_RESOLVER1+"/"+Util.URLEncode(name)+"/sdf"), "sdf"),
             new AbstractStructureResolver.UrlAndFormat(new URL (NCI_RESOLVER1+"/"+Util.URLEncode(name)+"/smiles"), "smiles")
         };
     }

@@ -2,8 +2,10 @@ package ix.ginas.utils;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import gov.nih.ncgc.chemical.Chemical;
-import gov.nih.ncgc.chemical.ChemicalReader;
+import gov.nih.ncats.molwitch.Chemical;
+import gov.nih.ncats.molwitch.io.ChemicalReader;
+import gov.nih.ncats.molwitch.io.ChemicalReaderFactory;
+import gov.nih.ncats.molwitch.io.StandardChemFormats;
 import ix.core.controllers.EntityFactory;
 import ix.core.controllers.PayloadFactory;
 import ix.core.models.Payload;
@@ -24,7 +26,8 @@ public class DefaultSdfLoader extends RecordExtractor<JsonNode>{
 
     private List<SubstanceProcessor<Chemical, ChemicalSubstanceBuilder>> processors = Arrays.asList( new SdfProcessor());
 
-    private  Iterator<Chemical> iter;
+    private ChemicalReader reader;
+
     public DefaultSdfLoader(InputStream is) {
         super(is);
         if(is==null){
@@ -39,16 +42,15 @@ public class DefaultSdfLoader extends RecordExtractor<JsonNode>{
             int firstValue = is.read();
             if(firstValue == -1){
                 //empty
-                iter= null;
+                reader= null;
             }else {
                 pis.unread(firstValue);
-                ChemicalReader reader = ChemicalReader.DEFAULT_CHEMICAL_FACTORY().createChemicalReader();
-                reader.load(pis);
-                iter = reader.iterator();
+                reader = ChemicalReaderFactory.newReader(StandardChemFormats.SDF, is);
+
             }
         } catch (Exception e) {
             e.printStackTrace();
-            IOUtil.closeQuietly(pis);
+            IOUtil.closeQuietly(reader);
         }
     }
 
@@ -78,15 +80,24 @@ public class DefaultSdfLoader extends RecordExtractor<JsonNode>{
 
     @Override
     public JsonNode getNextRecord() throws Exception {
-        if(iter==null){
+        if(reader==null){
             return null;
         }
-        if(!iter.hasNext()){
+        if(!reader.canRead()){
             return null;
         }
-        Chemical c = iter.next();
+        Chemical c = reader.read();
         ChemicalSubstanceBuilder builder = new ChemicalSubstanceBuilder();
-        builder.setStructure(c.export(Chemical.FORMAT_SDF));
+        //TODO after discussion with Tyler we should maybe
+        //change this to use the actual source text
+        //vs exporting using a config parameter?
+
+//        if(c.getSource().isPresent()){
+//            builder.setStructure(c.getSource().get().getData());
+//        }else {
+//            builder.setStructure(c.toSd());
+//        }
+        builder.setStructure(c.toMol());
 
         for(SubstanceProcessor<Chemical, ChemicalSubstanceBuilder> processor : processors){
             builder = processor.process(c, builder);
@@ -98,7 +109,7 @@ public class DefaultSdfLoader extends RecordExtractor<JsonNode>{
 
     @Override
     public void close() {
-        IOUtil.closeQuietly(is);
+        IOUtil.closeQuietly(reader);
     }
 
     @Override

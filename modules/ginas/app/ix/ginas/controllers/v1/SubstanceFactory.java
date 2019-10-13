@@ -44,11 +44,9 @@ import ix.core.util.CachedSupplier;
 import ix.core.util.EntityUtils;
 import ix.core.util.EntityUtils.EntityWrapper;
 import ix.core.util.EntityUtils.Key;
-import ix.core.util.StreamUtil;
 import ix.core.util.TimeUtil;
 import ix.core.util.pojopointer.PojoPointer;
 import ix.ginas.controllers.GinasApp.StructureSearchResultProcessor;
-import ix.ginas.controllers.GinasApp;
 import ix.ginas.models.v1.ChemicalSubstance;
 import ix.ginas.models.v1.Code;
 import ix.ginas.models.v1.MixtureSubstance;
@@ -63,7 +61,6 @@ import ix.ginas.models.v1.SubstanceReference;
 import ix.ginas.models.v1.Subunit;
 import ix.ginas.utils.GinasProcessingStrategy;
 import ix.ginas.utils.GinasUtils;
-import ix.ginas.utils.GinasV1ProblemHandler;
 import ix.ginas.utils.validation.ChemicalDuplicateFinder;
 import ix.ginas.utils.validation.DefaultSubstanceValidator;
 import ix.ncats.controllers.App;
@@ -82,7 +79,7 @@ import play.mvc.Result;
 @NamedResource(name = "substances", type = Substance.class, description = "Resource for handling of GInAS substances")
 public class SubstanceFactory extends EntityFactory {
 	private static final String CODE_TYPE_PRIMARY = "PRIMARY";
-	public static final double SEQUENCE_IDENTITY_CUTOFF = 0.85;
+	public static final double SEQUENCE_IDENTITY_CUTOFF = 0.95;
 	static public CachedSupplier<Model.Finder<UUID, Substance>> finder = Util.finderFor(UUID.class, Substance.class);
 
 	// Do we still need this?
@@ -290,8 +287,16 @@ public class SubstanceFactory extends EntityFactory {
 		try {
 			if (approvalID == null && uuid == null)
 				return null;
+			Substance s = null;
 
-			Substance s = (uuid != null) ? getSubstance(uuid) : null;
+			if(uuid != null){
+				try{
+					s=getSubstance(uuid);
+				}catch(Exception e){
+					e.printStackTrace();
+				}
+			}
+
 			if (s == null && approvalID != null) {
 				s = getSubstanceByApprovalID(approvalID);
 			}
@@ -718,7 +723,7 @@ public class SubstanceFactory extends EntityFactory {
 		    //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
             Structure struc2 = StructureProcessor.instrument(q, null, true); // don't
                                                                              // standardize
-            String hash = struc2.getLychiv3Hash();
+            String hash = struc2.getStereoInsensitiveHash();
             SearchRequest request = new SearchRequest.Builder()
                    .kind(Substance.class)
                    .fdim(fdim)
@@ -738,7 +743,7 @@ public class SubstanceFactory extends EntityFactory {
             //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
             Structure struc2 = StructureProcessor.instrument(q, null, true); // don't
                                                                              // standardize
-            String hash = "root_structure_properties_term:" + struc2.getLychiv4Hash();
+            String hash = "root_structure_properties_term:" + struc2.getExactHash();
             SearchRequest request = new SearchRequest.Builder()
                    .kind(Substance.class)
                    .fdim(fdim)
@@ -754,15 +759,7 @@ public class SubstanceFactory extends EntityFactory {
 		
         return detailedSearch(context);
 	}
-	
-	private static boolean isDna(String seq){
-		try{
-			new NucleotideSequenceBuilder(seq);
-			return true;
-		}catch(Exception e){
-			return false;
-		}
-	}
+
     public static Result sequenceSearch(String q, CutoffType type, double cutoff, int top, int skip, int fdim,
             String field, String seqType) throws Exception {
         SearchResultContext context;

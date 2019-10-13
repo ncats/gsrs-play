@@ -21,9 +21,8 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import be.objectify.deadbolt.java.actions.Dynamic;
-import chemaxon.struc.MolAtom;
-import gov.nih.ncgc.chemical.Chemical;
-import gov.nih.ncgc.chemical.ChemicalFactory;
+import gov.nih.ncats.molwitch.Atom;
+import gov.nih.ncats.molwitch.Chemical;
 import ix.core.validator.GinasProcessingMessage;
 import ix.core.UserFetcher;
 import ix.core.adapters.EntityPersistAdapter;
@@ -49,12 +48,12 @@ import ix.core.util.*;
 import ix.core.util.EntityUtils.EntityInfo;
 import ix.core.util.EntityUtils.EntityWrapper;
 import ix.core.util.EntityUtils.Key;
+import ix.core.util.StreamUtil.StreamConcatter;
 import ix.core.plugins.Workers;
 import ix.ginas.controllers.plugins.GinasSubstanceExporterFactoryPlugin;
 import ix.ginas.controllers.v1.CV;
 import ix.ginas.controllers.v1.ControlledVocabularyFactory;
 import ix.ginas.controllers.v1.SubstanceFactory;
-import ix.ginas.controllers.v1.SubstanceHierarchyFinder;
 import ix.ginas.controllers.viewfinders.ListViewFinder;
 import ix.ginas.controllers.viewfinders.ThumbViewFinder;
 import ix.ginas.exporters.*;
@@ -688,7 +687,7 @@ public class GinasApp extends App {
 
             boolean publicOnlyBool = publicOnly == 1;
             Principal prof = UserFetcher.getActingUser(true);
-            System.out.println("Getting url for:" + prof.username);
+//            System.out.println("Getting url for:" + prof.username);
             ExportMetaData emd=new ExportMetaData(collectionID, null, prof, publicOnlyBool, extension);
 
             String username=emd.username;
@@ -806,7 +805,7 @@ public class GinasApp extends App {
             try {
                 String username=UserFetcher.getActingUser(true).username;
                 String filename=request().getQueryString("filename");
-                System.out.println("here");
+//                System.out.println("here");
                 Optional<ExportMetaData>emeta = ExportProcessFactory.getStatusFor(username, downloadID);
                 System.out.println("optional metadata is present? " + emeta.isPresent());
                 ExportMetaData data=emeta.get();
@@ -1189,7 +1188,7 @@ public class GinasApp extends App {
             Logger.error("Can't perform sequence search", ex);
         }
 
-        return internalServerError(ix.ginas.views.html.error.render(500, "Unable to perform squence search!"));
+        return internalServerError(ix.ginas.views.html.error.render(500, "Unable to perform sequence search!"));
     }
 
     private static void instrumentSearchOptions(SearchOptions options, Map<String, String[]> params,
@@ -1357,7 +1356,7 @@ public class GinasApp extends App {
                                           .query(q)
                                           .build();
             
-            final String sha1 = App.getKeyForCurrentRequest() + ((sr.getOptions().getFdim()!=App.FACET_DIM)?sr.getOptions().getFdim():"");
+            final String sha1 = App.getBestKeyForCurrentRequest() + ((sr.getOptions().getFdim()!=App.FACET_DIM)?sr.getOptions().getFdim():"");
             
             
 
@@ -1374,8 +1373,11 @@ public class GinasApp extends App {
             Logger.debug(sha1 + " => " + result);
 
             double elapsed = (System.currentTimeMillis() - start) * 1e-3;
+            //result could be null!
+            if(result !=null){
             Logger.debug(String.format("Elapsed %1$.3fs to retrieve " + "search %2$d/%3$d results...", elapsed,
                     result.size(), result.count()));
+            }
             return result;
         }catch (Exception ex) {
             Logger.error("Unable to perform search", ex);
@@ -1540,9 +1542,9 @@ public class GinasApp extends App {
         try {
             Structure struc2 = StructureProcessor.instrument(query, null, true); // don't
             // standardize
-            String hash = struc2.getLychiv3Hash();
+            String hash = struc2.getStereoInsensitiveHash();
             if (exact) {
-                hash = "root_structure_properties_term:" + struc2.getLychiv4Hash();
+                hash = "root_structure_properties_term:" + struc2.getExactHash();
             }
             return _substances(hash, rows, page);
         } catch (Exception e) {
@@ -1582,7 +1584,7 @@ public class GinasApp extends App {
      *
      */
     public static String getId(Substance substance) {
-        return substance.getUuid().toString().substring(0, 8);
+        return substance.getUuid().toString();
     }
 
     static class GetResult {
@@ -1790,10 +1792,8 @@ public class GinasApp extends App {
                     e.printStackTrace();
                 }
                 try {
-                    Chemical c = ChemicalFactory.DEFAULT_CHEMICAL_FACTORY().createChemical(payload,
-                            Chemical.FORMAT_AUTO);
 
-                    Collection<StructuralUnit> o = PolymerDecode.DecomposePolymerSU(c, true);
+                    Collection<StructuralUnit> o = PolymerDecode.DecomposePolymerSU(payload, true);
                     for (StructuralUnit su : o) {
                         Structure struc = StructureProcessor.instrument(su.structure, null, false);
                         // struc.save();
@@ -1814,7 +1814,7 @@ public class GinasApp extends App {
     }
 
     /**
-     * Simply delegates to {@link StructureFactory.getStructureFrom}.
+     * Simply delegates to {@link StructureFactory#getStructureFrom(String, boolean)}.
      * @param str
      * @return
      */
@@ -1828,7 +1828,9 @@ public class GinasApp extends App {
 		int index;
 		public static EntityInfo<ChemicalSubstance> chemMeta = EntityUtils.getEntityInfoFor(ChemicalSubstance.class);
 		public static EntityInfo<MixtureSubstance> mixMeta = EntityUtils.getEntityInfoFor(MixtureSubstance.class);
-		
+		public static EntityInfo<Substance> subMeta = EntityUtils.getEntityInfoFor(Substance.class);
+		public static EntityInfo<Modifications> modMeta = EntityUtils.getEntityInfoFor(Modifications.class);
+
 		public StructureSearchResultProcessor() {
 		    
 		}
@@ -1838,17 +1840,45 @@ public class GinasApp extends App {
 			try{
 				Substance r=instrument(result);
 				if(r==null)return Stream.empty();
-				
+				boolean includePolymers = ConfigHelper.getBoolean("ix.ginas.structure.search.includePolymers", false);
+
+				StreamConcatter<Substance> sstream = StreamUtil.with(Stream.of(r));
+
+				if(!includePolymers){
+					if(r instanceof PolymerSubstance){
+						return Stream.empty();
+					}
+				}
+
+				if(ConfigHelper.getBoolean("ix.ginas.structure.search.includeModifications", false)){
+					//add modifications results as well
+					//This is likely to be a source of slow-down
+					//due to possibly missing indexes
+					List<Modifications> modlist = (List<Modifications>)modMeta.getFinder()
+							                                          .where()
+							                                          .eq("structuralModifications.molecularFragment.refuuid", result.getId())
+							                                          .findList();
+
+					sstream = sstream.and(modlist.stream().map(m->{
+								Substance ff=(Substance)subMeta.getFinder()
+										.where()
+										.eq("modifications_uuid", m.uuid)
+										.findUnique();
+								return ff;
+								}
+							   ));
+				}
+
+
 				if(ConfigHelper.getBoolean("ix.ginas.structure.search.includeMixtures", false)){
 					//add mixture results as well
-					List<Substance> mixlist = (List<Substance>)mixMeta.getFinder().where().eq("mixture.components.substance.refuuid", result.getId())
+					List<Substance> mixlist = (List<Substance>)mixMeta.getFinder()
+							                                          .where()
+							                                          .eq("mixture.components.substance.refuuid", result.getId())
 							                            .findList();
-					return StreamUtil.with(Stream.of(r))
-							         .and(mixlist.stream())
-							         .stream();
-				}else{
-					return Stream.of(r);
+					sstream = sstream.and(mixlist.stream());
 				}
+				return sstream.stream();
 			}catch(Exception e){
 				Logger.error("error processing record", e);
 				return Stream.empty();
@@ -1857,10 +1887,12 @@ public class GinasApp extends App {
 		
 		protected Substance instrument(StructureIndexer.Result r) throws Exception {
 		
-		    Key k = Key.of(chemMeta, UUID.fromString(r.getId()));
-		    EntityFetcher<ChemicalSubstance> efetch = k.getFetcher();
+		    Key k = Key.of(subMeta, UUID.fromString(r.getId()));
+
+		    EntityFetcher<Substance> efetch = k.getFetcher();
 		    
-		    ChemicalSubstance chem = efetch.call();
+		    Substance chem = efetch.call();
+
 		    
 		    
 		    
@@ -1870,10 +1902,14 @@ public class GinasApp extends App {
 		        
 		        double similarity = r.getSimilarity();
 		        Logger.debug(String.format("%1$ 5d: matched %2$s %3$.3f", ++index, r.getId(), r.getSimilarity()));
-		        int[] amap = new int[r.getMol().getAtomCount()];
+                Chemical mol = r.getMol();
+
+
+//                int[] amap = r.getHits();
+                int[] amap = new int[mol.getAtomCount()];
 		        int i = 0, nmaps = 0;
-		        for (MolAtom ma : r.getMol().getAtomArray()) {
-		            amap[i] = ma.getAtomMap();
+		        for (Atom ma : mol.getAtoms()) {
+		            amap[i] = ma.getAtomToAtomMap().orElse(0);
 		            if (amap[i] > 0) {
 		                ++nmaps;
 		            }
@@ -1884,8 +1920,8 @@ public class GinasApp extends App {
 		        }
 		        matchingContext.put("similarity", similarity);
 		        //Util.debugSpin(100);
-		        
-		        IxCache.setMatchingContext(this.getContext(), k, matchingContext);
+		        EntityWrapper<?> ew = EntityWrapper.of(chem);
+		        IxCache.setMatchingContext(this.getContext(), ew.getKey(), matchingContext);
 		    }
 		    return chem;
 		}
@@ -2112,8 +2148,6 @@ public class GinasApp extends App {
 
             if(cs instanceof ChemicalSubstance){
                 Structure struc = ((ChemicalSubstance)cs).structure;
-                //System.out.println("Looking at structure:" + struc.id.toString());
-                //System.out.println("Found structure:" + struc.molfile);
                 if(!history){
                     structureID=struc.id.toString();
                     return App.structure(structureID, format, size, atomMap);
@@ -2231,13 +2265,15 @@ public class GinasApp extends App {
         response().setHeader("EXPORT-WARNINGS", om.valueToTree(messages).toString() + "___");
         try {
             if (format.equalsIgnoreCase("mol")) {
-                return ok(formatMolfile(c, Chemical.FORMAT_MOL));
+                return ok(formatMolfile(c.toMol()));
             } else if (format.equalsIgnoreCase("sdf")) {
-                return ok(formatMolfile(c, Chemical.FORMAT_SDF));
+                return ok(formatMolfile(c.toSd()));
             } else if (format.equalsIgnoreCase("smiles")) {
-                return ok(c.export(Chemical.FORMAT_SMILES));
-            } else if (format.equalsIgnoreCase("cdx")) {
-                return ok(c.export(Chemical.FORMAT_CDX));
+                return ok(c.toSmiles());
+                //TODO add back CDX format?
+
+//            } else if (format.equalsIgnoreCase("cdx")) {
+//                return ok(c.export(Chemical.FORMAT_CDX));
             } else if (format.equalsIgnoreCase("fas")) {
                 if (s instanceof ProteinSubstance) {
                     return ok(makeFastaFromProtein(((ProteinSubstance) s)));
@@ -2256,8 +2292,7 @@ public class GinasApp extends App {
 
     }
 
-    public static String formatMolfile(Chemical c, int format) throws Exception {
-        String mol = c.export(format);
+    private static String formatMolfile(String mol) throws Exception {
         String[] lines = mol.split("\n");
         lines[1] = " G-SRS " + lines[1];
         return String.join("\n", lines);
@@ -2757,5 +2792,36 @@ public class GinasApp extends App {
             }
             return nuc;
         }
+    }
+    public static Result getStaticIndexFile() {
+    	if(Play.isProd()){
+    		File staticFile = new File("conf/beta/index.html");
+            return ok(staticFile, true).as("text/html");
+    	}else{
+    		File staticFile = new File("modules/ginas/conf/beta/index.html");
+            return ok(staticFile, true).as("text/html");
+    	}
+    }
+
+    public static Result getStaticClientAssets(String file) {
+    	if(Play.isProd()){
+    		File staticFile = new File("conf/beta/" + file);
+
+            if (file != "index.html" && staticFile.exists()) {
+                return ok(staticFile);
+            } else {
+                return getStaticIndexFile();
+            }
+    	}else{
+    		File staticFile = new File("modules/ginas/conf/beta/" + file);
+
+
+            if (file != "index.html" && staticFile.exists()) {
+                return ok(staticFile);
+            } else {
+                return getStaticIndexFile();
+            }
+    	}
+
     }
 }

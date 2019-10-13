@@ -6,24 +6,20 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-import java.util.TreeMap;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import javax.imageio.ImageIO;
+
+import gov.nih.ncats.molwitch.*;
+import gov.nih.ncats.molwitch.Chemical;
+import gov.nih.ncats.molwitch.renderer.ChemicalRenderer;
+import gov.nih.ncats.molwitch.renderer.RendererOptions;
 
 import ix.ncats.resolvers.*;
 import org.freehep.graphicsio.svg.SVGGraphics2D;
@@ -34,22 +30,11 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import be.objectify.deadbolt.java.actions.Dynamic;
-import chemaxon.struc.Molecule;
-import chemaxon.util.MolHandler;
-import gov.nih.ncgc.chemical.Chemical;
-import gov.nih.ncgc.chemical.ChemicalAtom;
 import ix.core.chem.Chem;
-import gov.nih.ncgc.chemical.ChemicalGroup;
-import gov.nih.ncgc.chemical.ChemicalReader;
-import gov.nih.ncgc.chemical.ChemicalFactory;
-import gov.nih.ncgc.chemical.ChemicalRenderer;
-import gov.nih.ncgc.chemical.DisplayParams;
-import gov.nih.ncgc.jchemical.Jchemical;
-import gov.nih.ncgc.nchemical.NchemicalRenderer;
-import gov.nih.ncgc.nchemical.NchemicalReader;
+
 import ix.core.adapters.EntityPersistAdapter;
 import ix.core.chem.ChemCleaner;
-import ix.core.chem.EnantiomerGenerator;
+//import ix.core.chem.EnantiomerGenerator;
 import ix.core.chem.PolymerDecode;
 import ix.core.chem.PolymerDecode.StructuralUnit;
 import ix.core.chem.StructureProcessor;
@@ -781,13 +766,28 @@ public class App extends Authentication {
 		try {
 
 			byte[] resp = getOrElse (getTextIndexer().lastModified(), key, TypedCallable.of(() ->{
-				MolHandler mh = new MolHandler (value);
-				Molecule mol = mh.getMolecule();
-				if (mol.getDim() < 2) {
-					mol.clean(2, null);
+
+				Chemical c = Chemical.parse(value);
+				if(!c.getSource().get().getType().includesCoordinates()){
+					c.generateCoordinates();
 				}
-				Logger.info("ok");
-				return render (mol, "svg", size, null);
+
+				//katzelda TODO this is cached even though the cache key doesn't include this param
+				Request r=RequestHelper.request();
+				if(r!=null){
+					if("true".equals(r.getQueryString("standardize"))){
+						c.kekulize();
+						c.makeHydrogensImplicit();
+				}
+				}
+//
+//				MolHandler mh = new MolHandler (value);
+//				Molecule mol = mh.getMolecule();
+//				if (mol.getDim() < 2) {
+//					mol.clean(2, null);
+//				}
+//				Logger.info("ok");
+				return render (c, "svg", size, null, null,getStereoFlagFromRequest(r));
 			},byte[].class));
 			
 			return ok(resp).as("image/svg+xml");
@@ -799,86 +799,80 @@ public class App extends Authentication {
 		}
 	}
 
-	public static byte[] render (Molecule mol, String format,
-			int size, int[] amap) throws Exception{
-		return render(mol,format,size,amap,null);
-	}
-	
-       public static ThreadLocal<DisplayParams> displayParams = new ThreadLocal<DisplayParams>(){
-           CachedSupplier<DisplayParams> dp =CachedSupplier.of(()->{
-               return DisplayParams.DEFAULT();
-           });
-           
-           @Override
-        protected DisplayParams initialValue() {
-               return dp.get();
-           }
-       };
+
+
 		 
 
 
-	public static byte[] render (Molecule mol, String format,
-			int size, int[] amap, Map newDisplay)
+
+	public static byte[] render (Chemical chem, String format,
+								 int size, int[] amap, Map<String, Boolean> newDisplay, Boolean drawStereo)
 					throws Exception {
-		Chemical chem = new Jchemical (mol);
-		Request r=RequestHelper.request();
-		if(r!=null){
-			if("true".equals(r.getQueryString("standardize"))){
-				chem.dearomatize();
-				chem.removeNonDescriptHydrogens();
+
+		try {
+			RendererOptions rendererOptons = RendererOptions.createDefault();
+
+			if (newDisplay != null) {
+
+				rendererOptons.changeSettings(newDisplay);
 			}
-		}
-
-		DisplayParams dp = displayParams.get().clone2();
-		if(newDisplay!=null)
-			dp.changeSettings(newDisplay);
-
-
 
 
 		//chem.reduceMultiples();
-		boolean highlight=false;
+//		boolean highlight=false;
 		if(amap!=null && amap.length>0){
-			ChemicalAtom[] atoms = chem.getAtomArray();
+				Atom[] atoms = chem.atoms().toArray(i -> new Atom[i]);
 			for (int i = 0; i < Math.min(atoms.length, amap.length); ++i) {
-				atoms[i].setAtomMap(amap[i]);
+					atoms[i].setAtomToAtomMap(amap[i]);
 				if(amap[i]!=0){
-					dp = dp.withSubstructureHighlight();
+						rendererOptons.withSubstructureHighlight();
 				}
 			}
 		}else{
-			ChemicalAtom[] atoms = chem.getAtomArray();
-			for (int i = 0; i < atoms.length; ++i) {
-				if(atoms[i].getAtomMap()!=0){
-					dp = dp.withSubstructureHighlight();
+				if (chem.atoms().filter(Atom::hasAtomToAtomMap)
+						.findAny().isPresent()) {
+					rendererOptons.withSubstructureHighlight();
 				}
+
 			}
-		}
-		dp = preProcessChemical(chem,dp);
+			preProcessChemical(chem, rendererOptons);
 		
 		if(Chem.isProblem(chem)){
-			dp.changeProperty(DisplayParams.PROP_KEY_DRAW_STEREO_LABELS, false);
+				rendererOptons.setDrawOption(RendererOptions.DrawOptions.DRAW_STEREO_LABELS, false);
+
 		}else{
-			if(size>250 && !highlight){
-				try{
-					if(chem.hasStereoIsomers()){
-						dp.changeProperty(DisplayParams.PROP_KEY_DRAW_STEREO_LABELS, true);
-					}
-				}catch(Exception e){
-					e.printStackTrace();
-					Logger.error("Can't generate stereo flags for structure", e);
-				}
+				if (size > 250 /*&& !highlight*/) {
+					//katzelda March 21 2019
+					//after talking to Tyler we should just always
+					//turn on stereo labels because the renderer will determine if there's stereo
+					rendererOptons.setDrawOption(RendererOptions.DrawOptions.DRAW_STEREO_LABELS, true);
+
+
+//				try{
+//					if(chem.hasStereoIsomers()){
+//						dp.changeProperty(DisplayParams.PROP_KEY_DRAW_STEREO_LABELS, true);
+//					}
+//				}catch(Exception e){
+//					e.printStackTrace();
+//					Logger.error("Can't generate stereo flags for structure", e);
+//				}
 			}
 		}
-		
-		if("true".equals(r.getQueryString("stereo"))){
-			dp.changeProperty(DisplayParams.PROP_KEY_DRAW_STEREO_LABELS, true);
-		}else if("false".equals(r.getQueryString("stereo"))){
-			dp.changeProperty(DisplayParams.PROP_KEY_DRAW_STEREO_LABELS, false);
+			if (drawStereo != null) {
+				rendererOptons.setDrawOption(RendererOptions.DrawOptions.DRAW_STEREO_LABELS, drawStereo);
+
 		}
+//		if("true".equals(r.getQueryString("stereo"))){
+//			rendererOptons.setDrawOption(RendererOptions.DrawOptions.DRAW_STEREO_LABELS, true);
+//
+//		}else if("false".equals(r.getQueryString("stereo"))){
+//			rendererOptons.setDrawOption(RendererOptions.DrawOptions.DRAW_STEREO_LABELS, false);
+//
+//		}
 
-
-
+			rendererOptons.captionTop(c -> c.getProperty("TOP_TEXT"));
+			rendererOptons.captionBottom(c -> c.getProperty("BOTTOM_TEXT"));
+			ChemicalRenderer renderer = new ChemicalRenderer(rendererOptons);
 		/*
         DisplayParams displayParams = new DisplayParams ();
         displayParams.changeProperty
@@ -888,47 +882,76 @@ public class App extends Authentication {
 		 */
 
 
-        Chem.fixMetals(Jchemical.makeJchemical(chem).getMol());
-		
-
-		ChemicalRenderer render = new NchemicalRenderer ();
+			Chem.fixMetals(chem);
 
 		
-		render.setDisplayParams(dp);
-		render.addDisplayProperty("TOP_TEXT");
-		render.addDisplayProperty("BOTTOM_TEXT");
+			//ChemicalRenderer renderer = new ChemicalRenderer()
+//		ChemicalRenderer render = new NchemicalRenderer ();
+
+
+//		render.setDisplayParams(dp);
+//		render.addDisplayProperty("TOP_TEXT");
+//		render.addDisplayProperty("BOTTOM_TEXT");
+
+
 		ByteArrayOutputStream bos = new ByteArrayOutputStream ();       
 
 		if (format.equals("svg")) {
 			SVGGraphics2D svg = new SVGGraphics2D
 					(bos, new Dimension (size, size));
+				try {
 			svg.startExport();
 
-			render.renderChem(svg, chem, size, size, false);
+					renderer.render(svg, chem, 0, 0, size, size, false);
 			svg.endExport();
+				} finally {
 			svg.dispose();
+				}
 		}else {
-			BufferedImage bi = render.createImage(chem, size);
+				BufferedImage bi = renderer.createImage(chem, size);
 			ImageIO.write(bi, "png", bos); 
 		}
 
 		return bos.toByteArray();
+		}catch(Exception e){
+			e.printStackTrace();
+			throw e;
+		}
 	}
- 
+	private static Boolean getStereoFlagFromRequest() {
+		return getStereoFlagFromRequest( request());
+	}
+	private static Boolean getStereoFlagFromRequest(Request r){
+		if(r ==null){
+			return null;
+	}
+		String stereo = r.getQueryString("stereo");
+		if("true".equals(stereo)){
+			return true;
+
+		}else if("false".equals(stereo)){
+			return false;
+		}
+		return null;
+	}
+	private static Chemical parseAndComputeCoordsIfNeeded(String input) throws IOException{
+		Chemical c = Chemical.parse(input);
+		if(!c.getSource().get().getType().includesCoordinates()){
+			try {
+				c.generateCoordinates();
+			} catch (ChemkitException e) {
+				throw new IOException("error generating coordinates",e);
+			}
+		}
+		return c;
+	}
 	public static byte[] render (Structure struc, String format, int size, int[] amap)
 			throws Exception {
-		Map newDisplay = new HashMap();
-		if(Stereo.RACEMIC.equals(struc.stereoChemistry)){
-			newDisplay.put(DisplayParams.PROP_KEY_DRAW_STEREO_LABELS_AS_RELATIVE, true);
-		}else{
-			newDisplay.put(DisplayParams.PROP_KEY_DRAW_STEREO_LABELS_AS_RELATIVE, false);
-		}
-		MolHandler mh = new MolHandler
-				(struc.molfile != null ? struc.molfile : struc.smiles);
-		Molecule mol = mh.getMolecule();
-		if (mol.getDim() < 2) {
-			mol.clean(2, null);
-		}
+		Map<String, Boolean> newDisplay = new HashMap<>();
+		newDisplay.put(RendererOptions.DrawOptions.DRAW_STEREO_LABELS_AS_RELATIVE.name(),
+				Stereo.RACEMIC.equals(struc.stereoChemistry));
+		Chemical c= parseAndComputeCoordsIfNeeded(struc.molfile != null ? struc.molfile : struc.smiles);
+
 		if(!Optical.UNSPECIFIED.equals(struc.opticalActivity)
 				&& struc.opticalActivity!=null){
 			if(struc.definedStereo>0){
@@ -936,31 +959,31 @@ public class App extends Authentication {
 					if(Stereo.EPIMERIC.equals(struc.stereoChemistry)
 							||Stereo.RACEMIC.equals(struc.stereoChemistry)
 							||Stereo.MIXED.equals(struc.stereoChemistry)){
-						mol.setProperty("BOTTOM_TEXT","relative stereochemistry");
+						c.setProperty("BOTTOM_TEXT","relative stereochemistry");
 					}
 				}
 			}
 			if(struc.opticalActivity==Optical.PLUS){
-				mol.setProperty("BOTTOM_TEXT","optical activity: (+)");
+				c.setProperty("BOTTOM_TEXT","optical activity: (+)");
 				if(Stereo.UNKNOWN.equals(struc.stereoChemistry)){
-					newDisplay.put(DisplayParams.PROP_KEY_DRAW_STEREO_LABELS_AS_STARRED, true);
+					newDisplay.put(RendererOptions.DrawOptions.DRAW_STEREO_LABELS_AS_STARRED.name(), true);
 				}
 			} else if(struc.opticalActivity==Optical.MINUS) {
-				mol.setProperty("BOTTOM_TEXT","optical activity: (-)");
+				c.setProperty("BOTTOM_TEXT","optical activity: (-)");
 				if(Stereo.UNKNOWN.equals(struc.stereoChemistry)){
-					newDisplay.put(DisplayParams.PROP_KEY_DRAW_STEREO_LABELS_AS_STARRED, true);
+					newDisplay.put(RendererOptions.DrawOptions.DRAW_STEREO_LABELS_AS_STARRED.name(), true);
 				}
 			}               
 		}
 
 		if(size>250){
 			if(!Stereo.ACHIRAL.equals(struc.stereoChemistry))
-				newDisplay.put(DisplayParams.PROP_KEY_DRAW_STEREO_LABELS, true);
+				newDisplay.put(RendererOptions.DrawOptions.DRAW_STEREO_LABELS.name(), true);
 		}
 		if(newDisplay.size()==0)newDisplay=null;
 
 		
-		return render (mol, format, size, amap,newDisplay);
+		return render (c, format, size, amap,newDisplay,getStereoFlagFromRequest(request()));
 	}
 
 	public static int[] stringToIntArray(String amapString){
@@ -994,89 +1017,71 @@ public class App extends Authentication {
 			final String format, 
 			final int size,
 			final String atomMap) {
-		
 
-		final int[] amap = stringToIntArray(atomMap);
-		if (format.equals("svg") || format.equals("png")) {
-			final String key = Structure.class.getName() + "/" + size + "/" + id + "." + format + ":" + atomMap
-                    + "||" + "%" + displayParams.get().hashCode()+ "|" 
-	                   + RequestHelper.request().getQueryString("stereo")
-                     + "|" + RequestHelper.request().getQueryString("version");
-			String mime = format.equals("svg") ? "image/svg+xml" : "image/png";
-			try {
-				byte[] result = getOrElse (key, TypedCallable.of(() -> {
 					Structure struc = StructureFactory.getStructure(id);
-					if (struc != null) {
-						return render (struc, format, size, amap);
-					}
-					return null;
-				}, byte[].class));
-				if (result != null) {
-					response().setContentType(mime);
-					return ok(result);
-				}
-		 	}catch (Exception ex) {
-				Logger.error("Can't generate image for structure "
-						+id+" format="+format+" size="+size, ex);
-				return internalServerError
-						("Unable to retrieve image for structure "+id);
-			}
-		}else {
-			final String key = Structure.class.getName()+"/"+id+"."+format;
-			try {
-				return getOrElse (key,  () ->{
-					Structure struc = StructureFactory.getStructure(id);
-					if (struc != null) {
-						response().setContentType("text/plain");
-						if (format.equals("mrv")) {
-							MolHandler mh =
-									new MolHandler (struc.molfile);
-							if (mh.getMolecule().getDim() < 2) {
-								mh.getMolecule().clean(2, null);
-							}
-							return ok (mh.getMolecule()
-									.toFormat("mrv"));
-						}
-						else if (format.equals("mol")
-								|| format.equals("sdf")) {
-							return struc.molfile != null
-									? ok (struc.molfile) : noContent ();
-						}
-						else {
-							return struc.smiles != null
-									?  ok (struc.smiles) : noContent ();
-						}
-					}
-					else {
-						Logger.warn("Unknown structure: "+id);
-					}
-					return noContent ();
-				});
-			}
-			catch (Exception ex) {
-				Logger.error("Can't convert format "+format+" for structure "
-						+id, ex);
-				return internalServerError
-						("Unable to convert structure "+id+" to format "+format);
-			}
-		}
-		return notFound ("Not a valid structure "+id);
+
+		return structure(struc, format, size, atomMap);
+//		final int[] amap = stringToIntArray(atomMap);
+//		if (format.equals("svg") || format.equals("png")) {
+//			final String key = Structure.class.getName() + "/" + size + "/" + id + "." + format + ":" + atomMap
+//                    + "||" + "%" + RendererOptions.createDefault().hashCode()+ "|"
+//	                   + RequestHelper.request().getQueryString("stereo")
+//                     + "|" + RequestHelper.request().getQueryString("version");
+//			String mime = format.equals("svg") ? "image/svg+xml" : "image/png";
+//			try {
+//				byte[] result = getOrElse (key, TypedCallable.of(() -> {
+//					Structure struc = StructureFactory.getStructure(id);
+//					if (struc != null) {
+//						return render (struc, format, size, amap);
+//					}
+//					return null;
+//				}, byte[].class));
+//				if (result != null) {
+//					response().setContentType(mime);
+//					return ok(result);
+//				}
+//		 	}catch (Exception ex) {
+//				Logger.error("Can't generate image for structure "
+//						+id+" format="+format+" size="+size, ex);
+//				return internalServerError
+//						("Unable to retrieve image for structure "+id);
+//			}
+//		}else {
+//			final String key = Structure.class.getName()+"/"+id+"."+format;
+//			try {
+//				return getOrElse (key,  () ->{
+//					Structure struc = StructureFactory.getStructure(id);
+//					if (struc != null) {
+//						response().setContentType("text/plain");
+//						if (format.equals("mol")
+//								|| format.equals("sdf")) {
+//							return struc.molfile != null
+//									? ok (struc.molfile) : noContent ();
+//						}
+//						else {
+//							return struc.smiles != null
+//									?  ok (struc.smiles) : noContent ();
+//						}
+//					}
+//					else {
+//						Logger.warn("Unknown structure: "+id);
+//					}
+//					return noContent ();
+//				});
+//			}
+//			catch (Exception ex) {
+//				Logger.error("Can't convert format "+format+" for structure "
+//						+id, ex);
+//				return internalServerError
+//						("Unable to convert structure "+id+" to format "+format);
+//			}
+//		}
+//		return notFound ("Not a valid structure "+id);
 	}
 	
 	/**
 	 * Export a structure to a given format (usually an image)
-     * 
-     * NOTE: 
-     * 
-     * TODO:
-     * There are a few very similar methods that all attempt to take an ID
-     * or structure string of some sort, and produce an image.
-     * These will need to be refactored for easier use. For now, these remain
-     * separate. Please increase this counter whenever you have delayed doing
-     * this refactoring: 
-     * 
-     * 2
-     * 
+     *
 
 	 * @param struc
 	 * @param format
@@ -1089,7 +1094,7 @@ public class App extends Authentication {
 		final int[] amap = stringToIntArray(atomMap);
 		if (format.equals("svg") || format.equals("png")) {
 			final String key = Structure.class.getName() + "/" + size + "/" + struc.id + "." + format + ":" + atomMap
-                                       + "||" + struc.version + "%" + displayParams.get().hashCode()+ "|" + RequestHelper.request().getQueryString("stereo")
+					+ "||" + struc.version + "%" + RendererOptions.createDefault().hashCode()+ "|" + RequestHelper.request().getQueryString("stereo")
                                         + "|" + RequestHelper.request().getQueryString("version");
 			String mime = format.equals("svg") ? "image/svg+xml" : "image/png";
 			try {
@@ -1110,13 +1115,7 @@ public class App extends Authentication {
 			try {
 				response().setContentType("text/plain");
 				return getOrElse(key, () -> {
-					if (format.equals("mrv")) {
-						MolHandler mh = new MolHandler(struc.molfile);
-						if (mh.getMolecule().getDim() < 2) {
-							mh.getMolecule().clean(2, null);
-						}
-						return ok(mh.getMolecule().toFormat("mrv"));
-					} else if (format.equals("mol") || format.equals("sdf")) {
+					if (format.equals("mol") || format.equals("sdf")) {
 						return struc.molfile != null ? ok(struc.molfile) : noContent();
 					} else {
 						return struc.smiles != null ? ok(struc.smiles) : noContent();
@@ -1196,9 +1195,12 @@ public class App extends Authentication {
 				}else if(type.toLowerCase().startsWith("flex")) {
 					String sq = getSmiles(RequestHelper.request().getQueryString("q"));
 					key = "flex/"+Util.sha1(sq + RequestHelper.request().getQueryString("order"));
+
+					return signature (key, getRequestQuery ());
 				}else if(type.toLowerCase().startsWith("exact")) {
 					String sq = getSmiles(RequestHelper.request().getQueryString("q"));
 					key = "exact/"+Util.sha1(sq + RequestHelper.request().getQueryString("order"));
+					return signature (key, getRequestQuery ());
 				}else{
 					key = type + "/"+Util.sha1(query);
 				}
@@ -1719,11 +1721,10 @@ public class App extends Authentication {
 					e.printStackTrace();
 				}
 				try {
-					Chemical c = ChemicalFactory.DEFAULT_CHEMICAL_FACTORY()
-							.createChemical(payload, Chemical.FORMAT_AUTO);
+//					Chemical c = Chemical.parseMol(payload);
 
 					Collection<StructuralUnit> o = PolymerDecode
-							.DecomposePolymerSU(c, true);
+							.DecomposePolymerSU(payload, true);
 
 					for (StructuralUnit su : o) {
 						Structure struc = StructureProcessor.instrument
@@ -1744,26 +1745,26 @@ public class App extends Authentication {
 		return ok(node);
 	}
 
-	public static Result enantiomer (final String id) {
-		final String key = "enantiomer/"+id;
-		try {
-			Structure[] strucs = getOrElse (key, TypedCallable.of(() -> {
-				Structure struc = StructureFactory.getStructure(id);
-				if (struc != null) {
-					return EnantiomerGenerator.enantiomersAsArray (struc);
-				}
-				return null;
-			}, Structure[].class));
-			if (strucs != null) {
-				ObjectMapper mapper = EntityFactory.getEntityMapper();
-				return Java8Util.ok (mapper.valueToTree(strucs));
-			}
-			return notFound ("Can't located structure "+id);
-		} catch (Exception ex) {
-			ex.printStackTrace();
-			return internalServerError ("Can't generate enantiomer for "+id);
-		}
-	}
+//	public static Result enantiomer (final String id) {
+//		final String key = "enantiomer/"+id;
+//		try {
+//			Structure[] strucs = getOrElse (key, TypedCallable.of(() -> {
+//				Structure struc = StructureFactory.getStructure(id);
+//				if (struc != null) {
+//					return EnantiomerGenerator.enantiomersAsArray (struc);
+//				}
+//				return null;
+//			}, Structure[].class));
+//			if (strucs != null) {
+//				ObjectMapper mapper = EntityFactory.getEntityMapper();
+//				return Java8Util.ok (mapper.valueToTree(strucs));
+//			}
+//			return notFound ("Can't located structure "+id);
+//		} catch (Exception ex) {
+//			ex.printStackTrace();
+//			return internalServerError ("Can't generate enantiomer for "+id);
+//		}
+//	}
 
 	public static String getSequence (String id) {
 		return getSequence (id, 0);
@@ -1929,7 +1930,7 @@ public class App extends Authentication {
 	//
 	//===========================================================================================
 	
-	private static DisplayParams preProcessChemical(Chemical c, DisplayParams dp){
+	private static void preProcessChemical(Chemical c,  RendererOptions renderOptions){
 		if(c!=null){
 			
 			
@@ -1942,41 +1943,95 @@ public class App extends Authentication {
 				if(fuse){
 					compColor=colorChemicalComponents(c);
 					if(compColor){
-						dp=dp.withSpecialColor2();
+						/*
+						dp.changeProperty(PROP_KEY_DRAW_HIGHLIGHT_MAPPED,true);
+			dp.changeProperty(PROP_KEY_DRAW_HIGHLIGHT_MONOCHROMATIC,false);
+			dp.DEF_STROKE_PERCENT=.095f;
+
+			PROP_KEYS_VALUES.put( PROP_KEY_BOND_EXPECTED_LENGTH,DEF_BOND_AVG );
+			 PROP_KEYS_VALUES.put( PROP_KEY_BOND_STROKE_WIDTH_FRACTION,DEF_STROKE_PERCENT );
+			 PROP_KEYS_VALUES.put( PROP_KEY_ATOM_LABEL_FONT_FRACTION,DEF_FONT_PERCENT );
+			 PROP_KEYS_VALUES.put( PROP_KEY_BOND_DOUBLE_GAP_FRACTION,DEF_DBL_BOND_GAP );
+			 PROP_KEYS_VALUES.put( PROP_KEY_BOND_DOUBLE_LENGTH_FRACTION,DEF_DBL_BOND_DISTANCE );
+			 PROP_KEYS_VALUES.put( PROP_KEY_ATOM_LABEL_BOND_GAP_FRACTION,DEF_FONT_GAP_PERCENT );
+			 PROP_KEYS_VALUES.put( PROP_KEY_BOND_STEREO_WEDGE_ANGLE,DEF_WEDGE_ANG );
+			 PROP_KEYS_VALUES.put( PROP_KEY_BOND_OVERLAP_SPACING_FRACTION,DEF_SPLIT_RATIO );
+			 PROP_KEYS_VALUES.put( PROP_KEY_BOND_STEREO_DASH_NUMBER,DEF_NUM_DASH );
+						 */
+//						dp=dp.withSpecialColor2();
+						renderOptions.setDrawOption(RendererOptions.DrawOptions.DRAW_HIGHLIGHT_MONOCHROMATIC, false);
+						renderOptions.setDrawOption(RendererOptions.DrawOptions.DRAW_HIGHLIGHT_MAPPED, true);
+
+						renderOptions.setDrawPropertyValue(RendererOptions.DrawProperties.BOND_STROKE_WIDTH_FRACTION, .095F);
+
 					}
 					if(fuseChemical(c)){
-						c.clean2D();
+						try {
+							c.generateCoordinates();
+						}catch(Exception e){
+							e.printStackTrace();
+
+						}
 					}
 				}
 				if(rgroupColor==1){
 					if(!compColor && mapChemicalRgroup(c)){
-						dp=dp.withSpecialColor();
+						/*
+
+			dp.changeProperty(PROP_KEY_DRAW_HIGHLIGHT_MAPPED,true);
+			dp.changeProperty(PROP_KEY_DRAW_HIGHLIGHT_WITH_HALO,true);
+			dp.changeProperty(PROP_KEY_DRAW_HIGHLIGHT_MONOCHROMATIC,false);
+						 */
+						renderOptions.setDrawOption(RendererOptions.DrawOptions.DRAW_HIGHLIGHT_MAPPED, true);
+						renderOptions.setDrawOption(RendererOptions.DrawOptions.DRAW_HIGHLIGHT_WITH_HALO, true);
+						renderOptions.setDrawOption(RendererOptions.DrawOptions.DRAW_HIGHLIGHT_MONOCHROMATIC, false);
+
+//						dp=dp.withSpecialColor();
 					}
-				}else if(rgroupColor==2){
+				}else if(rgroupColor==2){ //katzelda TODO DOES THIS EVER HAPPEN? rgroupColor hardcoded to 1
 					if(!compColor && mapChemicalRgroup(c)){
-						dp=dp.withSpecialColorMON();
+//						dp=dp.withSpecialColorMON();
+						/*
+						dp.changeProperty(PROP_KEY_DRAW_HIGHLIGHT_MAPPED,true);
+			dp.changeProperty(PROP_KEY_DRAW_HIGHLIGHT_WITH_HALO,true);
+			dp.changeProperty(PROP_KEY_DRAW_HIGHLIGHT_MONOCHROMATIC,true);
+						 */
+						renderOptions.setDrawOption(RendererOptions.DrawOptions.DRAW_HIGHLIGHT_MAPPED, true);
+						renderOptions.setDrawOption(RendererOptions.DrawOptions.DRAW_HIGHLIGHT_WITH_HALO, true);
+						renderOptions.setDrawOption(RendererOptions.DrawOptions.DRAW_HIGHLIGHT_MONOCHROMATIC, true);
+
 					}
 				}
 			}
 			
 		}
-		return dp;
 	}
 	
 	
 	
 	
 	public static boolean hasRGroups(Chemical c){
+//		return c.atoms()
+//				.filter(a-> a.getRGroupIndex().isPresent()).findAny().isPresent();
+
+//		else{
+//			//r=true;
+//			if(ca.getAlias().startsWith("_")){
+//				ca.setRgroupIndex(Integer.parseInt(ca.getAlias().replace("_R", "")));
+//				ca.setAlias(ca.getAlias().replace("_",""));
+//				r= true;
+//			}
+//		}
 		boolean r=false;
-		for(ChemicalAtom ca:c.getAtomArray()){
-			int rindex=	ca.getRgroupIndex();
-			if(rindex>0){
+		for(Atom ca:c.getAtoms()){
+			if(ca.getRGroupIndex().isPresent()){
 				r= true;
-			}else{
+			}
+			else{
 				//r=true;
-				if(ca.getAlias().startsWith("_")){
-					ca.setRgroupIndex(Integer.parseInt(ca.getAlias().replace("_R", "")));
-					ca.setAlias(ca.getAlias().replace("_",""));
+				String alias = ca.getAlias().orElse("");
+				if(alias.startsWith("_R")){
+					ca.setRGroup(Integer.parseInt(alias.replace("_R", "")));
 					r= true;
 				}
 			}
@@ -1984,66 +2039,63 @@ public class App extends Authentication {
 		return r;
 	}
 	public static boolean colorChemicalComponents(Chemical c){
-		int[] mapAssign= new int[c.getAtomCount()];
+
+
+		long numberOfConnectedComponents =c.connectedComponentsAsStream().count();
+		if(numberOfConnectedComponents <2){
+			return false;
+		}
+
+		c.setAtomMapToPosition();
 		int i = 2;
 		int con=80;
-		Chemical c2 = c.cloneChemical();
-		c2.generateAtomMap();
-		Iterable<Chemical> components = c2.getComponents();
-		for (Chemical c1 : components) {
-			for (ChemicalAtom ca : c1.getAtomArray()) {
-				mapAssign[ca.getAtomMap()-1] = i+con;
+
+		Iterator<Chemical> components = c.connectedComponents();
+		while(components.hasNext()){
+			for(Atom a : components.next().getAtoms()){
+				a.setAtomToAtomMap( i+con);
 			}
 			i--;
 		}
-		if(i>=1){
-			return false;
-		}
-		int aindex=0;
-		for(ChemicalAtom ca:c.getAtomArray()){
-			ca.setAtomMap(mapAssign[aindex++]);
-		}
+
 		return true;
 	}
 	public static boolean mapChemicalRgroup(Chemical c){
-		boolean change=false;
-		for(ChemicalAtom ca:c.getAtomArray()){
-			int rindex=	ca.getRgroupIndex();
-			if(rindex>0){
-				ca.setAtomMap(rindex);
-				change=true;
+		AtomicBoolean change=new AtomicBoolean(false);
+		for(Atom ca:c.getAtoms()){
+			ca.getRGroupIndex().ifPresent( rindex ->{
+				ca.setAtomToAtomMap(rindex);
+				change.set(true);
+			});
 			}
-		}
-		return change;
+		return change.get();
 	}
 	public static boolean fuseChemical(Chemical c){
-		Map<Integer,ChemicalAtom> needLink = new HashMap<Integer,ChemicalAtom>();
-		Set<ChemicalAtom> toRemove=new HashSet<ChemicalAtom>();
+		Map<Integer,Atom> needLink = new HashMap<>();
+		Set<Atom> toRemove=new HashSet<>();
 
 
-		for(ChemicalAtom ca:c.getAtomArray()){
+		for(Atom ca:c.getAtoms()){
 
-			int rindex=	ca.getRgroupIndex();
-
-			if(rindex>0){
-				ChemicalAtom newNeighbor=needLink.get(rindex);
+			ca.getRGroupIndex().ifPresent(rindex->{
+				Atom newNeighbor = needLink.get(rindex);
 				if(newNeighbor==null){
-					needLink.put(rindex,ca);
+					needLink.put(rindex, newNeighbor);
 				}else{
 					needLink.remove(rindex);
-					for(ChemicalAtom ca2:ca.getNeighbors()){
-						for(ChemicalAtom ca3:newNeighbor.getNeighbors()){
-							c.addBond(ca2,ca3,1,0);
+					for(Atom ca2 : ca.getNeighbors()){
+						for(Atom ca3: newNeighbor.getNeighbors()){
+							c.addBond(ca2, ca3, Bond.BondType.SINGLE);
 						}
 					}
 					toRemove.add(ca);
 					toRemove.add(newNeighbor);
-
 				}
+			});
 			}
-		}
+
 		toRemove.forEach(ca -> c.removeAtom(ca));
-		return toRemove.size()>0;
+		return !toRemove.isEmpty();
 	}
 
 	public static long getNumberOfRunningThreads(){

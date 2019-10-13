@@ -44,7 +44,9 @@ public class ExportMetaData implements Comparable<ExportMetaData>{
     public long size;
     
     
-
+    public Long getStarted() {
+        return started;
+    }
 
     public String getFilename() {
     	if(this.filename==null){
@@ -142,9 +144,6 @@ public class ExportMetaData implements Comparable<ExportMetaData>{
             return null;
         }
     }
-    
-    
-    
     
 
     public String getCollectionId() {
