@@ -81,7 +81,7 @@ public class ExportTest  extends AbstractGinasClassServerTest {
 	public void searchAll() throws IOException, InterruptedException {
 
 		SearchResult searchResult = searcher.all();
-		try (InputStream in = searchResult.export("csv");
+		try (InputStream in = searchResult.newExportRequest("csv").setPublicOnly(false).getInputStream();
 				BufferedReader reader = new BufferedReader(new InputStreamReader(in))) {
 
 			List<String> lines = reader.lines().collect(Collectors.toList());
@@ -149,10 +149,13 @@ public class ExportTest  extends AbstractGinasClassServerTest {
 		
 		
 		SearchResult searchResult = searcher.query(q);
-		try (InputStream in = searchResult.export("csv");
+		Set<String> uuids1 = searchResult.getUuids();
+		assertEquals(uuids1.toString(), 1, uuids1.size());
+		try (InputStream in = searchResult.newExportRequest("csv").setPublicOnly(false).getInputStream();
 				BufferedReader reader = new BufferedReader(new InputStreamReader(in))) {
 
 			List<String> lines = reader.lines().collect(Collectors.toList());
+//			lines.forEach(System.out::println);
 			assertEquals(1, lines.size() - 1); // 1 line of header
 
 			Set<String> uuids = parseUUids(lines);
@@ -209,7 +212,7 @@ public class ExportTest  extends AbstractGinasClassServerTest {
 			}).limit(1);
 		});
 		
-		try (InputStream in = searcher.getExport("csv", specialKey).getInputStream();
+		try (InputStream in = searcher.getExport("csv", specialKey).setPublicOnly(false).getInputStream();
 				BufferedReader reader = new BufferedReader(new InputStreamReader(in))) {
 
 			List<String> lines = reader.lines().collect(Collectors.toList());
@@ -245,7 +248,8 @@ public class ExportTest  extends AbstractGinasClassServerTest {
 			for(int i=0;i<numberSlowExports;i++){
 				new Thread(()->{
 					try{
-						WebExportRequest wer= searcher.getExport("csv", specialKey);
+						WebExportRequest wer= searcher.getExport("csv", specialKey)
+								.setPublicOnly(false);
 						//if(wer.isReady()){
 							wer.setTimeout(20).getInputStream();
 						//}

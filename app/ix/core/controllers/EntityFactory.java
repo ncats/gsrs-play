@@ -527,7 +527,8 @@ public class EntityFactory extends Controller {
                 return Java8Util.ok (mapper.valueToTree(inst));
             }
         }
-        return notFound ("Bad request: "+request().uri());
+        // return notFound ("Bad request: "+request().uri());
+		return  RouteFactory._apiNotFound(request().uri());
     }
 
     protected static <K,T> Result count (Model.Finder<K, T> finder) {

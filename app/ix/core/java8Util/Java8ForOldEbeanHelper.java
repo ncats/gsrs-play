@@ -22,15 +22,15 @@ import javax.persistence.PrePersist;
 import javax.persistence.PreRemove;
 import javax.persistence.PreUpdate;
 
-import gov.nih.ncats.chemkit.api.ChemicalBuilder;
+import gov.nih.ncats.molwitch.MolWitch;
+import gov.nih.ncats.molwitch.Chemical;
+import gov.nih.ncats.molwitch.ChemicalBuilder;
+import gov.nih.ncats.molwitch.inchi.Inchi;
 import ix.core.EntityProcessor;
 import ix.core.adapters.EntityPersistAdapter;
-import ix.core.util.EntityUtils;
 import ix.core.util.EntityUtils.EntityWrapper;
 import ix.core.util.EntityUtils.Key;
-import ix.core.util.EntityUtils.MethodMeta;
 import ix.ginas.models.v1.NucleicAcid;
-import ix.ginas.models.v1.ProteinSubstance;
 import ix.ginas.models.v1.Subunit;
 import org.jcvi.jillion.core.residue.aa.AminoAcid;
 import org.jcvi.jillion.core.residue.aa.ProteinSequence;
@@ -108,7 +108,13 @@ public class Java8ForOldEbeanHelper {
 	}
 
 	public static void makeChemkitCall() throws IOException {
-		ChemicalBuilder.createFromSmiles("O=C=O").build().toSmiles();
+		Chemical build = ChemicalBuilder.createFromSmiles("O=C=O").build();
+		String smiles = build.toSmiles();
+
+		String inchi = Inchi.asStdInchi(build).getKey();
+
+        System.out.println(MolWitch.getModuleName() + " : " + smiles + " inchi = " + inchi);
+
 	}
 
 	public static void makeStructureIndexesForBean(EntityPersistAdapter epa, EntityWrapper<?> ew){

@@ -20,7 +20,7 @@ public class SemaphoreCounter<T> {
      * Returns false if not tracked. True otherwise.
      */
     public synchronized boolean contains(T o){
-        return map.contains(o);
+    	return map.containsKey(o);
     }
 
     /**

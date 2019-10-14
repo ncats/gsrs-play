@@ -124,8 +124,6 @@ public class IxCache extends Plugin {
         throws Exception {
         checkInitialized();
         return _instance.gateKeeper.getSinceOrElse(key,epoch, generator);
-
-
     }
     
     public static <T> T getOrElse (String key, TypedCallable<T> generator)

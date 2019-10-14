@@ -34,8 +34,7 @@ import play.Logger;
 import play.Plugin;
 import play.db.ebean.Model;
 import play.db.ebean.Transactional;
-//import chemaxon.formats.MolImporter;
-//import chemaxon.struc.Molecule;
+
 
 public class GinasRecordProcessorPlugin extends Plugin {
     private static final int AKKA_TIMEOUT = 60000;
@@ -311,6 +310,9 @@ public class GinasRecordProcessorPlugin extends Plugin {
             public void run() {
                 FilteredPrintStream.Filter filterOutJChem = Filters.filterOutClasses(Pattern.compile("chemaxon\\..*|lychi\\..*"));
 
+                //katzelda 6/2019: IDE says we don't ever use the FilterSessions but we do it's just a sideeffect that gets used when we
+                //invoke the code inside the try and gets popped when we close so the de-sugared code of the try-with resources does use it
+                //so keep it !!
                 try (FilteredPrintStream.FilterSession ignoreChemAxonSTDOUT = ConsoleFilterPlugin.getStdOutOutputFilter().newFilter(filterOutJChem);
                      FilteredPrintStream.FilterSession ignoreChemAxonSTDERR = ConsoleFilterPlugin.getStdErrOutputFilter().newFilter(filterOutJChem);
 
@@ -345,11 +347,12 @@ public class GinasRecordProcessorPlugin extends Plugin {
 
                             }
                         } catch (Exception e) {
+                            e.printStackTrace();
                             Statistics stat = getStatisticsForJob(pp.key);
                             stat.applyChange(Statistics.CHANGE.ADD_EX_BAD);
                             storeStatisticsForJob(pp.key, stat);
                             Global.ExtractFailLogger
-                                    .info("failed to extract" + "\t" + e.getMessage() + "\t" + "UNKNOWN JSON");
+                                    .info("failed to extract record", e);
                             // hack to keep iterator going...
                             record = new Object();
                         }

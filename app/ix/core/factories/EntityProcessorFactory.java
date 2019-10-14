@@ -46,7 +46,12 @@ public class EntityProcessorFactory extends AccumlatingInternalMapEntityResource
 		}
 		
 		private EntityProcessor getEntityProcessor() throws Exception{
-			Class<?> processorCls = IOUtil.getGinasClassLoader().loadClass(processorClassName);
+			Class<?> processorCls;
+			try {
+				processorCls = IOUtil.getGinasClassLoader().loadClass(processorClassName);
+			}catch(Exception e){
+				throw new Exception("error loading entity processor class " + processorClassName, e);
+			}
 			if(with!=null){
 				Constructor c=processorCls.getConstructor(Map.class);
 				return (EntityProcessor) c.newInstance(with);

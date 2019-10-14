@@ -5,7 +5,10 @@ import static org.junit.Assert.assertEquals;
 import java.io.File;
 import java.util.List;
 
+import ix.core.plugins.SequenceIndexerPlugin;
 import ix.core.util.RunOnly;
+import ix.ginas.modelBuilders.ProteinSubstanceBuilder;
+import ix.ginas.models.v1.ProteinSubstance;
 import ix.test.server.GinasTestServer;
 import org.junit.After;
 import org.junit.Before;
@@ -17,6 +20,7 @@ import ix.test.SubstanceJsonUtil;
 import ix.test.server.BrowserSession;
 import ix.test.server.RestSession;
 import ix.test.server.SubstanceAPI;
+import play.Play;
 import play.libs.ws.WSResponse;
 import util.json.JsonUtil;
 
@@ -92,5 +96,28 @@ public class EndToEndSequenceAlignmentTest extends AbstractGinasServerTest{
             WSResponse response = api.submitSubstance(SubstanceJsonUtil.prepareUnapprovedPublic(JsonUtil.parseJsonFile(jsonFile)));
             SubstanceJsonUtil.ensurePass(response);
         }
+    }
+
+    @Test
+    public void searchDuplicateSequences() {
+           SubstanceAPI api = new SubstanceAPI(session);
+
+//        ts.getApplication().plugin(SequenceIndexerPlugin.class).get().getIndexer().setUseFingerprint(false);
+
+            for(int i=0; i<20; i++) {
+                api.submitSubstance(new ProteinSubstanceBuilder()
+                        .addName("seq" + i)
+                        .addSubUnit("SVSEIQLMHNLGKHLNSMERVEWLRKKLQDVHNF")
+                );
+            }
+
+        SequenceSearchAPI searchAPI = new SequenceSearchAPI(session);
+
+        SequenceSearchAPI.SearchResultActual actual = searchAPI.search(
+                new SequenceSearchAPI.SequenceSearchOptions("SVSEIQLMHNLGKHLNSMERVEWLRKKLQDVHNF", 1)
+                                        .setTop(Integer.MAX_VALUE));
+
+
+        assertEquals(20, actual.count);
     }
 }

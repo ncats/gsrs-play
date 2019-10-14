@@ -23,4 +23,8 @@ public abstract class CommonDataElementOfCollection extends GinasCommonSubData{
 	public Substance fetchOwner(){
 		return this.owner;
 	}
+
+	public void assignOwner(Substance own){
+		this.owner=own;
+	}
 }

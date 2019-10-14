@@ -1,6 +1,7 @@
 package ix.ginas.models.v1;
 
-import gov.nih.ncgc.chemical.Chemical;
+import gov.nih.ncats.molwitch.Chemical;
+import ix.core.models.Indexable;
 import ix.core.validator.GinasProcessingMessage;
 import ix.ginas.models.GinasAccessReferenceControlled;
 import ix.ginas.models.GinasSubstanceDefinitionAccess;
@@ -43,4 +44,10 @@ public class PolymerSubstance extends Substance implements GinasSubstanceDefinit
    		}
    		return temp;
    	}
+
+    @JsonIgnore
+    @Indexable(indexed=false, structure=true)
+	public String getStructureMolfile(){
+    	return polymer.displayStructure.molfile;
+	}
 }

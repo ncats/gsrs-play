@@ -3,20 +3,16 @@ package ix.core.plugins;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import gov.nih.ncats.molwitch.Atom;
+import gov.nih.ncats.molwitch.Bond;
+import gov.nih.ncats.molwitch.Chemical;
 import org.apache.lucene.search.Filter;
 import org.apache.lucene.search.Query;
 
-import chemaxon.formats.MolFormatException;
-import chemaxon.formats.MolImporter;
-import chemaxon.struc.MolAtom;
-import chemaxon.struc.MolBond;
-import chemaxon.struc.Molecule;
 import play.Application;
 import play.Logger;
 import play.Plugin;
@@ -97,51 +93,52 @@ public class StructureIndexerPlugin extends Plugin {
 		 * @param m
 		 * @return
 		 */
-		public static Molecule standardizeCharges(Molecule m){
-			List<MolAtom> malist=Arrays.stream(m.getAtomArray())
-									   .filter(ma->ma.getCharge()!=0)
+		public static Chemical standardizeCharges(Chemical m){
+			List<Atom> malist= m.atoms().filter(ma-> ma.getCharge() !=0)
 			                            .collect(Collectors.toList());
-			for(MolAtom c: malist){
+			for(Atom c: malist){
 				if(c.getCharge()==0)continue;
 				
-				for(int i=0;i<c.getBondCount();i++){
-					MolBond b = c.getBond(i);
-					if(b.getType() == 1){
-						MolAtom otherAtom = b.getOtherAtom(c);
+				for(Bond b : c.getBonds()){
+					if(b.getBondType() == Bond.BondType.SINGLE){
+						Atom otherAtom = b.getOtherAtom(c);
 						if(malist.contains(otherAtom) && otherAtom.getCharge()==-c.getCharge()){
-							b.setType(2);
+							b.setBondType(Bond.BondType.DOUBLE);
 							otherAtom.setCharge(0);
 							c.setCharge(0);
 						}
 					}
 				}
+
 			}
 			return m;
 		}
 		
 		
 		
-		public static Molecule getStandardized(Molecule m){
-			List<MolBond> anyBonds = new ArrayList<MolBond>();
-	    	for(MolBond mb: m.getBondArray()){
-	    		if(mb.getType()==MolBond.ANY){ //any
-	    			anyBonds.add(mb);
-	    			mb.setType(MolBond.SINGLE_OR_AROMATIC); //single or aromatic
-	    		}
-	    	}
-			m.aromatize();
-	    	for(MolBond mb2:anyBonds){
-	    		mb2.setType(MolBond.ANY);
-	    	}
+		public static Chemical getStandardized(Chemical m){
+			//katzelda - this is an implementation detail of jchem
 
+//			List<MolBond> anyBonds = new ArrayList<MolBond>();
+//	    	for(MolBond mb: m.getBondArray()){
+//	    		if(mb.getType()==MolBond.ANY){ //any
+//	    			anyBonds.add(mb);
+//	    			mb.setType(MolBond.SINGLE_OR_AROMATIC); //single or aromatic
+//	    		}
+//	    	}
+//	    	m.aromatize();
+//	    	for(MolBond mb2:anyBonds){
+//	    		mb2.setType(MolBond.ANY);
+//	    	}
+			m.aromatize();
 			return standardizeCharges(m);
 			
 		}
 		
-		public static Molecule getMolecule(String str){
+		public static Chemical getMolecule(String str){
 			try {
-				return MolImporter.importMol(str);
-			} catch (MolFormatException e) {
+				return Chemical.parse(str);
+			} catch (IOException e) {
 				e.printStackTrace();
 				return null;
 			}
@@ -149,11 +146,11 @@ public class StructureIndexerPlugin extends Plugin {
 		
 		
 		
-    	public void add(String id, Molecule struc) throws IOException {
+		public void add(String id, Chemical struc) throws IOException {
 			delegate.add(id, getStandardized(struc));
 		}
 
-		public void add(String source, String id, Molecule struc) throws IOException {
+		public void add(String source, String id, Chemical struc) throws IOException {
 			delegate.add(source, id, getStandardized(struc));
 		}
 
@@ -237,13 +234,6 @@ public class StructureIndexerPlugin extends Plugin {
 			return delegate.search(query, max);
 		}
 
-		public ResultEnumeration search(String field, String value, int max) throws Exception {
-			return delegate.search(field, value, max);
-		}
-
-		public ResultEnumeration search(String field, String value) throws Exception {
-			return delegate.search(field, value);
-		}
 
 		public ResultEnumeration search(String query) throws Exception {
 			return delegate.search(query);
@@ -253,16 +243,16 @@ public class StructureIndexerPlugin extends Plugin {
 			delegate.shutdown();
 		}
 
-		public ResultEnumeration similarity(Molecule query, double threshold, Filter... filters) throws Exception {
+		public ResultEnumeration similarity(Chemical query, double threshold, Filter... filters) throws Exception {
 			return delegate.similarity(getStandardized(query), threshold, filters);
 		}
 
-		public ResultEnumeration similarity(Molecule query, double threshold, int max, int nthreads, Filter... filters)
+		public ResultEnumeration similarity(Chemical query, double threshold, int max, int nthreads, Filter... filters)
 				throws Exception {
 			return delegate.similarity(getStandardized(query), threshold, max, nthreads, filters);
 		}
 
-		public ResultEnumeration similarity(Molecule query, double threshold, int max, int nthreads) throws Exception {
+		public ResultEnumeration similarity(Chemical query, double threshold, int max, int nthreads) throws Exception {
 			return delegate.similarity(getStandardized(query), threshold, max, nthreads);
 		}
 
@@ -286,20 +276,20 @@ public class StructureIndexerPlugin extends Plugin {
 			delegate.stats(ps);
 		}
 
-		public ResultEnumeration substructure(Molecule query, Filter... filters) throws Exception {
+		public ResultEnumeration substructure(Chemical query, Filter... filters) throws Exception {
 			return delegate.substructure(getStandardized(query), filters);
 		}
 
-		public ResultEnumeration substructure(Molecule query, int max, int nthreads, Filter... filters)
+		public ResultEnumeration substructure(Chemical query, int max, int nthreads, Filter... filters)
 				throws Exception {
 			return delegate.substructure(getStandardized(query), max, nthreads, filters);
 		}
 
-		public ResultEnumeration substructure(Molecule query, int max, int nthreads) throws Exception {
+		public ResultEnumeration substructure(Chemical query, int max, int nthreads) throws Exception {
 			return delegate.substructure(getStandardized(query), max, nthreads);
 		}
 
-		public ResultEnumeration substructure(Molecule query) throws Exception {
+		public ResultEnumeration substructure(Chemical query) throws Exception {
 			return delegate.substructure(getStandardized(query));
 		}
 

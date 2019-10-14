@@ -13,7 +13,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
-import gov.nih.ncats.chemkit.api.Chemical;
+import gov.nih.ncats.molwitch.Chemical;
 import ix.core.chem.StructureProcessorTask;
 import ix.core.controllers.search.SearchRequest;
 import org.reflections.Reflections;
@@ -60,7 +60,7 @@ import play.Logger;
 import play.Play;
 import play.db.ebean.Model;
 import play.mvc.*;
-import tripod.molvec.Molvec;
+import gov.nih.ncats.molvec.Molvec;
 
 public class RouteFactory extends Controller {
     private static final int MAX_POST_PAYLOAD = 1024*1024*10;
@@ -362,7 +362,7 @@ public class RouteFactory extends Controller {
         String raw =  new String(request().body().asRaw().asBytes());
 
         String base64Encoded = raw.substring(raw.indexOf(',')+1);
-//        System.out.println("base64 =" +base64Encoded);
+        System.out.println("base64 =" +base64Encoded);
         byte[] data = Base64.getDecoder().decode(base64Encoded);
         String mol;
         CompletableFuture<String> chemicalCompletableFuture = Molvec.ocrAsync(data);
@@ -370,7 +370,7 @@ public class RouteFactory extends Controller {
         try {
             mol = chemicalCompletableFuture.get(10, TimeUnit.SECONDS);
 
-             System.out.println("parsed mol=\n" +mol);
+//             System.out.println("parsed mol=\n" +mol);
             StructureProcessorTask.Builder taskBuilder = new StructureProcessorTask.Builder()
                     .mol(mol)
                     .query(true)
@@ -887,7 +887,7 @@ public class RouteFactory extends Controller {
         response().setHeader("Access-Control-Allow-Origin", "*");      			  // Need to add the correct domain in here!!
         response().setHeader("Access-Control-Allow-Methods", "POST, PUT, GET, PATCH");   // Only allow POST, PUT, GET, PATCH
         response().setHeader("Access-Control-Max-Age", "300");         			  // Cache response for 5 minutes
-        response().setHeader("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");         // Ensure this header is also allowed!  
+        response().setHeader("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, auth-username, auth-password, auth-token, auth-key, auth-token");         // Ensure this header is also allowed!
         return ok();
     }
 

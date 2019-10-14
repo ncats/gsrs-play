@@ -4,9 +4,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import chemaxon.struc.Molecule;
-import gov.nih.ncgc.chemical.Chemical;
-import gov.nih.ncgc.jchemical.Jchemical;
+import gov.nih.ncats.molwitch.Chemical;
 import ix.core.models.Structure;
 
 public class StructureProcessorTask {
@@ -30,9 +28,10 @@ public class StructureProcessorTask {
 		return mol;
 	}
 	
-	//TODO: remove molecule dependency
-	public Molecule getMolecule() {
-		return Jchemical.makeJchemical(mol).getMol();
+
+
+	public Chemical getChemical(){
+		return mol;
 	}
 
 	public void setMol(Chemical mol) {
@@ -91,14 +90,11 @@ public class StructureProcessorTask {
 			return this;
 		}
 		
-		public Builder mol(Molecule mol) {
-			this.mol = new Jchemical(mol);
-			return this;
-		}
+
 		
 		public Builder mol(String mol) throws Exception{
-			this.mol = new Jchemical();
-			this.mol.load(ChemCleaner.getCleanMolfile(mol), Chemical.FORMAT_AUTO);
+
+			this.mol = Chemical.parseMol(ChemCleaner.getCleanMolfile(mol));
 			
 			return this;
 		}

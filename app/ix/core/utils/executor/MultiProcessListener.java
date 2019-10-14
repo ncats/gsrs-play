@@ -72,4 +72,9 @@ public class MultiProcessListener implements ProcessListener {
     public void countSkipped(int numSkipped) {
         listeners.forEach(l -> l.countSkipped(numSkipped));
     }
+
+    @Override
+    public void preRecordProcess(Object o) {
+        listeners.forEach(l->l.preRecordProcess(o));
+    }
 }

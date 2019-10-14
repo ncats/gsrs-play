@@ -1,13 +1,18 @@
 package ix.test;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 
 import com.flipkart.zjsonpatch.JsonDiff;
+import gov.nih.ncats.molwitch.ChemicalBuilder;
+import ix.core.util.RunOnly;
+import ix.ginas.modelBuilders.ChemicalSubstanceBuilder;
+import ix.ginas.modelBuilders.SubstanceBuilder;
+import ix.ginas.models.v1.ChemicalSubstance;
+import ix.ginas.models.v1.Note;
 import org.junit.Test;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -19,6 +24,7 @@ import ix.ginas.models.v1.Substance;
 import ix.test.server.RestSession;
 import ix.test.server.SubstanceAPI;
 import util.json.JsonUtil.JsonNodeBuilder;
+import gov.nih.ncats.molwitch.Chemical;
 
 public class ApprovalWorkflowTest  extends AbstractGinasServerTest {
 	public final static String VALID_APPROVAL_ID="0000000000";
@@ -73,6 +79,137 @@ public class ApprovalWorkflowTest  extends AbstractGinasServerTest {
         }
 
 	}
+
+    @Test
+    public void approvedSubstanceThenDefinitionalChangeShouldThrowWarning() throws Exception {
+        String uuid;
+        final File resource=new File("test/testJSON/toapprove.json");
+        try(RestSession session = ts.newRestSession(ts.getFakeUser1());
+            InputStream is = new FileInputStream(resource)){
+
+
+            JsonNode js = SubstanceJsonUtil.prepareUnapprovedPublic(new ObjectMapper().readTree(is));
+
+            uuid = js.get("uuid").asText();
+
+            SubstanceAPI api = new SubstanceAPI(session);
+
+            JsonNode jsonNode2 = api.submitSubstanceJson(js);
+            assertEquals(Substance.STATUS_PENDING, SubstanceJsonUtil.getApprovalStatus(jsonNode2));
+
+            SubstanceJsonUtil.ensureFailure(api.approveSubstance(uuid));
+        }
+
+
+        try(RestSession session2 = ts.newRestSession(ts.createUser(Role.Approver))){
+            String approvalID;
+            JsonNode before = null;
+            JsonNode after = null;
+
+            SubstanceAPI api2 = new SubstanceAPI(session2);
+            //approval, CAN approve if different user
+
+            before = api2.approveSubstanceJson(uuid);
+            approvalID = SubstanceJsonUtil.getApprovalId(before);
+
+
+
+            after = api2.fetchSubstanceJsonByUuid(uuid);
+            assertEquals(Substance.STATUS_APPROVED, SubstanceJsonUtil.getApprovalStatus(after));
+            assertEquals(approvalID, SubstanceJsonUtil.getApprovalId(after));
+
+            JsonNode jp = JsonDiff.asJson(before, after);
+            int changes = 0;
+            for (JsonNode jschange : jp) {
+                changes++;
+                System.out.println("CHANGED:" + jschange + " old: " + before.at(jschange.get("path").asText()));
+            }
+            assertEquals(0,changes);
+
+        }
+
+        try(RestSession session = ts.newRestSession(ts.getFakeUser1())){
+            SubstanceAPI api = new SubstanceAPI(session);
+
+            ChemicalSubstanceBuilder builder = SubstanceBuilder.from(api.fetchSubstanceJsonByUuid(uuid));
+            ChemicalSubstance sub = builder.setStructure(createMolFor("c1ccccc1"))
+                                                    .build();
+
+            SubstanceAPI.ValidationResponse resp = api.validateSubstance(sub.toFullJsonNode());
+
+            assertTrue(resp.getMessages().stream().filter(m-> m.getMessage().contains("Definitional change")).findAny().isPresent());
+        }
+
+    }
+
+    @Test
+    public void approvedSubstanceThenNonDefinitionalChangeShouldNotThrowWarning() throws Exception {
+        String uuid;
+        final File resource=new File("test/testJSON/toapprove.json");
+        try(RestSession session = ts.newRestSession(ts.getFakeUser1());
+            InputStream is = new FileInputStream(resource)){
+
+
+            JsonNode js = SubstanceJsonUtil.prepareUnapprovedPublic(new ObjectMapper().readTree(is));
+
+            uuid = js.get("uuid").asText();
+
+            SubstanceAPI api = new SubstanceAPI(session);
+
+            JsonNode jsonNode2 = api.submitSubstanceJson(js);
+            assertEquals(Substance.STATUS_PENDING, SubstanceJsonUtil.getApprovalStatus(jsonNode2));
+
+            SubstanceJsonUtil.ensureFailure(api.approveSubstance(uuid));
+        }
+
+
+        try(RestSession session2 = ts.newRestSession(ts.createUser(Role.Approver))){
+            String approvalID;
+            JsonNode before = null;
+            JsonNode after = null;
+
+            SubstanceAPI api2 = new SubstanceAPI(session2);
+            //approval, CAN approve if different user
+
+            before = api2.approveSubstanceJson(uuid);
+            approvalID = SubstanceJsonUtil.getApprovalId(before);
+
+
+
+            after = api2.fetchSubstanceJsonByUuid(uuid);
+            assertEquals(Substance.STATUS_APPROVED, SubstanceJsonUtil.getApprovalStatus(after));
+            assertEquals(approvalID, SubstanceJsonUtil.getApprovalId(after));
+
+            JsonNode jp = JsonDiff.asJson(before, after);
+            int changes = 0;
+            for (JsonNode jschange : jp) {
+                changes++;
+                System.out.println("CHANGED:" + jschange + " old: " + before.at(jschange.get("path").asText()));
+            }
+            assertEquals(0,changes);
+
+        }
+
+        try(RestSession session = ts.newRestSession(ts.getFakeUser1())){
+            SubstanceAPI api = new SubstanceAPI(session);
+
+            ChemicalSubstanceBuilder builder = SubstanceBuilder.from(api.fetchSubstanceJsonByUuid(uuid));
+            Note newNote = new Note();
+            newNote.note = "blah blah blah";
+            ChemicalSubstance sub = builder.addNote(newNote)
+                    .build();
+
+            SubstanceAPI.ValidationResponse resp = api.validateSubstance(sub.toFullJsonNode());
+
+            assertFalse(resp.getMessages().stream().filter(m-> m.getMessage().contains("Definitional change")).findAny().isPresent());
+        }
+
+    }
+
+    private static String createMolFor(String smiles) throws IOException{
+        return ChemicalBuilder.createFromSmiles(smiles).computeCoordinates(true).build().toMol();
+    }
+
 	@Test
 	public void testNonAdminCantChangeApprovalID() throws Exception {
         String uuid;

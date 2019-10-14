@@ -40,6 +40,50 @@ public class NucleicAcidValidationTest extends AbstractGinasServerTest {
 
     }
 
+    private void assertArrayNotEquals(byte[] expecteds, byte[] actuals) {
+        try {
+            assertArrayEquals(expecteds, actuals);
+        } catch (AssertionError e) {
+            return;
+        }
+        fail("The arrays are equal");
+    }
+
+    @Test
+    public void addingSubunitChangesDefinitionalHash(){
+        String sequence = "ACGTACGTACGT";
+
+        NucleicAcidSubstance sub = new NucleicAcidSubstanceBuilder()
+                .addName("aName")
+                .addDnaSubunit(sequence)
+                .build();
+
+        byte[] oldHash = sub.getDefinitionalElements().getDefinitionalHash();
+
+
+        byte[] newHash = new NucleicAcidSubstanceBuilder(sub).addDnaSubunit("AAAAAAA").build().getDefinitionalElements().getDefinitionalHash();
+
+        assertArrayNotEquals(oldHash, newHash);
+    }
+
+    @Test
+    public void changingSubunitChangesDefinitionalHash(){
+        String sequence = "ACGTACGTACGT";
+
+        NucleicAcidSubstance sub = new NucleicAcidSubstanceBuilder()
+                .addName("aName")
+                .addDnaSubunit(sequence)
+                .build();
+
+        byte[] oldHash = sub.getDefinitionalElements().getDefinitionalHash();
+
+        sub.nucleicAcid.getSubunits().get(0).sequence = sequence + "NN";
+
+        byte[] newHash = sub.getDefinitionalElements().getDefinitionalHash();
+
+        assertArrayNotEquals(oldHash, newHash);
+    }
+
     @Test
     public void dnaSeqMustReference() throws Exception{
         try( RestSession session = ts.newRestSession(ts.getFakeUser1())) {

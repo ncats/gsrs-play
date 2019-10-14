@@ -284,12 +284,12 @@ public class RestSubstanceSubstanceSearcher implements SubstanceSearcher{
         }
 
         @Override
-        public InputStream export(String format) {
+        public WebExportRequest newExportRequest(String format) {
             //this is a hack because we don't really have a good key to use
             //for this export from the Rest API and the rest search doesn't do any caching either
             //so we use a special map used only in testing to store these results
             GinasApp.registerSpecialStream(this.getKey(), ()->getSubstances());
-            return super.export(format);
+            return super.newExportRequest(format);
         }
 
         public int getTotal() {

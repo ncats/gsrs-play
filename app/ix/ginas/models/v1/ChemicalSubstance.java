@@ -18,7 +18,7 @@ import com.fasterxml.jackson.annotation.JsonView;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import gov.nih.ncgc.chemical.Chemical;
+import gov.nih.ncats.molwitch.Chemical;
 import ix.core.models.DefinitionalElement;
 import ix.core.validator.GinasProcessingMessage;
 import ix.core.models.BeanViews;
@@ -133,6 +133,13 @@ public class ChemicalSubstance extends Substance implements GinasSubstanceDefini
 	}
 
     @JsonIgnore
+    @Indexable(name = "Molecular Weight", dranges = { 0, 200, 400, 600, 800, 1000 }, format = "%1$.0f", facet=true)
+    public double getMolecularWeight(){
+    	return structure.mwt;
+    }
+
+
+    @JsonIgnore
     public GinasAccessReferenceControlled getDefinitionElement(){
         return structure;
     }
@@ -174,7 +181,7 @@ structure.moieties[<lychi4>].countAmount->"4 to 5 per mol"
 
     private void addStructureDefinitionalElementsFor(Structure structure, String prefix, Consumer<DefinitionalElement> consumer, Set<Structure> visited){
         if(structure != null){
-            String l4 = structure.getLychiv4Hash();
+            String l4 = structure.getExactHash();
             visited.add(structure);
             if(l4 !=null){
                 consumer.accept(DefinitionalElement.of(prefix+ ".lychi4", l4));
@@ -194,7 +201,7 @@ structure.moieties[<lychi4>].countAmount->"4 to 5 per mol"
                 if(moietyStructure == null || visited.contains(moietyStructure)){
                     continue;
                 }
-                String lychi = moietyStructure.getLychiv4Hash();
+                String lychi = moietyStructure.getExactHash();
                 consumer.accept(DefinitionalElement.of("structure.moieties."+lychi + ".countAmount" , moiety.getCountAmount().toString()));
 
                 addStructureDefinitionalElementsFor(moietyStructure, "structure.moieties."+lychi, consumer, visited);

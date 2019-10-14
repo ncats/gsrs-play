@@ -14,7 +14,7 @@ import java.util.stream.Stream;
 
 import ix.core.CacheStrategy;
 import ix.core.util.CachedSupplier;
-
+import ix.core.util.ListeningCachedSupplier;
 import ix.utils.CallableUtil.TypedCallable;
 import ix.core.util.TimeUtil;
 import net.sf.ehcache.CacheManager;
@@ -151,6 +151,13 @@ public class TwoCacheGateKeeper implements GateKeeper {
      			  removeRaw(adaptedKey);
      		   }else{
      			  if(originalType==EvictionType.UNKNOWN){
+//     				  int len=0;
+//     				 try{
+//     					 throw new IllegalStateException("ASD");
+//     				 }catch(Exception e){
+//     					 len=e.getStackTrace().length;
+//     				 }
+//     				 System.out.println("Resolving:" + adaptedKey + " which is a " + ret.getClass() + " at level " + len);
      				 refreshElementAtWith(adaptedKey,ret.getClass());
      			  }
      		   }
@@ -202,6 +209,18 @@ public class TwoCacheGateKeeper implements GateKeeper {
         }
 
     }
+
+
+
+
+	@Override
+	public <T> T getOrElseRaw(String key, long creationTime,
+			TypedCallable<T> generator, int seconds) throws Exception {
+	    return getOrElseRaw(key,
+	               createRaw(generator,key, seconds),
+	               e->e.getCreationTime() < creationTime);
+	}
+
 
     @Override
     public <T> T getOrElseRaw(String key, TypedCallable<T> generator, int seconds) throws Exception{
@@ -480,17 +499,7 @@ public class TwoCacheGateKeeper implements GateKeeper {
     }
     
     
-    private static class ListeningCachedSupplier<T> extends CachedSupplier<T>{
-		public ListeningCachedSupplier(Supplier<T> supplier,Consumer<T> whenFirstCalled) {
-			super(()->{
-				T ret=supplier.get();
-				whenFirstCalled.accept(ret);
-				return ret;
-			});
-		}
-		public static <T> ListeningCachedSupplier<T> of(Supplier<T> supplier,Consumer<T> whenFirstCalled){
-			return new ListeningCachedSupplier<T>(supplier,whenFirstCalled);
-		}
-    }
+
+
     
 }

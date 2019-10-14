@@ -3,8 +3,6 @@ package ix.core.util.pojopointer.extensions;
 import java.util.Optional;
 import java.util.function.BiFunction;
 
-import gov.nih.ncgc.chemical.Chemical;
-import gov.nih.ncgc.chemical.ChemicalFactory;
 import ix.core.models.Structure;
 import ix.core.util.pojopointer.LambdaArgumentParser;
 import ix.core.util.pojopointer.LambdaPath;
@@ -33,9 +31,9 @@ public class InChIRegisteredFunction implements RegisteredFunction<InChIPath, St
 	@Override
 	public BiFunction<InChIPath, Structure, Optional<String>> getOperation() {
 		return (fp, s)->{
-			Chemical c= ChemicalFactory.DEFAULT_CHEMICAL_FACTORY().createChemical(s.molfile, Chemical.FORMAT_AUTO);
+
 			try{
-				return Optional.of(c.export(Chemical.FORMAT_STDINCHIKEY));
+				return Optional.of(s.getInChIKey());
 			}catch(Exception e){
 				return Optional.empty();
 			}

@@ -1,6 +1,5 @@
 package ix.ginas.models.v1;
 
-import java.math.BigInteger;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -12,22 +11,17 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.fasterxml.jackson.databind.annotation.JsonTypeIdResolver;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import gov.nih.ncgc.chemical.Chemical;
-import gov.nih.ncgc.chemical.ChemicalFactory;
-import gov.nih.ncgc.jchemical.JchemicalReader;
+import gov.nih.ncats.molwitch.Chemical;
+import gov.nih.ncats.molwitch.ChemicalBuilder;
 import ix.core.models.*;
 import ix.core.util.IOUtil;
-import ix.core.util.InheritanceTypeIdResolver;
 import ix.core.validator.GinasProcessingMessage;
 import ix.core.validator.GinasProcessingMessage.Link;
 import ix.core.plugins.GinasRecordProcessorPlugin;
 import ix.core.util.EntityUtils.EntityWrapper;
 import ix.core.util.TimeUtil;
-import ix.core.validator.GinasProcessingMessage;
-import ix.core.validator.GinasProcessingMessage.Link;
 import ix.ginas.modelBuilders.SubstanceBuilder;
 import ix.ginas.models.GinasAccessReferenceControlled;
 import ix.ginas.models.GinasCommonData;
@@ -67,7 +61,6 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
     public static final String STATUS_ALTERNATIVE = "alternative";
     public static final String DEFAULT_ALTERNATIVE_NAME = "ALTERNATIVE DEFINITION";
 
-    private static ChemicalFactory DEFAULT_READER_FACTORY = new JchemicalReader();
     private static String NULL_MOLFILE = "\n\n\n  0  0  0     0  0            999 V2000\nM  END\n\n$$$$";
 
     /**
@@ -884,8 +877,8 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
      * Temporary measure to persist validation messages without the use
      * of a data model change
      * 
-     * @param note
-     * @param property
+     * @param gpm
+     * @param r
      * @return
      */
     public Note addValidationNote(GinasProcessingMessage gpm, Reference r){
@@ -933,7 +926,7 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
         }
         UUID uuid = getUuid();
         if(uuid!=null){
-            return uuid.toString().split("-")[0];
+            return uuid.toString();
         }
         return getName();
     }
@@ -1139,8 +1132,8 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
         Objects.requireNonNull(warningsAndErrorsConsumer);
         List<GinasProcessingMessage> list = new ArrayList<>();
         Chemical c = getChemicalImpl(list);
-        if (c.getDim() < 2) {
-            c.clean2D();
+        if (!c.hasCoordinates()) {
+            c = c.toBuilder().computeCoordinates(true).build();
         }
 
         list.forEach(warningsAndErrorsConsumer);
@@ -1175,8 +1168,8 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
         Objects.requireNonNull(messages);
         Chemical c = getChemicalImpl(messages);
 
-        if (c.getDim() < 2) {
-            c.clean2D();
+        if (!c.hasCoordinates()) {
+            c = c.toBuilder().computeCoordinates(true).build();
         }
         if (approvalID != null) {
             c.setProperty("APPROVAL_ID", approvalID);
@@ -1256,7 +1249,12 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
     protected Chemical getChemicalImpl(List<GinasProcessingMessage> messages) {
         messages.add(GinasProcessingMessage
                 .WARNING_MESSAGE("Structure is non-chemical. Structure format is largely meaningless."));
-        return DEFAULT_READER_FACTORY.createChemical(NULL_MOLFILE, Chemical.FORMAT_SDF);
+        try {
+            return Chemical.parseMol(NULL_MOLFILE);
+        }catch(Exception e){
+            //can't happen
+            return new ChemicalBuilder().build();
+        }
     }
 
 

@@ -168,6 +168,15 @@ public class SingleCacheGateKeeper implements GateKeeper {
 
     }
 
+
+	@Override
+	public <T> T getOrElseRaw(String key, long creationTime,
+			TypedCallable<T> generator, int seconds) throws Exception {
+		  return getOrElseRaw(key,
+	               createRaw(generator,key, seconds),
+	               e->e.getCreationTime() < creationTime);
+	}
+
     @Override
     public <T> T getOrElseRaw(String key, TypedCallable<T> generator, int seconds) throws Exception{
        return getOrElseRaw(key,

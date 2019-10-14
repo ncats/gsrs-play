@@ -8,6 +8,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiFunction;
 import java.util.function.Function;
+import java.util.function.Predicate;
 
 import javax.persistence.PostLoad;
 import javax.persistence.PostPersist;
@@ -56,6 +57,9 @@ public class EntityPersistAdapter extends BeanPersistAdapter implements ProcessL
 
     // Do we need both?
     private Map<Key, EditLock> lockMap = new ConcurrentHashMap<>();
+
+
+    private Map<Key, String> workingOnJSON = new ConcurrentHashMap<>();
     // private ConcurrentHashMap<Key, Edit> editMap= new ConcurrentHashMap<>();
 
     private TextIndexerPlugin textIndexerPlugin;
@@ -85,6 +89,7 @@ public class EntityPersistAdapter extends BeanPersistAdapter implements ProcessL
         e.oldValue = oldJSON;
         e.path = null;
         e.version = "unknown";
+
 
         if (ew.getVersion().isPresent()) {
             e.version = ew.getVersion().get().toString();
@@ -130,6 +135,27 @@ public class EntityPersistAdapter extends BeanPersistAdapter implements ProcessL
     @Deprecated
     public static <T> EntityWrapper performChange(Key key, ChangeOperation<T> changeOp) {
         return EntityPersistAdapter.getInstance().change(key, changeOp);
+    }
+
+    public Optional<Edit> getEditFor(Key k){
+    	return Optional.ofNullable(lockMap.get(k))
+    			       .map(new Function<EditLock,Edit>(){
+
+							@Override
+							public Edit apply(EditLock t) {
+								return t.getEdit().orElse(null);
+							}
+
+    			       })
+    			       .filter(new Predicate<Edit>(){
+
+							@Override
+							public boolean test(Edit t) {
+								return t!=null;
+							}
+
+    			       });
+
     }
 
     public <T> EntityWrapper change(Key key, ChangeOperation<T> changeOp) {
@@ -196,8 +222,13 @@ public class EntityPersistAdapter extends BeanPersistAdapter implements ProcessL
             if (lock.getTransaction() == null) {
                 lock.release(); // release the lock
             }
+            workingOnJSON.remove(key);
         }
     }
+
+
+
+
 
     public EntityPersistAdapter() {
         this(Play.application());
