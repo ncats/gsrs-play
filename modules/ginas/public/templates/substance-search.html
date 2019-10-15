@@ -1,10 +1,11 @@
 <div ng-cloak="">
-    <label id="{{field}}-label" class="text-capitalize">{{label || field}}</label>
+   <div><label id="{{field}}-label" class="text-capitalize">{{label || field}}</label></div>
     <a ng-click="referenceobj[field]=null">
         <div ng-if=referenceobj[field]>
             <substance-view subref=referenceobj[field]></substance-view>
         </div>
     </a>
+    <div class = 'padded'><a ng-href = "app/substance/{{referenceobj[field].refuuid}}" ng-show="referenceobj[field]" target="_blank" uib-tooltip="view substance in new window">View in new tab <i class="fa fa-external-link-square" aria-hidden="true"></i></a></div>
     <spinner name="subrefSpinner">
         <loading></loading>
         <br/>

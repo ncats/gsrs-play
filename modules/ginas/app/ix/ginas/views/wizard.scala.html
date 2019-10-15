@@ -1,6 +1,7 @@
 @import play.api.Play.current
 @import ix.ginas.controllers.GinasFactory.EditLock
-
+@import be.objectify.deadbolt.java.views.html._
+@import ix.ncats.controllers.security.IxDynamicResourceHandler
 @(kind: String, json: String, lock: EditLock)
 
     @wizardfields(kind: String) = {
@@ -14,7 +15,7 @@
     <div class="loading"><h1>&nbsp;</h1></div>
         <div ng-cloak="" ng-init="form={}">
                 <div class="row info" top-dock docked-class="docked-actions">
-                        <div class="col-md-6">
+                        <div class="col-md-5">
                             <button class="btn btn-primary" ng-hide="show" ng-click="viewToggle()" id="showJSONBtn">
                                 Show JSON
                             </button>
@@ -26,7 +27,43 @@
                             <!-- <button class="btn btn-primary" ng-click="compare(); diff = true" id = "compareBtn">
                                 Compare</button> -->
                         </div>
-                        <div class="col-md-6">
+                    <div class = "col-md-4">
+                        <div class="dropdown show">
+                            <a class="btn btn-primary dropdown-toggle admin-toggle" href="#" role="button" id="dropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                Advanced functions
+                            </a>
+                            <div class="dropdown-menu admin-functions" aria-labelledby="dropdownMenuLink">
+                                <a class="dropdown-item" onclick="standardizeNames()">Standardize names</a>
+
+                                @dynamic(name = IxDynamicResourceHandler. CAN_REGISTER, handler = new ix.ncats.controllers.security.IxDeadboltHandler()) {
+
+                                    <a class="dropdown-item" onclick="resetDefRef()">Reset definitional References</a>
+                                    <a class="dropdown-item" onclick="setDefinitionPrivate()">Set definition to private</a>
+                                    <a class="dropdown-item" onclick="setDefinitionPublic()">Set definition to public</a>
+                                    <a class="dropdown-item" ng-if="substance.substanceClass== 'polymer'"  onclick="restoreSRU()">Restore SRU amounts from previous version</a>
+                                    <a class="dropdown-item" ng-if="substance.substanceClass== 'protein'"  onclick="disulfideLinks()">Predict disulfide links by protein type</a>
+                                    <a class="dropdown-item" ng-if="substance.substanceClass== 'protein'"  onclick="predictSites()">Predict N-Glycosylation sites</a>
+
+                                }
+
+                                @dynamic(name = IxDynamicResourceHandler.IS_ADMIN, handler = new ix.ncats.controllers.security.IxDeadboltHandler()) {
+
+                                    <a class="dropdown-item" onclick="changeClass()">Change substance class</a>
+                                    <a class="dropdown-item" onclick="setStatusToPending()">Set status to pending</a>
+                                    <a class="dropdown-item" onclick="setStatusToApproved()">Set status to approved</a>
+                                    <a class="dropdown-item" onclick="mergeConcept()">Merge and deprecate subconcept record</a>
+                                    <a class="dropdown-item" onclick="unapproveRecord()">Un-approve record (Remove approval ID)</a>
+                                    <a class="dropdown-item" onclick="changeApproval()">Change approval ID</a>
+                                    <a ng-if="substance.substanceClass== 'chemical'" class="dropdown-item" onclick="addFragment()">Add a fragment to CV</a>
+                                    <a class="dropdown-item" ng-if="substance.substanceClass== 'polymer'"  onclick="addFragment()">Add a fragment to CV</a>
+                                    <a class="dropdown-item" ng-if="substance.substanceClass== 'concept'"  onclick="conceptNonApproved()">Set concept status to non-approved</a>
+                                    <a class="dropdown-item" onclick="definitionSwitch()">Switch primary with alternative definition</a>
+                                }
+
+                            </div>
+                        </div>
+                    </div>
+                        <div class="col-md-3">
                             <div class="pull-right">
                                 <button ng-if="substance.substanceClass!=='concept' && !substance.approvalID && substance.definitionType.value!=='ALTERNATIVE'" ng-disabled="!canApprove()" class="btn btn-primary" ng-click="approveSubstanceConfirm()">
                                     Approve
@@ -155,7 +192,7 @@
                 Show Raw</button>
             <button class="btn btn-primary" ng-show="raw" ng-click="raw=false" >Show Object</button>
             <json-formatter ng-show="!raw" json=submitSubstanceView open="666"></json-formatter>
-            <pre id="rawJson" ng-show="raw==true">{{submitSubstanceView | json }}</pre>
+                    <textarea id="rawJson" ng-show="raw==true">{{submitSubstanceView | json }}</textarea>
             @*
             <pre ng-show="raw">{{subTest}}</pre>
             *@
@@ -211,13 +248,143 @@
 	        	}
 
                 window.onload = function(){
+
+
+                    var importID = getUrlVars()['importUUID'];
+                    var importType = getUrlVars()['importType'];
+                    if(importID){
+
+                        function callback(substance) {
+                            function scrub(oldraw) {
+                                function guid() {
+                                    function s4() {
+                                        return Math.floor((1 + Math.random()) * 0x10000)
+                                            .toString(16)
+                                            .substring(1);
+                                    };
+                                    return s4() + s4() + '-' + s4() + '-' + s4() + '-' +
+                                        s4() + '-' + s4() + s4() + s4();
+                                };
+                                var old = oldraw;
+                                var uuidHolders = JSON.search(old, "//*[uuid]");
+                                var map = {};
+                                for (var i = 0; i < uuidHolders.length; i++) {
+                                    var ouuid = uuidHolders[i].uuid;
+                                    if (map[ouuid]) {
+                                        uuidHolders[i].uuid = map[ouuid];
+                                    } else {
+                                        var nid = guid();
+                                        uuidHolders[i].uuid = nid;
+                                        map[ouuid] = nid;
+                                    }
+                                }
+                                var refHolders = JSON.search(old, "//*[references]");
+                                for (var i = 0; i < refHolders.length; i++) {
+                                    var refs = refHolders[i].references;
+                                    for (var j = 0; j < refs.length; j++) {
+                                        var or = refs[j];
+                                        if (typeof or === "object") continue;
+                                        //console.log(or);
+                                        refs[j] = map[or];
+                                    }
+                                }
+                                JSON.search(old, "//*[uuid]");
+                                _.remove(old.codes, {
+                                    codeSystem: "BDNUM"
+                                });
+                                var createHolders = JSON.search(old, "//*[created]");
+                                for (var i = 0; i < createHolders.length; i++) {
+                                    var rec = createHolders[i];
+                                    delete rec["created"];
+                                    delete rec["createdBy"];
+                                    delete rec["lastEdited"];
+                                    delete rec["lastEditedBy"];
+                                }
+                                delete old.approvalID;
+                                delete old.approved;
+                                delete old.approvedBy;
+                                old.status = "pending";
+                                console.log(importType);
+                                if ((importType) && (importType == 'definition')){
+                                    old.names = [];
+                                    old.codes = [];
+                                    old.notes = [];
+                                    old.relationships = [];
+                                }
+                                delete old["createdBy"];
+                                delete old["created"];
+                                delete old["lastEdited"];
+                                delete old["lastEditedBy"];
+                                delete old["version"];
+                                delete old["$$update"];
+                                delete old["changeReason"];
+
+
+                                if(true){
+                                	   var refSet = {};
+
+                                	   var refHolders = JSON.search(old, "//*[references]");
+                                       for (var i = 0; i < refHolders.length; i++) {
+                                           var refs = refHolders[i].references;
+                                           for (var j = 0; j < refs.length; j++) {
+                                               var or = refs[j];
+                                               if (typeof or === "object") continue;
+                                               //console.log(or);
+                                               refSet[or] = true;
+                                           }
+                                       }
+
+                                       var nrefs=_.chain(old.references)
+                                        .filter(function(ref){
+                                       	 	if(refSet[ref.uuid]){
+                                       	 		return true;
+                                       	 	}else{
+                                       	 		return false;
+                                       	 	}
+                                        })
+                                        .value();
+
+                                       old.references=nrefs;
+
+                                }
+
+
+                                return old;
+                            };
+                            var copyJSON = scrub(substance);
+                            setJson(copyJSON);
                     $('.loading').animate({'opacity': 0},200, function() {
                         $('.loading').hide();
                         console.info('Loading complete.');
                     });
                 };
 
+                        var url = baseurl + "api/v1/substances("+ importID + ")?view=full";
+                        $.ajax({
+                            contentType: 'application/json',
+                            url: url,
+                            success: function (result) {
+                                var substance = result;
+                                callback(result);
+                            },error: function(XMLHttpRequest, textStatus, errorThrown) {
+                                alert("There was a problem importing substance data");
+                            }
+                        });
+                    }else{
+                    	  $('.loading').animate({'opacity': 0}, 200, function () {
+                              $('.loading').hide();
+                          });
+                    }
 
+                };
+
+                function getUrlVars() {
+                    var vars = {};
+                    var parts = window.location.href.replace(/[?&]+([^=&]+)=([^&]*)/gi, function(m,key,value) {
+                        vars[key] = value;
+                    });
+                    return vars;
+                }
                 //Child frame
 
                  function getJson(){
@@ -235,6 +402,9 @@
                  if($scope.substance.substanceClass =="chemical"){
                  molChanger.setMol($scope.substance.structure.molfile);
                  }
+                         if($scope.substance.substanceClass =="polymer"){
+                             molChanger.setMol($scope.substance.polymer.displayStructure.molfile);
+                         }
 	                 	setTimeout(function(){
 	                 	    var oldClass=$scope.substance.substanceClass;
 	                 	    $scope.substance.substanceClass="concept";

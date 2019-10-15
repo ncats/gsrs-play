@@ -593,10 +593,10 @@
             $scope.searchVariables.query = '';
         }
 
-        if ($location.search()['q'] &&
-            !$location.search()['type'] &&
-            $location.search()['cutoff'] !== null &&
-            $location.path().indexOf('structure') === -1) {
+        if ($location.search()['q']
+            && !$location.search()['type']
+            && $location.search()['cutoff'] !== null
+            && $location.path().indexOf('structure') === -1) {
             $scope.searchVariables[$scope.qmod] = $location.search()['q'];
         }
         $scope.init = function (qmod) {
@@ -1196,6 +1196,13 @@
             return (errs.length <= 0);
         };
 
+        //remove second success message recieved from API call
+        $scope.RemoveDuplicateSuccess = function(){
+            var toRemove = $scope.errorsArray.findIndex(function (e) {return ((e.message === "Substance is valid")&&(e.actionType === "IGNORE"))});
+            if((toRemove >= 0) && $scope.errorsArray.some(function (e) {return ((e.message === "Substance is valid")&&(e.actionType === "DO_NOTHING"))})){
+                $scope.errorsArray.splice(toRemove,1);
+            }
+        }
         $scope.parseErrorArray = function (errorArr) {
             _.forEach(errorArr, function (value) {
                 if (value.messageType == "WARNING")
@@ -1233,13 +1240,36 @@
                 .value();
 
             //**************************
-
-            var sub = angular.toJson($scope.substance.$$flattenSubstance());
             $scope.errorsArray = [];
+            $scope.sequenceArray = [];
+            var sub = $scope.substance.$$flattenSubstance();
+
+            //add an element to the error array if a protein or nucleic acid sequence is still being edited.
+           if(((sub.protein) || (sub.nucleicAcid)) && ((sub.substanceClass == "protein") || (sub.substanceClass == "nucleicAcid"))){
+               var subunitLoc = sub.substanceClass;
+               if((sub[subunitLoc].subunits) && (sub[subunitLoc].subunits.length > 0 )){
+                   _.forEach(sub[subunitLoc].subunits, function(val,key){
+                      // Add the missing sequence property for unsaved subunits so API call can check additional errors properly
+                       if(!val.sequence){
+                           sub[subunitLoc].subunits[key].sequence = "";
+                       }
+                       if(val.editing){
+                          if(val.editing == 'open'){
+                             var error = {actionType:"FAIL", appliedChange:false, class:"danger", links:[], message:"Unsaved changes to subunit " + val.subunitIndex + "", messageType:"ERROR", suggestedChange:false, _discriminator:"GinasProcessingMessage"};
+                             $scope.sequenceArray.push(error);
+                           }
+                            delete sub[subunitLoc].subunits[key].editing;
+                        }
+                   })
+
+               }
+           }
+           sub = angular.toJson(sub);
             $http.post(baseurl + 'api/v1/substances/@validate', sub).then(
                 function success(response) {
                     $scope.validating = false;
-                    $scope.errorsArray = $scope.parseErrorArray(response.data.validationMessages);
+                    $scope.errorsArray = $scope.errorsArray.concat($scope.sequenceArray, $scope.parseErrorArray(response.data.validationMessages));
+                    $scope.RemoveDuplicateSuccess();
                     $scope.canSubmit = $scope.noErrors();
                     // if (callback) {
                     //     callback();
@@ -1273,62 +1303,6 @@
         $scope.getSubstanceClass = function () {
             return $scope.substance.substanceClass;
         }
-
-        $scope.submitSubstance = function () {
-            var url;
-            var sub = {};
-            $scope.close();
-            //this should cascade to all forms to check and see if validation is ok
-            //  $scope.$broadcast('show-errors-check-validity');
-            //this is the api error checking
-            //  $scope.checkErrors();
-            $scope.submitting = true;
-            var url1 = baseurl + "assets/templates/modals/submission-loader.html";
-            $scope.open(url1);
-
-            if (_.has($scope.substance, '$$update')) {
-                sub = angular.toJson($scope.substance.$$flattenSubstance());
-                $http.put(baseurl + 'api/v1/substances', sub, {
-                    headers: {
-                        'Content-Type': 'application/json'
-                    }
-                }).then(function (response) {
-                    $scope.updateNav = false;
-                    url = baseurl + "assets/templates/modals/update-success.html";
-                    $scope.postRedirect = response.data.uuid;
-                    $scope.close(url1);
-                    $scope.open(url);
-                }, function (response) {
-                    $scope.errorsArray = $scope.parseErrorArray(response.data.validationMessages);
-                    url = baseurl + "assets/templates/modals/submission-failure.html";
-                    $scope.submitting = false;
-                    $scope.close(url1);
-                    $scope.open(url);
-                });
-            } else {
-                sub = angular.toJson($scope.substance.$$flattenSubstance());
-
-                $http.post(baseurl + 'api/v1/substances', sub, {
-                    headers: {
-                        'Content-Type': 'application/json'
-                    }
-                }).then(function (response) {
-                    $scope.updateNav = false;
-                    $scope.postRedirect = response.data.uuid;
-                    var url = baseurl + "assets/templates/modals/submission-success.html";
-                    $scope.submitting = false;
-                    $scope.close(url1);
-                    $scope.open(url);
-                }, function (response) {
-                    $scope.errorsArray = $scope.parseErrorArray(response.data.validationMessages);
-                    url = baseurl + "assets/templates/modals/submission-failure.html";
-                    $scope.submitting = false;
-                    $scope.close(url1);
-                    $scope.open(url);
-                });
-            }
-        };
-
         $scope.reset = function (form) {
             $scope.$broadcast('show-errors-reset');
             form.$setPristine();
@@ -1727,7 +1701,30 @@
             }, true);
         };
     });
+    ginasApp.directive('inxight', function ($compile, $http) {
+        return {
+            restrict: 'E',
+            replace: true,
+            scope: {
+                uuid: '='
+            },
+            link: function (scope, element) {
+                if (scope.uuid.indexOf(" ") == -1) {
+                    var url = "https://drugs.ncats.io/api/v1/substances/search?q=root_approvalID:" + scope.uuid + "&fdim=1&callback=JSON_CALLBACK";
+                return $http.jsonp(url, {jsonpCallbackParam: 'callback'}).then(function (response) {
+                    if (response.data.total > 0) {
+                        var template = angular.element('<a href = "https://drugs.ncats.io/drug/' + scope.uuid + '" target = "_blank" class = "external-links" uib-tooltip="view this substance on Inxight drugs">Inxight Drugs</a>');
 
+                    }else{
+                        var template = angular.element('');
+                    }
+                    element.replaceWith(template);
+                    $compile(template)(scope);
+                });
+            }
+            }
+        };
+        });
     ginasApp.directive('rendered', function ($compile) {
         return {
             restrict: 'E',
@@ -1766,7 +1763,7 @@
                             .replace(/[|]/g, '%7C');
                         url = baseurl + "render?structure=" + smiles + "&size={{size||150}}&standardize=true";
                     }
-                    var template = angular.element('<img width=height={{size||150}} height={{size||150}} ng-src="' + url + '" class="tooltip-img" ng-cloak>');
+                    var template = angular.element('<img width=height={{size||150}} height={{size||150}} ng-src="' + url + '" class="tooltip-img" aria-label = "'+scope.id+ ' thumbnail" ng-cloak>');
                     element.html(template);
                     $compile(template)(scope);
                 };
@@ -2175,10 +2172,9 @@
                         var link = '<a ng-click="showActive(' + i + ')" uib-tooltip="view reference">' + i + '</a>';
                         links.push(link);
                     });
-
-                    var templateString = angular.element('<div class ="row reftable"><div class ="col-md-8">' +
-                        _.join(links, ",") +
-                        ' </div><div class="col-md-4"><span class="btn btn-primary pull-right" type="button" uib-tooltip="Show all references" ng-click="toggle()"><i class="fa fa-long-arrow-down"></i></span><div></div>');
+                    var templateString = angular.element('<div class ="row reftable"><div class ="col-md-8">'
+                        + _.join(links, ",")
+                        + ' </div><div class="col-md-4"><span class="btn btn-primary pull-right" type="button" uib-tooltip="Show all references" ng-click="toggle()"><i class="fa fa-long-arrow-down"></i></span><div></div>');
                     element.append(angular.element(templateString));
                     $compile(templateString)(scope);
                 });
@@ -2223,9 +2219,9 @@
                         links.push(link);
                     });
                     scope.buttonLabel = "view";
-                    var templateString = angular.element('<div class ="reftable">' +
-                        '<div style = "float:left" class =" center-text">' +
-                        '</div><div style = "float:left"><button class="btn btn-primary reference-button" type="button" uib-tooltip="Show all references" ng-click="toggle()" >{{buttonLabel}} ' + links.length + '<br/>reference(s)</button></div></div>');
+                    var templateString = angular.element('<div class ="reftable">'
+                        + '<div style = "float:left" class =" center-text">'
+                        + '</div><div style = "float:left"><button class="btn btn-primary reference-button" type="button" uib-tooltip="Show all references" ng-click="toggle()" >{{buttonLabel}} '+links.length+'<br/>reference(s)</button></div></div>');
                     element.append(angular.element(templateString));
                     $compile(templateString)(scope);
                 });
@@ -2659,13 +2655,22 @@
             templateUrl: baseurl + "assets/templates/elements/subunit.html"
         };
     });
+    //used to set the molfile in the sketcher externally
+    ginasApp.service('structureImgUp', function ($http, CVFields, UUID) {
+        var sk;
+        this.setSketcher = function (sketcherInstance) {
+            sk = sketcherInstance;
+        };
+        this.setImage = function (img) {
+            sk.modalToClipboard(img);
+        };
+    });
 
 
-    //this is solely to set the molfile in the sketcher externally
     ginasApp.service('molChanger', function ($http, CVFields, UUID) {
 
         var sk;
-
+        var that = this;
         this.setSketcher = function (sketcherInstance) {
             sk = sketcherInstance;
         };
@@ -2680,8 +2685,24 @@
         this.getSmiles = function () {
             return sk.sketcher.getSmiles();
         };
+        this.clean = function () {
+            var smi= that.getSmiles();
+
+            var url = baseurl + 'structure';
+            $http.post(url, smi, {
+                headers: {
+                    'Content-Type': 'text/plain'
+                }
+            }).success(function (data) {
+                if (!_.isEmpty(data)) {
+                    that.setMol(data.structure.molfile);
+                } else {
+                    alert('Unable to clean the structure');
+                }
     });
-    ginasApp.directive('sketcher', function ($compile, $http, $timeout, UUID, polymerUtils, CVFields, localStorageService, molChanger, Substance, $rootScope) {
+        };
+    });
+    ginasApp.directive('sketcher', function ($compile, $http, $timeout, UUID, polymerUtils, CVFields, localStorageService, molChanger, structureImgUp, Substance, $rootScope) {
         var t = {
             restrict: 'E',
             replace: true,
@@ -2722,11 +2743,17 @@
                     '<canvas height="1" ng-show="showCanvas" id="clip_canvas" style="max-width:800px;"></canvas>' +
                     '</div>';
                 var template = angular.element('<div><div id="sketcherForm" dataformat="molfile"></div> <div class = "col-md-12" id = "testing">' +
+                    '<div class = "clean-structure"><a ng-click="cleanStructure()" uib-tooltip="Clean Structure"><i class="fa fa-magic fa-2x"></i>Clean Structure</a></div>' +
                     '<div class="text-center">' +
                     'Load an image by pasting a copied image into the canvas with <code>ctrl + v</code>, or dragging a local image file' +
                     '</div> <div id = "canvas_cont">' + canvasHTML + '</div> </div> </div>');
                 element.append(template);
                 $compile(template)(scope);
+
+                scope.cleanStructure = function(){
+                    molChanger.clean();
+                }
+
 
                 scope.merge = function (oldStructure, newStructure) {
                     var definitionalChange = (oldStructure["hash"] !== newStructure["hash"]);
@@ -2930,6 +2957,7 @@
                     var chargeLine = scope.getMChargeFromXML(scope.sketcher.getXml());
                     var mfile = scope.sketcher.getMolfile();
 
+                    mfile=mfile.replace(/0.0000[ ]D[ ][ ][ ]/g,"0.0000 H   ");
                     //can't find charge section
                     if (mfile.indexOf("M  CHG") < 0) {
 
@@ -2961,6 +2989,7 @@
                     }
                 };
                 molChanger.setSketcher(scope);
+                structureImgUp.setSketcher(scope);
                 var structureid = (localStorageService.get('structureid') || false);
 
                 if (localStorageService.get('editID')) {
@@ -3054,6 +3083,13 @@
                         sketcherElm.get().parentElement.classList.remove('dragover');
                         _self.paste_auto(e, 'drop');
                     }, false);
+
+                    //bypass canvas functions if loading from modal
+                    this.modalImport = function(file) {
+                        canvas = document.getElementById(canvas_id);
+                        ctx = document.getElementById(canvas_id).getContext("2d");
+                        this.loadImage(file)();
+                    }
 
                     // local pointer of "this" keyword for the surrounding
                     // function
@@ -3270,13 +3306,17 @@
                         pastedImage.src = source;
                     };
                 }
+
+                scope.modalToClipboard = function(data){
+                    CLIPBOARD.modalImport(data);
+                }
             }
         };
 
 
         return t;
     });
-    ginasApp.directive('modalButton', function ($compile, $templateRequest, $http, $uibModal, molChanger, FileReader) {
+    ginasApp.directive('modalButton', function ($compile, $templateRequest, $http, $uibModal, molChanger, structureImgUp, FileReader) {
         return {
             scope: {
                 type: '=',
@@ -3295,13 +3335,21 @@
                 scope.stage = true;
                 switch (attrs.type) {
                     case "upload":
-                        template = angular.element(' <a aria-label="Upload" uib-tooltip ="Upload" tabindex="0" role="button" structureid=structureid format=format export><span class="sr-only">Upload Data</span><i class="fa fa-upload fa-2x"></i></a>');
+                        template = angular.element(' <a aria-label="Upload" uib-tooltip ="Upload" tabindex="0" role="button" structureid=structureid format=format ><span class="sr-only">Upload Data</span><i class="fa fa-upload fa-2x success"></i></a>');
                         element.append(template);
                         $compile(template)(scope);
                         break;
-                    case "import":
-                        template = angular.element(' <a aria-label="Import" uib-tooltip ="Import" tabindex="0" role="button" ng-keypress="open();" ng-click="open()"><span class="sr-only">Import Data</span><i class="fa fa-clipboard fa-2x success"></i></a>');
+                    case "image":
+                        template = angular.element(' <a aria-label="Upload" uib-tooltip ="Import image file" active ="image" tabindex="0" role="button" structureid=structureid format=format ng-keypress="open();" ng-click="open()"><span class="sr-only">Upload Image</span><i class="fa success fa-file-image-o fa-2x"></i></a>');
                         element.append(template);
+                        scope.active ="image";
+                        $compile(template)(scope);
+                        templateUrl = baseurl + "assets/templates/modals/mol-import.html";
+                        break;
+                    case "import":
+                        template = angular.element(' <a aria-label="Import" uib-tooltip ="Import text / Molfile" active = "text" tabindex="0" role="button" ng-keypress="open();" ng-click="open()"><span class="sr-only">Import Data</span><i class="fa fa-clipboard fa-2x success"></i></a>');
+                        element.append(template);
+                        scope.active = "text";
                         $compile(template)(scope);
                         templateUrl = baseurl + "assets/templates/modals/mol-import.html";
                         break;
@@ -3317,6 +3365,14 @@
                     FileReader.readAsText(file, scope).then(function (response) {
                         scope.molfile = response;
                     });
+                };
+
+                scope.imageUpload = function(element,file){
+                    if ((file.type.match('image.*'))){
+                        FileReader.readAsDataURL(element.uploadImg, scope).then(function(response){
+                            structureImgUp.setImage(response);
+                        });
+                    }
                 };
 
                 scope.resolveMol = function (mol) {
@@ -3523,9 +3579,8 @@
                 showPopup: '@'
             },
             link: function (scope, element, attrs) {
-
-                var div = "<span ng-class='iclass' ng-click='click()' class='stop-prop' >\n" +
-                    "<info-popup ng-mouseleave='mouesOut()' ng-mouseover='mouesIn()'  icon='fa-search-plus' show-popup=showPopup trigger='none' >" +
+                var div = "<span ng-class='iclass' ng-click='click()' aria-label = 'keep open' class='stop-prop' >\n" +
+                    "<info-popup ng-mouseleave='mouesOut()' ng-mouseover='mouesIn()'  aria-label = 'info-popup' icon='fa-search-plus' show-popup=showPopup trigger='none' >" +
                     "  <div style='text-align: center;'>" +
                     "  <substance-preview substance-views=\"['Preferred Term','img','Approval ID (UNII)','iconButtons']\"" +
                     "     substanceuuid='" + scope.substanceuuid + "'>" +
@@ -3740,8 +3795,8 @@
 
                 const kvclean = function (e, vf) {
                     var elm = "<div class='row'>" +
-                        "<div ng-hide='hideTitles' class='col-md-12'>" + vf.name() + "</div>" +
-                        "<div class='col-md-12'>" + e + "</div>";
+                        "<div ng-hide='hideTitles' class='col-md-12'>" + vf.name() + "</div>"
+                        + "<div class='col-md-12'>" + e + "</div>";
                     return elm;
                 };
 

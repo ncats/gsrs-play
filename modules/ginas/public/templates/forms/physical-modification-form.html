@@ -27,12 +27,16 @@
                                                    parent="parent">
                                 </modal-form-button>
                             </div>
-                            <div class="col-md-1">
+                            <div class="col-md-2">
                                 <gsrs-input type="text"
                                             ng-model="obj.modificationGroup"
                                             label="Group"
                                             field="modificationGroup">
                                 </gsrs-input>
+                            </div>
+                            <div class="col-md-1">
+                                <access-management obj-to-manage-access="obj">
+                                </access-management>
                             </div>
                         </div>
                         <br>

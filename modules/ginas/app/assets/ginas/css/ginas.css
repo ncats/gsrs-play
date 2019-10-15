@@ -364,6 +364,10 @@ nav#main-pagination {
     padding-right:5%;
 }
 
+.tools-bottom{
+    margin-top: 5%;
+    margin-bottom: 2%;
+}
 
 .row.stereo {
     position: relative;
@@ -550,7 +554,9 @@ span.count {
 .tooltip {
     letter-spacing: 0px;
 }
-
+.tooltip[placement="top"] {
+    min-width: 150px; /*stops tooltips from displaying too low*/
+}
 .prot-list {
     margin-bottom: 0px;
 }
@@ -1262,6 +1268,7 @@ pre.fixedsize{
 .subrefThumb{
     min-width: 150px;
     max-width: 40%;
+    margin: auto;
  }
 
 .form-div{
@@ -1975,12 +1982,12 @@ td.no-sort{
 
 /*styles for the buttons in the overview card. If these are approved, switch to classes and apply to all buttons*/
 #button-container {
-    width:190px;
+    width:270px;
     position:absolute;
     top:-70px;
     padding-top:20px;
     right:-50px;
-    padding-right:50px;
+    padding-right:40px;
     margin-top:2px;
 }
 
@@ -1994,6 +2001,16 @@ td.no-sort{
         padding-top:50px;
         z-index: 9999;
     }
+    .external-links {
+        float:right;
+        padding-top:50px;
+    }
+
+}
+
+.external-links {
+    padding-top:10px;
+    float:right;
 }
 
 .download-button {

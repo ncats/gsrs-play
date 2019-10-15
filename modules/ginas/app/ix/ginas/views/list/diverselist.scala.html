@@ -13,18 +13,30 @@
     <div class="badge-wrapper">
         <span class="label label-primary label-offset list-view-badge">STRUCTURALLY DIVERSE</span>
     </div>
-				<img ng-click="toggle()" class="struc-thumb img-responsive" id="" alt ="structurally diverse" src="@routes.Assets.at("ginas/images/structurally-diverse.svg")" />
+				<img ng-click="toggle()" class="struc-thumb img-responsive" id="" alt ="structurally diverse" aria-label = "toggle structurally diverse" src="@routes.Assets.at("ginas/images/structurally-diverse.svg")" />
                 @dynamic(name = IxDynamicResourceHandler.CAN_UPDATE, handler = new ix.ncats.controllers.security.IxDeadboltHandler()) {
                     <div class = "row">
                         <div class = "col-md-12 text-center">
                             <ul class= "list-inline list-unstyled tools">
-                                <li>
+                                <li class = "col-md-3">
                                     <a href="@ix.ginas.controllers.routes.GinasFactory.edit(GinasApp.getId(sub))" uib-tooltip="Edit" target="_self" aria-label="Edit Structurally Diverse Substance"><span class="sr-only">
                                         Edit Structurally Diverse</span><span class="fa fa-pencil fa-2x success"></span></a>
             </li>
-                                <li> <a href="@routes.Assets.at("gsrs2/index.html")#/substance/@sub.getUuid()/names" target="_blank" uib-tooltip="New Form" aria-label="Edit Structurally Diverse Substance">
+                                <li class = "col-md-3"> <a href="@routes.Assets.at("gsrs2/index.html")#/substance/@sub.getUuid()/names" target="_blank" uib-tooltip="New Form" aria-label="Edit Structurally Diverse Substance">
                                     <span class="sr-only">Edit New Form</span>
                                     <i class="fa fa-pencil-square fa-2x" aria-hidden="true" ></i></a></li>
+
+                                <li class = "col-md-3">
+                                    <a href="@ix.ginas.controllers.routes.GinasApp.wizard("mixture")&importUUID=@sub.uuid&importType=definition" target="_self" uib-tooltip="Copy&nbsp;Definition&nbsp;to&nbsp;New&nbsp;Substance" aria-label="Register Copy"><span class="sr-only"> Register Copy </span>
+                                    <span class="fa fa-clipboard fa-2x success"></span>
+                                    </a>
+                                </li>
+                                <li class = "col-md-3">
+                                    <a href="@ix.ginas.controllers.routes.GinasApp.wizard("mixture")&importUUID=@sub.uuid&importType=full" target="_self" uib-tooltip="Copy&nbsp;All&nbsp;to&nbsp;New&nbsp;Substance" aria-label="Register Copy"><span class="sr-only"> Register Copy </span>
+                                    <span class="fa fa-clipboard fa-2x"></span>
+                                    </a>
+                                </li>
+                            </ul>
         </ul>
     </div>
 </div>

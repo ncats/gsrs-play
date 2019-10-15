@@ -72,6 +72,7 @@
         $scope.facets =[];
         $scope.filtered=false;
         $scope.fbaseurl="";
+        $scope.fNoQueryBaseurl="";
         $scope.facetType="any";
         $scope.ofacetType="any";
 
@@ -103,6 +104,11 @@
         
         $scope.quantity=$scope.defquantity;
         
+        $scope.requestNumber=0;
+        $scope.lastReceivedRequestNumber=0;
+
+
+
         $scope.isEnhanced=true;
         
         $scope.mode = "SERVER"; // or CLIENT or OFF
@@ -187,6 +193,7 @@
                  .value();
                 $scope.ofacets=selfac;
             }
+            $scope.fNoQueryBaseurl=base.split("?")[0] + "?field=" + $scope.facetName;
         };
         $scope.dofilter = function () {
             if($scope.fq.length>0){
@@ -198,6 +205,7 @@
         };
         $scope.refresh = function () {
             if($scope.mode === "SERVER"){
+            	$scope.refreshServerLazy();
                 $scope.refreshServer();
             }else if($scope.mode === "CLIENT"){
                 $scope.refreshClient();
@@ -206,16 +214,17 @@
         
         $scope.refreshServer = function () {
             $scope.refreshing =true;
-            
+            $scope.requestNumber++;
+        	var reqNo=$scope.requestNumber;
+
             var onError=function (data, status, headers, config) {
                 $scope.monitor = false;
                 $scope.mess = "Polling error!";
                 $scope.refreshing=false;
             };
-            
-            
-            var responsePromise = $http.get($scope.fbaseurl + "&ffilter=" + $scope.fq);
-            responsePromise.success(function (data, status, headers, config) {
+            var onSuccess=function (data, status, headers, config) {
+            	if(reqNo>$scope.lastReceivedRequestNumber){
+            		$scope.lastReceivedRequestNumber=reqNo;
                 if(data.ffilter === $scope.fq){
                     var exp = new RegExp("(" + $scope.escapeRegExp($scope.fq) + ")", "gim");
                     $scope.facets=_.chain(data.content)
@@ -230,7 +239,53 @@
                                    }).value();
                     $scope.refreshing=false;
                 }
-            });
+            	}
+            };
+
+
+
+            var responsePromise = $http.get($scope.fbaseurl + "&ffilter=" + $scope.fq);
+
+            responsePromise.success(onSuccess);
+            responsePromise.error(onError);
+
+        };
+
+        $scope.refreshServerLazy = function () {
+        	$scope.refreshing =true;
+        	$scope.requestNumber++;
+        	var reqNo=$scope.requestNumber;
+
+            var onError=function (data, status, headers, config) {
+                $scope.monitor = false;
+                $scope.mess = "Polling error!";
+            };
+            var onSuccess=function (data, status, headers, config) {
+            	if(reqNo>$scope.lastReceivedRequestNumber){
+            		$scope.lastReceivedRequestNumber=reqNo;
+	                if(data.ffilter === $scope.fq ){
+	                    var exp = new RegExp("(" + $scope.escapeRegExp($scope.fq) + ")", "gim");
+	                    $scope.facets=_.chain(data.content)
+	                                   .map(function(f){
+	                                       var lab = getDisplayFacetValue($scope.facetName,f.label);
+	                                       f.labelHighlight=$sce.trustAsHtml(lab.replace(exp,"<b>$1</b>"));
+	                                       f.mid="mm"+$scope.hexEncode(f.label);
+	                                       if(_.includes($scope.selectedFacets, f.label)){
+	                                           f.checked=true;
+	                                       }
+	                                       f.count="?";
+	                                       return f;
+	                                   }).value();
+
+	                }
+            	}
+            };
+
+
+
+            var responsePromise = $http.get($scope.fNoQueryBaseurl + "&ffilter=" + $scope.fq);
+
+            responsePromise.success(onSuccess);
             responsePromise.error(onError);
 
         };
@@ -470,10 +525,23 @@ function getDisplayFacetValue(name, label){
     }
     
     if (name === "root_approved" || name ==="root_lastEdited"){
-        return label.substr(1); // skip the prefix character
+        var temp = label.substr(1); // skip the prefix character
+        if (temp == 'This week'){
+            return '1 day to < 1 week ago';
+        }else if (temp == 'This month'){
+            return '1 week to < 1 month ago';
+        }else if (temp == 'Past 6 months'){
+            return '1 to < 6 months ago';
+        }else if (temp == 'Past 1 year'){
+            return '6 months to < 1 year ago';
+        }else if (temp == 'Past 2 years'){
+            return '1 to < 2 years ago';
+        }else if (temp == 'Older than 2 years'){
+            return '2+ years ago';
+        }else {
+            return temp;
     }
-    
-    
+    }
     return label;
 }
 

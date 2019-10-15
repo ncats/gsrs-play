@@ -7,5 +7,10 @@
         @* This should be redone *@
         
         @for(i <- 0 until subunits.size()) {
-            <subunit uuid="'@sub.getUuid'" index ='@i' version='@sub.version' view='subunits' numbers="numbers" subclass="@stype"></subunit>
+            <subunit uuid="'@sub.getUuid'" index ='@i' subid="'@subunits(i).uuid.toString()'" version='@sub.version' view='subunits' numbers="numbers" subclass="@stype"></subunit>
+            <div style ="float:right">
+            <a href = "@ix.ginas.controllers.routes.GinasApp.sequence(subunits(i).uuid.toString())" target="_blank" uib-tooltip="Sequence Subunit @i Search" aria-label="Structure Subunit @subunits(i).subunitIndex Search">
+                <span>Similarity Search</span>
+            </a>
+            </div>
         }

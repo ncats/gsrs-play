@@ -10,6 +10,7 @@
             <th>Source Type</th>
             <th>Tags</th>
             <th>Date Accessed</th>
+            <th>File</th>
         </tr>
     </thead>
     @for((r,i) <- references.view.zipWithIndex) {
@@ -34,6 +35,13 @@
             </td>
             <td>
                 <span class="hidden">@r.getDocumentSortPrefix()</span>@r.documentDate
+            </td>
+            <td>
+                @if(r.uploadedFile != null) {
+                <a href= "@r.uploadedFile" target ="_blank">
+                    <i class="fa fa-2x fa-download" uib-tooltip="Download Attached File"></i>
+                </a>
+                }
             </td>
         </tr>
     }
