@@ -23,6 +23,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import be.objectify.deadbolt.java.actions.Dynamic;
 import gov.nih.ncats.molwitch.Atom;
 import gov.nih.ncats.molwitch.Chemical;
+import gov.nih.ncats.molwitch.io.ChemFormat;
 import ix.core.validator.GinasProcessingMessage;
 import ix.core.UserFetcher;
 import ix.core.adapters.EntityPersistAdapter;
@@ -2269,7 +2270,8 @@ public class GinasApp extends App {
             } else if (format.equalsIgnoreCase("sdf")) {
                 return ok(formatMolfile(c.toSd()));
             } else if (format.equalsIgnoreCase("smiles")) {
-                return ok(c.toSmiles());
+                return ok(c.toSmiles(new ChemFormat.SmilesFormatWriterSpecification()
+                                            .setKekulization(ChemFormat.KekulizationEncoding.KEKULE)));
                 //TODO add back CDX format?
 
 //            } else if (format.equalsIgnoreCase("cdx")) {
