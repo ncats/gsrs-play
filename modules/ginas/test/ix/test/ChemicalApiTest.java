@@ -912,7 +912,7 @@ public class ChemicalApiTest extends AbstractGinasServerTest {
             String displayName = entered.at("/_name").asText();
             String uuid=entered.at("/uuid").asText();
 			String export=api.exportHTML(uuid,"smiles");
-			assertTrue("Exported smiles should be kekulized", export.contains("="));
+			assertTrue("Exported smiles should be kekulized '" + export + "'", export.contains("="));
 			assertTrue("Exported smiles for 'COC1=CC=CC=C1' should have 'O'", export.contains("O"));
 			assertTrue("Exported smiles for 'COC1=CC=CC=C1' should have 'C'", export.contains("C"));
 			assertTrue("Exported smiles for 'COC1=CC=CC=C1' should have '1'", export.contains("1"));
