@@ -2301,3 +2301,9 @@ display:none;
     width:100%;
     height:800px;
 }
+
+#beta-button {
+    padding-left: 20px;
+    font-size: 13px !important;
+    color: #4b84fc !important;
+}
