@@ -978,7 +978,8 @@ function definitionSwitch() {
         'chemical': ['structure', 'moieties', 'modifications', 'properties'],
         'structurallyDiverse': ['structurallyDiverse', 'modifications', 'properties'],
         'polymer': ['polymer', 'modifications', 'properties'],
-        'nucleicAcid': ['nucleicAcid', 'modifications', 'properties']
+    'nucleicAcid': ['nucleicAcid', 'modifications', 'properties'],
+    'mixture' : ['mixture', 'modifications', 'properties']
     };
     var primeVersion = sub.version;
     var altVersion = '';
@@ -1023,8 +1024,14 @@ function definitionSwitch() {
     var tempPrimeChange = function tempPrimeChange(uuid) {
         $.getJSON(sub._self.split("(")[0] + "(" + sub.uuid + ")?view=full", function (c) {
             oldPrime = _.cloneDeep(c);
+      if(!fieldGetter[oldPrime.substanceClass]){
+        alert('This substance is incompatible with the definition switch function');
+        return;
+      }
             fieldGetter[sub.substanceClass].forEach(function (x) {
+        if(oldPrime[x]){
                 delete oldPrime[x];
+        }
             });
             console.log('setting primary to temporary substance type');
             var depRef = {
@@ -1075,7 +1082,10 @@ function definitionSwitch() {
             oldPrime.references.push(depRef);
             $.getJSON(sub._self.split("(")[0] + "(" + uuid + ")?view=full", function (d) {
                 oldAlt = _.cloneDeep(d);
-
+        if(!fieldGetter[oldAlt.substanceClass]){
+          alert('The selected alternative is incompatible with the definition switch function');
+          return;
+        }
                 if (oldAlt.substanceClass == sub.substanceClass) {
                     updateRecord(oldPrime, function () {
                         AltNewType(oldAlt);
@@ -1097,7 +1107,9 @@ function definitionSwitch() {
             var altSwitch = _.cloneDeep(d);
 
             fieldGetter[altSwitch.substanceClass].forEach(function (x) {
+        if(alt[x]){
                 delete alt[x];
+        }
             });
 
             if (altSwitch.substanceClass == 'structurallyDiverse') {
@@ -1147,10 +1159,14 @@ function definitionSwitch() {
             alt = _.cloneDeep(d);
             console.log('deleting ' + alt.substanceClass + ' adding ' + sub.substanceClass);
             fieldGetter[alt.substanceClass].forEach(function (x) {
+        if(alt[x]){
                 delete alt[x];
+        }
             });
             fieldGetter[sub.substanceClass].forEach(function (x) {
+        if(sub[x]){
                 alt[x] = sub[x];
+        }
             });
             alt.substanceClass = sub.substanceClass;
             var altReferences = JSON.search(alt, "//*[references]");
@@ -1203,10 +1219,14 @@ function definitionSwitch() {
 
                 newSub.substanceClass = oldAlt.substanceClass;
                 fieldGetter[newSub.substanceClass].forEach(function (x) {
+          if(newSub[x]){
                     delete newSub[x];
+          }
                 });
                 fieldGetter[oldAlt.substanceClass].forEach(function (x) {
+          if(oldAlt[x]){
                     newSub[x] = oldAlt[x];
+          }
                 });
                 var subReferences = JSON.search(newSub, "//*[references]");
                 var objectsA = subReferences.filter(function (e) {
@@ -1263,7 +1283,7 @@ function definitionSwitch() {
                 if (step == 3) {
                     hideLoadingWheel();
                     setTimeout(function () {
-                        alert('Record definitions successfully switched. The page will now refresh.');
+                        alert('Record definitions successfully switched. The page will now refresh. \n\n Please review and remove any unnecessary validation Notes created for each substance during the process');
                         cb();
                     }, 1000);
                 } else {

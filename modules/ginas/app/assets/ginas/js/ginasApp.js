@@ -1460,13 +1460,13 @@
         $scope.viewSubstance = function () {
             $scope.updateNav = false;
             $window.location.search = null;
-            $window.location.href = baseurl + 'substance/' + $scope.postRedirect.split('-')[0];
+            $window.location.href = baseurl + 'substance/' + $scope.postRedirect;
             //  $window.location.search =null;
         };
         $scope.editNewSubstance = function () {
             $scope.updateNav = false;
             $window.location.search = null;
-            $window.location.href = baseurl + 'substance/' + $scope.postRedirect.split('-')[0] + '/edit';
+            $window.location.href = baseurl + 'substance/' + $scope.postRedirect + '/edit';
             //  $window.location.search =null;
         };
         $scope.addSameSubstanceType = function () {
@@ -2508,6 +2508,7 @@
                 uuid: '=',
                 index: '@',
                 version: '=?',
+                subid: '=?',
                 view: '@',
                 numbers: '=',
                 selected: '='
@@ -2525,6 +2526,7 @@
                 scope.edit = true;
 
                 if (scope.obj) {
+                    scope.subid = scope.obj.uuid;
                     scope.obj.subunitIndex = _.toInteger(scope.index);
                 }
 
@@ -2567,7 +2569,9 @@
                     scope.edit = !scope.edit;
                     if (scope.edit) { //edit starts
                         scope.startEdit();
+                        scope.obj.editing = "open";
                     } else { //edit is done
+                        scope.obj.editing = "closed";
                         scope.obj.sequence = scope.postFormatSeq(scope.obj.$sequence);
                         scope.parseSubunit();
                         scope.fastaview = scope.fastaFormat();
@@ -2576,6 +2580,7 @@
                 };
 
                 scope.startEdit = function () {
+                    scope.obj.editing = "open";
                     scope.obj.$sequence = scope.preformatSeq(scope.obj.sequence);
                 };
 

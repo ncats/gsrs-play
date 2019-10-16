@@ -1955,9 +1955,14 @@ span.nowrap-list {
     border:none;
 }
 
-td.no-sort{
+
+.no-sort {
     pointer-events: none!important;
     cursor: default!important;
+}
+
+.no-sort::after {
+    display: none!important;
 }
 
 .reference-button{
@@ -2224,6 +2229,23 @@ display:none;
 .dragover {
     outline: 5px dashed blue;
 }
+.modal-tab{
+    font-size:17px;
+    padding: 10px 25px !important;
+}
+
+.admin-toggle::after {
+    display: inline-block;
+    width: 0;
+    height: 0;
+    margin-left: .255em;
+    vertical-align: .255em;
+    content: "";
+    border-top: .3em solid;
+    border-right: .3em solid transparent;
+    border-bottom: 0;
+    border-left: .3em solid transparent;
+}
 
 #menu{
     margin-bottom:15px;
@@ -2252,4 +2274,30 @@ display:none;
 #mymenubar > .pull-left .active>a {
     background-color: #1d84b7;
     color: white !important;
+}
+.admin-functions > a {
+    display: block;
+    width: 100%;
+    padding: 3px 6px 3px 6px;
+    clear: both;
+    color: rgb(33, 37, 41);
+    text-align: inherit;
+    white-space: nowrap;
+    background-color: transparent;
+    border: 0;
+}
+
+.admin-functions > a:hover{
+    background-color:lightblue;
+    text-underline-style: none;
+}
+.clean-structure {
+    margin-top:5px;
+    margin-bottom: -10px;
+    padding-right:5px;
+    float:right;
+}
+#rawJson {
+    width:100%;
+    height:800px;
 }
