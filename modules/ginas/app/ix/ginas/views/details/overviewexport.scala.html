@@ -13,7 +13,7 @@ it contains export button information
 *@
 
 	 
-<div class = "col-md-3 col-xs-3 pull-right">
+<div class = "col-md-3 col-xs-3 pull-right" ng-controller = "GinasController">
 	<div class= "list-inline pull-right list-unstyled" id = "button-container" style="">
 
 		<div class = "align-right" >
@@ -21,6 +21,22 @@ it contains export button information
 		</div>
 
 		@dynamic(name = IxDynamicResourceHandler.CAN_UPDATE, handler = new ix.ncats.controllers.security.IxDeadboltHandler()) {
+
+		@if((sub.substanceClass.toString() != "concept") && (sub.substanceClass.toString() != "specifiedSubstanceG1")){
+		<div class = "align-right" >
+			<a href="@ix.ginas.controllers.routes.GinasApp.wizard(sub.substanceClass.toString())&importUUID=@sub.uuid&importType=definition" target="_self" uib-tooltip="Copy&nbsp;Definition&nbsp;to&nbsp;New&nbsp;Substance" aria-label="Copy definition to new substance">
+				<span class="sr-only"> Register Copy </span>
+				<i class="fa fa-clipboard fa-2x success"></i>
+			</a>
+		</div>
+        <div class = "align-right" >
+            <a href="@ix.ginas.controllers.routes.GinasApp.wizard(sub.substanceClass.toString())&importUUID=@sub.uuid&importType=full" target="_self" uib-tooltip="Copy&nbsp;All&nbsp;to&nbsp;New&nbsp;Substance" aria-label="Copy to new substance">
+                <span class="sr-only"> Register Copy </span>
+                <i class="fa fa-clipboard fa-2x"></i>
+            </a>
+        </div>
+		}
+
 		<div class = "align-right" > <a href="@routes.Assets.at("gsrs2/index.html")#/substance/@sub.getUuid()/names"
 			target="_blank"
 
@@ -46,5 +62,6 @@ it contains export button information
 
 
 	</div>
+	<inxight uuid = "'@sub.getApprovalIDDisplay()'"></inxight>
 </div>
                        

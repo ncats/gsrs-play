@@ -67,7 +67,6 @@
 
                 for(var i = 0; i < containerElementCurrentClassList.length; i++) {
                     var className = containerElementCurrentClassList[i];
-                    console.log(className);
                     containerElement.classList.remove(className);
                 }
 

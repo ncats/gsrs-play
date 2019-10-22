@@ -1,7 +1,7 @@
 <div class="row">
     <div class="col-md-12">
         <form class="form-horizontal" name="termForm" role="form" id="addCVTermForm" novalidate>
-            <div ng-repeat="(index,obj) in  referenceobj.terms | orderBy:'value'">
+            <div ng-repeat="(index,obj) in  referenceobj.terms">
                 <ng-form name="form">
                     <div class="form-div" ng-class="{'bg-warning' : form.$invalid && form.$flagged}">
                         <div class="row" ng-class="{'disabled plain' : !referenceobj.$$unlocked}">

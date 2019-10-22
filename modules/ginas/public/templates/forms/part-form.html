@@ -36,6 +36,14 @@
                                 label="Fraction Material Type">
                     </gsrs-input>
                 </div>
+                <div class="col-md-3" ng-if="parent.structurallyDiverse.sourceMaterialClass.value =='ORGANISM'">
+                    <gsrs-input type="dropdown"
+                                ng-model="parent.structurallyDiverse.developmentalStage"
+                                field="developmentalStage"
+                                cv="DEVELOPMENTAL_STAGE"
+                                label="Developmental Stage">
+                    </gsrs-input>
+                </div>
             </div>
             <p></p>
         </form>

@@ -17,7 +17,8 @@
             name="{{::field}}"
             id ="{{::field}}"
             aria-labelledby="{{::field}}-label"
-            ng-required="required">
+            ng-required="required"
+            ng-disabled="isDisabled">
         <option class= "text-capitalize" value="" selected>{{label || field}}...</option>
     </select>
     <input type="text"
@@ -29,6 +30,7 @@
            aria-labelledby="{{::field}}-label"
            ng-if="obj.display=='Other'"
            required
+           ng-disabled="isDisabled"
     />
     <div ng-if="formname[field].$invalid && formname.$flagged" ng-messages="formname[field].$error" role="alert">
         <div ng-message="required" class ="danger">required field</div>

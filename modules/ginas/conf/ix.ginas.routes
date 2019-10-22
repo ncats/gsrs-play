@@ -58,6 +58,8 @@ GET         /downloads/:downloadID/@cancel      ix.ginas.controllers.GinasApp.ca
 GET         /downloads/:downloadID/@remove      ix.ginas.controllers.GinasApp.removeExport(downloadID: String)
 
 GET         /api/v1/substances/approvalId/:unii       ix.ginas.controllers.v1.SubstanceFactory.getSubstanceByApprovalIDForApi(unii : String)
+GET       /beta                  ix.ginas.controllers.GinasApp.getStaticIndexFile()
+GET       /beta/*file            ix.ginas.controllers.GinasApp.getStaticClientAssets(file)
 
 ->      /   ix.ncats.Routes	
 GET     /:any   ix.ginas.controllers.GinasApp.lastUnicorn(any: String)
