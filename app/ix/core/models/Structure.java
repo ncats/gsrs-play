@@ -457,7 +457,7 @@ public class Structure extends BaseModel implements ForceUpdatableModel{
         	messages.add(GinasProcessingMessage
                     .WARNING_MESSAGE("Structure format modified due to standardization"));
         	try {
-                c = Chemical.parseMol(ChemCleaner.removeSGroups(mfile));
+                c = Chemical.parse(ChemCleaner.removeSGroups(mfile));
 
         	c.setProperty("WARNING", "Structure format modified due to standardization: removed SGROUPs");
             }catch(Exception e){

@@ -115,7 +115,7 @@ public class StructureProcessor {
                                         Collection<Structure> components,
                                         boolean standardize) {
         try {
-            return instrument (Chemical.parseMol(buf),
+            return instrument (Chemical.parse(new String(buf)),
                     components, standardize);
         }
         catch (Exception ex) {

@@ -124,6 +124,7 @@ public class SubstanceProcessor implements EntityProcessor<Substance>{
                     EntityPersistAdapter.performChangeOn(oldPri, obj->{
                         List<Relationship> related=oldPri.removeAlternativeSubstanceDefinitionRelationship(s);
                         for(Relationship r:related){
+                            System.out.println("deleting alternative relationship " + r);
                             r.delete();
                         }
                         oldPri.forceUpdate();
@@ -140,8 +141,9 @@ public class SubstanceProcessor implements EntityProcessor<Substance>{
                 }catch(Exception e){
                     e.printStackTrace();
                 }
-                Logger.debug("Got parent sub, which is:" + subPrimary.getName());
                 if (subPrimary != null) {
+                    Logger.debug("Got parent sub, which is:" + subPrimary.getName());
+
                     if (subPrimary.definitionType == SubstanceDefinitionType.PRIMARY) {
 
                         Logger.debug("Going to save");
@@ -156,6 +158,9 @@ public class SubstanceProcessor implements EntityProcessor<Substance>{
                         });
 
                     }
+                }else{
+                    Logger.debug("Got null parent sub");
+
                 }
 
             }else{

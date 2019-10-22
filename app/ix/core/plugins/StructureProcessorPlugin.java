@@ -571,7 +571,7 @@ public class StructureProcessorPlugin extends Plugin {
 
     public void submit (String struc, StructureReceiver receiver) {
         try {
-            submit (Chemical.parseMol(struc), receiver);
+            submit (Chemical.parse(struc), receiver);
         }
         catch (Exception ex) {
             ex.printStackTrace();
