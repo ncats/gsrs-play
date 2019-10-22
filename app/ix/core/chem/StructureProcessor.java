@@ -148,6 +148,7 @@ public class StructureProcessor {
                 instrument (struc, components, Chemical.parse(nmol), standardize);
             }catch(Exception e){
                 System.err.println("Attempt failed");
+                e.printStackTrace();
                 throw new IllegalArgumentException (e);
             }
         }
@@ -224,6 +225,7 @@ public class StructureProcessor {
             struc.molfile = molSupplier.get();
             try {
                 struc.smiles = mol.toSmarts();
+//                System.out.println("query smarts is " + struc.smiles);
             } catch (IOException e) {
                 e.printStackTrace();
             }
