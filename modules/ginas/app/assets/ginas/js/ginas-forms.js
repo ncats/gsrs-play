@@ -234,7 +234,7 @@
 
                 if (_.has(parent, 'modifications.structuralModifications')) {
                         _.forEach(parent.modifications.structuralModifications, function(mod, index){
-                                 sites=_.concat(sites,factory.markSites(mod.sites, "structuralModifications", mod.molecularFragment));
+                                 sites=_.concat(sites,factory.markSites(mod.sites, "structuralModifications", angular.copy(mod.molecularFragment)));
                         });
                 }
                 if (parent.substanceClass === 'protein') {
@@ -382,15 +382,19 @@
 
 
 
-            _.forEach(subunit.sequence.toUpperCase(), function (aa, index) {
+            _.forEach(subunit.sequence, function (aa, index) {
                 var obj = {};
                 obj.value = aa;
-                var temp = mmap[aa];
+                var aaUpercase = aa.toUpperCase();
+                var temp = mmap[aaUpercase];
                 if (!_.isUndefined(temp)) {
                     obj = _.pickBy(temp, _.isString);
                     obj.value = aa;
                     obj.valid = true;
-                    
+                    if(obj.value!==aaUpercase){
+                    	obj.display="D-"+obj.display;
+                    }
+
                     if (subunit.subunitIndex) {
                         obj.subunitIndex = subunit.subunitIndex;
                     } else {
@@ -400,7 +404,7 @@
 
                      if (parent.substanceClass === 'protein') {
                         //parse out cysteines first
-                        if (aa == 'C') {
+                        if (aaUpercase == 'C') {
                             obj.cysteine = true;
                         }else{
                             obj.cysteine = false;
@@ -512,7 +516,7 @@
             link: function (scope, element, attrs) {
 
                 if (scope.parent.uuid) {
-                    scope.editid = scope.parent.uuid.split('-')[0];
+                    scope.editid = scope.parent.uuid;
                 }
 
                 scope.changeClass = function (newClass) {
@@ -834,15 +838,17 @@
             _.forEach(display, function (subunit) {
                 if(!subunit) return;
                 if(!subunit.sequence) return;
+                var tempadd1=[];
                 _.forEach(subunit.$$subunitDisplay, function (chunk) {
                     var tempadd = _.reject(chunk, function (aa) {
                         return aa[type];
                     });
-                    temp = _.concat(temp,tempadd);
+                    tempadd1 = _.concat(tempadd1,tempadd);
                 });
                 if (type === 'linkage' && subunit.sequence.length>0) {
-                        temp = _.dropRight(temp);
+                    tempadd1.splice(0,1);
                     }
+                temp=_.concat(temp,tempadd1);
             });
             return temp;
         };

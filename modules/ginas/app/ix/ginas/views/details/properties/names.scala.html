@@ -11,16 +11,60 @@
 				<tr>
 					<td style="width:100%;">
 						<span>@n.name</span>
-						@* preferred name checkmark*@
-						@if(n.preferred){
-							<span title="Preferred Name" class="pref-check">
+					@* display name checkmark*@
+					@if(n.isDisplayName()){
+						<span title="Display Name" class="pref-check">
 								<i class="fa fa-check" aria-hidden="true"></i>
 							</span>
 						}
 					</td>
 					<td>
 						@* info-popup contents *@
-						@if(n.getReferences.size > 0 || n.getLocators(substance).size()>0){
+					<div style = "display:none">
+						@if(n.domains.size()>0 || n.nameJurisdiction.size()>0 || n.nameOrgs.size()>0){
+						<div class="info-popup-container" id = "names-det-@n.uuid">
+							<label>Details:</label>
+							<table class="table moreDetails">
+								<tr class = "relationship-subtable-tr">
+									<th>Domain</th>
+									<th>Jurisdiction</th>
+									<th>Naming Organization</th>
+								</tr>
+								<td>
+									@if(n.domains.size()>0){
+										<div>
+											@for(l <- n.domains) {
+											@GinasApp.getCV.getDisplay("DOMAIN", l.term) &nbsp;
+											}
+										</div>
+									}
+								</td>
+								<td>
+									@if(n.nameJurisdiction.size()>0){
+										<div>
+											@for(l <- n.nameJurisdiction) {
+											@GinasApp.getCV.getDisplay("NAME_JURISDICTION", l.term) &nbsp;
+											}
+										</div>
+									}
+								</td>
+								<td>
+									@if(n.nameOrgs.size()>0){
+										<div>
+											@for(org <- n.nameOrgs) {
+											@GinasApp.getCV.getDisplay("NAME_ORG", org.nameOrg) &nbsp;
+											}
+										</div>
+									}
+								</td>
+								</tr>
+							</table>
+						</div>
+						}
+					</div>
+
+
+					@if(n.getReferences.size > 0){
 							<div style = "display:none">
 
 								<div class="info-popup-container" id = "names-ref-@n.uuid">
@@ -36,17 +80,6 @@
 												@l
 												</span> &nbsp;
 											}
-										</div>
-									}
-
-									@if(n.nameOrgs.size()>0){
-										<div class="table-responsive">
-											<div>
-												<label>Naming Organization:</label>
-												@for(org <- n.nameOrgs) {
-													@GinasApp.getCV.getDisplay("NAME_ORG", org.nameOrg) &nbsp;
-												}
-											</div>
 										</div>
 									}
 
@@ -74,11 +107,7 @@
 		</td>
 
 		<td id="one-line">
-		@if(n.preferred) {
-			Preferred Name
-		}else{
 			@GinasApp.getCV.getDisplay("NAME_TYPE",{n.`type`})
-		}
 		</td>
 
 		<td >
@@ -92,7 +121,13 @@
 			</div>
 		}
 		</td>
-		<td><button onclick = "addRef('@n.uuid',this,'names');" class = "btn btn-primary reference-button" >view</button></td>
+	<td>
+		<button onclick = "addDetails('@n.uuid',this,'names');" class = "btn btn-primary reference-button"
+		@if(n.domains.size == 0 && n.nameJurisdiction.size() == 0 && n.nameOrgs.size() == 0){ disabled } >view</button>
+	</td>
+	<td>
+		<button onclick = "addRef('@n.uuid',this,'names');" class = "btn btn-primary reference-button" @if(n.getReferences.size == 0){ disabled } >view</button>
+	</td>
 	</tr>
 }
 
@@ -102,6 +137,7 @@
 			<th>Name</th>
 			<th>Type</th>
 			<th>Language</th>
+		<th>Details</th>
 			<th class = "no-sort">References</th>
 
 		</tr>
@@ -111,7 +147,13 @@
 
 		@for(n <- names) {
 
-			@if(n.isDisplayName() || n.preferred){
+	@if(n.isDisplayName()){
+	@renderName(n)
+	}
+	}
+	@for(n <- names) {
+
+	@if(n.preferred && !n.isDisplayName()){
 				@renderName(n)
 			}
 		}

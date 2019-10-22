@@ -14,13 +14,24 @@
                     <div class = "row">
                         <div class = "col-md-12 text-center">
                             <ul class= "list-inline list-unstyled tools">
-                                <li>
+                                <li class = "col-md-3">
                                     <a href="@ix.ginas.controllers.routes.GinasFactory.edit(GinasApp.getId(sub))" uib-tooltip="Edit" target="_self" aria-label="Edit Mixture"><span class="sr-only">
                                         Edit Mixture</span><span class="fa fa-pencil fa-2x success"></span></a>
             </li>
-                                <li> <a href="@routes.Assets.at("gsrs2/index.html")#/substance/@sub.getUuid()/names" target="_blank" uib-tooltip="New Form" aria-label="Edit Mixture">
+                                <li class = "col-md-3"> <a href="@routes.Assets.at("gsrs2/index.html")#/substance/@sub.getUuid()/names" target="_blank" uib-tooltip="New Form" aria-label="Edit Mixture">
                                     <span class="sr-only">Edit New Form</span>
                                     <i class="fa fa-pencil-square fa-2x" aria-hidden="true" ></i></a></li>
+
+                                <li class = "col-md-3">
+                                 <a href="@ix.ginas.controllers.routes.GinasApp.wizard("mixture")&importUUID=@sub.uuid&importType=definition" target="_self" uib-tooltip="Copy&nbsp;Definition&nbsp;to&nbsp;New&nbsp;Substance" aria-label="Register Copy"><span class="sr-only"> Register Copy </span>
+                    				<span class="fa fa-clipboard fa-2x success"></span>
+                				 </a>
+                                </li>
+                                <li class = "col-md-3">
+                                    <a href="@ix.ginas.controllers.routes.GinasApp.wizard("mixture")&importUUID=@sub.uuid&importType=full" target="_self" uib-tooltip="Copy&nbsp;All&nbsp;to&nbsp;New&nbsp;Substance" aria-label="Register Copy"><span class="sr-only"> Register Copy </span>
+                                    <span class="fa fa-clipboard fa-2x"></span>
+                                    </a>
+                                </li>
         </ul>
     </div>
 </div>

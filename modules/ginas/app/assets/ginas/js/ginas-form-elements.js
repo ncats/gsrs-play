@@ -11,6 +11,28 @@
                     patharr = _.takeRight(patharr, 2);
                 }
                 var pathString = _.join(patharr, '.');
+                //this is a stop-gap for a few things missing the fields attribute
+                var defMap = {};
+                defMap["physicalModifications.physicalModificationRole"]="PHYSICAL_MODIFICATION_ROLE";
+                defMap["extentAmount.type"]="AMOUNT_TYPE";
+
+                if(defMap[pathString]){
+	                return $http.get(vocabulariesUrl + "/search", {
+	                    params: {"q": "root_domain=\"^" + defMap[pathString] + "$\""},
+	                    cache: true
+	                }, {
+	                    headers: {
+	                        'Content-Type': 'text/plain'
+	                    }
+	                }).success(function (data) {
+	                    if (data.content.length > 0) {
+	                        return data;
+	                    } else {
+	                        return 0;
+	                    }
+	                });
+                }else{
+
                 return $http.get(vocabulariesUrl, {
                     params: {"filter": "fields.term ='" + pathString + "'"},
                     cache: true
@@ -25,6 +47,7 @@
                         return 0;
                     }
                 });
+                }
             },
             //used to load cv in form elements
             getCV: function (domain) {
@@ -913,10 +936,8 @@
                 };
 
                 scope.stage = true;
-                scope.externalLink = '';
 
                 scope.fetch = function (term, skip) {
-                    scope.externalLink = '';
                     if (_.isUndefined(scope.referenceobj) || scope.referenceobj == null) {
                         scope.referenceobj = {};
                     }
@@ -948,7 +969,6 @@
                 };
 
                 scope.createSubref = function (selectedItem) {
-                    scope.externalLink = baseurl + "substance/"+selectedItem.uuid;
                     var temp = {};
                     temp.refuuid = selectedItem.uuid;
                     temp.refPname = selectedItem._name;

@@ -1,0 +1,69 @@
+{
+  "_from": "dojo@1.14.2",
+  "_id": "dojo@1.14.2",
+  "_inBundle": false,
+  "_integrity": "sha512-TI+Ytgfh/VfmHWERp45Jte6NFMdoJTPsvUP/uzJUvAXET8FP2h442LePWWJ/q/xZ4V0V8OtdJhx8It/GB+Zbxg==",
+  "_location": "/dojo",
+  "_phantomChildren": {},
+  "_requested": {
+    "type": "version",
+    "registry": true,
+    "raw": "dojo@1.14.2",
+    "name": "dojo",
+    "escapedName": "dojo",
+    "rawSpec": "1.14.2",
+    "saveSpec": null,
+    "fetchSpec": "1.14.2"
+  },
+  "_requiredBy": [
+    "/",
+    "/dijit",
+    "/dojox"
+  ],
+  "_resolved": "https://registry.npmjs.org/dojo/-/dojo-1.14.2.tgz",
+  "_shasum": "45ca90b19068230e1486f68b1531fa4ce0e21280",
+  "_spec": "dojo@1.14.2",
+  "_where": "C:\\Users\\neyraj2\\Spotlight\\GSRSFrontend",
+  "bugs": {
+    "url": "http://bugs.dojotoolkit.org/"
+  },
+  "bundleDependencies": false,
+  "deprecated": false,
+  "description": "Dojo core is a powerful, lightweight library that makes common tasks quicker and easier. Animate elements, manipulate the DOM, and query with easy CSS syntax, all without sacrificing performance.",
+  "devDependencies": {
+    "dojo": "1.14.2",
+    "formidable": "1.0.17",
+    "glob": "3.2.7",
+    "http-proxy": "0.10.3",
+    "intern-geezer": "2.2.2",
+    "jsgi-node": "0.3.1",
+    "sinon": "1.12.2"
+  },
+  "directories": {
+    "lib": "."
+  },
+  "dojoBuild": "dojo.profile.js",
+  "homepage": "http://dojotoolkit.org/",
+  "keywords": [
+    "JavaScript",
+    "Dojo",
+    "Toolkit"
+  ],
+  "license": "BSD-3-Clause OR AFL-2.1",
+  "main": "main",
+  "name": "dojo",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dojo/dojo.git"
+  },
+  "scripts": {
+    "test": "intern-client config=tests/dojo.intern",
+    "test-coverage": "intern-client config=tests/dojo.intern reporters=console reporters=lcovhtml",
+    "test-local": "intern-runner config=tests/dojo.intern.local",
+    "test-local-coverage": "intern-runner config=tests/dojo.intern.local reporters=runner reporters=lcovhtml",
+    "test-proxy": "intern-runner config=tests/dojo.intern.proxy proxyOnly=true",
+    "test-remote": "intern-runner config=tests/dojo.intern",
+    "test-remote-coverage": "intern-runner config=tests/dojo.intern reporters=runner reporters=lcovhtml"
+  },
+  "version": "1.14.2"
+}

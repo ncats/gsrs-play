@@ -66,5 +66,19 @@ angular.module('validatorListener', [])
 				return false;
 			}
 		});
+		codeSystemValidators.putValidatorFor("PUBCHEM", function (cd) {
+			if(!_.isUndefined(cd)) {
+				var c = (cd - 0) + "";
+
+				if (c === "NaN") {
+					return false;
+				} else {
+					return true;
+				}
+				return false;
+			}
+		});
 return codeSystemValidators;
 	});
+
+

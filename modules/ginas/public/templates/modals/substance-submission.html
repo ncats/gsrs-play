@@ -40,6 +40,8 @@
                 </div>
             </div>
     <div class="modal-footer">
+        <button type="button" ng-if="errorsArray.length>3" class="btn btn-danger"  ng-click="dismissAll()" style="float: left">Dismiss All</button>
+
                     <button type="button" class="btn btn-danger"  ng-click="close()">Go Back</button>
                     <span ng-show="canSubmit">
                     	<button type="button" class="btn btn-success" ng-click="submitSubstance()" id="submitConfirm">Submit</button>

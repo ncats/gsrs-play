@@ -756,6 +756,17 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
         return null;
     }
 
+    @JsonIgnore
+    public Optional<Relationship> getPrimaryDefinitionRelationships() {
+        List<Relationship> primaries = new ArrayList<>();
+        for (Relationship r : relationships) {
+            if (r.type != null && r.type.equals(PRIMARY_SUBSTANCE_REL)) {
+                return Optional.of(r);
+            }
+        }
+        return Optional.empty();
+    }
+
     /**
      * Returns this substance as a SubstanceReference
      * for linking.
@@ -781,6 +792,16 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
         r.relatedSubstance=sub.asSubstanceReference();
         r.type=ALTERNATE_SUBSTANCE_REL;
         r.addReference(Reference.SYSTEM_GENERATED(),this);
+
+        //G-SRS 1034
+        Optional<Relationship> primaryRel = sub.getPrimaryDefinitionRelationships();
+        if(primaryRel.isPresent()){
+            r.setAccess(new HashSet<>(primaryRel.get().getAccess()));
+
+        }else{
+            System.out.println("primary def not found!!!!");
+        }
+
         this.relationships.add(r);
         return false;
     }

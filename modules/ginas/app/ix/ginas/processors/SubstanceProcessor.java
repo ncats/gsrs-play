@@ -95,10 +95,9 @@ public class SubstanceProcessor implements EntityProcessor<Substance>{
     private void savingSubstance(final Substance s, boolean newInsert) {
 
 
-
         Logger.debug("Persisting substance:" + s);
         if (s.isAlternativeDefinition()) {
-
+//            System.out.println("IN ALTERNATE DEF");
             Logger.debug("It's alternative");
             //If it's alternative, find the primary substance (there should only be 1, but this returns a list anyway)
             List<Substance> realPrimarysubs=SubstanceFactory.getSubstanceWithAlternativeDefinition(s);
@@ -110,6 +109,7 @@ public class SubstanceProcessor implements EntityProcessor<Substance>{
 
 
             SubstanceReference sr = s.getPrimaryDefinitionReference();
+//            System.out.println("primary ref = " + sr);
             if (sr != null) {
 
                 Logger.debug("Enforcing bidirectional relationship");
