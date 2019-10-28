@@ -21,7 +21,10 @@ public class PrimaryDefinitionValidator extends AbstractValidatorPlugin<Substanc
                 .getAlternativeDefinitionReferences()) {
             Substance subAlternative = SubstanceFactory
                     .getFullSubstance(relsub);
-            if (subAlternative.isPrimaryDefinition()) {
+            if(subAlternative ==null){
+                //does not exist
+                callback.addMessage(GinasProcessingMessage.WARNING_MESSAGE("alternative definition not found " + relsub.refPname));
+            }else if (subAlternative.isPrimaryDefinition()) {
                 callback.addMessage(GinasProcessingMessage
                         .ERROR_MESSAGE("Primary definitions cannot be alternative definitions for other Primary definitions"));
             }

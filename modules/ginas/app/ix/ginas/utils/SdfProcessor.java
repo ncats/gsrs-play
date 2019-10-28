@@ -1,6 +1,6 @@
 package ix.ginas.utils;
 
-import gov.nih.ncgc.chemical.Chemical;
+import gov.nih.ncats.molwitch.Chemical;
 import ix.ginas.modelBuilders.ChemicalSubstanceBuilder;
 import ix.ginas.modelBuilders.SubstanceBuilder;
 

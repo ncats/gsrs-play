@@ -810,15 +810,16 @@ public class ChemicalApiTest extends AbstractGinasServerTest {
 			SearchResult result = searcher.substructure(searcher.getStructureAsUUID("S(=O)(=O)(O)OC[#6]"));
 			assertEquals(2, result.getUuids().size());
 
-			result = searcher.substructure(searcher.getStructureAsUUID("S(=O)(=O)(O)OC@:[#6]"));
+			result = searcher.substructure("S(=O)(=O)(O)OC@:[#6]", .5);
 			assertEquals(3, result.getUuids().size());
 
-			result = searcher.substructure(searcher.getStructureAsUUID("S(=O)(=O)(O)OC@-[#6]"));
+			result = searcher.substructure("S(=O)(=O)(O)OC@-[#6]");
 			assertEquals(1, result.getUuids().size());
 		}
 
 	}
-	
+//	@RunOnly
+
 	@Test
 	public void testCarbonSubstructureSearchDoesNotLimitToAliphaticCarbon() throws Exception {
 		// JsonNode entered = parseJsonFile(resource);
@@ -912,7 +913,7 @@ public class ChemicalApiTest extends AbstractGinasServerTest {
             String displayName = entered.at("/_name").asText();
             String uuid=entered.at("/uuid").asText();
 			String export=api.exportHTML(uuid,"smiles");
-			assertTrue("Exported smiles should be kekulized", export.contains("="));
+			assertTrue("Exported smiles should be kekulized '" + export + "'", export.contains("="));
 			assertTrue("Exported smiles for 'COC1=CC=CC=C1' should have 'O'", export.contains("O"));
 			assertTrue("Exported smiles for 'COC1=CC=CC=C1' should have 'C'", export.contains("C"));
 			assertTrue("Exported smiles for 'COC1=CC=CC=C1' should have '1'", export.contains("1"));

@@ -83,4 +83,38 @@ public class ChemicalValidationTest extends AbstractGinasServerTest {
             assertTrue(fetchedMol, fetchedMol.contains("M  END"));
         }
     }
+
+    @Test
+    public void definitionalHashChangeStructureOKAsFirstSubmission() throws Exception{
+
+
+        try (RestSession session = ts.newRestSession(ts.getFakeUser1())) {
+            SubstanceAPI api = new SubstanceAPI(session);
+
+            JsonNode toSubmit =
+                    new ChemicalSubstanceBuilder()
+                            .addName("aName")
+                            .generateNewUUID()
+                            .setStructure("c1ccccc1")
+                            .buildJson();
+
+            SubstanceAPI.ValidationResponse response = api.validateSubstance(toSubmit);
+
+
+
+
+            assertTrue(response.isValid());
+            //this is split up and stored as a variable fo
+
+            List<ValidationMessage> messages = response.getMessages();
+
+            assertFalse(messages.stream()
+                    .filter(m -> m.getMessage().contains("Definitional change"))
+                    .findAny()
+                    .isPresent());
+
+        }
+    }
+
+
 }

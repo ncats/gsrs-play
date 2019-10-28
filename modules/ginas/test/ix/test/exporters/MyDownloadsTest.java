@@ -35,7 +35,7 @@ public class MyDownloadsTest extends AbstractGinasServerTest{
     @Test
     public void createdExportIsSavedInMyDownloads() throws IOException {
         try (BrowserSession browserSession = loadRep90();
-             BufferedReader reader = new BufferedReader(new InputStreamReader(browserSession.newSubstanceSearcher().all().export("csv")))
+             BufferedReader reader = new BufferedReader(new InputStreamReader(browserSession.newSubstanceSearcher().all().newExportRequest("csv").setPublicOnly(false).getInputStream()))
         ) {
             List<String> originalExport = reader.lines().collect(Collectors.toList());
 
@@ -60,7 +60,7 @@ public class MyDownloadsTest extends AbstractGinasServerTest{
     }
 
     private List<String> exportTo(BrowserSession session, String format) throws IOException{
-        try(BufferedReader reader = new BufferedReader(new InputStreamReader(session.newSubstanceSearcher().all().export("csv")))){
+        try(BufferedReader reader = new BufferedReader(new InputStreamReader(session.newSubstanceSearcher().all().newExportRequest("csv").setPublicOnly(false).getInputStream(true)))){
             return reader.lines().collect(Collectors.toList());
         }
     }
@@ -114,7 +114,8 @@ public class MyDownloadsTest extends AbstractGinasServerTest{
             File actualCsv = files[0];
             long lastModifiedDate = actualCsv.lastModified();
 
-            try(BufferedReader reader = new BufferedReader(new InputStreamReader(browserSession.newSubstanceSearcher().all().newExportRequest("csv").getInputStream()))){
+            try(BufferedReader reader = new BufferedReader(new InputStreamReader(browserSession.newSubstanceSearcher().all()
+                            .newExportRequest("csv").setPublicOnly(false).getInputStream(true)))){
                 List<String> redownloadLines = reader.lines().collect(Collectors.toList());
 
                 assertEquals(lines, redownloadLines);

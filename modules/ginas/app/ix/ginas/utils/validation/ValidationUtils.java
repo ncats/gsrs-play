@@ -19,6 +19,7 @@ import ix.core.controllers.AdminFactory;
 import ix.core.models.*;
 import ix.core.plugins.PayloadPlugin;
 import ix.core.util.CachedSupplier;
+import ix.ginas.controllers.v1.ReferenceFactory;
 import ix.ginas.controllers.v1.SubstanceFactory;
 import ix.ginas.models.EmbeddedKeywordList;
 import ix.ginas.models.GinasAccessReferenceControlled;
@@ -441,8 +442,16 @@ public class ValidationUtils {
 			for (Keyword ref : references) {
 				Reference r = s.getReferenceByUUID(ref.getValue());
 				if (r == null) {
+					//GSRS-933 more informative error message if you can find the Reference
+					Reference dbReference = ReferenceFactory.getReference(ref.getValue());
+					if(dbReference !=null) {
+						callback.addMessage(GinasProcessingMessage.ERROR_MESSAGE("Reference  type: \"" + dbReference.docType +
+								"\" citation: \"" + dbReference.citation + "\"  uuid \""
+								+ ref.getValue() + "\" not found on substance."));
+					}else{
 					callback.addMessage(GinasProcessingMessage.ERROR_MESSAGE("Reference \""
 							+ ref.getValue() + "\" not found on substance."));
+					}
 					worked.set(false);
 				}
 			}
@@ -1280,25 +1289,19 @@ public class ValidationUtils {
 					|| cs.nucleicAcid.getSubunits().isEmpty()) {
 				gpm.add(GinasProcessingMessage
 						.ERROR_MESSAGE("Nucleic Acid substance must have at least 1 subunit"));
-			} else {
-
 			}
 			if (cs.nucleicAcid.getSugars() == null
 					|| cs.nucleicAcid.getSugars().isEmpty()) {
 				gpm.add(GinasProcessingMessage
 						.ERROR_MESSAGE("Nucleic Acid substance must have at least 1 specified sugar"));
-			} else {
-
 			}
 			if (cs.nucleicAcid.getLinkages() == null
 					|| cs.nucleicAcid.getLinkages().isEmpty()) {
 				gpm.add(GinasProcessingMessage
 						.ERROR_MESSAGE("Nucleic Acid substance must have at least 1 specified linkage"));
-			} else {
-
 			}
 
-			{
+
 				int unspSugars = NucleicAcidUtils
 						.getNumberOfUnspecifiedSugarSites(cs);
 				if (unspSugars != 0) {
@@ -1306,16 +1309,23 @@ public class ValidationUtils {
 							.ERROR_MESSAGE("Nucleic Acid substance must have every base specify a sugar fragment. Missing "
 									+ unspSugars + " sites."));
 				}
-			}
-			{
+
 				int unspLinkages = NucleicAcidUtils
 						.getNumberOfUnspecifiedLinkageSites(cs);
-				if (unspLinkages != 0) {
+				//This is meant to say you can't be MISSING a link between 2 sugars in an NA
+				if (unspLinkages >0) {
 					gpm.add(GinasProcessingMessage
 							.ERROR_MESSAGE("Nucleic Acid substance must have every linkage specify a linkage fragment. Missing "
 									+ unspLinkages + " sites."));
+					//Typically you can't also have an extra link (on the 5' end), but it's allowed
+				}else if(unspLinkages < 0 && unspLinkages >= -cs.nucleicAcid.subunits.size()){
+					gpm.add(GinasProcessingMessage
+							.INFO_MESSAGE("Nucleic Acid Substance specifies more linkages than typically expected. This is typically done to specify a 5' phosphate, but is often sometimes done by accident."));
+				}else if(unspLinkages < 0){
+					gpm.add(GinasProcessingMessage
+							.ERROR_MESSAGE("Nucleic Acid Substance has too many linkage sites specified."));
 				}
-			}
+
 		}
 		return gpm;
 	}
@@ -1545,13 +1555,34 @@ public class ValidationUtils {
 					moietiesForSub.add(m2);
 				}
 			}
-			if (cs.moieties == null
-					|| cs.moieties.size() != moietiesForSub.size()) {
+
+			  if (cs.moieties != null
+	            		&& !cs.moieties.isEmpty()
+	                    && cs.moieties.size() != moietiesForSub.size()) {
 
 				GinasProcessingMessage mes = GinasProcessingMessage
 						.WARNING_MESSAGE("Incorrect number of moieties")
 						.appliableChange(true);
 				gpm.add(mes);
+				strat.processMessage(mes);
+				switch (mes.actionType) {
+				case APPLY_CHANGE:
+					cs.moieties = moietiesForSub;
+					mes.appliedChange = true;
+					break;
+				case FAIL:
+					break;
+				case DO_NOTHING:
+				case IGNORE:
+				default:
+					break;
+				}
+			}else if (cs.moieties == null || cs.moieties.isEmpty()) {
+
+                GinasProcessingMessage mes = GinasProcessingMessage
+                        .INFO_MESSAGE("No moieties found in submission. They will be generated automatically.")
+                        .appliableChange(true);
+                gpm.add(mes);
 				strat.processMessage(mes);
 				switch (mes.actionType) {
 				case APPLY_CHANGE:
@@ -1601,8 +1632,8 @@ public class ValidationUtils {
 
 		String oldhash = null;
 		String newhash = null;
-		oldhash = oldstr.getLychiv4Hash();
-		newhash = newstr.getLychiv4Hash();
+		oldhash = oldstr.getExactHash();
+		newhash = newstr.getExactHash();
 		// Should always use the calculated pieces
 		// TODO: Come back to this and allow for SOME things to be overloaded
 		if (true || !newhash.equals(oldhash)) {

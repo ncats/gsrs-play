@@ -13,24 +13,24 @@
                     <form role="search" method="POST"
                     enctype="application/x-www-form-urlencoded"
                     action="@ix.ginas.controllers.routes.GinasApp.sequenceSearch"
-                    id="search-bar">
+                    id="sequence-search-bar">
                         <div class="form-group">
                             <div class="row">
                                 <div class="col-md-4">
                                     <label for="identity">Search Identity: </label>
                                     <input type="text" class="form-control" id="identity"
-                                    name="identity" value="0.5">
+                                    name="identity" value="0.9">
                                 </div>
                                 <div class="col-md-4">
                                     <label for="identityType">Cutoff Type: </label>
                                     <select class="form-control" id="identityType" name="identityType" >
-                                    	<option selected="selected" value="SUB">Contains Alignment Match</option>
-                                    	<option value="GLOBAL">Global Alignment Match</option>
+                                    	<option selected="selected" value="GLOBAL">Global Alignment Match</option>
                                     	<option value="LOCAL">Local Alignment Match</option>
+                                    	<option value="SUB">Contains Alignment Match</option>
                                     </select>
                                 </div>
                                 <div class="col-md-4">
-                                    <label for="identityType">Sequence Type: </label>
+                                    <label for="seqType">Sequence Type: </label>
                                     <select class="form-control" ng-init="preload('@seqType')" ng-change="preload(seqType)"
                                     ng-model="seqType" id="seqType" name="seqType" >
                                         <option @if(seqType.equalsIgnoreCase("protein")){selected="selected"} value="Protein">Protein</option>

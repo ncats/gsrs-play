@@ -6,10 +6,8 @@ import java.util.List;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import chemaxon.struc.MolAtom;
-import chemaxon.struc.Molecule;
-import gov.nih.ncgc.chemical.Chemical;
-import gov.nih.ncgc.jchemical.Jchemical;
+import gov.nih.ncats.molwitch.Atom;
+import gov.nih.ncats.molwitch.Chemical;
 import ix.core.validator.GinasProcessingMessage;
 import ix.core.models.Structure;
 import ix.core.models.Structure.Optical;
@@ -18,8 +16,6 @@ import ix.core.validator.ValidatorCallback;
 import ix.utils.FortranLikeParserHelper.LineParser;
 
 
-//All of the code below should be changed to use
-//chemkit eventually
 
 public class ChemUtils {
 
@@ -51,15 +47,10 @@ public class ChemUtils {
 	 */
 	public static void checkValance(Structure newstr, List<GinasProcessingMessage> gpm) {
 		Chemical c = newstr.toChemical();
-		Molecule m = Jchemical.makeJchemical(c).getMol();
-		m.valenceCheck();
-		MolAtom[] mas = m.getAtomArray();
-
-		for (int i = 0; i < mas.length; i++) {
-			MolAtom ma = mas[i];
-			if (ma.hasValenceError()) {
+		for(Atom atom : c.getAtoms()){
+			if(atom.hasValenceError()){
 				GinasProcessingMessage mes = GinasProcessingMessage
-						.WARNING_MESSAGE("Valence Error on " + ma.getSymbol() + " atom (" + (i + 1) + ") ");
+						.WARNING_MESSAGE("Valence Error on " + atom.getSymbol() + " atom (" + (atom.getAtomIndexInParent() + 1) + ") ");
 				gpm.add(mes);
 			}
 		}

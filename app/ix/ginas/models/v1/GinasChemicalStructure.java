@@ -216,6 +216,8 @@ public class GinasChemicalStructure extends Structure implements GinasAccessRefe
     	}
     }
 
+
+    //There's an issue here.
 	public GinasChemicalStructure copy() throws Exception {
 		EntityMapper em=EntityFactory.EntityMapper.FULL_ENTITY_MAPPER();
 		JsonNode jsn=em.valueToTree(this);

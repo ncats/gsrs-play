@@ -11,10 +11,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-import ix.ginas.controllers.GinasApp;
+import gov.nih.ncats.molwitch.Chemical;
 import ix.ginas.models.v1.Substance;
 import ix.core.validator.GinasProcessingMessage;
-import gov.nih.ncgc.chemical.Chemical;
 
 public class SdfExporter implements Exporter<Substance> {
     @FunctionalInterface
@@ -56,7 +55,7 @@ public class SdfExporter implements Exporter<Substance> {
         modifier.modify(chem, s, warnings);
         try {
 
-            String content = GinasApp.formatMolfile(chem,Chemical.FORMAT_SDF);
+            String content = formatMolfile(chem);
             out.write(content);
             out.newLine();
 
@@ -71,4 +70,10 @@ public class SdfExporter implements Exporter<Substance> {
     }
 
 
+    private static String formatMolfile(Chemical c) throws Exception {
+        String mol = c.toSd();
+        String[] lines = mol.split("\n");
+        lines[1] = " G-SRS " + lines[1];
+        return String.join("\n", lines);
+    }
 }

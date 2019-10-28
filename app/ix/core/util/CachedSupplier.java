@@ -2,7 +2,6 @@ package ix.core.util;
 
 import java.util.Optional;
 import java.util.concurrent.Callable;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Supplier;
 
@@ -54,12 +53,16 @@ public class CachedSupplier<T> implements Supplier<T>, Callable<T>{
 				if(hasRun()){
 					return this.cache;
 				}
-				this.generatedWithVersion=CachedSupplier.generatedVersion.get();
-				this.cache=directCall();
-				this.run=true;
+				setCacheDirect(directCall());
 				return this.cache;
 			}
 		}
+	}
+
+	protected void setCacheDirect(T obj) {
+				this.generatedWithVersion=CachedSupplier.generatedVersion.get();
+		this.cache=obj;
+				this.run=true;
 	}
 	
 	protected T directCall(){

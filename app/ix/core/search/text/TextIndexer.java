@@ -151,6 +151,7 @@ public class TextIndexer implements Closeable, ProcessListener {
 	private static final boolean USE_ANALYSIS =    ConfigHelper.getBoolean("ix.textindex.fieldsuggest",true);
 	
 	private static final String ANALYZER_FIELD = "M_FIELD";
+	private static final String ANALYZER_MARKER_FIELD = "ANALYZER_MARKER";
 	private static final String ANALYZER_VAL_PREFIX = "ANALYZER_";
 	
 	
@@ -339,6 +340,7 @@ public class TextIndexer implements Closeable, ProcessListener {
             
             terms.entrySet()
                 .stream()
+                .parallel()
                 .map(es->Tuple.of(es.getKey(), es.getValue().getNDocs()))
                 .filter(filt)
                 .map(t->new FV(fac,t.k(),t.v()))
@@ -1380,7 +1382,17 @@ public class TextIndexer implements Closeable, ProcessListener {
 			try{
 				q = super.parse(qtext);
 			}catch(Exception e){
+				//This is not a good way to deal with dangling quotes, but it is A
+				//way to do it
+				try{
 				q = super.parse("\"" + qtext + "\"");
+				}catch(Exception e2){
+					if(qtext.startsWith("\"")){
+						q = super.parse(qtext + "\"");
+					}else{
+						q = super.parse("\"" + qtext);
+					}
+				}
 			}
 			return q;
 
@@ -1431,6 +1443,8 @@ public class TextIndexer implements Closeable, ProcessListener {
 				}
 			} else if (options.getKind() != null) {
 				f = createKindArrayFromOptions(options);
+			} else{
+				f = new FieldCacheTermsFilter(ANALYZER_MARKER_FIELD, "false");
 			}
 			return f;
 		};
@@ -1781,6 +1795,8 @@ public class TextIndexer implements Closeable, ProcessListener {
 					// now queue the payload so the remainder is fetched in
 					// the background
 					// fetchQueue.put(payload);
+					// The problem here is that the searcher may have changed since the last time, so this isn't strictly guaranteed to be consistent
+
 					threadPool.submit(() -> {
 						try {
 							withSearcher(s->{
@@ -2431,7 +2447,9 @@ public class TextIndexer implements Closeable, ProcessListener {
 				Key key =ew.getKey();
 				if(!key.getIdString().equals("")){  //probably not needed
 					StringField toAnalyze=new StringField(FIELD_KIND, ANALYZER_VAL_PREFIX + ew.getKind(),YES);
-					
+					StringField analyzeMarker=new StringField(ANALYZER_MARKER_FIELD, "true",YES);
+
+
 					Tuple<String,String> luceneKey = key.asLuceneIdTuple();
 					StringField docParent=new StringField(ANALYZER_VAL_PREFIX+luceneKey.k(),luceneKey.v(),YES);
 					FacetField  docParentFacet =new FacetField(ANALYZER_VAL_PREFIX+luceneKey.k(),luceneKey.v());
@@ -2440,6 +2458,7 @@ public class TextIndexer implements Closeable, ProcessListener {
 							try{
                                 Document fielddoc = new Document();
 								fielddoc.add(toAnalyze);
+								fielddoc.add(analyzeMarker);
 								fielddoc.add(docParent);
 								fielddoc.add(docParentFacet);
 								fielddoc.add(new FacetField(ANALYZER_FIELD,name));
@@ -2455,7 +2474,7 @@ public class TextIndexer implements Closeable, ProcessListener {
 			}
 			
 			fieldCollector.accept(new StringField(FIELD_KIND, ew.getKind(), YES));
-			
+			fieldCollector.accept(new StringField(ANALYZER_MARKER_FIELD, "false", YES));
 			
 			// now index
 			addDoc(doc);
@@ -2514,13 +2533,14 @@ public class TextIndexer implements Closeable, ProcessListener {
 	
 	public void remove(Key key) throws Exception {
 				Tuple<String,String> docKey=key.asLuceneIdTuple();
-				if (DEBUG(2)){
+				//if (DEBUG(2)){
 					Logger.debug("Deleting document " + docKey.k() + "=" + docKey.v() + "...");
-				}
+				//}
 				
 				BooleanQuery q = new BooleanQuery();
 				q.add(new TermQuery(new Term(docKey.k(), docKey.v())), BooleanClause.Occur.MUST);
 				q.add(new TermQuery(new Term(FIELD_KIND, key.getKind())), BooleanClause.Occur.MUST);
+
 				indexWriter.deleteDocuments(q);
 				
 				if(USE_ANALYSIS){ //eliminate 

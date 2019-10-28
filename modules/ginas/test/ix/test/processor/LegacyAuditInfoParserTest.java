@@ -8,6 +8,7 @@ import static org.junit.Assert.assertTrue;
 import java.io.File;
 import java.util.Date;
 
+import ix.ginas.models.v1.Substance;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -36,12 +37,15 @@ public class LegacyAuditInfoParserTest extends AbstractGinasServerTest{
 
 	@Override
 	public GinasTestServer createGinasTestServer(){
-		return new GinasTestServer(()->{
-			Config additionalConfig = ConfigFactory.parseFile(new File("conf/ginas-legacy-audit.conf"))
-					.resolve()
-					.withOnlyPath("ix.core.entityprocessors");
-			return new Configuration(additionalConfig).asMap();
-		});
+		GinasTestServer ts = super.createGinasTestServer();
+		ts.addEntityProcessor(GinasTestServer.ConfigOptions.ALL_TESTS, Substance.class, LegacyAuditInfoProcessor.class);
+//		return new GinasTestServer(()->{
+//			Config additionalConfig = ConfigFactory.parseFile(new File("conf/ginas-legacy-audit.conf"))
+//					.resolve()
+//					.withOnlyPath("ix.core.entityprocessors");
+//			return new Configuration(additionalConfig).asMap();
+//		});
+		return ts;
 	}
 	
 	RestSession session;

@@ -123,6 +123,7 @@ public class StructureFactory extends EntityFactory {
             }
             return struc;
         } catch (Exception e) {
+            e.printStackTrace();
             throw new IllegalStateException("Can not parse structure from:" + str, e);
             //throw new IllegalStateException("Can not parse structure from:" + str);
         }

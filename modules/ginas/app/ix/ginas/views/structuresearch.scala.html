@@ -72,8 +72,9 @@
                         id="structure"></textarea>
                          
                     <div class="col-md-2 pull-right">
-                        <modal-button class= "pull-right padded" type= "export" structureid = parent.structure.id format="mol" format2="sdf" ></modal-button>
-                        <modal-button class= "pull-right padded" type= "import"></modal-button>
+                        <modal-button class= "pull-right padded" active = "image" type= "export" structureid = parent.structure.id format="mol" format2="sdf" ></modal-button>
+                        <modal-button class= "pull-right padded" acive = "text" type= "import"></modal-button>
+                        <modal-button class= "pull-right padded" type= "image" structureid = parent.structure.id ></modal-button>
                     </div>
                     </div>
             </form>
@@ -92,7 +93,7 @@
 
                 <form>
                 <div class ="col-md-2">
-                    <input type = "text" ng-model="name" field="name" label="Name" />
+                    <input type = "text" name = "name" ng-model="name" field="name" label="Name" aria-label="name"/>
                 </div>
                 <div class ="col-md-2">
                     <button class="btn btn-primary" id="resolverButton" ng-click="resolveName(name, 'structureSearch')" type = "submit" style="margin-left: 10px;">

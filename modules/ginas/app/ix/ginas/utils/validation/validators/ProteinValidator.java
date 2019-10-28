@@ -68,6 +68,16 @@ public class ProteinValidator extends AbstractValidatorPlugin<Substance> {
                     Integer newValue = i +1;
                     callback.addMessage(mes, () -> su.subunitIndex = newValue);
 
+                }
+
+                //GSRS-735 add sequence validation
+                //for now just null/blank need to confer with stakeholders if amino acid validation is needed or not
+                if(su.sequence == null || su.sequence.trim().isEmpty()){
+                    if(Substance.SubstanceDefinitionLevel.INCOMPLETE.equals(cs.definitionLevel)){
+                        callback.addMessage(GinasProcessingMessage.WARNING_MESSAGE("subunit at position " + (i +1) + " is blank. This is allowed but discouraged for incomplete protein records."));
+                    }else {
+                        callback.addMessage(GinasProcessingMessage.ERROR_MESSAGE("subunit at position " + (i +1) + " is blank"));
+                    }
                     }
                 }
             }

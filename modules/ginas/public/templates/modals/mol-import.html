@@ -1,9 +1,21 @@
 <div>
-    <div class="modal-header">
+    <div class="modal-header" style = "border-bottom:none;">
         <a type="button" class="close"  ng-click="close()" uib-tooltip ="Close" aria-label="Close"><i class ="fa fa-times danger"></i></a>
-        <h4 class="modal-title" id="myModalLabelExport">Import </h4>
+        <h3 class="modal-title" id="myModalLabelExport">Import </h3><br/>
+        <div class = "row">
+            <div class="col-md-12">
+
+    <ul class="nav nav-tabs" id="tabContent" style = "border-bottom:1px solid #ddd;">
+        <li class="" ng-class="{'active': active === 'text'}"><a href="#text" data-toggle="tab" class = "modal-tab" >Text</a></li>
+        <li ng-class="{'active': active === 'image'}"><a href="#image" data-toggle="tab" class ="modal-tab"  >Image</a></li>
+    </ul>
     </div>
+        </div>
+    </div>
+
     <div class="modal-body">
+        <div class="tab-content">
+            <div class="tab-pane" ng-class="{'active': active === 'text'}" id="text">
         <div class = "row">
             <div class="col-md-12 warn" ng-repeat="warn in warnings">
                 <div class="alert alert-danger alert-dismissible" role="alert">
@@ -27,7 +39,7 @@
                     </div>
                     <div class = "row">
                         <div class="col-md-12">
-                            <label for="description-det">Enter molfile or smiles:</label>
+                                    <label for="mol-import-txt">Enter molfile or smiles:</label>
                             <textarea id="mol-import-txt" spellcheck="false" class="form-control" rows="10" ng-model="molfile" ng-trim="false" ></textarea>
                         </div>
 <!--
@@ -38,6 +50,28 @@
                 <div class="modal-footer">
                     <button type="button" class="btn btn-default" ng-click="molfile=null; close();">Close</button>
                     <button  type="button" class="btn btn-primary" ng-click="resolveMol(molfile);" >Import</button>
+                </div>
+        </div>
+            <div class="tab-pane" id="image" ng-class="{'active': active === 'image'}">
+                <div class="form-group">
+                <div class = "row">
+                    <div class="col-md-12">
+                    <ng-form class="form" enctype="multipart/form-data">
+                        <label for="uploadImg">Load an Image</label><br>
+                        <file-field ng-model="uploadImg" ng-change="imageUpload(this,uploadImg);close();" id = "uploadImg"><i class="fa fa-folder-open fa-lg"></i>Browse</file-field>
+                    </ng-form>
+
+                    <br/><br/>You can also copy and paste or drag an image directly onto the canvas
+                    </div>
+                </div>
+                </div>
+                <div class = "row">
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" ng-click="molfile=null; close();">Close</button>
+                    </div>
+                </div>
+
+            </div>
                 </div>
         </div>
     </div>

@@ -14,14 +14,16 @@ object ApplicationBuild extends Build {
     .format(new java.util.Date())
   val appVersion = "%s-%s-%s".format(branch, buildDate, commit)
 
-  val displayVersion = "version 2.3 beta"
+  val displayVersion = "version 2.4 beta"
   val commonSettings = Seq(
     version := appVersion,    
     scalaVersion := "2.11.7",
 //    crossScalaVersions := Seq("2.10.2", "2.10.3", "2.10.4", "2.10.5",
 //      "2.11.0", "2.11.1", "2.11.2", "2.11.3", "2.11.4",
 //      "2.11.5", "2.11.6", "2.11.7"),
-//    resolvers += Resolver.typesafeRepo("releases"),
+    resolvers +=
+      "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots",
+    resolvers += Resolver.typesafeRepo("releases"),
     resolvers += Resolver.sonatypeRepo("snapshots"),
     resolvers += Resolver.sonatypeRepo("releases"),
     resolvers += Resolver.url("Edulify Repository",
@@ -35,16 +37,27 @@ object ApplicationBuild extends Build {
     cache,
     filters,
 
+    "org.jcvi.jillion" % "jillion" % "5.3.2",
     "com.fasterxml.jackson.core" % "jackson-core" % "2.9.7",
         "com.fasterxml.jackson.core" % "jackson-databind" % "2.9.7",
         "com.fasterxml.jackson.core" % "jackson-annotations" % "2.9.7",
+//    "gov.nih.ncats" % "molwitch" % "0.5",
+//    "gov.nih.ncats" % "molwitch-renderer" % "1.0",
+
+
+
+    "gov.nih.ncats" % "molvec" % "0.9.3",
+    "com.twelvemonkeys.imageio" % "imageio-core" % "3.4.1",
+    "com.twelvemonkeys.imageio" % "imageio" % "3.4.1",
+    "com.twelvemonkeys.imageio" % "imageio-tiff" % "3.4.1",
+    "com.twelvemonkeys.imageio" % "imageio-jpeg"% "3.4.1",
     "org.apache.httpcomponents" % "httpclient" %"4.5.2",
     "org.apache.httpcomponents" % "httpcore" %"4.4.4",
     "org.apache.httpcomponents" % "httpclient" %"4.3.1", //required for Ivy bug?
     "commons-io" % "commons-io" % "2.4",
     "com.flipkart.zjsonpatch" % "zjsonpatch" % "0.4.6",
-
-    "net.sourceforge.htmlunit" % "htmlunit" % "2.33" % Test,
+    "javax.xml.bind" % "jaxb-api" % "2.3.0",    //required for JAVA > 9
+    "net.sourceforge.htmlunit" % "htmlunit" % "2.35.0" % Test,
     "com.zaxxer" % "HikariCP" % "2.4.6"
       ,"com.edulify" %% "play-hikaricp" % "2.1.0"
       ,"mysql" % "mysql-connector-java" % "5.1.31"
@@ -186,7 +199,7 @@ public class BuildInfo {
       libraryDependencies += "org.webjars" % "lodash" % "4.0.0",
       libraryDependencies += "org.scalatest" %% "scalatest" % "2.2.2" % Test,
       libraryDependencies  += "junit" % "junit" % "4.12" % Test,
-      libraryDependencies += "com.novocode" % "junit-interface" % "0.11" % Test,
+    libraryDependencies += "com.novocode" % "junit-interface" % "0.11" % Test,
     libraryDependencies += "org.apache.poi" % "poi" % "3.17",
     libraryDependencies += "org.apache.poi" % "poi-ooxml" % "3.17",
     libraryDependencies += "org.apache.poi" % "poi-ooxml-schemas" % "3.17",
@@ -195,6 +208,7 @@ public class BuildInfo {
    // libraryDependencies += "org.reflections" % "reflections" % "0.9.8" notTransitive () ,
     libraryDependencies += "io.swagger" %% "swagger-play2" % "1.5.1",
     libraryDependencies += "org.webjars" % "swagger-ui" % "2.1.8-M1",*/
+
 
 	  javaOptions ++= Seq("-Xmx4096M", "-Xms512M", "-XX:MaxPermSize=2048M"),
       javacOptions in (Compile, compile) ++= javaBuildOptions,

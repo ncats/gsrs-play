@@ -12,6 +12,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
+import ix.test.server.GinasTestServer;
 import org.junit.Test;
 
 import ix.AbstractGinasServerTest;
@@ -23,7 +24,17 @@ import ix.utils.Util;
 public class IxCacheTest  extends AbstractGinasServerTest {
 
 
-	@Test  
+	@Override
+	public GinasTestServer createGinasTestServer() {
+		//ix.cache.useFileDb=false
+
+		GinasTestServer ts= super.createGinasTestServer();
+		ts.modifyConfig("GinasTestServer", true);
+
+		return ts;
+	}
+
+	@Test
 	public void testFetchFromCacheWithSameKeyReturnsFirstCachedValue() throws Exception {
 		final String result1="First";
 		final String result2="Second";

@@ -1,13 +1,14 @@
 package ix.test.validation;
 
 import static org.junit.Assert.*;
-import static org.junit.Assert.assertTrue;
 
 import java.util.Optional;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import ix.core.util.RunOnly;
 import ix.ginas.modelBuilders.ProteinSubstanceBuilder;
+import ix.ginas.models.v1.Glycosylation;
+import ix.ginas.models.v1.ProteinSubstance;
 import ix.ginas.models.v1.Subunit;
 import org.junit.Test;
 
@@ -49,7 +50,249 @@ public class ProteinValidationTest extends AbstractGinasServerTest{
         }
    	}
     
-    @Test   
+	@Test
+	public void changingSequenceChangesDefinitionalHash(){
+	String sequence = "AQPAMAQMQLVQSGAEVKKPGASVKLSCKASGYTFSSYWMHWVRQAPGQRLEWMGEINPGNGHTNYNEKFKSRV" +
+			"TITVDKSASTAYMELSSLRSEDTAVYYCAKIWGPSLTSPFDYWGQGTLVTVSSGLGGLASTKGPSVFPLAPSSKSTSG" +
+			"GTAALGCLVKDYFPEPVTVSWNSGALTSGVHTFPAVLQSSGLYSLSSVVTVPSSSLGTQTYICNVNHKPSNTKVDKRV" +
+			"EPKSCDKTHTCPPCPAPELLGGPSVFLFPPKPKDTLMISRTPEVTCVVVDVSHEDPEVKFNWYVDGVEVHNAKTKPRE" +
+			"EQYNSTYRVVSVLTVLHQDWLNGKEYKCKVSNKALPAPIEKTISKAKGQPREPQVYTLPPSREEMTKNQVSLTCLVKG" +
+			"FYPSDIAVEWESNGQPENNYKTTPPVLDSDGSFFLYSKLTVDKSRWQQGNVFSCSVMHEALHNHYTQKSLSLSPGK";
+
+		ProteinSubstance sub = new ProteinSubstanceBuilder()
+				.addName("aName")
+				.addSubUnit(sequence)
+				.build();
+
+		byte[] oldHash = sub.getDefinitionalElements().getDefinitionalHash();
+
+		sub.protein.getSubunits().get(0).sequence = sequence + "XX";
+
+		byte[] newHash = sub.getDefinitionalElements().getDefinitionalHash();
+
+		assertArrayNotEquals(oldHash, newHash);
+	}
+	@Test
+	public void changingGlycosCSitesChangesDefinitionalHash(){
+		String sequence = "AQPAMAQMQLVQSGAEVKKPGASVKLSCKASGYTFSSYWMHWVRQAPGQRLEWMGEINPGNGHTNYNEKFKSRV" +
+				"TITVDKSASTAYMELSSLRSEDTAVYYCAKIWGPSLTSPFDYWGQGTLVTVSSGLGGLASTKGPSVFPLAPSSKSTSG" +
+				"GTAALGCLVKDYFPEPVTVSWNSGALTSGVHTFPAVLQSSGLYSLSSVVTVPSSSLGTQTYICNVNHKPSNTKVDKRV" +
+				"EPKSCDKTHTCPPCPAPELLGGPSVFLFPPKPKDTLMISRTPEVTCVVVDVSHEDPEVKFNWYVDGVEVHNAKTKPRE" +
+				"EQYNSTYRVVSVLTVLHQDWLNGKEYKCKVSNKALPAPIEKTISKAKGQPREPQVYTLPPSREEMTKNQVSLTCLVKG" +
+				"FYPSDIAVEWESNGQPENNYKTTPPVLDSDGSFFLYSKLTVDKSRWQQGNVFSCSVMHEALHNHYTQKSLSLSPGK";
+
+		ProteinSubstance sub = new ProteinSubstanceBuilder()
+				.addName("aName")
+				.addSubUnit(sequence)
+				.setGlycosylationCSites("1_1-1_" +sequence.length())
+				.build();
+
+
+		byte[] oldHash = sub.getDefinitionalElements().getDefinitionalHash();
+
+		ProteinSubstance sub2 = new ProteinSubstanceBuilder(sub)
+									.setGlycosylationCSites("1_1-1_20;1_25-1_100")
+				.build();
+
+		byte[] newHash = sub2.getDefinitionalElements().getDefinitionalHash();
+
+		assertArrayNotEquals(oldHash, newHash);
+	}
+
+	@Test
+	public void changingGlycosOSitesChangesDefinitionalHash(){
+		String sequence = "AQPAMAQMQLVQSGAEVKKPGASVKLSCKASGYTFSSYWMHWVRQAPGQRLEWMGEINPGNGHTNYNEKFKSRV" +
+				"TITVDKSASTAYMELSSLRSEDTAVYYCAKIWGPSLTSPFDYWGQGTLVTVSSGLGGLASTKGPSVFPLAPSSKSTSG" +
+				"GTAALGCLVKDYFPEPVTVSWNSGALTSGVHTFPAVLQSSGLYSLSSVVTVPSSSLGTQTYICNVNHKPSNTKVDKRV" +
+				"EPKSCDKTHTCPPCPAPELLGGPSVFLFPPKPKDTLMISRTPEVTCVVVDVSHEDPEVKFNWYVDGVEVHNAKTKPRE" +
+				"EQYNSTYRVVSVLTVLHQDWLNGKEYKCKVSNKALPAPIEKTISKAKGQPREPQVYTLPPSREEMTKNQVSLTCLVKG" +
+				"FYPSDIAVEWESNGQPENNYKTTPPVLDSDGSFFLYSKLTVDKSRWQQGNVFSCSVMHEALHNHYTQKSLSLSPGK";
+
+		ProteinSubstance sub = new ProteinSubstanceBuilder()
+				.addName("aName")
+				.addSubUnit(sequence)
+				.setGlycosylationOSites("1_1-1_" +sequence.length())
+				.build();
+
+
+		byte[] oldHash = sub.getDefinitionalElements().getDefinitionalHash();
+
+		ProteinSubstance sub2 = new ProteinSubstanceBuilder(sub)
+				.setGlycosylationOSites("1_1-1_20;1_25-1_100")
+				.build();
+
+		byte[] newHash = sub2.getDefinitionalElements().getDefinitionalHash();
+
+		assertArrayNotEquals(oldHash, newHash);
+	}
+
+	@Test
+	public void changingGlycosNSitesChangesDefinitionalHash(){
+		String sequence = "AQPAMAQMQLVQSGAEVKKPGASVKLSCKASGYTFSSYWMHWVRQAPGQRLEWMGEINPGNGHTNYNEKFKSRV" +
+				"TITVDKSASTAYMELSSLRSEDTAVYYCAKIWGPSLTSPFDYWGQGTLVTVSSGLGGLASTKGPSVFPLAPSSKSTSG" +
+				"GTAALGCLVKDYFPEPVTVSWNSGALTSGVHTFPAVLQSSGLYSLSSVVTVPSSSLGTQTYICNVNHKPSNTKVDKRV" +
+				"EPKSCDKTHTCPPCPAPELLGGPSVFLFPPKPKDTLMISRTPEVTCVVVDVSHEDPEVKFNWYVDGVEVHNAKTKPRE" +
+				"EQYNSTYRVVSVLTVLHQDWLNGKEYKCKVSNKALPAPIEKTISKAKGQPREPQVYTLPPSREEMTKNQVSLTCLVKG" +
+				"FYPSDIAVEWESNGQPENNYKTTPPVLDSDGSFFLYSKLTVDKSRWQQGNVFSCSVMHEALHNHYTQKSLSLSPGK";
+
+		ProteinSubstance sub = new ProteinSubstanceBuilder()
+				.addName("aName")
+				.addSubUnit(sequence)
+				.setGlycosylationNSites("1_1-1_" +sequence.length())
+				.build();
+
+
+		byte[] oldHash = sub.getDefinitionalElements().getDefinitionalHash();
+
+		ProteinSubstance sub2 = new ProteinSubstanceBuilder(sub)
+				.setGlycosylationNSites("1_1-1_20;1_25-1_100")
+				.build();
+
+		byte[] newHash = sub2.getDefinitionalElements().getDefinitionalHash();
+
+		assertArrayNotEquals(oldHash, newHash);
+	}
+
+	@Test
+	public void addingFirstDisulfideLinksChangesDefinitionalHash(){
+		String sequence = "AQPAMAQMQLVQSGAEVKKPGASVKLSCKASGYTFSSYWMHWVRQAPGQRLEWMGEINPGNGHTNYNEKFKSRV" +
+				"TITVDKSASTAYMELSSLRSEDTAVYYCAKIWGPSLTSPFDYWGQGTLVTVSSGLGGLASTKGPSVFPLAPSSKSTSG" +
+				"GTAALGCLVKDYFPEPVTVSWNSGALTSGVHTFPAVLQSSGLYSLSSVVTVPSSSLGTQTYICNVNHKPSNTKVDKRV" +
+				"EPKSCDKTHTCPPCPAPELLGGPSVFLFPPKPKDTLMISRTPEVTCVVVDVSHEDPEVKFNWYVDGVEVHNAKTKPRE" +
+				"EQYNSTYRVVSVLTVLHQDWLNGKEYKCKVSNKALPAPIEKTISKAKGQPREPQVYTLPPSREEMTKNQVSLTCLVKG" +
+				"FYPSDIAVEWESNGQPENNYKTTPPVLDSDGSFFLYSKLTVDKSRWQQGNVFSCSVMHEALHNHYTQKSLSLSPGK";
+
+		ProteinSubstance sub = new ProteinSubstanceBuilder()
+				.addName("aName")
+				.addSubUnit(sequence)
+				.setGlycosylationNSites("1_1-1_" +sequence.length())
+				.build();
+
+
+		byte[] oldHash = sub.getDefinitionalElements().getDefinitionalHash();
+
+		ProteinSubstance sub2 = new ProteinSubstanceBuilder(sub)
+				.addDisulfideLink("1_1-1_20;1_25-1_100")
+				.build();
+
+		byte[] newHash = sub2.getDefinitionalElements().getDefinitionalHash();
+
+		assertArrayNotEquals(oldHash, newHash);
+	}
+	@Test
+	public void addingSecondDisulfideLinksChangesDefinitionalHash(){
+		String sequence = "AQPAMAQMQLVQSGAEVKKPGASVKLSCKASGYTFSSYWMHWVRQAPGQRLEWMGEINPGNGHTNYNEKFKSRV" +
+				"TITVDKSASTAYMELSSLRSEDTAVYYCAKIWGPSLTSPFDYWGQGTLVTVSSGLGGLASTKGPSVFPLAPSSKSTSG" +
+				"GTAALGCLVKDYFPEPVTVSWNSGALTSGVHTFPAVLQSSGLYSLSSVVTVPSSSLGTQTYICNVNHKPSNTKVDKRV" +
+				"EPKSCDKTHTCPPCPAPELLGGPSVFLFPPKPKDTLMISRTPEVTCVVVDVSHEDPEVKFNWYVDGVEVHNAKTKPRE" +
+				"EQYNSTYRVVSVLTVLHQDWLNGKEYKCKVSNKALPAPIEKTISKAKGQPREPQVYTLPPSREEMTKNQVSLTCLVKG" +
+				"FYPSDIAVEWESNGQPENNYKTTPPVLDSDGSFFLYSKLTVDKSRWQQGNVFSCSVMHEALHNHYTQKSLSLSPGK";
+
+		ProteinSubstance sub = new ProteinSubstanceBuilder()
+				.addName("aName")
+				.addSubUnit(sequence)
+				.addDisulfideLink("1_1-1_20;1_25-1_100")
+				.build();
+
+
+		byte[] oldHash = sub.getDefinitionalElements().getDefinitionalHash();
+
+		ProteinSubstance sub2 = new ProteinSubstanceBuilder(sub)
+				.addDisulfideLink("1_1-1_"+sequence.length()) //adding 2nd one not getting rid of first
+				.build();
+
+		byte[] newHash = sub2.getDefinitionalElements().getDefinitionalHash();
+
+		assertArrayNotEquals(oldHash, newHash);
+	}
+
+	@Test
+	public void addingFirstOtherLinksChangesDefinitionalHash(){
+		String sequence = "AQPAMAQMQLVQSGAEVKKPGASVKLSCKASGYTFSSYWMHWVRQAPGQRLEWMGEINPGNGHTNYNEKFKSRV" +
+				"TITVDKSASTAYMELSSLRSEDTAVYYCAKIWGPSLTSPFDYWGQGTLVTVSSGLGGLASTKGPSVFPLAPSSKSTSG" +
+				"GTAALGCLVKDYFPEPVTVSWNSGALTSGVHTFPAVLQSSGLYSLSSVVTVPSSSLGTQTYICNVNHKPSNTKVDKRV" +
+				"EPKSCDKTHTCPPCPAPELLGGPSVFLFPPKPKDTLMISRTPEVTCVVVDVSHEDPEVKFNWYVDGVEVHNAKTKPRE" +
+				"EQYNSTYRVVSVLTVLHQDWLNGKEYKCKVSNKALPAPIEKTISKAKGQPREPQVYTLPPSREEMTKNQVSLTCLVKG" +
+				"FYPSDIAVEWESNGQPENNYKTTPPVLDSDGSFFLYSKLTVDKSRWQQGNVFSCSVMHEALHNHYTQKSLSLSPGK";
+
+		ProteinSubstance sub = new ProteinSubstanceBuilder()
+				.addName("aName")
+				.addSubUnit(sequence)
+
+				.build();
+
+
+		byte[] oldHash = sub.getDefinitionalElements().getDefinitionalHash();
+
+		ProteinSubstance sub2 = new ProteinSubstanceBuilder(sub)
+				.addOtherLink("linkTypeA", "1_1-1_" +sequence.length())
+				.build();
+
+		byte[] newHash = sub2.getDefinitionalElements().getDefinitionalHash();
+
+		assertArrayNotEquals(oldHash, newHash);
+	}
+
+	@Test
+	public void addingSecondOtherLinksChangesDefinitionalHash(){
+		String sequence = "AQPAMAQMQLVQSGAEVKKPGASVKLSCKASGYTFSSYWMHWVRQAPGQRLEWMGEINPGNGHTNYNEKFKSRV" +
+				"TITVDKSASTAYMELSSLRSEDTAVYYCAKIWGPSLTSPFDYWGQGTLVTVSSGLGGLASTKGPSVFPLAPSSKSTSG" +
+				"GTAALGCLVKDYFPEPVTVSWNSGALTSGVHTFPAVLQSSGLYSLSSVVTVPSSSLGTQTYICNVNHKPSNTKVDKRV" +
+				"EPKSCDKTHTCPPCPAPELLGGPSVFLFPPKPKDTLMISRTPEVTCVVVDVSHEDPEVKFNWYVDGVEVHNAKTKPRE" +
+				"EQYNSTYRVVSVLTVLHQDWLNGKEYKCKVSNKALPAPIEKTISKAKGQPREPQVYTLPPSREEMTKNQVSLTCLVKG" +
+				"FYPSDIAVEWESNGQPENNYKTTPPVLDSDGSFFLYSKLTVDKSRWQQGNVFSCSVMHEALHNHYTQKSLSLSPGK";
+
+		ProteinSubstance sub = new ProteinSubstanceBuilder()
+				.addName("aName")
+				.addSubUnit(sequence)
+				.addOtherLink("linkTypeA", "1_1-1_" +sequence.length())
+				.build();
+
+
+		byte[] oldHash = sub.getDefinitionalElements().getDefinitionalHash();
+
+		ProteinSubstance sub2 = new ProteinSubstanceBuilder(sub)
+				.addOtherLink("linkTypeA", "1_1-1_20")
+				.build();
+
+		byte[] newHash = sub2.getDefinitionalElements().getDefinitionalHash();
+
+		assertArrayNotEquals(oldHash, newHash);
+	}
+
+	private void assertArrayNotEquals(byte[] expecteds, byte[] actuals) {
+		try {
+			assertArrayEquals(expecteds, actuals);
+		} catch (AssertionError e) {
+			return;
+		}
+		fail("The arrays are equal");
+	}
+
+	@Test
+	public void addingSubunitChangesDefinitionalHash(){
+		String sequence = "AQPAMAQMQLVQSGAEVKKPGASVKLSCKASGYTFSSYWMHWVRQAPGQRLEWMGEINPGNGHTNYNEKFKSRV" +
+				"TITVDKSASTAYMELSSLRSEDTAVYYCAKIWGPSLTSPFDYWGQGTLVTVSSGLGGLASTKGPSVFPLAPSSKSTSG" +
+				"GTAALGCLVKDYFPEPVTVSWNSGALTSGVHTFPAVLQSSGLYSLSSVVTVPSSSLGTQTYICNVNHKPSNTKVDKRV" +
+				"EPKSCDKTHTCPPCPAPELLGGPSVFLFPPKPKDTLMISRTPEVTCVVVDVSHEDPEVKFNWYVDGVEVHNAKTKPRE" +
+				"EQYNSTYRVVSVLTVLHQDWLNGKEYKCKVSNKALPAPIEKTISKAKGQPREPQVYTLPPSREEMTKNQVSLTCLVKG" +
+				"FYPSDIAVEWESNGQPENNYKTTPPVLDSDGSFFLYSKLTVDKSRWQQGNVFSCSVMHEALHNHYTQKSLSLSPGK";
+
+		ProteinSubstance sub = new ProteinSubstanceBuilder()
+				.addName("aName")
+				.addSubUnit(sequence)
+				.build();
+
+		byte[] oldHash = sub.getDefinitionalElements().getDefinitionalHash();
+
+
+
+		byte[] newHash = new ProteinSubstanceBuilder(sub).addSubUnit("AAAAAAA").build().getDefinitionalElements().getDefinitionalHash();
+
+		assertArrayNotEquals(oldHash, newHash);
+	}
+
+    @Test
    	public void testIncompleteProteinWithNoSubunitsShouldPassValidation() throws Exception {
         try( RestSession session = ts.newRestSession(ts.getFakeUser1())) {
            SubstanceAPI api = new SubstanceAPI(session);

@@ -43,11 +43,11 @@
             <legend>Sign-in to <strong>@title</strong></legend>
             <div class="body">
 	      <div class="form-group">
-		<p><input type="text" class="form-control"
+		<p><input type="text" aria-label = "username" class="form-control"
 		       name="username" 
 		       id="username"
 		       placeholder="Enter Username">
-		<p> <input type="password" class="form-control"
+		<p> <input type="password" class="form-control" aria-label = "password"
 			   name="password" id="password"
 			   placeholder="Enter Password" autocomplete="off">
 	      </div>
@@ -59,22 +59,11 @@
             </div>
             
             <div class="footer">
-	      @**
-              <label class="checkbox inline">
-                <input type="checkbox" id="remember-me">Remember me
-              </label>
-              **@
               <button type="submit" name="submit" class="btn btn-success">Login</button>
             </div>
           </form>
         </div>
-    </div>
-
-    @**
-    <footer class="white navbar-fixed-bottom">
-      Don't have an account yet? <a href="register.html" class="btn btn-black">Register</a>
-    </footer>
-    **@
+    </div> <!-- Container -->
     
     <!-- Le javascript
     ================================================== -->

@@ -4,7 +4,7 @@
     </div>
     <div class="col-md-12" uib-collapse="iscollapsed">
         <br>
-        <button class="btn btn-primary"  ng-if="!iscollapsed && parent.relationships.length>2" ng-click="addNew(relationshipForm, 'relationships')"><i class="fa fa-plus"></i> Add a<span
+        <button class="btn btn-primary"  ng-if="!iscollapsed && parent.relationships.length>2" ng-click="addNew(relationshipForm, 'relationships','','0')"><i class="fa fa-plus"></i> Add a<span
                 ng-if="parent.relationships.length>0">nother</span> relationship
         </button>
         <form class="form-horizontal" name="relationshipForm" role="form" id="addRelationshipForm" novalidate>

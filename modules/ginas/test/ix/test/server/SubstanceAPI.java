@@ -19,6 +19,7 @@ import ix.core.validator.GinasProcessingMessage;
 import ix.core.validator.ValidationMessage;
 import ix.core.controllers.EntityFactory;
 import ix.core.util.EntityUtils;
+import ix.ginas.modelBuilders.AbstractSubstanceBuilder;
 import ix.ginas.models.v1.Substance;
 import ix.ginas.utils.JsonSubstanceFactory;
 import ix.seqaln.SequenceIndexer.CutoffType;
@@ -96,7 +97,7 @@ public class SubstanceAPI {
         return session.createRequestHolder(API_URL_SUBMIT_SUBSTANCE).post(js).get(timeout);
     }
 
-    public JsonNode submitSubstance(Consumer<SubstanceBuilder> substanceFunction){
+    public JsonNode submitSubstance(Consumer<? super AbstractSubstanceBuilder> substanceFunction){
         SubstanceBuilder b = new SubstanceBuilder();
         substanceFunction.accept(b);
 
@@ -108,8 +109,8 @@ public class SubstanceAPI {
         });
         return ret[0];
     }
-    public void submitSubstance(SubstanceBuilder substanceBuilder){
-        substanceBuilder.buildJsonAnd(j -> ensurePass(submitSubstance(j)));
+    public void submitSubstance(AbstractSubstanceBuilder substanceBuilder){
+        substanceBuilder.buildJsonAnd(j -> ensurePass(submitSubstance((JsonNode) j)));
     }
 
     public JsonNode submitSubstance(Substance s){

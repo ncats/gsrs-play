@@ -52,11 +52,27 @@ public class SubstanceReference extends GinasCommonSubData {
                 return approvalID;
         }
         if(refuuid!=null){
-                return refuuid.split("-")[0];
+                return refuuid;
         }
         return refPname;
     }
     
+    /**
+     * Create a new copy of this reference without the
+     * same UUID so the database will treat it as a new object.
+     * @return
+     */
+    public SubstanceReference copyWithNullUUID(){
+        SubstanceReference ref = new SubstanceReference();
+        ref.refuuid = this.refuuid;
+        ref.refPname =this.refPname;
+        ref.approvalID = this.approvalID;
+        ref.substanceClass = this.substanceClass;
+        //this should be null anyway but make it explicit.
+        ref.uuid = null;
+        return ref;
+    }
+
     public String getName(){
     	if(refPname!=null)
     		return refPname;

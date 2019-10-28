@@ -10,7 +10,8 @@
             </div>
             <div class="row form-row">
                 <div class="col-md-3">
-                    <gsrs-input type="dropdown"
+                    <gsrs-input ng-if="parent.substanceClass!='concept'"
+                            type="dropdown"
                                 ng-model="parent.definitionType"
                                 field="definitionType"
                                 label="Definition Type"
@@ -25,7 +26,8 @@
                                                 definition="true"></substance-chooser-selector>
                 </div>
                 <div class="col-md-2">
-                    <gsrs-input type="dropdown"
+                    <gsrs-input ng-if="parent.substanceClass!='concept'"
+                            type="dropdown"
                                 ng-model="parent.definitionLevel"
                                 field="definitionLevel"
                                 label="Definition Level"
@@ -46,7 +48,7 @@
                     </modal-form-button>
                 </div>
             </div>
-            <div>Deprecated: <input type="checkbox" ng-model="parent.deprecated"> </div>
+            <div><label for = "deprecated">Deprecated:</label> <input type="checkbox" id = "deprecated" name = "deprecated" ng-model="parent.deprecated"> </div>
             <br>
             <div class="row">
                 <div class="col-md-12">

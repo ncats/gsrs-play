@@ -1,7 +1,6 @@
 package ix.ginas.utils.validation.validators;
 
-import gov.nih.ncgc.chemical.Chemical;
-import gov.nih.ncgc.chemical.ChemicalFactory;
+import gov.nih.ncats.molwitch.Chemical;
 import ix.core.validator.ExceptionValidationMessage;
 import ix.core.validator.GinasProcessingMessage;
 import ix.core.chem.StructureProcessor;
@@ -18,6 +17,7 @@ import ix.core.validator.ValidatorCallback;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Supplier;
 
 /**
  * Created by katzelda on 5/14/18.
@@ -77,6 +77,9 @@ public class ChemicalValidator extends AbstractValidatorPlugin<Substance> {
                 } );
 
             }
+
+            //GSRS-914 verify valid atoms
+            verifyValidAtoms(()->struc.toChemical(), callback);
             for (Structure m : moieties) {
                 Moiety m2 = new Moiety();
                 m2.structure = new GinasChemicalStructure(m);
@@ -84,8 +87,9 @@ public class ChemicalValidator extends AbstractValidatorPlugin<Substance> {
                 moietiesForSub.add(m2);
             }
 
-            if (cs.moieties == null
-                    || cs.moieties.size() != moietiesForSub.size()) {
+            if (cs.moieties != null
+            		&& !cs.moieties.isEmpty()
+                    && cs.moieties.size() != moietiesForSub.size()) {
 
                 GinasProcessingMessage mes = GinasProcessingMessage
                         .WARNING_MESSAGE("Incorrect number of moieties")
@@ -93,6 +97,13 @@ public class ChemicalValidator extends AbstractValidatorPlugin<Substance> {
                 callback.addMessage(mes, ()-> cs.moieties = moietiesForSub);
 
 
+            }else if (cs.moieties == null
+            		|| cs.moieties.isEmpty()) {
+
+                GinasProcessingMessage mes = GinasProcessingMessage
+                        .INFO_MESSAGE("No moieties found in submission. They will be generated automatically.")
+                        .appliableChange(true);
+                callback.addMessage(mes, ()-> cs.moieties = moietiesForSub);
             } else {
                 for (Moiety m : cs.moieties) {
                     Structure struc2 = StructureProcessor.instrument(
@@ -121,6 +132,23 @@ public class ChemicalValidator extends AbstractValidatorPlugin<Substance> {
 
         }
 
+    }
+
+    private void verifyValidAtoms(Supplier<Chemical> chemical, ValidatorCallback callback) {
+//        for(ChemicalAtom a : chemical.getAtomArray()){
+//            if("Ac".equals(a.getSymbol())){
+//                System.out.println(a.getSymbol() + "  atno = " + a.getAtomNo() +"  query = " + a.isQueryAtom() + "  " + a.isRgroupAtom());
+//
+//            }
+//            if(!a.isQueryAtom() & !a.isRgroupAtom()){
+//                int atomNo = a.getAtomNo();
+//                if(atomNo < 1 && atomNo > 110){
+//                    callback.addMessage(GinasProcessingMessage
+//                            .ERROR_MESSAGE("Chemical substance must have a valid atoms found atom symol '" +a.getSymbol()   + "' atomic number " + atomNo));
+//                }
+//            }
+//        }
+        //TODO noop for now pushed to 2.3.7 until we find out more for GSRS-914
     }
 
     private static void validateStructureDuplicates(
@@ -164,8 +192,8 @@ public class ChemicalValidator extends AbstractValidatorPlugin<Substance> {
 
         String oldhash = null;
         String newhash = null;
-        oldhash = oldstr.getLychiv4Hash();
-        newhash = newstr.getLychiv4Hash();
+        oldhash = oldstr.getExactHash();
+        newhash = newstr.getExactHash();
         // Should always use the calculated pieces
         // TODO: Come back to this and allow for SOME things to be overloaded
         if (true || !newhash.equals(oldhash)) {
@@ -210,6 +238,12 @@ public class ChemicalValidator extends AbstractValidatorPlugin<Substance> {
         if (oldstr.charge == null) {
             oldstr.charge = newstr.charge;
         }
+        if (oldstr.opticalActivity == null) {
+			oldstr.opticalActivity = newstr.opticalActivity;
+		}
+		if (oldstr.stereoChemistry == null) {
+			oldstr.stereoChemistry = newstr.stereoChemistry;
+		}
 
         ChemUtils.checkValance(newstr, callback);
 

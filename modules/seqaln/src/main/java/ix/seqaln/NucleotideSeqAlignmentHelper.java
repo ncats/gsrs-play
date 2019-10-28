@@ -13,7 +13,7 @@ import org.jcvi.jillion.core.residue.nt.NucleotideSequence;
 public class NucleotideSeqAlignmentHelper implements SequenceAlignmentHelper<Nucleotide, NucleotideSequence>{
     @Override
     public NucleotideSequence toSequence(String seq) {
-        return NucleotideSequence.of(seq);
+        return NucleotideSequence.of(Nucleotide.cleanSequence(seq, "N"));
     }
 
     @Override

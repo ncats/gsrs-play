@@ -79,10 +79,11 @@
     <script src='@routes.Assets.at("ginas/js/jquery.dataTables.js")' type='text/javascript'></script>
     <script src='@routes.Assets.at("ginas/js/polyfill.js")' type='text/javascript'></script>
     <script src='@routes.Assets.at("ginas/js/reference-subtable.js")' type='text/javascript'></script>
-
+    <script src='@routes.Assets.at("ginas/js/defiant.min.js")' type='text/javascript'></script>
     <script src='@routes.Assets.at("gsrs2/assets/js/gsrsapi.0.1.js")' type='text/javascript'></script>
-    <script src='@routes.Assets.at("gsrs2/assets/js/json-patch.min.js")' type='text/javascript'></script> @*
-
+    <script src='@routes.Assets.at("gsrs2/assets/js/json-patch.min.js")' type='text/javascript'></script>
+    <script src='@routes.Assets.at("ginas/js/edit-bookmarklets.js")' type='text/javascript'></script>
+    @*
     <script src='@routes.Assets.at("ginas/js/help-info.js")' type='text/javascript'></script>*@ @if(showSketcher){
     <script src='@routes.WebJarAssets.at(WebJarAssets.locate("dojo/dojo.js"))'></script>
     <script src='@routes.Assets.at("javascripts/JSDraw5.2.0/Scilligence.JSDraw2.Pro.js")'></script>
@@ -121,7 +122,7 @@
 	    	//the SSO server will redirect after 38 minutes of
 	    	//non-use.
 	    	var keepSessionAlive = function(){
-	    	    document.body.appendChild($("<iframe id='refresher' style='height:1px;opacity:0'></iframe>").get()[0]);
+	    	    document.body.appendChild($("<iframe id='refresher' title = 'page refresher' name = 'refresher' style='height:1px;opacity:0'></iframe>").get()[0]);
 	    	    setInterval(function(){
 	    	     $("#refresher").get()[0].src="/";
 	    	    }, 120000);
@@ -222,7 +223,7 @@
                 <div class="top-bar-content-line">
                     <div id="versionsrs">
                         <code>
-                            <small uib-tooltip="Built on @ix.BuildInfo.TIME v2.3.3" tooltip-placement="right">version 2.3.3</small>
+                            <small uib-tooltip="Built on @ix.BuildInfo.TIME v2.4" tooltip-placement="right">version 2.4</small>
                         </code>
         </div>
                     <div class="auth-data">

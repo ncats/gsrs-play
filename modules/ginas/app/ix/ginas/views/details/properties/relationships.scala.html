@@ -10,7 +10,7 @@
 
 
 <div class=" table-responsive" uib-collapse = "@title.replace(' ', '.')" ng-controller = "GinasController">
-    <table class="table ref-datatable">
+    <table class="table ref-datatable" id = "relationships" >
         <thead>
             <tr>
                 <th>Related Record</th>
@@ -39,11 +39,20 @@
                     <td class = "relationship-details" >
 
                         @defining("more"+(((5000*Math.random())).toInt+"")) { sug =>
+                        @if((r.mediatorSubstance == null)&&(r.interactionType == null)&&(!r.hasComments())&&(r.qualification == null)&&(r.amount == null)){
 
+                        <div id = "b@sug"><i>none</i>
+                            <button class="btn btn-primary reference-button ng-binding" style = "visibility:hidden" type="button"  ng-click="@sug =! @sug">{{ @sug == true ? 'hide' : 'show' }}</button>
+                        </div>
 
-                            <div  ng-init="@sug = false">
+                        }else{
+                        <div  ng-init="@sug = false" id = "b@sug">
                                 <button class="btn btn-primary reference-button ng-binding" type="button" ng-click="@sug =! @sug">{{ @sug == true ? 'hide' : 'show' }}</button>
                             </div>
+
+                        }
+
+
 
                     </td>
 
@@ -51,19 +60,21 @@
                         @if(r.getReferences().size > 0){
                            <referencesmanager ref-count substance ="'@id'" divid ="'@r.getUuid()'" references = "@GinasApp.getAsJson(r.getReferences())"></referencesmanager>
                         }else{
-                            none
+                        <i>none</i>
                         }
                     </td>
 
             </tr>
     <tr class ="details_'@r.getUuid()'" ng-show = "@sug" ng-hide = "!@sug">
         <td colspan = '4' class = "ref-table-td">
-            <table class="table moreDetails">
+
+                <table class="table moreDetails" id = "@sug">
                 <tr class = "relationship-subtable-tr">
                     <th>Mediator Substance</th>
                     <th>Details</th>
 
                 </tr>
+                    <tr id = "a@sug">
                 <td>
                     @if(r.mediatorSubstance != null){
                             <div class = "relationship-details">
@@ -134,5 +145,68 @@
         }
 
     </table>
+
+    <script type = "text/javascript">
+        //combine relationship table rows which share the same related substance / relationship
+        window.onload = function() {
+            var rows = [];
+            var found = false;
+            $('#relationships > tbody > tr').each(function (row, val) {
+                var substance = '';
+                var pos = row;
+                var rel = '';
+                var divID;
+
+                if((found === true) && ($(this).attr("class") == "relationship-subtable-tr")){
+                    found = false;
+                    $(this).remove();
+                }
+                if ($(this).attr("class") == "main-relationship-tr") {
+                    $(this).children('td').each(function (key, value) {
+                        var data = $(this).html();
+                        if (key == 0) {
+                            substance = $(this).find('a').html();
+                            $(this).find('a').each(function () {
+                            });
+                        }
+                        if (key == 1) {
+                            rel = data;
+                        }
+                        if (key == 2) {
+                            divID = $(this).find('div');
+                            divID = divID.attr("id").slice(1);
+
+                        }
+                    });
+
+                    for (var i = 0; i < rows.length; i++) {
+                        if ((rows[i].name == substance) && (rows[i].relationship == rel)) {
+                            found = true;
+                            rows[i].count++;
+                            $('#b'+rows[i].divID).find('button').each(function () {
+                                if ($(this).css('visibility') == 'hidden'){
+                                    $(this).css('visibility','visible');
+                                    $('#b'+rows[i].divID).find('i').css('display','none');
+                                }
+                            });
+                            $('#' + rows[i].divID).append('<tr>' + $('#a' + divID).html() + '</tr>');
+                            $(this).remove();
+                        }
+                    }
+                    if (found == false) {
+                        rows.push({'name': substance, 'relationship': rel, 'pos': pos, 'count': 1, 'divID': divID})
+                    }
+                }
+            });
+            for (var i = 0; i < rows.length; i++) {
+                if (rows[i].count > 1) {
+                    var current = $('#relationships > tbody > tr:nth-of-type(' + rows[i].pos + ')');
+                    $('#b' + rows[i].divID).append('<div style = "text-align:center"><i>(' + rows[i].count + ' records)</i></div>');
+                }
+            }
+
+        }
+    </script>
+
 
  </div>

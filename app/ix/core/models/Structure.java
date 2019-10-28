@@ -23,9 +23,8 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import gov.nih.ncgc.chemical.Chemical;
-import gov.nih.ncgc.chemical.ChemicalFactory;
-import gov.nih.ncgc.jchemical.JchemicalReader;
+import gov.nih.ncats.molwitch.Chemical;
+import gov.nih.ncats.molwitch.inchi.Inchi;
 import ix.core.AbstractValueDeserializer;
 import ix.core.validator.GinasProcessingMessage;
 import ix.core.chem.Chem;
@@ -46,7 +45,6 @@ import play.Logger;
 @Table(name = "ix_core_structure")
 public class Structure extends BaseModel implements ForceUpdatableModel{
 
-    private static ChemicalFactory DEFAULT_READER_FACTORY = new JchemicalReader();
 
     @Id
     public UUID id;
@@ -72,7 +70,8 @@ public class Structure extends BaseModel implements ForceUpdatableModel{
     public static final String H_LyChI_L3 = "LyChI_L3";
     public static final String H_LyChI_L4 = "LyChI_L4";
     public static final String H_InChI_Key = "InChI_Key";
-
+    public static final String H_EXACT_HASH = "EXACT_HASH";
+    public static final String H_STEREO_INSENSITIVE_HASH = "STEREO_INSENSITIVE_HASH";
     public static class StereoSerializer extends JsonSerializer<Stereo> {
     	public StereoSerializer(){
     		super();
@@ -300,35 +299,35 @@ public class Structure extends BaseModel implements ForceUpdatableModel{
     public void setUUID(UUID id){
     	this.setId(id);
     }
-    
-    @JsonIgnore
-    public String getLychiv4Hash(){
-    	 String newhash=null;
-    	 for (Value val : this.properties) {
-             if (Structure.H_LyChI_L4.equals(val.label)) {
-            	 try{
-            		 newhash=val.getValue()+"";
-            	 }catch(Exception e){
-            		 
-            	 }
-             }
-         }
-    	 return newhash;
+
+    @JsonProperty(value="hash")
+    public String getExactHash(){
+        String newhash=null;
+        for (Value val : this.properties) {
+            if (Structure.H_EXACT_HASH.equals(val.label)) {
+                try{
+                    newhash=Objects.toString(val.getValue());
+                }catch(Exception e){
+
+                }
+            }
+        }
+        return newhash;
     }
-    
+
     @JsonIgnore
-    public String getLychiv3Hash(){
-    	 String newhash=null;
-    	 for (Value val : this.properties) {
-             if (Structure.H_LyChI_L3.equals(val.label)) {
-            	 try{
-            		 newhash=val.getValue()+"";
-            	 }catch(Exception e){
-            		 
-            	 }
-             }
-         }
-    	 return newhash;
+    public String getStereoInsensitiveHash(){
+        String newhash=null;
+        for (Value val : this.properties) {
+            if (Structure.H_STEREO_INSENSITIVE_HASH.equals(val.label)) {
+                try{
+                    newhash=Objects.toString(val.getValue());
+                }catch(Exception e){
+
+                }
+            }
+        }
+        return newhash;
     }
 
 	@Override
@@ -337,18 +336,6 @@ public class Structure extends BaseModel implements ForceUpdatableModel{
 		return id.toString();
 	}
 	
-
-    
-    public String getHash(){
-    	String hash = null;
-    	for (Value val : this.properties) {
-            if (Structure.H_LyChI_L4.equals(val.label)) {
-                Keyword kw = (Keyword)val;
-                hash = kw.term;
-            }
-        }
-    	return hash;
-    }
 
 	@Override
 	public void forceUpdate() {
@@ -405,13 +392,18 @@ public class Structure extends BaseModel implements ForceUpdatableModel{
     public Chemical toChemical() {
         return toChemical(new ArrayList<>());
     }
-    
+    @JsonIgnore
+    @Transient
+    public Chemical toChemical(boolean computeCoordinatesIfNeeded) {
+        return toChemical(new ArrayList<>(), computeCoordinatesIfNeeded);
+    }
+
     
     @JsonIgnore
     @Transient
     public String getInChIKey() {
     	try{
-    		return toChemical().export(Chemical.FORMAT_STDINCHIKEY);
+            return Inchi.asStdInchi(Chem.RemoveQueryAtomsForPseudoInChI(toChemical()), true).getKey();
     	}catch(Exception e){
     		e.printStackTrace();
     		return null;
@@ -423,7 +415,7 @@ public class Structure extends BaseModel implements ForceUpdatableModel{
     @Transient
     public String getInChI() {
     	try{
-    		return toChemical().getSTDInchi();
+    		return Inchi.asStdInchi(toChemical(), true).getInchi();
     	}catch(Exception e){
     		e.printStackTrace();
     		return null;
@@ -433,20 +425,44 @@ public class Structure extends BaseModel implements ForceUpdatableModel{
     @JsonIgnore
     @Transient
     public Chemical toChemical(List<GinasProcessingMessage> messages) {
+        return toChemical(messages, true);
+    }
+    @JsonIgnore
+    @Transient
+    public Chemical toChemical(List<GinasProcessingMessage> messages, boolean computeCoordsIfNeeded) {
         Objects.requireNonNull(messages);
-        Chemical c;
+        Chemical c=null;
         String mfile = molfile;
-        Objects.requireNonNull(molfile);
+        if(molfile ==null){
+            Objects.requireNonNull(smiles);
+            try {
+                if(computeCoordsIfNeeded) {
+                    c = Chemical.createFromSmilesAndComputeCoordinates(smiles);
+                }else{
+                    c = Chemical.createFromSmiles(smiles);
+                }
+            }catch(Exception e){
+                messages.add(GinasProcessingMessage.ERROR_MESSAGE(e.getMessage()));
+            }
         
-        
-        
-        c = DEFAULT_READER_FACTORY.createChemical(mfile, Chemical.FORMAT_SDF);
-        
-        if(Chem.isProblem(c)){
+        }else{
+            try {
+                c = Chemical.parseMol(molfile);
+            }catch(Exception e){
+                messages.add(GinasProcessingMessage.ERROR_MESSAGE(e.getMessage()));
+            }
+        }
+
+        if(c==null || Chem.isProblem(c)){
         	messages.add(GinasProcessingMessage
                     .WARNING_MESSAGE("Structure format modified due to standardization"));
-        	c = DEFAULT_READER_FACTORY.createChemical(ChemCleaner.removeSGroups(mfile), Chemical.FORMAT_SDF);
+        	try {
+                c = Chemical.parse(ChemCleaner.removeSGroups(mfile));
+
         	c.setProperty("WARNING", "Structure format modified due to standardization: removed SGROUPs");
+            }catch(Exception e){
+        	    throw new IllegalStateException("could not parse as mol/sdf", e);
+            }
         }
         
         if (stereoChemistry != null)
@@ -469,4 +485,5 @@ public class Structure extends BaseModel implements ForceUpdatableModel{
         return c;
 
     }
+
 }

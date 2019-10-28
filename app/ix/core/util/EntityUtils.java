@@ -2652,7 +2652,7 @@ public class EntityUtils {
 		 * @return
 		 */
 		public Tuple<String, String> asLuceneIdTuple() {
-			return new Tuple<String, String>(kind.getInternalIdField(), this.getIdString());
+			return new Tuple<String, String>(kind.getExternalIdFieldName(), this.getIdString());
 		}
 
 		public static Key of(EntityInfo<?> meta, Object id) {

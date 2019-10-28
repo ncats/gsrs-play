@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
 import java.util.OptionalLong;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -110,7 +111,27 @@ public class ProcessExecutionService {
     		};
     	}
     	
-    	public default EntityStreamSupplier<T> before(Runnable run){
+		/**
+		 * Create a new StreamSupplier
+		 * that runs the given Runnale before this.
+		 *
+		 * This is similiar to
+		 * <pre>
+		 EntityStreamSupplier<T> me = this;
+		 return new EntityStreamSupplier<T>(){
+		  // ... handle other overrides too not shown
+		@Override
+		public Stream<T> get() {
+		run.run();
+		return me.get();
+		}
+		};
+		 * </pre>
+		 * @param run
+		 * @return
+		 */
+		default EntityStreamSupplier<T> before(Runnable run){
+			Objects.requireNonNull(run, "Before runnale can not e null");
     		EntityStreamSupplier<T> me = this;
     		return new EntityStreamSupplier<T>(){
     			@Override
@@ -192,6 +213,7 @@ public class ProcessExecutionService {
     		stream.forEach(t->{
     			executor.submit(()->{
     				try{
+						listener.preRecordProcess(t);  //Added on May 22, 2019
     					consumer.accept(t);
     					listener.recordProcessed(t);
     				}catch(Exception e){
@@ -304,7 +326,9 @@ public class ProcessExecutionService {
     	private Consumer<T> consumer = CommonConsumers.doNothing.consumer();
     	private EntityStreamSupplier<T> supplier = CommonStreamSuppliers.doNothing();
     	private ProcessListener listener = ProcessListener.doNothingListener();
-    	
+    	private Runnable before = null;
+		private Predicate<T> filter = null;
+
     	public ProcessBulder(){}
     	public ProcessBulder(Class<T> cls){}
     	
@@ -324,7 +348,8 @@ public class ProcessExecutionService {
     	}
     	
     	public ProcessBulder<T> before(Runnable r){
-    		this.supplier=supplier.before(r);
+//    		this.supplier=supplier.before(r);
+			this.before = r;
     		return this;
     	}
     	
@@ -333,7 +358,7 @@ public class ProcessExecutionService {
     	}
     	
     	public ProcessBulder<T> filter(Predicate<T> filter){
-    	    this.supplier=supplier.filter(filter);
+    	   this.filter = filter;
             return this;
         }
     	
@@ -343,7 +368,14 @@ public class ProcessExecutionService {
     	}
     	
     	public Process<T> build(){
-    		return new Process(supplier, consumer,listener);    		
+    		EntityStreamSupplier<T> s = supplier;
+    		if(filter !=null){
+    			s= s.filter(filter);
+			}
+			if(before !=null){
+    			s = s.before(before);
+			}
+    		return new Process(s, consumer,listener);
     	}
     	
     }

@@ -4,22 +4,30 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.UUID;
 import java.util.function.Supplier;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import ix.test.SubstanceJsonUtil;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.flipkart.zjsonpatch.JsonDiff;
 import com.flipkart.zjsonpatch.JsonPatch;
 
-import ix.AbstractGinasTest;
 import ix.core.controllers.EntityFactory;
 import ix.core.models.Author;
 import ix.core.models.Keyword;
@@ -38,7 +46,7 @@ import ix.utils.pojopatch.PojoPatch;
  */
 
 @RunWith(Parameterized.class)
-public class PojoDiffTest extends AbstractGinasTest{
+public class PojoDiffTest{
 
     
     private List<UUID> uuids = new ArrayList<>();

@@ -158,9 +158,16 @@ public class LazyList<N,T> implements List<T>{
 	@Override
 	public T get(int index) {
 		try {
-			return _internalList.get(index).call();
+			NamedCallable<N,T> nc=_internalList.get(index);
+			try {
+				return nc.call();
+			} catch (Exception e) {
+				System.err.println("Named callable with name:" + nc.getName().toString() + " could not be fetched");
+				e.printStackTrace();
+			}
 		} catch (Exception e) {
 			e.printStackTrace();
+			System.err.println("Couldn't fetch Named Callable from list");
 		}
 		return null;
 	}
@@ -212,7 +219,7 @@ public class LazyList<N,T> implements List<T>{
 		public K next() {
 			K next=current();
 			if(next==null){
-				throw new NoSuchElementException(cindex  + " does not exist");
+				throw new NoSuchElementException("Entry number:" + cindex  + " could not be found in list of size " + ml.size() + ", the index may not be consistent with the database");
 			}
 			cindex++;
 			return next;

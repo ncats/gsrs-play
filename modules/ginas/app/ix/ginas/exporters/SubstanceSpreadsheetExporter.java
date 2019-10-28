@@ -5,7 +5,8 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
-import gov.nih.ncgc.chemical.Chemical;
+import gov.nih.ncats.molwitch.Chemical;
+import gov.nih.ncats.molwitch.inchi.Inchi;
 import ix.core.models.Group;
 import ix.core.models.Structure;
 import ix.core.util.CachedSupplier;
@@ -95,7 +96,7 @@ public class SubstanceSpreadsheetExporter implements Exporter<Substance> {
 
                 try{
                     Chemical chem = s.toChemical();
-                    cell.writeString( chem.export(Chemical.FORMAT_STDINCHIKEY).replace("InChIKey=",""));
+                    cell.writeString(Inchi.asStdInchi(chem).getKey().replace("InChIKey=",""));
                 }catch(Exception e){
 
                 }
@@ -182,52 +183,7 @@ public class SubstanceSpreadsheetExporter implements Exporter<Substance> {
     	}
     }
 
-    private static class ChemicalExportRecipe implements SubstanceColumnValueRecipe{
 
-        private final  int chemicalFormat;
-
-        private final String columnHeder;
-
-        public ChemicalExportRecipe(Enum<?> columnValue, int chemicalFormat) {
-            this(columnValue.name(), chemicalFormat);
-        }
-
-        public ChemicalExportRecipe(String columnValue, int chemicalFormat) {
-            this.chemicalFormat = chemicalFormat;
-            this.columnHeder = columnValue;
-        }
-
-        @Override
-        public int writeHeaderValues(Spreadsheet.SpreadsheetRow row, int currentOffset) {
-            row.getCell(currentOffset).writeString(columnHeder);
-            return 1;
-        }
-
-        @Override
-        public void writeValue(Substance s, SpreadsheetCell cell) {
-            if(s instanceof ChemicalSubstance){
-                try{
-                    Chemical chem = s.toChemical();
-                    cell.writeString(chem.export(chemicalFormat));
-                }catch(Exception e){
-
-                }
-            }
-        }
-
-        @Override
-        public boolean containsColumnName(String name) {
-            return Objects.equals(columnHeder, name);
-        }
-
-        @Override
-        public ColumnValueRecipe<Substance> replaceColumnName(String oldName, String newName) {
-            if(containsColumnName(oldName)){
-                return new ChemicalExportRecipe(newName, chemicalFormat);
-            }
-            return this;
-        }
-    }
     
     private static class ParentSourceMaterialRecipeWrapper extends SubstanceFetcherRecipeWrapper {
 

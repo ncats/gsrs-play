@@ -4,22 +4,14 @@ import static org.junit.Assert.*;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
+import gov.nih.ncats.molwitch.Chemical;
 import org.junit.Test;
 
-import com.fasterxml.jackson.databind.JsonNode;
-
-import chemaxon.struc.Molecule;
-import chemaxon.util.MolHandler;
 import ix.AbstractGinasServerTest;
-import ix.AbstractGinasTest;
 import ix.core.chem.StructureProcessor;
 import ix.core.controllers.StructureFactory;
-import ix.core.models.Session;
 import ix.core.models.Structure;
-import ix.ncats.controllers.App;
-import ix.test.server.BrowserSession;
 import ix.test.server.RestSession;
 import ix.test.server.SubstanceAPI;
 
@@ -378,9 +370,9 @@ public final class OddMolfileParserTest extends AbstractGinasServerTest{
 	@Test
 	public void readOddMolfile() throws Exception{
 		try {
-			MolHandler mh = new MolHandler(ODD_MOLFILE_BRACKETS);
-			Molecule m = mh.getMolecule();
-			assertNotNull(m);
+			Chemical c = Chemical.parseMol(ODD_MOLFILE_BRACKETS);
+
+			assertNotNull(c);
 		} catch (Throwable e) {
 			e.printStackTrace();
 			throw e;
@@ -414,7 +406,7 @@ public final class OddMolfileParserTest extends AbstractGinasServerTest{
 			try( RestSession session = ts.newRestSession(ts.getFakeUser1())) {
 	        	SubstanceAPI api = new SubstanceAPI(session);
 	        	String svg = api.imageSVG(sid, 400);
-				System.out.println(svg);
+//				System.out.println(svg);
 	        	assertTrue("SVG export should work, even with 0 atom brackets", svg.contains("FreeHEP Graphics2D"));
 	        }
 			
@@ -444,7 +436,7 @@ public final class OddMolfileParserTest extends AbstractGinasServerTest{
 			try( RestSession session = ts.newRestSession(ts.getFakeUser1())) {
 	        	SubstanceAPI api = new SubstanceAPI(session);
 	        	String sdf = api.exportHTML(sid, "sdf");
-				System.out.println(sdf);
+//				System.out.println(sdf);
 	        	assertTrue("SDF export should work, even with 0 atom brackets", sdf.contains("M  END"));
 	        }
 		} catch (Throwable e) {

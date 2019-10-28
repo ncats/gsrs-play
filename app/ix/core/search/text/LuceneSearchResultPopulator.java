@@ -63,11 +63,16 @@ class LuceneSearchResultPopulator {
 				if (Thread.interrupted()) {
 					throw new InterruptedException();
 				}
-				Document doc = searcher.doc(hits.scoreDocs[i + offset].doc); //bad idea
+
+				//This is probably a bad idea
+				//because the document id integer may not always remain the same between loads
+				//and that can cause a problem
+				Document doc = searcher.doc(hits.scoreDocs[i + offset].doc);
 				try {
 					Key k = Key.of(doc);
 					result.addNamedCallable(new EntityFetcher<>(k));
 				} catch (Exception e) {
+					System.out.println("Record:" + i + " of " + hits.scoreDocs.length);
 					e.printStackTrace();
 					Logger.error(e.getMessage());
 				}

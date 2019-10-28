@@ -1,13 +1,15 @@
 package ix.ginas.utils;
 
-import gov.nih.ncgc.chemical.Chemical;
-import gov.nih.ncgc.chemical.ChemicalReader;
-import gov.nih.ncgc.jchemical.JchemicalReader;
+
+import gov.nih.ncats.molwitch.Chemical;
+import gov.nih.ncats.molwitch.io.ChemicalReader;
+import gov.nih.ncats.molwitch.io.ChemicalReaderFactory;
 import ix.core.models.Keyword;
 import ix.core.models.Payload;
 import ix.core.models.Structure;
 import ix.core.processing.RecordExtractor;
 import ix.core.processing.RecordTransformer;
+import ix.core.util.IOUtil;
 import ix.core.util.TimeUtil;
 import ix.ginas.models.v1.ChemicalSubstance;
 import ix.ginas.models.v1.Code;
@@ -31,6 +33,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.regex.Pattern;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -47,6 +50,10 @@ public class GinasSDFUtils {
 	public static class GinasSDFExtractor extends RecordExtractor<Map>{
 		private static final String LINE_SPLIT = "\n";
 		private static final String DELIM = "\t";
+
+		private static final Pattern LINE_SPLIT_PATTERN = Pattern.compile(LINE_SPLIT);
+		private static final Pattern DELIM_SPLIT_PATTERN = Pattern.compile(DELIM);
+
 
 		ChemicalExtractor chemExtract;
 		public int recordNumber=0;
@@ -85,7 +92,7 @@ public class GinasSDFUtils {
 			keyValueMap.put(FIELD_INDEX, recordNumber+"");
 			try {
 				keyValueMap.put(FIELD_NAME, c.getName());
-				keyValueMap.put(FIELD_MOLFILE, c.export(Chemical.FORMAT_MOL));
+				keyValueMap.put(FIELD_MOLFILE, c.toMol());
 				//structureObject.put("molfile", c.export(Chemical.FORMAT_MOL));
 			} catch (Exception e) {
 				e.printStackTrace();
@@ -94,13 +101,14 @@ public class GinasSDFUtils {
 						FIELD_MOLFILE,null
 						));
 			}
-			for(String property:c.getPropertyList()){
-				String value = c.getProperty(property);
+
+			for(Map.Entry<String, String> entry : c.getProperties().entrySet()){
+
 				int rnum=0;
-				for(String line:value.split(LINE_SPLIT)){
+				for(String line : LINE_SPLIT_PATTERN.split(entry.getValue())){
 					int cnum=0;
-					for(String col:line.split(DELIM)){
-						String path=property + "{" + rnum + "}{" + cnum + "}";
+					for(String col : DELIM_SPLIT_PATTERN.split(line)){
+						String path=entry.getKey() + "{" + rnum + "}{" + cnum + "}";
 						keyValueMap.put("property." + path, col);
 						cnum++;
 					}
@@ -108,6 +116,7 @@ public class GinasSDFUtils {
 				}
 			}
 			
+
 			//substanceObject.put("structure", structureObject);
 			return keyValueMap;
 		}
@@ -122,7 +131,7 @@ public class GinasSDFUtils {
 		
 		
 		static public class ExtractionError{
-			static enum TYPE {ERROR, WARNING};
+			 enum TYPE {ERROR, WARNING};
 			
 			TYPE errorType=TYPE.ERROR;
 			String sourcePath;
@@ -320,7 +329,7 @@ public class GinasSDFUtils {
 			public ChemicalExtractor(InputStream is) {
 				super(is);
 				try{
-					mi = new JchemicalReader().createChemicalReader(is);
+					mi = ChemicalReaderFactory.newReader(is);
 				}catch(Exception e){
 					e.printStackTrace();
 				}
@@ -328,9 +337,12 @@ public class GinasSDFUtils {
 
 			@Override
 			public Chemical getNextRecord() {
-				if(mi==null)return null;
+				if(mi==null || !mi.canRead()){
+					return null;
+				}
+
 				try {
-					return mi.next();
+					return mi.read();
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
@@ -339,15 +351,7 @@ public class GinasSDFUtils {
 
 			@Override
 			public void close() {
-				try{
-					if(mi!=null){
-						//probably should have chemicalreader close
-						//System.out.println("Close");
-					}
-
-				}catch(Exception e){
-					e.printStackTrace();
-				}
+				IOUtil.closeQuietly(mi);
 			}
 
 			@Override

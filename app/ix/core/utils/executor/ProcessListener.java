@@ -9,6 +9,14 @@ import java.util.stream.Stream;
  */
 public interface ProcessListener {
     /**
+     * The following object is about to be
+     * processed.
+     * @param o the object that will be re-indexed.
+     */
+    default void preRecordProcess(Object o){}
+
+
+    /**
      * Starting a new process
      */
     default void newProcess(){};

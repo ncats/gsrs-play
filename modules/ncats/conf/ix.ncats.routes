@@ -10,7 +10,7 @@ GET	 /render	ix.ncats.controllers.App.renderParam(structure: String ?= null, siz
 # return a structure in the designated format
 GET	 /structure/$id<[a-f0-9\-]+>.$format<(svg|png|mol|sdf|smi|smiles|mrv)>	ix.ncats.controllers.App.structure(id: String, format: String, size: Int ?= 150, atomMap: String ?= null)
 POST	 /structure	ix.ncats.controllers.App.molinstrument
-GET	 /enantiomer/:id	ix.ncats.controllers.App.enantiomer(id: String)
+#GET	 /enantiomer/:id	ix.ncats.controllers.App.enantiomer(id: String)
 
 ## resolve a given name to 
 GET	 /resolve/*name	ix.ncats.controllers.App.resolve(name: String)

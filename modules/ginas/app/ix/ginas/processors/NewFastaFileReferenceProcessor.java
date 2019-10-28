@@ -79,7 +79,9 @@ public class NewFastaFileReferenceProcessor implements EntityProcessor<Substance
                             protected void visitRecord(String id, String comment, String seq) {
                                 try {
                                     System.out.println("adding seq:" + seq);
-                                    indexer.add(">"+obj.uuid +"|"+id, seq);
+                                    String indexId = ">"+obj.uuid +"|"+id;
+                                    indexer.remove(indexId);
+                                    indexer.add(indexId, seq);
                                 } catch (IOException e) {
                                     e.printStackTrace();
                                 }

@@ -29,7 +29,114 @@ import org.apache.http.message.BasicNameValuePair;
  */
 public class SequenceSearchAPI {
 	
-	
+	public static class SequenceSearchOptions{
+	    public enum SearchType{
+	        GLOBAL,
+            LOCAL,
+            CONTAINS;
+        }
+        public enum SequenceType{
+            Protein,
+            NucleicAcid
+            ;
+
+            public static SequenceType parseIsProtein(boolean isProtein){
+                if(isProtein){
+                    return Protein;
+                }
+                return NucleicAcid;
+            }
+        }
+	    public SearchType searchType = SearchType.GLOBAL;
+	    public String query;
+	    public double percentIdentity;
+	    public SequenceType type = SequenceType.Protein;
+
+	    public Integer top;
+	    public Integer skip;
+	    public Integer fdim;
+	    /*
+	     int top,
+            int skip,
+            int fdim,
+	     */
+
+	    public SequenceSearchOptions(String sequence, double percentIdentity){
+            validatePercentIdentity(percentIdentity);
+            this.query = Objects.requireNonNull(sequence);
+	        this.percentIdentity = percentIdentity;
+        }
+
+        private static void validatePercentIdentity(double percentIdentity) {
+            if(percentIdentity <0 || percentIdentity >1){
+                throw new IllegalArgumentException("percent identity must be between 0 and 1 inclusive");
+}
+        }
+
+        public Integer getTop() {
+            return top;
+        }
+
+        public SequenceSearchOptions setTop(Integer top) {
+            this.top = top;
+            return this;
+        }
+
+        public Integer getSkip() {
+            return skip;
+        }
+
+        public SequenceSearchOptions setSkip(Integer skip) {
+            this.skip = skip;
+            return this;
+        }
+
+        public Integer getFdim() {
+            return fdim;
+        }
+
+        public SequenceSearchOptions setFdim(Integer fdim) {
+            this.fdim = fdim;
+            return this;
+        }
+
+        public SearchType getSearchType() {
+            return searchType;
+        }
+
+        public SequenceSearchOptions setSearchType(SearchType searchType) {
+            this.searchType = searchType == null ? SearchType.GLOBAL : searchType;
+            return this;
+        }
+
+        public String getQuery() {
+            return query;
+        }
+
+        public SequenceSearchOptions setQuery(String query) {
+            this.query = Objects.requireNonNull(query);
+            return this;
+        }
+
+        public double getPercentIdentity() {
+            return percentIdentity;
+        }
+
+        public SequenceSearchOptions setPercentIdentity(double percentIdentity) {
+            validatePercentIdentity(percentIdentity);
+            this.percentIdentity = percentIdentity;
+            return this;
+        }
+
+        public SequenceType getType() {
+            return type;
+        }
+
+        public SequenceSearchOptions setType(SequenceType type) {
+            this.type = type == null ? SequenceType.Protein : type;
+            return this;
+        }
+    }
     private static final Pattern IDENTITY_PRE_PATTERN = Pattern.compile("identity = (\\d+(\\.\\d+)?)");
 ///ginas/app/substance/4cf9ca84
     private static final Pattern PARTIAL_UUID_PATTERN = Pattern.compile("/ginas/app/substance/(\\S+)");
@@ -48,18 +155,30 @@ public class SequenceSearchAPI {
     }
 
         public SearchResultActual search(String querySequence, double percentIdentity, boolean proteins){
-
+            return search(new SequenceSearchOptions(querySequence, percentIdentity)
+                                        .setType(SequenceSearchOptions.SequenceType.parseIsProtein(proteins)));
+        }
+    public SearchResultActual search(SequenceSearchOptions sequenceSearchOptions){
         try{
             List<SearchResult> retList = new ArrayList<>();
             List<NameValuePair> params = new ArrayList<>();
 
             List<org.apache.http.NameValuePair> form = new ArrayList<>();
-            form.add(new BasicNameValuePair("q", querySequence));
-            form.add(new BasicNameValuePair("cutoff",  String.format("%.2f", percentIdentity)));
+            form.add(new BasicNameValuePair("q", sequenceSearchOptions.query));
+            form.add(new BasicNameValuePair("cutoff",  String.format("%.2f", sequenceSearchOptions.percentIdentity)));
 
-            form.add(new BasicNameValuePair("seqType", proteins? "Protein" : "Nucleic Acid"));
+            form.add(new BasicNameValuePair("seqType", sequenceSearchOptions.type.name()));
+            form.add(new BasicNameValuePair("type", sequenceSearchOptions.searchType.name()));
 
-
+            if(sequenceSearchOptions.top !=null){
+                form.add(new BasicNameValuePair("top", Integer.toString(sequenceSearchOptions.top)));
+            }
+            if(sequenceSearchOptions.skip !=null){
+                form.add(new BasicNameValuePair("skip", Integer.toString(sequenceSearchOptions.skip)));
+            }
+            if(sequenceSearchOptions.fdim !=null){
+                form.add(new BasicNameValuePair("fdim", Integer.toString(sequenceSearchOptions.fdim)));
+            }
             UrlEncodedFormEntity entity = new UrlEncodedFormEntity(form, Consts.UTF_8);
             ByteArrayOutputStream out = new ByteArrayOutputStream();
             entity.writeTo(out);

@@ -145,7 +145,7 @@ public class GinasGlobal extends Global {
 																	// response
 																	// for 5
 																	// minutes
-			response.setHeader("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept"); // Ensure
+			response.setHeader("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, auth-username, auth-password, auth-token, auth-key, auth-token"); // Ensure
 																													// this
 																													// header
 																													// is

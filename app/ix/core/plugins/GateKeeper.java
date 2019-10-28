@@ -21,6 +21,7 @@ public interface GateKeeper extends Closeable {
     <T> T getSinceOrElse(String key, long creationTime, TypedCallable<T> generator, int seconds) throws Exception;
 
     <T> T getOrElseRaw(String key, TypedCallable<T> generator, int seconds) throws Exception;
+    <T> T getOrElseRaw(String key, long creationTime, TypedCallable<T> generator, int seconds) throws Exception;
 
     Object get(String key);
 

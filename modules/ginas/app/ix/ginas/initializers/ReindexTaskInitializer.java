@@ -56,7 +56,7 @@ public class ReindexTaskInitializer extends ScheduledTaskInitializer{
 
 	@Override
 	public String getDescription() {		
-		return "Reindex All Entities";
+		return "Reindex all core entities from backup tables";
 	}
 	
 	@Override

@@ -284,12 +284,12 @@ public class RestSubstanceSubstanceSearcher implements SubstanceSearcher{
         }
 
         @Override
-        public InputStream export(String format) {
+        public WebExportRequest newExportRequest(String format) {
             //this is a hack because we don't really have a good key to use
             //for this export from the Rest API and the rest search doesn't do any caching either
             //so we use a special map used only in testing to store these results
             GinasApp.registerSpecialStream(this.getKey(), ()->getSubstances());
-            return super.export(format);
+            return super.newExportRequest(format);
         }
 
         public int getTotal() {
@@ -312,15 +312,17 @@ public class RestSubstanceSubstanceSearcher implements SubstanceSearcher{
 
     }
 
-
-
     @Override
     public RestExportSupportSearchResult substructure(String smiles) throws IOException {
+        return substructure(smiles, 0.8);
+    }
+    public RestExportSupportSearchResult substructure(String smiles, double cutoff) throws IOException {
 //        String url = restSession.getHttpResolver().apiV1("substances/structureSearch?q="+ URLEncoder.encode(smiles, "UTF-8")+"");
         String url = restSession.getHttpResolver().apiV1("substances/structureSearch");
 
         JsonNode node = restSession.createRequestHolder(url)
                 .setQueryParameter("q", smiles)
+                .setQueryParameter("cutoff", Double.toString(cutoff))
                 .get()
                 .get(3000)
                 .asJson();
@@ -393,8 +395,10 @@ public class RestSubstanceSubstanceSearcher implements SubstanceSearcher{
                 .post(post)
                 .get(3000);
 
-//        System.out.println(resp.getBody());
-        String uuid=resp.getUri().toString().split("[?]q=")[1].split("&")[0];
+        System.out.println(resp.getBody());
+        String uriString = resp.getUri().toString();
+        System.out.println(uriString);
+        String uuid= uriString.split("[?]q=")[1].split("&")[0];
         return uuid;
     }
     @Override

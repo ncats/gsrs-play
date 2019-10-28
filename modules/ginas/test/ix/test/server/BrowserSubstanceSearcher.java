@@ -131,7 +131,7 @@ public class BrowserSubstanceSearcher implements SubstanceSearcher {
             }catch(Exception e){
                 e.printStackTrace();
             }
-        }while(substances.addAll(tmp.v()));
+        }while(tmp !=null && substances.addAll(tmp.v()));
 
         SearchResult results = new SearchResult(keyString, substances,this, session.getUser());
         if(results.numberOfResults() >0){

@@ -11,6 +11,9 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.Serializable;
 
+import gov.nih.ncats.molwitch.Chemical;
+import gov.nih.ncats.molwitch.io.ChemicalReader;
+import gov.nih.ncats.molwitch.io.ChemicalReaderFactory;
 import ix.core.util.TimeUtil;
 import play.Logger;
 import play.Plugin;
@@ -32,25 +35,11 @@ import akka.actor.Terminated;
 import akka.routing.Broadcast;
 import akka.routing.RouterConfig;
 import akka.routing.FromConfig;
-import akka.routing.RoundRobinRouter;
 import akka.routing.SmallestMailboxRouter;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
-import scala.concurrent.duration.Duration;
-import scala.concurrent.duration.FiniteDuration;
-import scala.collection.immutable.Iterable;
 import scala.collection.JavaConverters;
 
-import chemaxon.formats.MolImporter;
-import chemaxon.struc.Molecule;
-import chemaxon.util.MolHandler;
-
-import com.avaje.ebean.Ebean;
-import com.avaje.ebean.Transaction;
-
-import ix.core.plugins.IxContext;
-import ix.core.plugins.PersistenceQueue;
-import ix.core.plugins.StructureIndexerPlugin;
 import ix.core.plugins.StructureIndexerPlugin.StandardizedStructureIndexer;
 import ix.core.models.XRef;
 import ix.core.models.Keyword;
@@ -62,8 +51,8 @@ import ix.core.chem.StructureProcessor;
 import ix.core.controllers.ProcessingJobFactory;
 import ix.core.controllers.PayloadFactory;
 import ix.utils.Util;
-
 import tripod.chem.indexer.StructureIndexer;
+
 
 public class StructureProcessorPlugin extends Plugin {
     private static final int AKKA_TIMEOUT = 60000;
@@ -111,7 +100,7 @@ public class StructureProcessorPlugin extends Plugin {
         }
         
         final StructureReceiver receiver;
-        final Molecule mol;
+        final Chemical mol;
         final String key;
         final StandardizedStructureIndexer indexer;
 
@@ -122,13 +111,13 @@ public class StructureProcessorPlugin extends Plugin {
         StructureReceiver.Status status = StructureReceiver.Status.OK;
         String mesg;
 
-        public ReceiverProcessor (Molecule mol, 
+        public ReceiverProcessor (Chemical mol,
                                   StructureReceiver receiver,
                                   StandardizedStructureIndexer indexer) {
             this (mol, false, receiver, indexer);
         }
         
-        public ReceiverProcessor (Molecule mol, boolean standardize,
+        public ReceiverProcessor (Chemical mol, boolean standardize,
                                   StructureReceiver receiver,
                                   StandardizedStructureIndexer indexer) {
             this.mol = mol;
@@ -191,9 +180,9 @@ public class StructureProcessorPlugin extends Plugin {
 
     public static class PayloadRecord implements Serializable {
         public final ProcessingJob job;
-        public final Molecule mol;
+        public final Chemical mol;
 
-        public PayloadRecord (ProcessingJob job, Molecule mol) {
+        public PayloadRecord (ProcessingJob job, Chemical mol) {
             this.job = job;
             this.mol = mol;
         }
@@ -249,10 +238,10 @@ public class StructureProcessorPlugin extends Plugin {
     public static class PersistRecord implements Serializable {
         public final Structure struc;
         public final ProcessingRecord rec;
-        final Molecule mol;
+        final Chemical mol;
         final StructureIndexer indexer;
         
-        public PersistRecord (Structure struc, Molecule mol,
+        public PersistRecord (Structure struc, Chemical mol,
                               ProcessingRecord rec, StructureIndexer indexer) {
             this.struc = struc;
             this.rec = rec;
@@ -582,8 +571,7 @@ public class StructureProcessorPlugin extends Plugin {
 
     public void submit (String struc, StructureReceiver receiver) {
         try {
-            MolHandler mh = new MolHandler (struc);
-            submit (mh.getMolecule(), receiver);
+            submit (Chemical.parse(struc), receiver);
         }
         catch (Exception ex) {
             ex.printStackTrace();
@@ -592,13 +580,13 @@ public class StructureProcessorPlugin extends Plugin {
         }
     }
 
-    public void submit (Molecule mol, boolean standardize,
+    public void submit (Chemical mol, boolean standardize,
                         StructureReceiver receiver) {
         inbox.send(processor, new ReceiverProcessor
                    (mol, standardize, receiver, indexer));
     }
 
-    public void submit (Molecule mol, StructureReceiver receiver) {
+    public void submit (Chemical mol, StructureReceiver receiver) {
         inbox.send(processor, new ReceiverProcessor (mol, receiver, indexer));
     }
 
@@ -628,12 +616,12 @@ public class StructureProcessorPlugin extends Plugin {
             job.payload = pp.payload;
             try {
                 InputStream is = PayloadFactory.getStream(pp.payload);      
-                MolImporter mi = new MolImporter (is);
-                int total = 0;
-                for (Molecule m; (m = mi.read()) != null; ++total) {
-                    proc.tell(new PayloadRecord (job, m), sender);
+                try(ChemicalReader reader = ChemicalReaderFactory.newReader(is)){
+                    while(reader.canRead()){
+                        proc.tell(new PayloadRecord (job, reader.read()), sender);
                 }
-                mi.close();
+                }
+
             }
             catch (Throwable t) {
                 job.message = t.getMessage();

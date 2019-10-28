@@ -6,6 +6,7 @@ import ix.core.models.Keyword;
 import ix.core.util.EntityUtils;
 import ix.ginas.models.v1.Relationship;
 import ix.ginas.models.v1.Substance;
+import ix.ginas.models.v1.SubstanceReference;
 
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -157,6 +158,10 @@ Exception Details:
             r.interactionType = new String(other.interactionType);
         }
 
+        //GSRS-982 mediator
+        if(other.mediatorSubstance !=null){
+            r.mediatorSubstance = other.mediatorSubstance.copyWithNullUUID();
+        }
         return r;
     }
     

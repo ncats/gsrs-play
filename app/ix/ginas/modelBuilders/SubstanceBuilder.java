@@ -91,7 +91,9 @@ public class SubstanceBuilder extends AbstractSubstanceBuilder<Substance, Substa
 		if(substance instanceof StructurallyDiverseSubstance){
 			return (B) new StructurallyDiverseSubstanceBuilder((StructurallyDiverseSubstance) substance);
 		}
-
+		if(substance instanceof SpecifiedSubstanceGroup1Substance){
+			return (B) new SpecifiedSubstanceGroup1SubstanceBuilder((SpecifiedSubstanceGroup1Substance) substance);
+		}
 
 		return (B) new SubstanceBuilder(substance);
 	}
