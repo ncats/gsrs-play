@@ -56,13 +56,5 @@ public class PolymerDecodeTest {
 //        }
     }
 
-    public static void main(String[] args) {
-        JUnitCore jUnitCore = new JUnitCore();
-        Result result = jUnitCore.run(PolymerDecodeTest.class);
 
-        result.getFailures().forEach(f-> System.out.println(f));
-        System.out.printf("Test ran: %s, Failed: %s%n",
-                result.getRunCount(), result.getFailureCount());
-
-    }
 }
