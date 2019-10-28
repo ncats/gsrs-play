@@ -691,7 +691,7 @@ function standardizeNames() {
 
         for (var t in tmp) {
             var name = tmp[t];
-            name = name.replace(/([\u0390-\u03C9||\u2192|\u00B1-\u00B9|\u2070-\u208F|\u2190|�])/g, replacer).trim();
+      name = name.replace(/([\u0390-\u03C9||\u2192|\u00B1-\u00B9|\u2070-\u208F|\u2190|])/g, replacer).trim();
             name = name.replace(bad, "");
             name = name.replace(/[[]([A-Z -.]*)\]$/g, " !!@!$1_!@!");
             name = name.replace(/[ \t]+/g, " ");
@@ -1283,7 +1283,7 @@ function definitionSwitch() {
                 if (step == 3) {
                     hideLoadingWheel();
                     setTimeout(function () {
-                        alert('Record definitions successfully switched. The page will now refresh. \n\n Please review and remove any unnecessary validation Notes created for each substance during the process');
+            alert('Record definitions successfully switched. The page will now refresh. \n\n Please review and remove any unnecessary validation Notes created for each substance during the switch');
                         cb();
                     }, 1000);
                 } else {

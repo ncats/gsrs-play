@@ -1713,7 +1713,7 @@
                     var url = "https://drugs.ncats.io/api/v1/substances/search?q=root_approvalID:" + scope.uuid + "&fdim=1&callback=JSON_CALLBACK";
                 return $http.jsonp(url, {jsonpCallbackParam: 'callback'}).then(function (response) {
                     if (response.data.total > 0) {
-                        var template = angular.element('<a href = "https://drugs.ncats.io/drug/' + scope.uuid + '" target = "_blank" class = "external-links" uib-tooltip="view this substance on Inxight drugs">Inxight Drugs</a>');
+                        var template = angular.element('<a style = "text-decoration:underline" href = "https://drugs.ncats.io/drug/' + scope.uuid + '" target = "_blank" class = "external-links" uib-tooltip="view this substance on Inxight drugs">Inxight Drugs<i class="fa fa-external-link-square thumb-col" aria-hidden="true"></i></a>');
 
                     }else{
                         var template = angular.element('');

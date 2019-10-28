@@ -1039,6 +1039,14 @@
                 scope.$on('changed', function (e) {
                     subunitParser.parseSubunits(scope.parent);
                 });
+
+                scope.remGlycosylation = function(){
+                	scope.parent.protein.glycosylation.CGlycosylationSites=[];
+                	scope.parent.protein.glycosylation.OGlycosylationSites=[];
+                	scope.parent.protein.glycosylation.NGlycosylationSites=[];
+                	scope.parent.protein.glycosylation.glycosylationType=null;
+                };
+
             }
 
         };
