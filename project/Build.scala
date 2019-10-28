@@ -199,7 +199,7 @@ public class BuildInfo {
       libraryDependencies += "org.webjars" % "lodash" % "4.0.0",
       libraryDependencies += "org.scalatest" %% "scalatest" % "2.2.2" % Test,
       libraryDependencies  += "junit" % "junit" % "4.12" % Test,
-      libraryDependencies += "com.novocode" % "junit-interface" % "0.11" % Test,
+    libraryDependencies += "com.novocode" % "junit-interface" % "0.11" % Test,
     libraryDependencies += "org.apache.poi" % "poi" % "3.17",
     libraryDependencies += "org.apache.poi" % "poi-ooxml" % "3.17",
     libraryDependencies += "org.apache.poi" % "poi-ooxml-schemas" % "3.17",
@@ -208,6 +208,7 @@ public class BuildInfo {
    // libraryDependencies += "org.reflections" % "reflections" % "0.9.8" notTransitive () ,
     libraryDependencies += "io.swagger" %% "swagger-play2" % "1.5.1",
     libraryDependencies += "org.webjars" % "swagger-ui" % "2.1.8-M1",*/
+
 
 	  javaOptions ++= Seq("-Xmx4096M", "-Xms512M", "-XX:MaxPermSize=2048M"),
       javacOptions in (Compile, compile) ++= javaBuildOptions,

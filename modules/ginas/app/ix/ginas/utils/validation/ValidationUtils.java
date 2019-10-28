@@ -1289,25 +1289,19 @@ public class ValidationUtils {
 					|| cs.nucleicAcid.getSubunits().isEmpty()) {
 				gpm.add(GinasProcessingMessage
 						.ERROR_MESSAGE("Nucleic Acid substance must have at least 1 subunit"));
-			} else {
-
 			}
 			if (cs.nucleicAcid.getSugars() == null
 					|| cs.nucleicAcid.getSugars().isEmpty()) {
 				gpm.add(GinasProcessingMessage
 						.ERROR_MESSAGE("Nucleic Acid substance must have at least 1 specified sugar"));
-			} else {
-
 			}
 			if (cs.nucleicAcid.getLinkages() == null
 					|| cs.nucleicAcid.getLinkages().isEmpty()) {
 				gpm.add(GinasProcessingMessage
 						.ERROR_MESSAGE("Nucleic Acid substance must have at least 1 specified linkage"));
-			} else {
-
 			}
 
-			{
+
 				int unspSugars = NucleicAcidUtils
 						.getNumberOfUnspecifiedSugarSites(cs);
 				if (unspSugars != 0) {
@@ -1315,16 +1309,23 @@ public class ValidationUtils {
 							.ERROR_MESSAGE("Nucleic Acid substance must have every base specify a sugar fragment. Missing "
 									+ unspSugars + " sites."));
 				}
-			}
-			{
+
 				int unspLinkages = NucleicAcidUtils
 						.getNumberOfUnspecifiedLinkageSites(cs);
-				if (unspLinkages != 0) {
+				//This is meant to say you can't be MISSING a link between 2 sugars in an NA
+				if (unspLinkages >0) {
 					gpm.add(GinasProcessingMessage
 							.ERROR_MESSAGE("Nucleic Acid substance must have every linkage specify a linkage fragment. Missing "
 									+ unspLinkages + " sites."));
+					//Typically you can't also have an extra link (on the 5' end), but it's allowed
+				}else if(unspLinkages < 0 && unspLinkages >= -cs.nucleicAcid.subunits.size()){
+					gpm.add(GinasProcessingMessage
+							.INFO_MESSAGE("Nucleic Acid Substance specifies more linkages than typically expected. This is typically done to specify a 5' phosphate, but is often sometimes done by accident."));
+				}else if(unspLinkages < 0){
+					gpm.add(GinasProcessingMessage
+							.ERROR_MESSAGE("Nucleic Acid Substance has too many linkage sites specified."));
 				}
-			}
+
 		}
 		return gpm;
 	}

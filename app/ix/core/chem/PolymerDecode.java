@@ -342,10 +342,15 @@ public class PolymerDecode {
 
 //					System.out.println("Atom is:" + ca.getAtomicNumber() + " or " + ca.getSymbol());
 
-					if (rGroup == null && (ca.getSymbol().equals("*") || ca.getSymbol().equals("A"))) {
+					boolean isR=false;
+					//rgroup because it's a star atom or query
+					if((ca.getSymbol().equals("*") || ca.getSymbol().equals("A"))){
+						isR=true;
 						connectcount++;
+					}
 
-
+					//rgroup for above reason, but NOT because it had been connected to something else
+					if (rGroup == null && isR) {
 						ca.setRGroup(attachType);
 
 						ca.setAlias("_R" + ca.getRGroupIndex().getAsInt());
@@ -359,7 +364,8 @@ public class PolymerDecode {
 						}
 						m3.setProperty("rgroups", rgroups + attachType);
 						rgroupMap.put(ca, attachType++);
-					}else if (rGroup != null) {
+					}else if (rGroup != null) { //rgroup because it HAD been connected to something else
+
 						connectcount++;
 //						System.out.println("It's an rgroup:" + connectcount);
 						Atom ca2 = m3.addAtom(pseudoString);

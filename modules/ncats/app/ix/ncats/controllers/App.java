@@ -1019,7 +1019,9 @@ public class App extends Authentication {
 			final String atomMap) {
 
 					Structure struc = StructureFactory.getStructure(id);
-
+		if(struc==null){
+			return notFound("Not a valid structure " + id);
+		}
 		return structure(struc, format, size, atomMap);
 //		final int[] amap = stringToIntArray(atomMap);
 //		if (format.equals("svg") || format.equals("png")) {

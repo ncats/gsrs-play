@@ -1760,6 +1760,7 @@ public class GinasApp extends App {
         ObjectNode node = mapper.createObjectNode();
         try {
             String opayload = request().body().asText();
+            System.out.println("interpreting molfile\n"+opayload);
             String payload = ChemCleaner.getCleanMolfile(opayload);
             if (payload != null) {
                 List<Structure> moieties = new ArrayList<Structure>();
