@@ -54,7 +54,7 @@ public class LoadDataSetTest extends AbstractLoadDataSetTest{
 //        String searchKey = results.getKey();
         SearchResult results = restSearcher.substructure("C1=CC=CC=C1");
 
-        System.out.println("rest results = " + results.getAllFacets());
+//        System.out.println("rest results = " + results.getAllFacets());
         //17 chemicals, 3 polymers
         assertEquals(20, results.numberOfResults());
         Map<String, Integer> classCountMap =results.getAllFacets().get("Substance Class");
