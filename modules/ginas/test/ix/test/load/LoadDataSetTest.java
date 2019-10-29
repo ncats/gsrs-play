@@ -4,10 +4,7 @@ import static org.junit.Assert.*;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.CountDownLatch;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -58,7 +55,12 @@ public class LoadDataSetTest extends AbstractLoadDataSetTest{
         SearchResult results = restSearcher.substructure("C1=CC=CC=C1");
 
         System.out.println("rest results = " + results.getAllFacets());
-        assertEquals(17, results.numberOfResults());
+        //17 chemicals, 3 polymers
+        assertEquals(20, results.numberOfResults());
+        Map<String, Integer> classCountMap =results.getAllFacets().get("Substance Class");
+        assertEquals(Integer.valueOf(17), classCountMap.get("chemical"));
+        assertEquals(Integer.valueOf(3), classCountMap.get("polymer"));
+
         TestFacetUtil.assertFacetsMatch(TestFacetUtil.createExpectedRep90Facets(), results);
         
     }

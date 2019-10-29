@@ -72,10 +72,11 @@ public final class TestFacetUtil {
         Map<String, Map<String, Integer>> expectedFacets = new HashMap<>();
 
         expectedFacets.put("Record Status", new HashMap<String, Integer>(){{
-            put("approved", 17);
+            put("approved", 20);
         }});
         expectedFacets.put("Substance Class", new HashMap<String, Integer>(){{
             put("chemical", 17);
+            put("polymer", 3);
         }});
 //        expectedFacets.put("Molecular Weight", new HashMap<String, Integer>(){{
 //            put("200:400", 10);
@@ -87,14 +88,16 @@ public final class TestFacetUtil {
         expectedFacets.put( "GInAS Tag", new HashMap<String, Integer>(){{
 //            put("NOMEN", 17); //Note, this was removed, as it was only in the tags by accident
 //            put("WARNING", 17);
-            put("WHO-DD", 6);
+            put("WHO-DD", 8);
             put("MI", 6);
-            put("INCI", 2);
-            put("INN", 1);
-            put("HSDB", 1);
-            put("MART.", 1);
+            put("INCI", 4);
+            put("INN",3);
+            put("HSDB", 2);
+            put("MART.", 2);
             put("FCC", 1);
             put("FHFI", 1);
+            put("USAN", 1);
+            put("II", 1);
         }});
 
         //Stereochemistry={ACHIRAL=13, ABSOLUTE=3, RACEMIC=1},
@@ -105,7 +108,7 @@ public final class TestFacetUtil {
             put("RACEMIC", 1);
         }});
         //Structure Hash={NNQ793F142LD=5, 1GMA5YNPSNF6=1, 9QJCPY53NHZV=1, L6RUGLWCMMP4=1, NNQ1X6A91CVX=1, NV2AC53S72NK=1, PA437XKNCWR2=1, VU8BQZFPPYTZ=1, YPCZM11BTJ54=1, Z3T91W4NXAHP=1 }
-        expectedFacets.put("Structure Hash", new HashMap<String, Integer>(){{
+        expectedFacets.put("EXACT_HASH", new HashMap<String, Integer>(){{
             put("NNQ793F142LD", 5);
             put("1GMA5YNPSNF6", 1);
             put("9QJCPY53NHZV", 1);
