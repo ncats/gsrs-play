@@ -29,7 +29,7 @@ public class IxCacheTest  extends AbstractGinasServerTest {
 		//ix.cache.useFileDb=false
 
 		GinasTestServer ts= super.createGinasTestServer();
-		ts.modifyConfig("GinasTestServer", true);
+		ts.modifyConfig( "ix.cache.useFileDb", true, GinasTestServer.ConfigOptions.ALL_TESTS);
 
 		return ts;
 	}

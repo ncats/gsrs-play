@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import gov.nih.ncats.molwitch.Chemical;
+import ix.core.util.RunOnly;
 import org.junit.Test;
 
 import ix.AbstractGinasServerTest;
@@ -399,7 +400,8 @@ public final class OddMolfileParserTest extends AbstractGinasServerTest{
 		try {
 			List<Structure> slist = new ArrayList<>();
 			Structure s = StructureProcessor.instrument(RENDER_PROBLEM_STUCTURE, slist, true);
-			s.molfile=RENDER_PROBLEM_STUCTURE;
+			//katzelda - why did we override this field instrumenting should clean and save the fixed mol ?
+//			s.molfile=RENDER_PROBLEM_STUCTURE;
 			StructureFactory.saveTempStructure(s);
 			String sid = s.getId();
 			

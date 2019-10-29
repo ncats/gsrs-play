@@ -63,7 +63,7 @@ public class StructurallyDiverseApiTest extends AbstractGinasServerTest {
             ensurePass( api.submitSubstance(entered));
             String uuid = entered.at("/uuid").asText();
             String html = api.fetchSubstance(uuid).getBody();
-            assertTrue(html, html.contains("Definition References"));
+            assertTrue(html, html.contains("Definitional References"));
             
         }
    	}
