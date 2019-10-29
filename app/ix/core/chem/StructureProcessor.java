@@ -144,6 +144,7 @@ public class StructureProcessor {
             System.err.println(mol);
             System.err.println("Attempting to eliminate SGROUPS");
             String nmol = ChemCleaner.removeSGroups(mol);
+//            System.out.println("now new mol is:\n"+ nmol);
             try{
                 instrument (struc, components, Chemical.parse(nmol), standardize);
             }catch(Exception e){
