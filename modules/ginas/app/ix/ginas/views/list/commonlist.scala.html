@@ -19,7 +19,6 @@
             	@contentDetails
             </div>
             <div class = "col-md-3">
-                <inxight uuid = "'@sub.getApprovalIDDisplay()'"></inxight>
                 @dynamic(name = IxDynamicResourceHandler.IS_ADMIN, handler = new ix.ncats.controllers.security.IxDeadboltHandler()) {
                     @commonliststatus(sub)
                 }
