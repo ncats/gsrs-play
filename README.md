@@ -13,7 +13,6 @@ investigation, consistent with the **ISO 11238** standard.
 
 The code can be checked out of this git repository.  There are several important branches:
 * GSRS_DEV - this is the main bleeding edge development branch.
-* additionaldata - This is an experimental branch that is being used to incorporate additional data sources to provide even more information on the status of each substance.
 
 ## Config File
 Configuration is controlled by a Play ConfigFile.  
@@ -83,7 +82,7 @@ The Play framework can run a single JUnit test class using `ginas/testOnly $full
 So for example to run all the tests in `ix.test.EditingWorkflowTest` class this would be the invocation
 
 ```
-./activator -Dconfig.file=modules/ginas/conf/ginas.conf -Dtestconfig=conf/ginas.conf ginas/clean "ginas/testOnly ix.test.EditingWorkflowTest"
+./activator -Dconfig.file=modules/ginas/conf/ginas.conf ginas/clean "ginas/testOnly ix.test.EditingWorkflowTest"
 ```
 
 
@@ -102,9 +101,9 @@ will be replaced with the test to be run.  Keep the `{0}` in the variable. the T
 to replace it.
 
 ```
-export command="./activator -Dconfig.file=modules/ginas/conf/ginas.conf -Dtestconfig=conf/ginas.conf \"ginas/testOnly {0}\""
+export command="./activator -Dconfig.file=modules/ginas/conf/ginas.conf \"ginas/testOnly {0}\""
 
-./activator -Dconfig.file=modules/ginas/conf/ginas.conf -Dtestconfig=conf/ginas.conf  "ginas/testOnly ix.test.RunAllGinasTests"
+./activator -Dconfig.file=modules/ginas/conf/ginas.conf  "ginas/testOnly ix.test.RunAllGinasTests"
 
 ```
 
