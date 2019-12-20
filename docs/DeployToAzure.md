@@ -1,5 +1,3 @@
-# Deploy GSRS to Azure
-
 1. [Create Azure account](https://azure.microsoft.com)
 2. [Create resource group](https://docs.microsoft.com/en-us/azure/azure-resource-manager/manage-resource-groups-portal)
 	- This will be the resource that you will select when you create all the needed resources
@@ -23,10 +21,10 @@ CREATE DATABASE gsrsdb;```)](https://docs.microsoft.com/en-us/azure/mysql/quicks
 		- {AZURE_VM_USERNAME} - the same value entered in __Username__ under the __Administrator account__ section
 		- {AZURE_APPLICATION_HOST} - this will be the URL host that you're going to use for your application. If you're planning to use the default given by Azure, it will be in this format: {AnyAvailableNameYouChoose}.{SelectedRegion}.cloudapp.azure.com (example: gsrs.eastus.cloudapp.azure.com)
 		- {AZURE_APPLICATION_HOST_WITH_HTTPS} - same as above but prepend with "https://" (example: https://gsrs.eastus.cloudapp.azure.com)
-		- {AZURE_DB_SERVER} - MySQL database server name created in step 5
-		- {AZURE_DB_NAME} - MySQL database name created in step 5 (not the same as the server name unless you implicitly created both with the same name)
-		- {AZURE_DB_DEFAULT_USER} - MySQL server admin login name created in step 5
-		-  {AZURE_DB_DEFAULT_PASSWORD} - Password for the MySQL server admin login name created in step 5
+		- {AZURE_DB_SERVER} - MySQL database server name created in step 4
+		- {AZURE_DB_NAME} - MySQL database name created in step 4 (not the same as the server name unless you implicitly created both with the same name)
+		- {AZURE_DB_DEFAULT_USER} - MySQL server admin login name created in step 4
+		-  {AZURE_DB_DEFAULT_PASSWORD} - Password for the MySQL server admin login name created in step 4
 ```yaml
 #cloud-config
 package_upgrade: true
@@ -78,10 +76,10 @@ runcmd:
 ```
 9. __(OPTIONAL)__ Create storage account and mount it to the VM to make the application more modular
 	1. [Create storage account](https://docs.microsoft.com/en-us/azure/storage/common/storage-quickstart-create-account?tabs=azure-portal)
-	- Before you click on __Review + create__, follow these steps:
-		1. click on the __Networking__ tab
-		2. In __Connectivity method__, select __Public endpoint (selected networks)__
-		3. Select the virtual network you created in step 3 and the default subnet
+		- Before you click on __Review + create__, follow these steps:
+			1. click on the __Networking__ tab
+			2. In __Connectivity method__, select __Public endpoint (selected networks)__
+			3. Select the virtual network you created in step 3 and the default subnet
 	2. After the storage account has deployed, [create a blob container](https://docs.microsoft.com/en-us/azure/storage/blobs/storage-quickstart-blobs-portal#create-a-container)
 	3. [Mount Blob storage to VM](https://docs.microsoft.com/en-us/azure/storage/blobs/storage-how-to-mount-container-linux)
 		- You can SSH to your virtual machine by accessing your cloud shell the same way you did in step nine and typing the following command: `ssh {AZURE_VM_USERNAME}@{IP_ADDRESS}`
