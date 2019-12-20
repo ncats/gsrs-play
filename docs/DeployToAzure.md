@@ -1,4 +1,4 @@
-#Deploy GSRS to Azure
+# Deploy GSRS to Azure
 
 1. [Create Azure account](https://azure.microsoft.com)
 2. [Create resource group](https://docs.microsoft.com/en-us/azure/azure-resource-manager/manage-resource-groups-portal)
