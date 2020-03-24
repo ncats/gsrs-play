@@ -1051,6 +1051,7 @@ create table ix_ginas_vocabulary_term (
   value                     varchar(4000),
   display                   varchar(4000),
   description               varchar(4000),
+  regex                     varchar(4000),
   origin                    varchar(255),
   filters                   clob,
   hidden                    boolean,
@@ -1059,7 +1060,6 @@ create table ix_ginas_vocabulary_term (
   fragment_structure        varchar(255),
   simplified_structure      varchar(255),
   system_category           varchar(255),
-  regex                     varchar(255),
   constraint pk_ix_ginas_vocabulary_term primary key (id))
 ;
 

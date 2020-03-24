@@ -63,6 +63,8 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
 
     private static String NULL_MOLFILE = "\n\n\n  0  0  0     0  0            999 V2000\nM  END\n\n$$$$";
 
+    protected static final int MAX_LAYERS = 2;
+
     /**
      * Represent this Substance as full JsonNode.
      *

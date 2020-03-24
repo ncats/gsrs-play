@@ -1,11 +1,11 @@
 package ix.core.models;
 
+import ix.utils.Util;
 import java.nio.charset.Charset;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
 import java.util.function.Function;
-import java.util.function.Supplier;
 
 /**
  * Created by katzelda on 2/7/19.
@@ -91,26 +91,72 @@ public class DefinitionalElements {
 
                 }
             }else {
-                //usually there should only be 1 record but just in case...
-                //TODO handle multiple keys?...
-//                for (DefinitionalElement ce : currentElements) {
-//                    String defString = ce.getDefinitionalString();
-//                    boolean found=false;
-//                    for (DefinitionalElement oe : oldElements) {
-//                        if (oe.getDefinitionalString().equals(defString)) {
-//                            found=true;
-//                            break;
-//                        }
-//                    }
-//                    if(!found){
-//                        diffs.add(new DefinitionalElementDiff(DefinitionalElementDiff.OP.CHANGED,oldElements.get(0), currentElements.get(0)));
-//
-//                    }
-//                }
+                for(DefinitionalElement element : currentElements) {
+                    String definitionalString = element.getDefinitionalString();
+
+                    boolean hasMatch =false;
+
+                    for(DefinitionalElement oe : oldElements){
+                        if(oe.getDefinitionalString().equals(definitionalString)){
+                            hasMatch=true;
+                            break;
+                        }
+                    }
+
+                    if( !hasMatch){
+                        diffs.add(new DefinitionalElementDiff(DefinitionalElementDiff.OP.ADD, null, element));
+                    }
+                }
+
+                for(DefinitionalElement oldElement : oldElements ) {
+                    String definitionalString = oldElement.getDefinitionalString();
+
+                    boolean hasMatch =false;
+                    for(DefinitionalElement ce : currentElements){
+                        if(definitionalString.equals(ce.getDefinitionalString())){
+                            hasMatch=true;
+                            break;
+                        }
+                    }
+
+                    if(!hasMatch) {
+                        diffs.add(new DefinitionalElementDiff(DefinitionalElementDiff.OP.REMOVED, oldElement, null));
+                    }
             }
+        }
         }
         return diffs;
 
+    }
+
+    public List<String> getDefinitionalHashLayers(){
+        //sort key+values so that order of addition wouldn't matter
+        List<DefinitionalElement> elms = new ArrayList<>(elements);
+        Collections.sort(elms);
+        List<String> layers = new ArrayList<>();
+
+
+        int MAX_LAYERS= 2;
+        for(int i=1;i<=MAX_LAYERS;i++){
+            try {
+                MessageDigest digest = MessageDigest.getInstance("SHA-1");
+                for(DefinitionalElement e: elms){
+                    if(e.getLayer()<=i){
+                        digest.update(e.getDefinitionalString().getBytes(Charset.defaultCharset()));
+                    }
+                }
+                layers.add(encodeString(digest.digest()));
+            } catch (NoSuchAlgorithmException e) {
+                System.out.println("NoSuchAlgorithmException: " + e.getMessage());
+                //this shouldn't happen...
+                throw new IllegalStateException(e);
+            }
+        }
+        return layers;
+    }
+
+    public static String encodeString(byte[] value) {
+        return Util.toHex(value);
     }
 
     public static class DefinitionalElementDiff{

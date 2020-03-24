@@ -119,10 +119,9 @@ public class ProteinSubstance extends Substance implements GinasSubstanceDefinit
 			if(s !=null && s.sequence !=null){
 				ProteinSequence seq = ProteinSequence.of(AminoAcid.cleanSequence(s.sequence));
 				UUID uuid = s.getOrGenerateUUID();
-				consumer.accept(DefinitionalElement.of("subunitIndex."+ uuid, s.subunitIndex==null? null: Integer.toString(s.subunitIndex)));
-				consumer.accept(DefinitionalElement.of("subunitSeq."+ uuid , seq.toString()));
-				consumer.accept(DefinitionalElement.of("subunitSeqLength."+ uuid , Long.toString(seq.getLength())));
-
+				consumer.accept(DefinitionalElement.of("subunitIndex.", s.subunitIndex==null? null: Integer.toString(s.subunitIndex), 1));
+				consumer.accept(DefinitionalElement.of("subunitSeq.", seq.toString(), 1));
+				consumer.accept(DefinitionalElement.of("subunitSeqLength.", Long.toString(seq.getLength()), 1));
 
 			}
 		}
@@ -133,14 +132,14 @@ public class ProteinSubstance extends Substance implements GinasSubstanceDefinit
 			handleGlycosylationSites(glycosylation.getOGlycosylationSites(), "O", consumer);
 			handleGlycosylationSites(glycosylation.getCGlycosylationSites(), "C", consumer);
 			if(glycosylation.glycosylationType !=null){
-				consumer.accept(DefinitionalElement.of("protein.glycosylation.type", glycosylation.glycosylationType));
+				consumer.accept(DefinitionalElement.of("protein.glycosylation.type", glycosylation.glycosylationType, 2));
 			}
 		}
 		List<DisulfideLink> disulfideLinks = this.protein.getDisulfideLinks();
 		if(disulfideLinks !=null){
 			for(DisulfideLink disulfideLink : disulfideLinks){
 				if(disulfideLink !=null) {
-					consumer.accept(DefinitionalElement.of("protein.disulfide", disulfideLink.getSitesShorthand()));
+					consumer.accept(DefinitionalElement.of("protein.disulfide", disulfideLink.getSitesShorthand(), 2));
 				}
 			}
 		}
@@ -154,10 +153,10 @@ public class ProteinSubstance extends Substance implements GinasSubstanceDefinit
 				List<Site> sites = otherLink.getSites();
 				if(sites !=null) {
 					String shortHand = SiteContainer.generateShorthand(sites);
-					consumer.accept(DefinitionalElement.of("protein."+shortHand, shortHand));
+					consumer.accept(DefinitionalElement.of("protein."+shortHand, shortHand, 2));
 					String type = otherLink.linkageType;
 					if(type !=null){
-						consumer.accept(DefinitionalElement.of("protein."+shortHand +".linkageType", type));
+						consumer.accept(DefinitionalElement.of("protein."+shortHand +".linkageType", type, 2));
 					}
 				}
 			}
@@ -169,7 +168,7 @@ public class ProteinSubstance extends Substance implements GinasSubstanceDefinit
 			return;
 		}
 
-		consumer.accept(DefinitionalElement.of("protein.glycosylation."+letter, SiteContainer.generateShorthand(sites)));
+		consumer.accept(DefinitionalElement.of("protein.glycosylation."+letter, SiteContainer.generateShorthand(sites), 2));
 
 	}
 }

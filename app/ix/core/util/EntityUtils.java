@@ -258,6 +258,14 @@ public class EntityUtils {
 			return EntityMapper.COMPACT_ENTITY_MAPPER().toJson(getValue());
 		}
 
+		/**
+		 * Get the Json of this entity using only the fields that are
+		 * considered when json-diffing different versions of the entity.
+		 * @return
+		 */
+		public String toJsonDiffJson() {
+			return EntityMapper.JSON_DIFF_ENTITY_MAPPER().toJson(getValue());
+		}
 		public String toInternalJson() {
 			return EntityMapper.INTERNAL_ENTITY_MAPPER().toJson(getValue());
 		}

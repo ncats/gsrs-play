@@ -110,7 +110,9 @@ public class SQLReportScheduledTaskInitializer
 					l.message("Getting column names");
 					for (int i = 1; i <= ccount; i++) {
 						out.print(rs1.getMetaData().getColumnName(i));
+						if(i<ccount) {
 						out.print("\t");
+					}
 					}
 					out.println();
 
@@ -120,7 +122,9 @@ public class SQLReportScheduledTaskInitializer
 					while (rs1.next()) {
 						for (int i = 1; i <= ccount; i++) {
 							out.print(rs1.getString(i));
+							if(i<ccount) {
 							out.print("\t");
+						}
 						}
 						out.println();
 						int r = rs1.getRow();

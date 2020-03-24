@@ -1960,6 +1960,21 @@ public class TextIndexer implements Closeable, ProcessListener {
 						QueryParser parser = new IxQueryParser(sp, indexAnalyzer);
 
 						Query tq = parser.parse(theQuery);
+						if(lsp instanceof DrillSidewaysLuceneSearchProvider){
+							DrillDownQuery ddq2 = new DrillDownQuery(facetsConfig, tq);
+								options.getDrillDownsMapExcludingRanges()
+								    .entrySet()
+								    .stream()
+								    .flatMap(e->e.getValue().stream())
+								    .filter(dp->{
+								        String drill = dp.getDrill();
+									    return !drill.startsWith("^") && ! drill.startsWith("!");
+								    })
+								    .forEach((dp)->{
+									ddq2.add(dp.getDrill(), dp.getPaths());
+								    });
+							tq=ddq2;
+						}
 						LuceneSearchProviderResult lspResult = lsp.search(searcher, taxon, tq,new FacetsCollector()); //special q
 						TopDocs td = lspResult.getTopDocs();
 						for (int j = 0; j < td.scoreDocs.length; j++) {

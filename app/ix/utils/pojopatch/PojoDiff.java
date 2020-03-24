@@ -75,7 +75,7 @@ import ix.utils.Util;
  */
 
 public class PojoDiff {
-	public static ObjectMapper _mapper = EntityFactory.EntityMapper.INTERNAL_ENTITY_MAPPER();
+	public static ObjectMapper _mapper = EntityFactory.EntityMapper.JSON_DIFF_ENTITY_MAPPER();
 	
 	public static Function<Object, Optional<String>> IDGetter = (o)->{
 		EntityWrapper<?> ew = EntityWrapper.of(o);
@@ -147,6 +147,7 @@ public class PojoDiff {
 				EntityWrapper<T> newOld = EntityWrapper.of(old);
 				JsonNode json=newOld.toFullJsonNode();
 				T newtarget=newOld.getEntityInfo().fromJsonNode( JsonPatch.apply(temp, json));
+
 				return new EnhancedObjectPatch<T>(old, newtarget).apply(old);
 			}
 		}

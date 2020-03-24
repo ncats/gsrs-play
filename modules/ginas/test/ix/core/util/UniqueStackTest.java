@@ -12,7 +12,7 @@ import org.junit.Test;
 
 import ix.AbstractGinasTest;
 
-public class UniqueStackTest  extends AbstractGinasTest{
+public class UniqueStackTest{
 	
 	@Test
 	public void testUniqueStackIsEmptyAfterAddingAndRemoving(){
@@ -29,8 +29,7 @@ public class UniqueStackTest  extends AbstractGinasTest{
 		ustack.pop();
 		
 		assertEquals(0,ustack.asStream().count());
-		
-		
+
 	}
 	
 	@Test

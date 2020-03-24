@@ -196,7 +196,9 @@
                         Basic Searches
                     </div>
                     <div class="description">
-                        Searches without any special characters (listed below) will return items that contain the exact value(s) entered in the search field. This means that searching for "ASPIRIN CALCIUM" won't return any items that have "ASPIRIN GLYCINE CALCIUM" because the search term doesn't match exactly.
+                                Searches without any special characters (listed below) will return items that contain the exact value(s) entered in the search
+                                field. This means that searching for "ASPIRIN CALCIUM" won't return any items that have "ASPIRIN GLYCINE CALCIUM"
+                                because the search term doesn't match exactly.
                     </div>
                     <div class="heading">
                             Boolean Operators
@@ -204,12 +206,14 @@
                     <div class="description">
                         <strong>OR</strong> - searches with terms separated by " OR " will return items that contain any of the terms in the search.
                         <div class="example">
-                            Example: "ASPIRIN" OR "CALCIUM" will return items that have strings like "ASPIRIN GLYCINE" and "GLYCINE CALCIUM" because they contain at least one of the terms in the search.
+                                    Example: "ASPIRIN" OR "CALCIUM" will return items that have strings like "ASPIRIN GLYCINE" and "GLYCINE CALCIUM" because
+                                    they contain at least one of the terms in the search.
                         </div>
                         <br />
                         <strong>AND</strong> - searches with terms separated by " AND " will return items that contain all the terms in the search.
                         <div class="example">
-                            Example: "ASPIRIN" AND "CALCIUM" won't return items that have strings "ASPIRIN GLYCINE" and "GLYCINE CALCIUM" because neither contain both terms, but it will return "ASPIRIN GLYCINE CALCIUM" because it contains both search terms.
+                                    Example: "ASPIRIN" AND "CALCIUM" won't return items that have strings "ASPIRIN GLYCINE" and "GLYCINE CALCIUM" because neither
+                                    contain both terms, but it will return "ASPIRIN GLYCINE CALCIUM" because it contains both search terms.
                         </div>
                     </div>
                 </div>
@@ -223,7 +227,7 @@
                 <div class="top-bar-content-line">
                     <div id="versionsrs">
                         <code>
-                            <small uib-tooltip="Built on @ix.BuildInfo.TIME v2.4" tooltip-placement="right">version 2.4</small>
+                            <small uib-tooltip="Built on @ix.BuildInfo.TIME v@ix.BuildInfo.VERSION" tooltip-placement="right">version @ix.BuildInfo.VERSION</small>
                         </code>
         </div>
                     <div class="auth-data">

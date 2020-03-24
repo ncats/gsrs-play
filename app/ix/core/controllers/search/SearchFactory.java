@@ -256,7 +256,9 @@ public class SearchFactory extends EntityFactory {
 
         etag.save();
         etag.setContent(results);
+        etag.setSponosredResults(result.getSponsoredMatches());
         etag.setFacets(result.getFacets());
+        etag.setFieldFacets(result.getFieldFacets());
         etag.setSelected(result.getOptions().getFacets(), result.getOptions().isSideway());
 
 
@@ -475,6 +477,7 @@ public class SearchFactory extends EntityFactory {
             
             etag.setFacets(results.getFacets());
             etag.setContent(ret);
+            etag.setFieldFacets(results.getFieldFacets());
             //TODO Filters and things
     		
             return Java8Util.ok (em.valueToTree(etag));

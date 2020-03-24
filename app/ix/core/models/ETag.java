@@ -1,8 +1,12 @@
 package ix.core.models;
 
 import java.security.SecureRandom;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -14,6 +18,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import ix.core.controllers.RequestOptions;
+import ix.core.search.FieldedQueryFacet;
 import ix.core.search.text.TextIndexer.Facet;
 import ix.utils.Global;
 import ix.utils.Util;
@@ -41,6 +46,8 @@ import play.mvc.Http;
   "query",
   "sideway",
   "facets",
+  "exactMatches",
+  "narrowSearchSuggestions",
   "content"})
 public class ETag extends IxModel {
 
@@ -151,6 +158,9 @@ public class ETag extends IxModel {
 	@Transient
 	@JsonIgnore
 	private transient Object content = null;
+	@Transient
+	@JsonIgnore
+	private transient Object sponsoredResults = null;
 
 	@Transient
 	@JsonIgnore
@@ -159,6 +169,10 @@ public class ETag extends IxModel {
 	@Transient
 	@JsonIgnore
 	private transient List<String> selected = null;
+
+	@Transient
+	@JsonIgnore
+	private transient List<FieldedQueryFacet> fieldFacets;
 
 	@Transient
 	@JsonIgnore
@@ -287,9 +301,21 @@ public class ETag extends IxModel {
 		this.query = builder.query;
 		this.filter = builder.filter;
 	}
+	@JsonIgnore
+	public List<FieldedQueryFacet> getFieldFacets() {
+		return fieldFacets;
+	}
+
+	public void setFieldFacets(List<FieldedQueryFacet> fieldFacets) {
+		this.fieldFacets = fieldFacets;
+	}
 
 	public void setContent(Object cont) {
 		this.content = cont;
+	}
+
+	public void setSponosredResults(Object sponsoredResults) {
+		this.sponsoredResults = sponsoredResults;
 	}
 
 	public void setFacets(List<Facet> facets) {
@@ -301,6 +327,10 @@ public class ETag extends IxModel {
 		this.sideway=sideway;
 	}
 
+	@JsonProperty("exactMatches")
+	public Object getSponsoredResults(){
+		return this.sponsoredResults;
+	}
 	@JsonProperty("content")
 	// Maybe make this a link unless full bean view?
 	public Object getContent() {
@@ -323,6 +353,37 @@ public class ETag extends IxModel {
 		return this.selected;
 	}
 
-	
+	private enum NarrowSearchComparator implements Comparator<Map.Entry<FieldedQueryFacet.MATCH_TYPE, List<FieldedQueryFacet>>> {
+		INSTANCE;
+
+		private static final Map<FieldedQueryFacet.MATCH_TYPE,Integer> NARROW_SEARCH_SORT_ORDER_MAP= new HashMap<>();
+
+		static {
+			NARROW_SEARCH_SORT_ORDER_MAP.put(FieldedQueryFacet.MATCH_TYPE.FULL, 0);
+			NARROW_SEARCH_SORT_ORDER_MAP.put(FieldedQueryFacet.MATCH_TYPE.WORD_STARTS_WITH, 1);
+			NARROW_SEARCH_SORT_ORDER_MAP.put(FieldedQueryFacet.MATCH_TYPE.WORD, 2);
+			NARROW_SEARCH_SORT_ORDER_MAP.put(FieldedQueryFacet.MATCH_TYPE.CONTAINS, 3);
+			NARROW_SEARCH_SORT_ORDER_MAP.put(FieldedQueryFacet.MATCH_TYPE.NO_MATCH, 4);
+		}
+		@Override
+		public int compare(Map.Entry<FieldedQueryFacet.MATCH_TYPE, List<FieldedQueryFacet>> o1, Map.Entry<FieldedQueryFacet.MATCH_TYPE, List<FieldedQueryFacet>> o2) {
+			return NARROW_SEARCH_SORT_ORDER_MAP.get(o2.getKey())-NARROW_SEARCH_SORT_ORDER_MAP.get(o1.getKey());
+
+		}
+	}
+
+	/**
+	 * Returns the suggested FieldQueryFacets grouped by match type,
+	 * in order they show in easy grouping
+	 * @return
+	 */
+	@JsonProperty("narrowSearchSuggestions")
+	public List<FieldedQueryFacet> getFieldFacetsMap(){
+		if(fieldFacets ==null){
+			return Collections.emptyList();
+		}
+		return fieldFacets;
+	}
+
 	
 }

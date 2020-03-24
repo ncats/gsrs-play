@@ -289,7 +289,7 @@ public class Global extends GlobalSettings {
 			Promise<Result> result = this.delegate.call(ctx);
 			Http.Response response = ctx.response();
 			response.setHeader("Access-Control-Allow-Origin", "*");
-			response.setHeader("Access-Control-Allow-Methods", "POST, PUT, GET, PATCH"); // Only
+			response.setHeader("Access-Control-Allow-Methods", "POST, PUT, GET, PATCH, DELETE"); // Only
 																					// allow
 																					// POST
 			response.setHeader("Access-Control-Max-Age", "300"); // Cache

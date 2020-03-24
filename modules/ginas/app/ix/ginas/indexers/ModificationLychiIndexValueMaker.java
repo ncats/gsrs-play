@@ -48,12 +48,23 @@ public class ModificationLychiIndexValueMaker implements IndexValueMaker<Substan
     public void extractLychis(ChemicalSubstance s, Consumer<IndexableValue> consumer) {
 
         //consumer.accept(IndexableValue.simpleStringValue("root_structure_properties_term", lychi3));
-        consumer.accept(IndexableValue.simpleStringValue("root_structure_properties_term", s.structure.getStereoInsensitiveHash()));
-        consumer.accept(IndexableValue.simpleStringValue("root_structure_properties_term", s.structure.getExactHash()));
-
+		String stereoInsensitive=s.structure.getStereoInsensitiveHash();
+		String exact=s.structure.getExactHash();
+		if(stereoInsensitive!=null){
+			consumer.accept(IndexableValue.simpleStringValue("root_structure_properties_term", stereoInsensitive));
+		}
+		if(exact!=null){
+			consumer.accept(IndexableValue.simpleStringValue("root_structure_properties_term", exact));
+		}
         s.moieties.stream().forEach(m->{
-            consumer.accept(IndexableValue.simpleStringValue("root_moieties_structure_properties_term", m.structure.getStereoInsensitiveHash()));
-            consumer.accept(IndexableValue.simpleStringValue("root_moieties_structure_properties_term", m.structure.getExactHash()));
+			String sins=m.structure.getStereoInsensitiveHash();
+			String exa=m.structure.getExactHash();
+			if(sins!=null){
+				consumer.accept(IndexableValue.simpleStringValue("root_moieties_structure_properties_term", sins));
+			}
+			if(exa!=null){
+				consumer.accept(IndexableValue.simpleStringValue("root_moieties_structure_properties_term", exa));
+			}
         });
 
     }

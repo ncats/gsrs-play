@@ -45,11 +45,19 @@ public class NucleicAcidValidator extends AbstractValidatorPlugin<Substance> {
             return;
         }
 
-            if (cs.nucleicAcid.getSubunits() == null
-                    || cs.nucleicAcid.getSubunits().isEmpty()) {
+        List<Subunit> subunits = cs.nucleicAcid.getSubunits();
+        if (subunits == null
+                || subunits.isEmpty()) {
+            if(Substance.SubstanceDefinitionLevel.INCOMPLETE.equals(cs.definitionLevel)) {
+                callback.addMessage(GinasProcessingMessage
+                        .WARNING_MESSAGE("Nucleic Acid substance should have at least 1 subunit.  This is allowed but discouraged for incomplete nucleic acid records."));
+            }else {
                 callback.addMessage(GinasProcessingMessage
                         .ERROR_MESSAGE("Nucleic Acid substance must have at least 1 subunit"));
             }
+            //to make it easier for validation below set the subunits to an empty list to avoid other errors
+            subunits = Collections.emptyList();
+        }
             if (cs.nucleicAcid.getSugars() == null
                     || cs.nucleicAcid.getSugars().isEmpty()) {
                 callback.addMessage(GinasProcessingMessage
@@ -60,6 +68,18 @@ public class NucleicAcidValidator extends AbstractValidatorPlugin<Substance> {
                 callback.addMessage(GinasProcessingMessage
                         .ERROR_MESSAGE("Nucleic Acid substance must have at least 1 specified linkage"));
             }
+        for (int i=0; i< subunits.size(); i++) {
+            Subunit su = subunits.get(i);
+            //GSRS-735 and GSRS-1373 add sequence validation
+            //for now just null/blank need to confer with stakeholders if validation is needed or not
+            if(su.sequence == null || su.sequence.trim().isEmpty()){
+                if(Substance.SubstanceDefinitionLevel.INCOMPLETE.equals(cs.definitionLevel)){
+                    callback.addMessage(GinasProcessingMessage.WARNING_MESSAGE("subunit at position " + (i +1) + " is blank. This is allowed but discouraged for incomplete nucleic acid records."));
+                }else {
+                    callback.addMessage(GinasProcessingMessage.ERROR_MESSAGE("subunit at position " + (i +1) + " is blank"));
+                }
+            }
+        }
 
 
             int unspSugars = NucleicAcidUtils
@@ -73,17 +93,23 @@ public class NucleicAcidValidator extends AbstractValidatorPlugin<Substance> {
 
             int unspLinkages = NucleicAcidUtils
                     .getNumberOfUnspecifiedLinkageSites(cs);
-            if (unspLinkages != 0) {
+        if (unspLinkages > 0) {
                 callback.addMessage(GinasProcessingMessage
                         .ERROR_MESSAGE("Nucleic Acid substance must have every linkage specify a linkage fragment. Missing "
                                 + unspLinkages + " sites."));
+        }else{
+            if (unspLinkages < - (subunits.size())) {
+                callback.addMessage(GinasProcessingMessage
+                    .ERROR_MESSAGE("Nucleic Acid substance must have every linkage specify a linkage fragment, but sites are over-specified. Found "
+                            + (-1*unspLinkages) + " more sites than expected."));
+            }
             }
 
         if(sequenceHasChanged(cs, objold)){
             validateSequence(cs, callback);
         }
         
-        if(!cs.nucleicAcid.getSubunits().isEmpty()) {
+        if(!subunits.isEmpty()) {
             ValidationUtils.validateReference(cs, cs.nucleicAcid, callback, ValidationUtils.ReferenceAction.FAIL);
         }
     }
@@ -93,13 +119,17 @@ public class NucleicAcidValidator extends AbstractValidatorPlugin<Substance> {
 
         Set<String> seen = new HashSet<>();
         for(Subunit subunit : subunits){
+            if(subunit.sequence ==null || subunit.sequence.trim().isEmpty()){
+               //skip here we do the real check above
+                continue;
+            }
             if(!seen.add(subunit.sequence)){
                 //should we remove as applicable change?
             	//TP: I'm not sure we should even warn about duplicates within a record, tbh. At least with proteins,
             	//it's quite common to have subunits that are identical in sequence within the same record.
                 callback.addMessage(GinasProcessingMessage.WARNING_MESSAGE("Duplicate subunit at index " + subunit.subunitIndex));
             }
-            NucleotideSequence nucleotideSequence =null;
+
             try {
                 NucleotideSequence.of(subunit.sequence);
             }catch(Exception e){

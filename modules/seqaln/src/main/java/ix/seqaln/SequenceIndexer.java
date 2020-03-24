@@ -995,13 +995,25 @@ public class SequenceIndexer {
 	                      Iterator<Residue> sIter = gappedSubject.iterator();
 	                      int qGaps=0, sGaps=0;
 	                      int currentOffset=0;
-	                      StringBuilder topBuilder = new StringBuilder(alignment.getAlignmentLength());
-	                      StringBuilder middleBuilder = new StringBuilder(alignment.getAlignmentLength());
-	                      StringBuilder bottomBuilder = new StringBuilder(alignment.getAlignmentLength());
+                                          StringBuilder fullBuilder = new StringBuilder(4 * alignment.getAlignmentLength());
+
+                                          StringBuilder topBuilder = new StringBuilder(100);
+                                          StringBuilder middleBuilder = new StringBuilder(100);
+                                          StringBuilder bottomBuilder = new StringBuilder(100);
 
                                           int len =query.length();
 	                      int matched=0;
+
+                                          int count=0;
+                                          boolean hasDataOnCurrentLine=false;
+                                          if(qIter.hasNext()){
+                                              topBuilder.append(   String.format("Query  %5d  ",qOffset + currentOffset +1));
+                                              middleBuilder.append("              ");
+                                              bottomBuilder.append(String.format("Sbjct  %5d  ",tOffset + currentOffset +1));
+
+                                          }
 	                      while(qIter.hasNext()){
+                                              hasDataOnCurrentLine = true;
 	                          Residue q = qIter.next();
 	                          Residue s = sIter.next();
 	                          if(q.isGap()){
@@ -1016,6 +1028,7 @@ public class SequenceIndexer {
 	                          }else if(q.equals(s)){
 	                              qbits.set(qOffset+currentOffset - qGaps);
 	                              tbits.set(tOffset+currentOffset - sGaps);
+
 	                              middleBuilder.append('|');
 	                              matched++;
 	                          }else{
@@ -1023,16 +1036,45 @@ public class SequenceIndexer {
             }
 	                          topBuilder.append(q.getCharacter());
 	                          bottomBuilder.append(s.getCharacter());
+                                              count++;
+                                              if(count % 80 ==0){
+                                                  topBuilder.append(   String.format("  %5d  \n",qOffset + currentOffset - qGaps +1));
+                                                  middleBuilder.append("\n");
+                                                  bottomBuilder.append(String.format("  %5d  \n",tOffset + currentOffset - sGaps +1));
+
+                                                  fullBuilder.append(topBuilder).append(middleBuilder).append(bottomBuilder);
+                                                  topBuilder.setLength(0);
+                                                  middleBuilder.setLength(0);
+                                                  bottomBuilder.setLength(0);
+                                                  //check for next line
+                                                  if(qIter.hasNext()){
+                                                      //more data
+                                                      topBuilder.append(   String.format("Query  %5d  ",qOffset + currentOffset -qGaps +2));
+                                                      middleBuilder.append("              ");
+                                                      bottomBuilder.append(String.format("Sbjct  %5d  ",tOffset + currentOffset -sGaps +2));
+                                                  }else{
+                                                      hasDataOnCurrentLine = false;
+                                                  }
+                                              }
 	                          currentOffset++;
 
             }
+                                          if(hasDataOnCurrentLine){
+                                                //end of last line of something
+                                              //current offset is already at +1 so we don't need a +1 for the end of the line
+                                              topBuilder.append(   String.format("  %5d  \n",qOffset + currentOffset -qGaps));
+                                              middleBuilder.append("\n");
+                                              bottomBuilder.append(String.format("  %5d  \n",tOffset + currentOffset -sGaps));
+                                              fullBuilder.append(topBuilder).append(middleBuilder).append(bottomBuilder);
+                                          }
 
 	      //GK    1 - 456 [Query
 	                      Alignment aln = new Alignment(null, query, entry.getValue(),
-	                              topBuilder +"    "+ alignment.getQueryRange().asRange().getBegin(Range.CoordinateSystem.RESIDUE_BASED) + " - " +   alignment.getQueryRange().asRange().getEnd(Range.CoordinateSystem.RESIDUE_BASED) + " [Query]\n"
-	                                      + middleBuilder + "\n" + bottomBuilder+ "    "+ alignment.getSubjectRange().asRange().getBegin(Range.CoordinateSystem.RESIDUE_BASED) + " - " +   alignment.getSubjectRange().asRange().getEnd(Range.CoordinateSystem.RESIDUE_BASED) + " [Target]\n"
-	                              ,
-
+//                                                  topBuilder + "    " + alignment.getQueryRange().asRange().getBegin(Range.CoordinateSystem.RESIDUE_BASED) + " - " + alignment.getQueryRange().asRange().getEnd(Range.CoordinateSystem.RESIDUE_BASED) + " [Query]\n"
+//                                                          + middleBuilder + "\n" + bottomBuilder + "    " + alignment.getSubjectRange().asRange().getBegin(Range.CoordinateSystem.RESIDUE_BASED) + " - " + alignment.getSubjectRange().asRange().getEnd(Range.CoordinateSystem.RESIDUE_BASED) + " [Target]\n"
+//                                                  topBuilder.to
+//                                                  ,
+                                                    fullBuilder.toString(),
 
 	                              matched, matched/(double)query.length(),
 	                              alignment.getPercentIdentity(),

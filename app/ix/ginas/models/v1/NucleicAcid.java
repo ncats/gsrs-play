@@ -13,6 +13,7 @@ import java.util.*;
 import javax.persistence.*;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import ix.core.models.Indexable;
 import ix.ginas.models.GinasCommonSubData;
@@ -87,16 +88,18 @@ public class NucleicAcid extends GinasCommonSubData {
 	}
 
 
+	@JsonProperty("nucleicAcidSubType")
 	@Indexable(facet=true,name="Nucleic Acid Subtype")
 	public List<String> getNucleicAcidSubType() {
-		if( this.nucleicAcidSubType != null){
+		if( this.nucleicAcidSubType != null && this.nucleicAcidSubType.length() > 0){
 			String[] type = this.nucleicAcidSubType.split(";");
-			return Arrays.asList(type);
+			return new ArrayList<String>(Arrays.asList(type));
 		}else {
-			return null;
+			return new ArrayList<String>();
 		}
 	}
 
+	@JsonProperty("nucleicAcidSubType")
 	public void setNucleicAcidSubType(List<String> nucleicAcidSubType) {
 		StringBuilder sb = new StringBuilder();
 		if(nucleicAcidSubType!=null){

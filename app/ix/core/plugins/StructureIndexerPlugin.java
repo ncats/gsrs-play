@@ -137,10 +137,8 @@ public class StructureIndexerPlugin extends Plugin {
 		
 		public static Chemical getMolecule(String str){
 			try {
-				Chemical c= Chemical.parse(str);
-				c.aromatize();
-				return c;
-			} catch (Throwable e) {
+				return Chemical.parse(str);
+			} catch (IOException e) {
 				e.printStackTrace();
 				return null;
 			}

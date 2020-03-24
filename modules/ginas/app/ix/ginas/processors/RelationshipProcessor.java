@@ -409,9 +409,6 @@ public class RelationshipProcessor implements EntityProcessor<Relationship>{
 	}
 
 
-	private boolean isPrimaryOrAlternateDefinition(Relationship r){
-		return r.type.equals(Substance.ALTERNATE_SUBSTANCE_REL) || r.type.equals(Substance.PRIMARY_SUBSTANCE_REL);
-	}
 	@Override
 	public void preUpdate(Relationship obj) {
 
@@ -421,8 +418,6 @@ public class RelationshipProcessor implements EntityProcessor<Relationship>{
 //			System.out.println("already worked on it!!");
 			return;
 		}
-
-
 		SubstanceReference parentRef = obj.fetchOwner().asSubstanceReference();
 
 		AtomicBoolean forceToBeGenerator = new AtomicBoolean(false);
@@ -450,9 +445,9 @@ public class RelationshipProcessor implements EntityProcessor<Relationship>{
 					forceToBeGenerator.set(true);
 				}
 			}
-			else{
-				System.out.println("Inference not successful");
-			}
+//			else{
+//				System.out.println("Inference not successful");
+//			}
 
 
 			boolean addInverse=false;

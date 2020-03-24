@@ -90,10 +90,19 @@ public class Administration extends App {
         String groupName = requestData.get("grpName");
 
         
+
         if(newUser.username==null || newUser.username.length()<=1){
         	throw new IllegalStateException("Cannot register null username, or username less than 2 characters");
         }
         
+	newUser.username=newUser.username.trim();
+        if(newUser.email!=null){
+		newUser.email=newUser.email.trim();
+	}
+	if(newUser.username.contains(" ")){
+		throw new IllegalStateException("Cannot register username with space character");
+	}
+
         Principal olduser = PrincipalFactory.byUserName(newUser.username);
         
         
@@ -138,7 +147,13 @@ public class Administration extends App {
         if (prof == null) {
             prof = new UserProfile(newUser);
             prof.active = Boolean.parseBoolean(requestData.get("active"));
-            prof.setPassword(requestData.get("password"));
+
+            String pw= requestData.get("password");
+            if(pw!=null){
+                pw=pw.trim();
+            }
+            prof.setPassword(pw);
+
             prof.setRoles(rolesChecked);
 
             for (Group g : groupsChecked) {
@@ -170,6 +185,10 @@ public class Administration extends App {
 
         String userName = requestData.get("username");
         String password = requestData.get("password");
+
+        if(password!=null){
+              password=password.trim();
+        }
         String email = requestData.get("email");
         String active = requestData.get("active");
         String groupName = requestData.get("grpName");

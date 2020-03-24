@@ -8,6 +8,7 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.search.BooleanClause;
@@ -87,7 +88,20 @@ public class FieldedQueryFacet implements Serializable{
 		return null;
 	}
 
-	
+	public String getLuceneField(){
+		String query = getLuceneQuery();
+		if(query !=null) {
+
+			int offset = query.indexOf(':');
+			if (offset > -1) {
+				return query.substring(0, offset);
+			}
+		}
+		return query;
+	}
+	public String getLuceneQuery(){
+		return toLuceneQuery();
+	}
 	public String toLuceneQuery(){
 		return explicitLucenQuery;
 	}
@@ -99,7 +113,7 @@ public class FieldedQueryFacet implements Serializable{
 	public int getCount(){
 		return this.count;
 	}
-	
+	@JsonIgnore
 	public String getCountText(){
 		if(this.couldBeMore){
 			return this.getCount() + "+";

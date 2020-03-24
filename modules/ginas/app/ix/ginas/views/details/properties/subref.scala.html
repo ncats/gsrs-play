@@ -31,7 +31,12 @@
 			                                		@if(ref.substanceClass.toString().equals("concept")){
 														<img src="@routes.Assets.at("ginas/images/concept.svg")" alt="Concept" class = "img-responsive subrefThumb"/>
 			                                		}else{
-			                                			
+														@if(ref.substanceClass.toString().equals("specifiedSubstanceG1")){
+															<img src="@routes.Assets.at("ginas/images/g1ss.svg")" alt="G1SS" class = "img-responsive subrefThumb"/>
+														}else{
+															}
+
+
 			                                		}
 			                                	}	
 		                                	}	
