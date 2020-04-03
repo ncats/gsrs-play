@@ -1396,7 +1396,8 @@ public class App extends Authentication {
 	                                                            throws IOException, Exception{
 	    
 	    final String key = getKey (ctx, req);
-		return getOrElse(key,  TypedCallable.of(() -> {
+
+		TypedCallable<SearchResult> tc =  TypedCallable.of(() -> {
 					Collection results = ctx.getResults();
 					SearchRequest request = new SearchRequest.Builder()
                             .subset(results)
@@ -1423,7 +1424,14 @@ public class App extends Authentication {
 					// make an alias for the context.id to this search
 					// result
 					return cacheKey (searchResult, ctx.getId());
-				}, SearchResult.class));
+				}, SearchResult.class);
+		// attempt to prevent overcaching if the UI doesn't wait for result poll to finish and immediately gets results
+		//we don't want to cache the results.
+		if(ctx.isDetermined()) {
+			return getOrElse(key, tc);
+		}else {
+			return tc.call();
+		}
 	}
 	
 	

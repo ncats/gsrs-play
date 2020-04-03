@@ -238,11 +238,14 @@ public class EntityPersistAdapter extends BeanPersistAdapter implements ProcessL
     }
 
     public EntityPersistAdapter(Application app) {
-        this.application = app;
-        textIndexerPlugin = app.plugin(TextIndexerPlugin.class);
-        strucProcessPlugin = app.plugin(StructureIndexerPlugin.class);
-        seqProcessPlugin = app.plugin(SequenceIndexerPlugin.class);
-        _instance = this;
+        //EPA will be called multiple times by ebean once for each datasource that adds the adapters
+        if(_instance ==null) {
+            this.application = app;
+            textIndexerPlugin = app.plugin(TextIndexerPlugin.class);
+            strucProcessPlugin = app.plugin(StructureIndexerPlugin.class);
+            seqProcessPlugin = app.plugin(SequenceIndexerPlugin.class);
+            _instance = this;
+        }
     }
 
     boolean debug(int level) {
@@ -275,7 +278,6 @@ public class EntityPersistAdapter extends BeanPersistAdapter implements ProcessL
     @Override
     public boolean preInsert(BeanPersistRequest<?> request) {
         Object bean = request.getBean();
-
         operate(bean, Java8ForOldEbeanHelper.processorCallableFor(PrePersist.class), true);
         return true;
     }
