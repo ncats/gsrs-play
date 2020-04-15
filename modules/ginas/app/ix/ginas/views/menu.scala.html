@@ -26,9 +26,10 @@
                 @dynamic(name = IxDynamicResourceHandler.IS_ADMIN, handler = new ix.ncats.controllers.security.IxDeadboltHandler()) {
                     <li ng-class="getClass('admin')"><a ng-href= "@play.api.Play.configuration.getString("application.context").getOrElse("/ginas/app")/admin" id ="admin-button" target="_self">
                         Admin</a></li>
+
+                }
                 <li ng-class="getClass('admin1')"><a ng-href="@play.api.Play.configuration.getString("application.context")/beta/browse-substance?returnTo={{location.href}}" id ="beta-button" target="_blank">
                     Beta Site</a></li>
-                }
                 <!-- <li ng-controller="TypeAheadController">
                     <form class="form-inline main-search" role="search">
                         <div class="input-group" id = "search-bar">
