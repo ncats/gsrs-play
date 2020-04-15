@@ -1,5 +1,6 @@
 {
-  "version": "2.5.1",
+  "apiBaseUrl" : "/ginas/app/",
+  "version": "2.5",
   "substanceDetailsCards": [{
       "card": "substance-overview",
       "title": "overview"
