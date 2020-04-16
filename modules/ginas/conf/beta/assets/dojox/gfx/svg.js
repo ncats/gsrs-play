@@ -589,12 +589,12 @@ function(lang, has, win, dom, declare, arr, domGeom, domAttr, Color, g, gs, path
 			// solution to the "orphan issue" in Opera
 			// (nodeValue == "" hangs firefox)
 			if(_text!=""){
-				while(!_width){
+				if(!_width){
 //Yang: work around svgweb bug 417 -- http://code.google.com/p/svgweb/issues/detail?id=417
-if (_measurementNode.getBBox)
+				if (_measurementNode.getBBox){
 					_width = parseInt(_measurementNode.getBBox().width);
-else
-	_width = 68;
+				}
+				if(!_width)_width=68;
 				}
 			}
 			oldParent.removeChild(_measurementNode);
