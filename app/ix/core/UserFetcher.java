@@ -43,7 +43,6 @@ public class UserFetcher {
 		if (allowGuest){
 			return PrincipalFactory.registerIfAbsent(new Principal(DEFAULT_USERNAME, null));
 		}
-		System.out.println("Why?");
 		return null;
 	}
 

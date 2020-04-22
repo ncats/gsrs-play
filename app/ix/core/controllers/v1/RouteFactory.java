@@ -1028,7 +1028,7 @@ public class RouteFactory extends Controller {
             ObjectMapper om=new ObjectMapper();
             return Java8Util.ok(om.valueToTree(p));
         }
-        return _apiNotFound("No user logged in");
+        return Results.notFound("No user logged in");
     }
 
     public static Result profileResetKey(){
@@ -1039,7 +1039,7 @@ public class RouteFactory extends Controller {
             ObjectMapper om=new ObjectMapper();
             return Java8Util.ok(om.valueToTree(p));
         }
-        return _apiNotFound("No user logged in");
+        return Results.notFound("No user logged in");
     }
 
 
