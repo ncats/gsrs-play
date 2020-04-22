@@ -34,7 +34,7 @@
         $scope.apply = function (){
             $location.search("facet",$scope.getAllSelected());
             $location.search("page",1);
-            window.location = $location.absUrl();
+            window.location = $location.absUrl().replace(/[;]/g,"%3B");
         }
         
         $scope.getAllSelected = function(){
@@ -130,6 +130,8 @@
                 $scope.mode=mode;
             }
             $scope.fbaseurl=base.replace("ffilter=","");
+
+
             if(pfacet){
                 if(pfacet.enhanced===false){
                 	$scope.isEnhanced=false;
@@ -237,6 +239,7 @@
                                        }
                                        return f;
                                    }).value();
+
                     $scope.refreshing=false;
                 }
             	}
@@ -288,7 +291,9 @@
             responsePromise.success(onSuccess);
             responsePromise.error(onError);
 
+
         };
+
         $scope.refreshClient = function () {
             $scope.refreshing =true;
             

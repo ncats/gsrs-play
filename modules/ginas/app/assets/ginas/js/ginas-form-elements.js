@@ -15,6 +15,7 @@
                 var defMap = {};
                 defMap["physicalModifications.physicalModificationRole"]="PHYSICAL_MODIFICATION_ROLE";
                 defMap["extentAmount.type"]="AMOUNT_TYPE";
+                defMap["structuralUnits.type"]="POLYMER_SRU_TYPE";
 
                 if(defMap[pathString]){
 	                return $http.get(vocabulariesUrl + "/search", {
