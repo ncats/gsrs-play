@@ -290,15 +290,15 @@ public class Structure extends BaseModel implements ForceUpdatableModel{
     	return this.id;
     }
     
-    @JsonProperty(value="uuid")
-    public String getUUID(){
-    	return getId();
-    }
-    
-    @JsonProperty(value="uuid")
-    public void setUUID(UUID id){
-    	this.setId(id);
-    }
+//    @JsonProperty(value="uuid")
+//    public String getUUID(){
+//    	return getId();
+//    }
+//
+//    @JsonProperty(value="uuid")
+//    public void setUUID(UUID id){
+//    	this.setId(id);
+//    }
 
     @JsonProperty(value="hash")
     public String getExactHash(){
