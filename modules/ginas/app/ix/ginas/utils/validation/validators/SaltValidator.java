@@ -19,7 +19,7 @@ public class SaltValidator extends AbstractValidatorPlugin<Substance>
 {
 
 	public SaltValidator(){
-		System.out.println("starting in SaltValidator.ctor");
+//		System.out.println("starting in SaltValidator.ctor");
 	}
 					
 	@Override
@@ -29,7 +29,7 @@ public class SaltValidator extends AbstractValidatorPlugin<Substance>
 		}
 		ChemicalSubstance substance = (ChemicalSubstance)substanceORIG;
 		
-		System.out.println("starting in SaltValidator.validate");
+//		System.out.println("starting in SaltValidator.validate");
 		//is this a salt?
 		Logger.debug("starting in SaltValidator.validate. substance.moieties.size() "+ substance.moieties.size());
 		if (substance.moieties.size() > 1) {
