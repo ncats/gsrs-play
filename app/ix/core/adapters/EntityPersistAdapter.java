@@ -45,7 +45,6 @@ import ix.seqaln.SequenceIndexer;
 import play.Application;
 import play.Logger;
 import play.Play;
-import tripod.chem.indexer.StructureIndexer;
 
 public class EntityPersistAdapter extends BeanPersistAdapter implements ProcessListenerJava7 {
 
@@ -172,6 +171,7 @@ public class EntityPersistAdapter extends BeanPersistAdapter implements ProcessL
 
         Edit e = null;
         lock.acquire(); // acquire the lock (blocks)
+
         boolean worked = false;
         try {
             EntityWrapper<T> ew = (EntityWrapper<T>) key.fetch().get(); // supplies
@@ -182,6 +182,9 @@ public class EntityPersistAdapter extends BeanPersistAdapter implements ProcessL
             // you could have a different supplier
             // for this, but it's nice to be sure
             // that the object can't be stale
+
+
+
             e = createAndPushEditForWrappedEntity(ew, lock); // Doesn't block,
                                                              // or even check
                                                              // for
@@ -235,11 +238,14 @@ public class EntityPersistAdapter extends BeanPersistAdapter implements ProcessL
     }
 
     public EntityPersistAdapter(Application app) {
-        this.application = app;
-        textIndexerPlugin = app.plugin(TextIndexerPlugin.class);
-        strucProcessPlugin = app.plugin(StructureIndexerPlugin.class);
-        seqProcessPlugin = app.plugin(SequenceIndexerPlugin.class);
-        _instance = this;
+        //EPA will be called multiple times by ebean once for each datasource that adds the adapters
+        if(_instance ==null) {
+            this.application = app;
+            textIndexerPlugin = app.plugin(TextIndexerPlugin.class);
+            strucProcessPlugin = app.plugin(StructureIndexerPlugin.class);
+            seqProcessPlugin = app.plugin(SequenceIndexerPlugin.class);
+            _instance = this;
+        }
     }
 
     boolean debug(int level) {
@@ -272,7 +278,6 @@ public class EntityPersistAdapter extends BeanPersistAdapter implements ProcessL
     @Override
     public boolean preInsert(BeanPersistRequest<?> request) {
         Object bean = request.getBean();
-
         operate(bean, Java8ForOldEbeanHelper.processorCallableFor(PrePersist.class), true);
         return true;
     }
@@ -281,12 +286,12 @@ public class EntityPersistAdapter extends BeanPersistAdapter implements ProcessL
     public boolean preUpdate(BeanPersistRequest<?> request) {
 
         Object bean = request.getBean();
-
         return preUpdateBeanDirect(bean, request);
     }
 
     public boolean preUpdateBeanDirect(Object bean, BeanPersistRequest<?> request) {
         EntityWrapper ew = EntityWrapper.of(bean);
+
         EditLock ml = lockMap.get(ew.getKey());
         if (ml != null && ml.hasPreUpdateBeenCalled()) {
             return true; // true?

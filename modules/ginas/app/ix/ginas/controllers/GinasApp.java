@@ -1760,7 +1760,6 @@ public class GinasApp extends App {
         ObjectNode node = mapper.createObjectNode();
         try {
             String opayload = request().body().asText();
-            System.out.println("interpreting molfile\n"+opayload);
             String payload = ChemCleaner.getCleanMolfile(opayload);
             if (payload != null) {
                 List<Structure> moieties = new ArrayList<Structure>();
@@ -2082,6 +2081,7 @@ public class GinasApp extends App {
 
         return null;
     }
+
 
     /**
      * Renders a chemical structure from structure ID atom map can be provided
@@ -2809,18 +2809,23 @@ public class GinasApp extends App {
     public static Result getStaticClientAssets(String file) {
     	if(Play.isProd()){
     		File staticFile = new File("conf/beta/" + file);
-
-            if (file != "index.html" && staticFile.exists()) {
+	    if(staticFile.exists()){
+		    if(file.contains(".html")){
+		    	return ok(staticFile, true).as("text/html");
+		    }else{
                 return ok(staticFile);
+		    }
             } else {
                 return getStaticIndexFile();
             }
     	}else{
     		File staticFile = new File("modules/ginas/conf/beta/" + file);
-
-
-            if (file != "index.html" && staticFile.exists()) {
+            if(staticFile.exists()){
+		    if(file.contains(".html")){
+		    	return ok(staticFile, true).as("text/html");
+		    }else{
                 return ok(staticFile);
+		    }
             } else {
                 return getStaticIndexFile();
             }

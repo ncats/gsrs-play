@@ -53,32 +53,39 @@
                 <div class = "row">
                     <div class = "col-md-12 text-center">
                         <ul class= "list-inline list-unstyled tools">
-                            <li class = "col-md-2">
+            <li class = "col-md-1"></li>
+            <li class = "col-md-3">
                                 <modal-button type= "export" structureid ="'@chem.uuid'" format="mol"  format2="sdf" ></modal-button>
                             </li>
-                            <li class = "col-md-2">
+            <li class = "col-md-3">
                                 <a ng-href="@ix.ginas.controllers.routes.GinasApp.structuresearch(chem.structure.id.toString())" target="_self" uib-tooltip="Structure Search" aria-label="Structure Search"><span class="sr-only">
                                     Search for Structure</span><span class="fa fa-search fa-2x success"></span></a>
                             </li>
+
             @dynamic(name = IxDynamicResourceHandler.CAN_UPDATE, handler = new ix.ncats.controllers.security.IxDeadboltHandler()) {
-                                <li class = "col-md-2">
+            <div class = "row">
+                <div class = "col-md-12 text-center">
+                    <ul class= "list-inline list-unstyled tools tools-bottom">
+                                <li class = "col-md-3">
                 <a href="@ix.ginas.controllers.routes.GinasFactory.edit(GinasApp.getId(chem))" uib-tooltip="Edit" target="_self" aria-label="Edit Chemical Substance"><span class="sr-only">
                                         Edit Chemical</span><span class="fa fa-pencil fa-2x success"></span></a>
             </li>
-                                <li class = "col-md-2"> <a href="@routes.Assets.at("gsrs2/index.html")#/substance/@chem.getUuid()/names" target="_blank" uib-tooltip="New Form" aria-label="Edit Chemical Substance">
+            <li class = "col-md-3"> <a href="@ix.ginas.controllers.routes.GinasApp.index()/beta/substances/@chem.getUuid()/edit" target="_blank" uib-tooltip="New Form" aria-label="Edit Chemical Substance">
                                     <span class="sr-only">Edit New Form</span>
                                     <i class="fa fa-pencil-square fa-2x" aria-hidden="true" ></i></a></li>
-            <li class = "col-md-2">
+            <li class = "col-md-3">
                 <a href="@ix.ginas.controllers.routes.GinasApp.wizard("chemical")&importUUID=@chem.uuid&importType=definition" target="_self" uib-tooltip="Copy&nbsp;Definition&nbsp;to&nbsp;New&nbsp;Substance" aria-label="Register Copy"><span class="sr-only"> Register Copy </span>
                     <span class="fa fa-clipboard fa-2x success"></span>
                 </a>
             </li>
-            <li class = "col-md-2">
+            <li class = "col-md-3">
                 <a href="@ix.ginas.controllers.routes.GinasApp.wizard("chemical")&importUUID=@chem.uuid&importType=full" target="_self" uib-tooltip="Copy&nbsp;All&nbsp;to&nbsp;New&nbsp;Substance" aria-label="Register Copy"><span class="sr-only"> Register Copy </span>
                 <span class="fa fa-clipboard fa-2x"></span>
                 </a>
             </li>
                     </ul>
+                </div>
+            </div>
             }
         </ul>
     </div>

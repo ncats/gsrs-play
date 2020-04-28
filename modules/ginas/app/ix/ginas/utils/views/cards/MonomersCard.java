@@ -1,15 +1,15 @@
 package ix.ginas.utils.views.cards;
 
 import ix.ginas.models.v1.PolymerSubstance;
-import ix.ginas.models.v1.Unit;
+import ix.ginas.models.v1.Material;
 import play.twirl.api.Html;
 
-public class MonomersCard extends CollectionDetailCard<Unit>{
+public class MonomersCard extends CollectionDetailCard<Material>{
 
 	PolymerSubstance ps;
 	
 	public MonomersCard(PolymerSubstance ps){
-		super(ps.polymer.structuralUnits, "Monomers", "monomers");
+		super(ps.polymer.monomers, "Monomers", "monomers");
 		this.ps=ps;
 	}
 

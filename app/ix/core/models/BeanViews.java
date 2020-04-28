@@ -4,7 +4,22 @@ public class BeanViews {
     public static class Compact {}
     public static class Full{}
     public static class Public {}
-    public static class Internal extends Full {}
+
+    /**
+     * View of the Json that considers more fields
+     * than public but less than {@link Internal}
+     * and is used when finding differences between
+     * different versons of an entity.
+     */
+    public static class JsonDiff extends Full {}
+
+    /**
+     * View that includes more fields than Full
+     * and JsonDiff and mostly used for making Entity backups.
+     */
+    public static class Internal extends JsonDiff {}
+
+
     public static class Private {}
 }
 /*

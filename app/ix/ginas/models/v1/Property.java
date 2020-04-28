@@ -101,11 +101,11 @@ public class Property extends CommonDataElementOfCollection {
     }
 
     @Indexable(name="defining")
-    public Boolean isDefining() {
-        return defining;
+    public boolean isDefining() {
+        return (defining == null) ? false : defining;
     }
 
-    public void setDefining(Boolean defining) {
+    public void setDefining(boolean defining) {
         this.defining = defining;
     }
 

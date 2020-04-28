@@ -1023,62 +1023,6 @@ public class App extends Authentication {
 			return notFound("Not a valid structure " + id);
 		}
 		return structure(struc, format, size, atomMap);
-//		final int[] amap = stringToIntArray(atomMap);
-//		if (format.equals("svg") || format.equals("png")) {
-//			final String key = Structure.class.getName() + "/" + size + "/" + id + "." + format + ":" + atomMap
-//                    + "||" + "%" + RendererOptions.createDefault().hashCode()+ "|"
-//	                   + RequestHelper.request().getQueryString("stereo")
-//                     + "|" + RequestHelper.request().getQueryString("version");
-//			String mime = format.equals("svg") ? "image/svg+xml" : "image/png";
-//			try {
-//				byte[] result = getOrElse (key, TypedCallable.of(() -> {
-//					Structure struc = StructureFactory.getStructure(id);
-//					if (struc != null) {
-//						return render (struc, format, size, amap);
-//					}
-//					return null;
-//				}, byte[].class));
-//				if (result != null) {
-//					response().setContentType(mime);
-//					return ok(result);
-//				}
-//		 	}catch (Exception ex) {
-//				Logger.error("Can't generate image for structure "
-//						+id+" format="+format+" size="+size, ex);
-//				return internalServerError
-//						("Unable to retrieve image for structure "+id);
-//			}
-//		}else {
-//			final String key = Structure.class.getName()+"/"+id+"."+format;
-//			try {
-//				return getOrElse (key,  () ->{
-//					Structure struc = StructureFactory.getStructure(id);
-//					if (struc != null) {
-//						response().setContentType("text/plain");
-//						if (format.equals("mol")
-//								|| format.equals("sdf")) {
-//							return struc.molfile != null
-//									? ok (struc.molfile) : noContent ();
-//						}
-//						else {
-//							return struc.smiles != null
-//									?  ok (struc.smiles) : noContent ();
-//						}
-//					}
-//					else {
-//						Logger.warn("Unknown structure: "+id);
-//					}
-//					return noContent ();
-//				});
-//			}
-//			catch (Exception ex) {
-//				Logger.error("Can't convert format "+format+" for structure "
-//						+id, ex);
-//				return internalServerError
-//						("Unable to convert structure "+id+" to format "+format);
-//			}
-//		}
-//		return notFound ("Not a valid structure "+id);
 	}
 	
 	/**
@@ -1452,7 +1396,8 @@ public class App extends Authentication {
 	                                                            throws IOException, Exception{
 	    
 	    final String key = getKey (ctx, req);
-		return getOrElse(key,  TypedCallable.of(() -> {
+
+		TypedCallable<SearchResult> tc =  TypedCallable.of(() -> {
 					Collection results = ctx.getResults();
 					SearchRequest request = new SearchRequest.Builder()
                             .subset(results)
@@ -1479,7 +1424,14 @@ public class App extends Authentication {
 					// make an alias for the context.id to this search
 					// result
 					return cacheKey (searchResult, ctx.getId());
-				}, SearchResult.class));
+				}, SearchResult.class);
+		// attempt to prevent overcaching if the UI doesn't wait for result poll to finish and immediately gets results
+		//we don't want to cache the results.
+		if(ctx.isDetermined()) {
+			return getOrElse(key, tc);
+		}else {
+			return tc.call();
+		}
 	}
 	
 	

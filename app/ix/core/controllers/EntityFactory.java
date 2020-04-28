@@ -36,6 +36,7 @@ import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.deser.DeserializationProblemHandler;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import com.flipkart.zjsonpatch.JsonPatch;
@@ -194,6 +195,11 @@ public class EntityFactory extends Controller {
 		public static EntityMapper FULL_ENTITY_MAPPER(){
         	return new EntityMapper(BeanViews.Full.class);
         }
+
+        public static EntityMapper JSON_DIFF_ENTITY_MAPPER(){
+            return new EntityMapper(BeanViews.JsonDiff.class);
+        }
+
         public static EntityMapper INTERNAL_ENTITY_MAPPER(){
         	return new EntityMapper(BeanViews.Internal.class);
         }
@@ -209,6 +215,7 @@ public class EntityFactory extends Controller {
             _serializationConfig = getSerializationConfig();
             for (Class<?> v : views) {
                 _serializationConfig = _serializationConfig.withView(v);
+
             }
             addHandler ();
         }
@@ -483,6 +490,7 @@ public class EntityFactory extends Controller {
         return get (id, null, finder);
     }
 
+
     protected static <K,T> Result doc (K id, Model.Finder<K, T> finder) {
         try {
             T inst = finder.byId(id);
@@ -586,7 +594,12 @@ public class EntityFactory extends Controller {
     
     
     protected static Object atFieldSerialized (Object inst, PojoPointer cpath) {
-    	EntityWrapper ew=EntityWrapper.of(inst).at(cpath).get();
+        Optional<EntityWrapper<?>> at = EntityWrapper.of(inst).at(cpath);
+        if(!at.isPresent()){
+            //incase there isn't something with that field
+            return JsonNodeFactory.instance.objectNode();
+        }
+        EntityWrapper ew= at.get();
     	if(cpath.isLeafRaw()){
     		return ew.getRawValue();
     	}else{
@@ -1153,6 +1166,7 @@ public class EntityFactory extends Controller {
      * @throws Exception
      */
     public static <T> EntityWrapper<T> calculateAndApplyDiff(EntityWrapper<? extends T> oWrap, EntityWrapper<? extends T> nWrap) throws Exception{
+
     	 boolean usePojoPatch=false;
          if(oWrap.getEntityClass().equals(nWrap.getEntityClass())){ //only use POJO patch if the entities are the same type
          	usePojoPatch=true;
@@ -1215,7 +1229,7 @@ public class EntityFactory extends Controller {
         
         //This is the last line of defense for making sure that the patch worked
         //Should throw an exception here if there's a major problem
-        String serialized=EntityWrapper.of(rawOld).toInternalJson();
+        String serialized=EntityWrapper.of(rawOld).toJsonDiffJson();
 
     	while(!changeStack.isEmpty()){
     		Object v=changeStack.pop();

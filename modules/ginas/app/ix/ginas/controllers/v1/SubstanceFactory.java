@@ -69,12 +69,14 @@ import ix.seqaln.SequenceIndexer;
 import ix.seqaln.SequenceIndexer.CutoffType;
 import ix.seqaln.SequenceIndexer.ResultEnumeration;
 import ix.utils.Tuple;
+import ix.utils.UUIDUtil;
 import ix.utils.Util;
 import org.jcvi.jillion.core.residue.nt.NucleotideSequenceBuilder;
 import play.Logger;
 import play.Play;
 import play.db.ebean.Model;
 import play.mvc.Result;
+import play.mvc.Results;
 
 @NamedResource(name = "substances", type = Substance.class, description = "Resource for handling of GInAS substances")
 public class SubstanceFactory extends EntityFactory {
@@ -198,7 +200,7 @@ public class SubstanceFactory extends EntityFactory {
 								//Need to use the getter or it won't lazy-load
 								Subunit sunit = s.protein.getSubunits()
 								        .stream()
-										.peek(su->System.out.println(su.uuid + "?=" + suUUID))
+//										.peek(su->System.out.println(su.uuid + "?=" + suUUID))
 								        .filter(su->su.uuid.equals(suUUID))
 										.findFirst()
 										.orElse(null);
@@ -228,7 +230,13 @@ public class SubstanceFactory extends EntityFactory {
 	public static Result get(UUID id, String select) {
 		return get(id, select, finder.get());
 	}
-
+	public static Result hierarchy (UUID id) {
+		Substance sub = finder.get().byId(id);
+		if(sub ==null){
+			return notFound();
+		}
+		return Results.ok(EntityWrapper.of(SubstanceHierarchyFinder.makeJsonTreeForAPI(sub)).toFullJsonNode());
+	}
 	public static Substance getFullSubstance(SubstanceReference subRef) {
 		try {
 			if (subRef == null)
@@ -617,6 +625,7 @@ public class SubstanceFactory extends EntityFactory {
 		if (name == null) {
 			return new ArrayList<Substance>();
 		}
+		if(UUIDUtil.isUUID(name)) {
 
 		try {
 			Substance s = finder.get().byId(UUID.fromString(name));
@@ -625,8 +634,9 @@ public class SubstanceFactory extends EntityFactory {
 				retlist.add(s);
 				return retlist;
 			}
-		} catch (Exception e) {}
-
+			} catch (Exception e) {
+			}
+		}
 		List<Substance> values = new ArrayList<Substance>();
 		if (name.length() == 8) { // might be uuid
 			values = finder.get().where().istartsWith("uuid", name).findList();

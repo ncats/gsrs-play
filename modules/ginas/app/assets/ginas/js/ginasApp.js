@@ -180,6 +180,11 @@
                     sub.protein.proteinSubTypes = sub.protein.proteinSubType.split("|");
                 }
             }
+            if(sub.polymer){
+                if(sub.polymer.structuralUnits){
+                    polymerUtils.setSRUConnectivityDisplay(sub.polymer.structuralUnits);
+                }
+            }
             substance.$$setClass(substance.$$getClass());
             return $q.when(expandCV(substance));
         };
@@ -257,6 +262,11 @@
                         if (mod.$$residueModified) {
                             mod.residueModified = _.join(mod.$$residueModified, ';');
                         }
+                        //Updates structural modifications to blank out sites if
+                        //the location type is residue-specific
+                        if(mod.locationType === "RESIDUE_SPECIFIC" || (mod.locationType && mod.locationType.value === "RESIDUE_SPECIFIC")){
+                            mod.sites=[];
+                        }
                     });
                 }
             }
@@ -278,10 +288,8 @@
             }
             return sub;
         };
-
         return substance;
     });
-
     ginasApp.factory('polymerUtils', function () {
         var utils = {};
         utils.getAttachmentMapUnits = function (srus) {
@@ -328,10 +336,7 @@
                 var res = regex.exec(con);
                 if (res == null) {
                     var text = "Connection '" + con + "' is not properly formatted";
-                    errors.push({
-                        text: text,
-                        type: 'warning'
-                    });
+                    errors.push({ text: text, type: 'warning' });
                 } else {
                     if (!map[res[1]]) {
                         map[res[1]] = [];
@@ -364,9 +369,7 @@
         var nameFinder = {
             search: function (query) {
                 var promise = $http.get(url, {
-                    params: {
-                        "q": "root_names_name:" + query + "*"
-                    },
+                    params: { "q": "root_names_name:" + query + "*" },
                 }, {
                         headers: {
                             'Content-Type': 'text/plain'
@@ -383,9 +386,7 @@
         var url = baseurl + "api/v1/substances(";
         var editSubstance = {
             getSubstance: function (editId) {
-                var promise = $http.get(url + editId + ")?view=full", {
-                    cache: true
-                }, {
+                var promise = $http.get(url + editId + ")?view=full", { cache: true }, {
                     headers: {
                         'Content-Type': 'text/plain'
                     }
@@ -402,9 +403,7 @@
         var suggest = {
             search: function (query, typePriority, ukeys) {
                 var promise = $http.get(url, {
-                    params: {
-                        "q": query
-                    }
+                    params: { "q": query }
                 }, {
                     headers: {
                         'Content-Type': 'text/plain'
@@ -413,18 +412,11 @@
                     //TODO search multiple field types//
                 }).then(function (response) {
                     if (!ukeys) ukeys = [];
-                    if (!typePriority) typePriority = function (t) {
-                        return 0;
-                    };
+                    if (!typePriority) typePriority = function (t) { return 0; };
                     ukeys.length = 0;
-
                     var pairs = _.chain(response.data)
                         .map(function (v, k) {
-                            return {
-                                "key": k,
-                                "values": v,
-                                "i": typePriority(k)
-                            };
+                            return { "key": k, "values": v, "i": typePriority(k) };
                         })
                         .sortBy("i")
                         .filter(function (kv) {
@@ -439,7 +431,6 @@
                                 var lim = 30;
                                 var start = 0;
                                 var bef = "";
-
                                 var sindex = v.highlight.indexOf("<b>");
                                 var eindex = v.highlight.indexOf("</b>") - 3;
                                 if (eindex > lim) {
@@ -450,16 +441,10 @@
                                 } else {
                                     start = 0;
                                 }
-
-                                return {
-                                    "k": kvp.key,
-                                    "v": v.key,
-                                    "d": bef + v.key.substring(start)
-                                };
+                                return { "k": kvp.key, "v": v.key, "d": bef + v.key.substring(start) };
                             });
                         })
                         .value();
-
                     return pairs;
                 });
                 return promise;
@@ -467,20 +452,13 @@
         };
         return suggest;
     });
-
     ginasApp.service('substanceSearch', function ($http, $q) {
         var options = {};
         var url = baseurl + "api/v1/substances/search";
-
         this.load = function (field) {
             $http.get(url, {
-                params: {
-                    "q": field.toUpperCase()
-                }
-
-            }, {
-                cache: true
-            }, {
+                params: { "q": field.toUpperCase() }
+            }, { cache: true }, {
                 headers: {
                     'Content-Type': 'text/plain'
                 }
@@ -488,28 +466,23 @@
                 options.data = response;
             });
         };
-
         this.search = function ($q) {
             return options;
         };
     });
-
     ginasApp.service('UUID', function () {
         function s4() {
             return Math.floor((1 + Math.random()) * 0x10000)
                 .toString(16)
                 .substring(1);
         }
-
         this.newID = function () {
             var uuid = s4() + s4() + '-' + s4() + '-' + s4() + '-' +
                 s4() + '-' + s4() + s4() + s4();
             return (uuid);
         };
     });
-
     ginasApp.factory('FileReader', ['$q', '$window', function ($q, $window) {
-
         // Wrap the onLoad event in the promise
         var onLoad = function (reader, deferred, scope) {
             return function () {
@@ -518,7 +491,6 @@
                 });
             };
         };
-
         // Wrap the onLoad event in the promise
         var onError = function (reader, deferred, scope) {
             return function () {
@@ -527,7 +499,6 @@
                 });
             };
         };
-
         // Wrap the onProgress event by broadcasting an event
         var onProgress = function (reader, scope) {
             return function (event) {
@@ -537,7 +508,6 @@
                 });
             };
         };
-
         // Instantiate a new Filereader with the wrapped properties
         var getReader = function (deferred, scope) {
             var reader = new $window.FileReader();
@@ -546,36 +516,27 @@
             reader.onprogress = onProgress(reader, scope);
             return reader;
         };
-
         // Read a file as a data url
         var readAsDataURL = function (file, scope) {
             var deferred = $q.defer();
-
             var reader = getReader(deferred, scope);
             reader.readAsDataURL(file);
-
             return deferred.promise;
         };
-
         // Read a file as a text
         var readAsText = function (file, scope) {
             var deferred = $q.defer();
-
             var reader = getReader(deferred, scope);
             reader.readAsText(file, 'UTF-8');
             return deferred.promise;
         };
-
         // Read a file as a binary data
         var readAsBinaryString = function (file, scope) {
             var deferred = $q.defer();
-
             var reader = getReader(deferred, scope);
             reader.readAsBinaryString(file);
-
             return deferred.promise;
         };
-
         return {
             readAsDataURL: readAsDataURL,
             readAsBinaryString: readAsBinaryString,
@@ -584,11 +545,8 @@
     }]);
     ginasApp.controller("TypeAheadController", function ($rootScope, $scope, $location, typeaheadService) {
         $scope.types = [];
-
         $scope.showTypes = ["Approval_ID", "Display_Name", "CAS", "Name"];
-
         $scope.qmod = "query";
-        
         if ($scope.searchVariables) {
             $scope.searchVariables.query = '';
         }
@@ -602,21 +560,17 @@
         $scope.init = function (qmod) {
             $scope.qmod = qmod;
         }
-
         $scope.nameFor = function (suggest) {
             if (suggest === "Approval_ID") return "UNII";
             if (suggest === "Display_Name") return "Preferred Term";
             return suggest;
         };
-
-
         $scope.onSelect = function ($item, $model, $label) {
             if ($scope.searchVariables) {
-                $scope.searchVariables.isSearchKeyed = false;
+                $scope.searchVariables.isInteractedWith = false;
                 $scope.searchVariables[$scope.qmod] = '"' + $item.v + '"';
             }
         };
-
         $scope.getSuggestions = function (query) {
             var ret = typeaheadService.search(query, function (t) {
                 if (t === "Approval_ID" && query.length < 3) {
@@ -624,10 +578,8 @@
                 }
                 return $scope.showTypes.indexOf(t);
             }, $scope.types);
-
             return ret;
         };
-
     });
     ginasApp.controller("GinasController", function ($rootScope, $scope, $document, $location, $compile, $uibModal, $http, $window, $anchorScroll, $timeout, polymerUtils,
         localStorageService, Substance, UUID, substanceSearch, substanceIDRetriever, CVFields, molChanger, toggler, resolver,
@@ -643,13 +595,12 @@
         $scope.show = false;
         $scope.sequence = "";
         $scope.searchVariables = {
-            isSearchKeyed: false
+            isInteractedWith: false
         };
         var currentKeyPressFunction;
         $scope.cleanSequence = function (seqType) {
             $scope.sequence = subunitParser.cleanSequence($scope.sequence, _.lowerCase(seqType));
         }
-
         $scope.preload = function (seqType) {
             if ("protein" === seqType.toLowerCase()) {
                 $scope.seqType = "Protein";
@@ -663,29 +614,26 @@
             }
         }
         $window.SDFFields = {};
-
         $scope.getClass = function (path) {
             var t = $location.path().split('/');
             var r = (_.indexOf(t, path) >= 0) ? 'active' : '';
             return r;
-
         };
-
         $scope.getSuggestions = function (query) {
             var ret = typeaheadService.search(query);
             return ret;
         };
-        $scope.checkIfKeyPressed = function () {
-            currentKeyPressFunction = $document.onkeypress;
-            $document[0].onkeypress = function () {
-                $scope.searchVariables.isSearchKeyed = true;
-                if (currentKeyPressFunction) {
-                    currentKeyPressFunction();
+        var searchEventListener = function(event) {
+            $scope.searchVariables.isInteractedWith = true;
                 }
+
+        $scope.listenForInteraction = function (event) {
+            event.target.addEventListener('keypress', searchEventListener);
+            event.target.addEventListener('paste', searchEventListener);
             }
-        }
-        $scope.removeKeyPressCheck = function () {
-            $document[0].onkeypress = currentKeyPressFunction;
+        $scope.removeInteractionListener = function (event) {
+            event.target.removeEventListener('click', searchEventListener);
+            event.target.removeEventListener('paste', searchEventListener);
         }
         $scope.submitq = function (query, action, isFromQueryBuilder) {
             // if (query.indexOf("\"") < 0 && query.indexOf("*") < 0 && query.indexOf(":") < 0 && query.indexOf(" AND ") < 0 && query.indexOf(" OR ") < 0) {
@@ -693,7 +641,7 @@
             // } else {
             //     $scope.q = query;
             // }
-            if (!isFromQueryBuilder && $scope.searchVariables.isSearchKeyed && query.indexOf('"') < 0 && query.indexOf("*") < 0 && query.indexOf(":") < 0 && query.indexOf(" AND ") < 0 && query.indexOf(" OR ") < 0) {
+            if (!isFromQueryBuilder && $scope.searchVariables.isInteractedWith && query.indexOf('"') < 0 && query.indexOf("*") < 0 && query.indexOf(":") < 0 && query.indexOf(" AND ") < 0 && query.indexOf(" OR ") < 0) {
                 $scope.q = "\"" + query + "\"";
             } else {
                 $scope.q = query;
@@ -708,10 +656,8 @@
                     $scope.q = 'root_codes_code:' + $scope.q;
                     break;
             }
-
             //First, we get the absolute url where we currently are            
             var whereiam = window.location.href;
-
             //Then we get the base path of the app, which will have
             //a terminal "/", but we want to remove that slash, which
             //we do with the following regex.
@@ -738,24 +684,18 @@
             $location.search({});
             $location.search("q", rq);
             $location.hash("");
-
             //This just gets angular's encoding of the query portion of the URL,
             //which will be explicitly added.
             var qpart = _.chain(($location.absUrl().split("?")))
-                .filter(function (a, b) {
-                    return b;
-                }) //get rid of first element
+                .filter(function (a, b) { return b; }) //get rid of first element
                 .value()
                 .join("?");
 
             window.location = nav + "?" + qpart.replace(";", "%3B");
         };
-
         if (typeof $window.loadjson !== "undefined" &&
             JSON.stringify($window.loadjson) !== "{}") {
-
             $scope.substance = Substance;
-
             Substance.$$setSubstance($window.loadjson).then(function (data) {
                 if (data.names) {
                     data.names.sort(function (a, b) {
@@ -766,7 +706,6 @@
                         return a.name.localeCompare(b.name);
                     });
                 }
-
                 _.set(data, '$$update', true);
                 data = data.$$setClass(data.$$getClass());
                 $scope.substance = data;
@@ -783,7 +722,6 @@
                 $scope.substance = Substance.$$setClass(substanceClass);
             }
         }
-
         var windowElement = angular.element($window);
         var u = $location.path().split('/');
         var inter = _.intersection(u, ["edit", "wizard"]);
@@ -795,19 +733,14 @@
                 return "Navigating away from this page will lose all unsaved changed.";
             }
         });
-
         $scope.type = $location.search().type;
-
         if (!$scope.type) {
             $scope.type = "Substructure";
         }
-
         $scope.cutoff = $location.search().cutoff - 0;
         if (!Number.isFinite($scope.cutoff)) {
             $scope.cutoff = 0.8;
         }
-
-
         $scope.stage = true;
         $scope.gridView = localStorageService.get('gridView') || false;
         $scope.diff = false;
@@ -826,12 +759,9 @@
                 }
             }
         };
-
         $scope.resolveName = function (name, div) {
-
             $scope.structureSearchResolve = [];
             resolver.resolve(name, 'structureSearchSpinner').then(function (response) {
-
                 if (response.data.length > 0) {
                     $scope.structureSearchResolve = _.union($scope.structureSearchResolve, response.data);
                 }
@@ -843,7 +773,6 @@
                     $anchorScroll(div);
                 }, 0, false);
             });
-
             substanceFactory.getSubstances(name).then(function (response) {
                 var duplicate = [];
                 if (response.data.count > 0) {
@@ -854,41 +783,33 @@
                 }
                 return duplicate;
             });
-
-
         };
-
         $scope.toggleGrid = function () {
             localStorageService.set('gridView', $scope.gridView);
         };
-
         $scope.toggleFacet = function (facet) {
             $scope[facet] = !$scope[facet];
         };
-
         $scope.getToggleStatus = function (facet) {
             if (_.isUndefined($scope[facet])) {
                 $scope[facet] = false;
             }
             return $scope[facet];
         };
-
         $scope.redirectVersion = function (v) {
             if (!v) {
                 v = $scope.versionNumber;
             }
-
             var base = $window.location.pathname.split('/v/')[0];
             var newLocation = "/v/" + v;
             $window.location.pathname = base + newLocation;
         };
-
-
         //We can put this here, but it makes it difficult to expand in the future.
         //The server knows how things can be sorted, we need to either ajax
         //(which can cause latency problems), or we can have it pre-stored
         //server-side, and injected.
-        $scope.sortValues = [{
+        $scope.sortValues = [
+            {
                 "value": "default",
                 "display": "Relevance"
             },
@@ -925,31 +846,22 @@
                 "display": "Lowest Molecular Weight"
             }
         ];
-
         var suppliedOrder = _.find($scope.sortValues, {
             value: $location.search()["order"]
         });
-        $scope.selectedSort = suppliedOrder || {
-            value: "Sort By"
-        };
-
+        $scope.selectedSort = suppliedOrder || { value: "Sort By" };
         $scope.showDeprecated = $location.search()["showDeprecated"] || "false";
-
         $scope.showDeprecatedChange = function (model) {
             $location.search("showDeprecated", $scope.showDeprecated);
             window.location = $location.absUrl();
         };
-
         $scope.sortSubstances = function (model) {
-
             $location.search("order", $scope.selectedSort.value);
             window.location = $location.absUrl();
         };
-
         $scope.showPriv = function () {
             $scope.showprivates = !$scope.showprivates;
         };
-
         // $scope.showprivates = false;
         //Prepare an export file for download
         $scope.downloadFile = function (url) {
@@ -961,24 +873,16 @@
                     var dl = response.data;
                     if (dl) {
                         if (dl.isReady) {
-
                             var d = new Date();
                             var datestr = d.toISOString().split("T")[0] + "_" + d.toTimeString().split(" ")[0].split(":").join("_");
                             var proposedfname = "export-" + datestr + "." + dl.url.split("format=")[1].split("&")[0];
-
-
                             $scope.exportData = {};
-
                             if (dl.isCached) {
                                 $scope.exportData.cached = dl.cached;
                                 $scope.baseurl = baseurl;
                             }
-
                             $scope.fileNamePrompt(proposedfname, function (fname) {
-
-
                                 var nurl = dl.url + "&genUrl=" + encodeURIComponent(window.location.href) + "&filename=" + encodeURIComponent(fname);
-
                                 //alert(nurl);
                                 $http.get(nurl).then(function (rep) {
                                     var meta = rep.data;
@@ -987,7 +891,6 @@
                                     $scope.exportUnavailableWarning();
                                 });
                             })
-
                         } else if (dl.isPresent) { //busy
                             $scope.exportUnavailableWarning();
                         } else { //unknown result set
@@ -997,17 +900,13 @@
                         $scope.exportUnavailableWarning();
                     }
                 });
-
-
         };
-
         $scope.exportUnavailableWarning = function () {
             $scope.modalInstance = $uibModal.open({
                 templateUrl: baseurl + "assets/templates/modals/export-warning.html",
                 scope: $scope
             });
         };
-
         $scope.fileNamePrompt = function (fname, cb) {
             $scope.exportFname = fname;
             $scope.modalInstance = $uibModal.open({
@@ -1019,16 +918,13 @@
                 cb(fname2);
             };
         };
-
         $scope.compare = function () {
             //$scope.left = angular.toJson(Substance.$$flattenSubstance(angular.copy($scope.substance)));
             $scope.left = angular.toJson($scope.substance.$$flattenSubstance());
             $scope.right = angular.toJson(angular.copy($window.loadjson));
             $scope.substancesEqual = angular.equals($scope.right, $scope.left);
         };
-
         $scope.canApprove = function () {
-
             var lastEdit = $scope.substance.lastEditedBy;
             if (!lastEdit) {
                 return false;
@@ -1041,7 +937,6 @@
             }
             return true;
         };
-
         $scope.moment = function (time) {
             return moment(time).fromNow();
         };
@@ -1052,20 +947,16 @@
         };
         this.numbers = true;
         localStorageService.set('enabled', $scope.enabled);
-
         //passes structure id from chemlist search to structure search//
         $scope.passStructure = function (id) {
             localStorageService.set('structureid', id);
         };
-
         $scope.clearStructure = function () {
             localStorageService.remove('structureid');
         };
-
         $scope.$on('validate', function (event, obj, form, path) {
             $scope.validate(obj, form, path);
         });
-
         //Method for pushing temporary objects into the final message
         //Note: This was changed to use a full path for type.
         //That means that passing something like "nucleicAcid.type"
@@ -1073,7 +964,6 @@
         //the substance, unless otherwise caught in the switch.
         //This simplifies some things.
         $scope.validate = function (obj, form, path) {
-
             $scope.$broadcast('show-errors-check-validity');
             if (form.$valid) {
                 if (_.has($scope.substance, path)) {
@@ -1085,7 +975,6 @@
                     x.push(angular.copy(obj));
                     _.set($scope.substance, path, x);
                 }
-
                 obj = null;
                 form.$setPristine();
                 form.$setUntouched();
@@ -1095,7 +984,6 @@
                 return false;
             }
         };
-
         $scope.checkErrors = function () {
             if (_.has($scope.substanceForm, '$error')) {
                 _.forEach($scope.substanceForm.$error, function (error) {
@@ -1103,7 +991,6 @@
                 });
             }
         };
-
         $scope.open = function (url) {
             $scope.modalInstance = $uibModal.open({
                 templateUrl: url,
@@ -1126,9 +1013,7 @@
         };
         $scope.setSysNames = function (uuid) {
             var approveURL = baseurl + 'api/v1/substances(' + uuid + ')/names';
-            $http.get(approveURL, {
-                cache: false
-            }, {
+            $http.get(approveURL, {cache: false}, {
                 headers: {
                     'Content-Type': 'application/json'
                 }
@@ -1144,10 +1029,16 @@
         };
         $scope.getSmilesInchi = function (uuid) {
             var url = baseurl + 'export/' + uuid + '.smiles';
-            $http.get(url, {
+
+            $http({
+                url: url,
+                method: 'GET',
+                transformResponse:[]
+            }, {
                 headers: {
                     'Content-Type': 'text/plain'
-                }
+                },
+                responseType: 'text'
             }).success(function (response) {
                 $scope.smiles = response;
             });
@@ -1163,7 +1054,6 @@
         $scope.close = function () {
             $scope.modalInstance.close();
         };
-
         $scope.submitSubstanceConfirm = function () {
             $scope.isLoading = true;
             $scope.validating = true;
@@ -1174,19 +1064,15 @@
             var noGlogalLoading = true;
             $scope.validateSubstance(noGlogalLoading);
         };
-
         $scope.dismissAll = function () {
             $scope.errorsArray = [];
             $scope.canSubmit = $scope.noErrors();
         };
-
         $scope.dismiss = function (err) {
             _.pull($scope.errorsArray, err);
             $scope.canSubmit = $scope.noErrors();
         };
-
         $scope.canSubmit = false;
-
         $scope.noErrors = function () {
             var errs = _.filter($scope.errorsArray, function (err) {
                 if (err.messageType === "ERROR" || err.messageType === "WARNING") {
@@ -1217,28 +1103,19 @@
             errorArr = _.difference(errorArr, (_.filter(errorArr, ['class', 'info'])));
             return errorArr;
         };
-
         $scope.validateSubstance = function (noGlobalLoading) {
             $rootScope.isGlobalLoading = !noGlobalLoading;
             //this should cascade to all forms to check and see if validation is ok
             $scope.$broadcast('show-errors-check-validity');
             //this is the api error checking
             $scope.checkErrors();
-
-
             //TODO: Remove later. This just adds uuids to names which don't have UUIDs.
             //This should not be necessary, but appears to be.
             //**************************
-
             _.chain(angular.element(document.body).scope().substance.names)
-                .filter(function (n) {
-                    return !n.uuid;
-                })
-                .forEach(function (n) {
-                    n.uuid = angular.element(document.body).injector().get("UUID").newID();
-                })
+                .filter(function (n) { return !n.uuid; })
+                .forEach(function (n) { n.uuid = angular.element(document.body).injector().get("UUID").newID(); })
                 .value();
-
             //**************************
             $scope.errorsArray = [];
             $scope.sequenceArray = [];
@@ -1298,7 +1175,6 @@
                 $scope.validating = false;
             });
         };
-
         //this is already a function the substance object has, not really needed.
         $scope.getSubstanceClass = function () {
             return $scope.substance.substanceClass;
@@ -1307,14 +1183,11 @@
             $scope.$broadcast('show-errors-reset');
             form.$setPristine();
         };
-
         $scope.selected = false;
-
         $scope.fetch = function ($query) {
             return substanceSearch.load($query);
             //return substanceSearch.search(field, $query);
         };
-
         $scope.approveSubstanceConfirm = function () {
             $scope.validateSubstance();
             var url = baseurl + "assets/templates/modals/substance-approval.html";
@@ -1327,11 +1200,8 @@
             var sub = angular.toJson($scope.substance.$$flattenSubstance());
             var keyid = $scope.substance.uuid;
             var approveURL = baseurl + "api/v1/substances(" + keyid + ")/@approve";
-
             $scope.submitting = true;
-            $http.get(approveURL, {
-                cache: false
-            }, {
+            $http.get(approveURL, { cache: false }, {
                 headers: {
                     'Content-Type': 'application/json'
                 }
@@ -1368,11 +1238,7 @@
                 $scope.submitting = false;
                 $scope.open(url);
             });
-
-
         };
-
-
         $scope.submitSubstance = function () {
             var url;
             var sub = {};
@@ -1384,7 +1250,6 @@
             $scope.submitting = true;
             var url1 = baseurl + "assets/templates/modals/submission-loader.html";
             $scope.open(url1);
-
             if (_.has($scope.substance, '$$update')) {
                 sub = angular.toJson($scope.substance.$$flattenSubstance());
                 $http.put(baseurl + 'api/v1/substances', sub, {
@@ -1407,7 +1272,6 @@
                 });
             } else {
                 sub = angular.toJson($scope.substance.$$flattenSubstance());
-
                 $http.post(baseurl + 'api/v1/substances', sub, {
                     headers: {
                         'Content-Type': 'application/json'
@@ -1428,13 +1292,11 @@
                 });
             }
         };
-
         $scope.removeItem = function (list, item) {
             _.remove(list, function (someItem) {
                 return item === someItem;
             });
         };
-
         $scope.applyPaster = function () {
             $scope.close();
             var originalSubstanceClass = $scope.substance.substanceClass;
@@ -1443,7 +1305,6 @@
             }
             delete $scope.substance[originalSubstanceClass];
             $scope.substance.$$changeClass($scope.substanceClass);
-
             if ($scope.substance.substanceClass === 'chemical') {
                 molChanger.setMol($scope.substance.structure.molfile);
             }
@@ -1474,24 +1335,20 @@
             $window.location.search = null;
             $window.location.href = baseurl + 'wizard?kind=' + $scope.substanceClass;
         };
-
         $scope.addDifferentSubstance = function () {
             $scope.updateNav = false;
             $window.location.search = null;
             $window.location.href = baseurl + 'register';
         };
-
         $scope.redirect = function () {
             localStorageService.set('tempsubstance', $scope.substance);
             $window.location.search = "kind=" + $scope.substance.substanceClass;
-
         };
-
         $scope.getRange = function (start, end) {
             return _.reverse(_.range(start, (end - 1 + 2)));
         };
-
         $scope.submitpaster = function (input) {
+
             $scope.substanceClass = $location.$$search.kind;
             if (!$scope.substanceClass) {
                 $scope.substanceClass = $scope.substance.substanceClass;
@@ -1506,7 +1363,6 @@
                     molChanger.setMol($scope.substance.structure.molfile);
                 }
                 if ($scope.substance.substanceClass != $scope.substanceClass) {
-
                     var url = baseurl + "assets/templates/modals/paste-redirect-modal.html";
                     $scope.open(url);
                 }
@@ -1520,15 +1376,12 @@
                     }, 1);
                 }, 1);
             });
-
         };
-
-        $scope.bugSubmit = function (bugForm) {};
-
+        $scope.bugSubmit = function (bugForm) {
+        };
         $scope.setEditId = function (editid) {
             localStorageService.set('editID', editid);
         };
-
         //method for injecting a large structure image on the browse page//
         $scope.showLarge = function (id, divid, ctx) {
             var template;
@@ -1539,17 +1392,12 @@
             }
             toggler.toggle($scope, divid, template);
         };
-
-
-
         //------------------------------------------------
         // GSRS Functions Begin
         //------------------------------------------------
-
         //************************************************/
         //Flatten CV and Expand CV
         //************************************************/
-
         function isCV2(ob) {
             if (typeof ob !== "object") return false;
             if (ob === null) return false;
@@ -1558,7 +1406,6 @@
             }
             return false;
         }
-
         function flattenCV2(sub) {
             for (var v in sub) {
                 if (isCV2(sub[v])) {
@@ -1575,7 +1422,6 @@
             }
             return sub;
         }
-
         function expandCV2(sub, path) {
             _.forEach(_.keysIn(sub), function (field) {
                 if (path) {
@@ -1583,9 +1429,7 @@
                 } else {
                     var newpath = field;
                 }
-
                 if (_.isObject(sub[field])) {
-
                     if (_.isArray(sub[field])) {
                         _.forEach((sub[field]), function (value, key) {
                             if (_.isObject(value)) {
@@ -1601,7 +1445,6 @@
                                             //  _.set(newcv, 'value', value + ' (not in CV)');
                                         }
                                         sub[field][key] = newcv;
-
                                     }
                                 });
                             }
@@ -1613,11 +1456,8 @@
                         }
                     }
                 } else {
-
                     if (!_.isNull(sub[field])) {
-
                         CVFields.getByField(newpath).then(function (response) {
-
                             if (response.data.content.length > 0) {
                                 var cv = response.data.content[0].terms;
                                 var newcv = _.find(cv, ['value', sub[field]]);
@@ -1625,7 +1465,6 @@
                                     newcv = {};
                                     _.set(newcv, 'display', sub[field] + ' (not in CV)');
                                     //  _.set(newcv, 'value', sub[field] + ' (not in CV)');
-
                                 }
                                 sub[field] = newcv;
                             }
@@ -1638,17 +1477,15 @@
 
     }); //controller
     /**** controller GinasController ENDS **************************************/
-
     /***** GSRS Functions ENDS *************************************************/
+
 
     ginasApp.directive('escKey', function () {
         return function (scope, element, attrs) {
-
             var elm = element;
             if (attrs.escGlobal !== 'undefined') {
                 elm = angular.element(document).find('body');
             }
-
             elm.bind('keydown keypress', function (event) {
                 if (event.which === 27) { // 27 = esc key
                     scope.$apply(function () {
@@ -1677,7 +1514,6 @@
                 "</div>"
         };
     });
-
     ginasApp.directive('stringToNumber', function () {
         return {
             require: 'ngModel',
@@ -1691,7 +1527,6 @@
             }
         };
     });
-
     ginasApp.directive('scrollSpy', function ($timeout) {
         return function (scope, elem, attr) {
             scope.$watch(attr.scrollSpy, function (value) {
@@ -1712,7 +1547,6 @@
                 smiles: '@'
             },
             link: function (scope, element, attrs) {
-
                 scope.$watch('smiles', function (val) {
                     if (val) {
                         scope.relink();
@@ -1730,7 +1564,6 @@
                     } else {
                         url += '&context=' + Math.random();
                     }
-
                     if (attrs.smiles) {
                         var smiles = attrs.smiles
                             .replace(/[;]/g, '%3B')
@@ -1747,9 +1580,7 @@
             }
         };
     });
-
     ginasApp.directive('amount', function ($compile) {
-
         return {
             restrict: 'E',
             replace: true,
@@ -1773,7 +1604,6 @@
                     }
                     return null;
                 };
-
                 scope.display = function () {
                     if (!_.isUndefined(scope.value) && !_.isNull(scope.value)) {
                         var ret = "";
@@ -1782,8 +1612,6 @@
                         if (!unittext) {
                             unittext = "";
                         }
-
-
                         if (scope.value) {
                             var atype = scope.formatValue(scope.value.type);
                             if (atype) {
@@ -1799,7 +1627,6 @@
                                 }
                                 if (scope.value.high || scope.value.low) {
                                     ret += " [";
-
                                     if (scope.value.high && !scope.value.low) {
                                         ret += "<" + scope.value.high;
                                     } else if (!scope.value.high && scope.value.low) {
@@ -1817,7 +1644,6 @@
                                 }
                                 ret += " (average) ";
                             }
-
                             if (scope.value.highLimit || scope.value.lowLimit) {
                                 ret += "\n[";
                             }
@@ -1838,20 +1664,16 @@
                                 }
                                 ret += " (limits)";
                             }
-
                         }
                         return ret;
                     }
                 };
-
                 var template = angular.element('<div><span class="amt">{{display()}}<br><i>{{value.nonNumericValue}}</i></span></div>');
-
                 element.append(template);
                 $compile(template)(scope);
             }
         };
     });
-
     ginasApp.factory('referenceRetriever', function ($http, $q) {
         var url = baseurl + "api/v1/substances(";
         var references = {};
@@ -1862,27 +1684,21 @@
                         resolve(references[uuid + "_" + version]);
                     });
                 }
-
                 var processReferences = function (refs) {
                     _.forEach(refs, function (ref, index) {
                         _.set(ref, '$$index', index + 1);
                     });
                     return refs;
                 };
-
                 var httpDoer = function (burl) {
-                    return $http.get(burl, {
-                        cache: true
-                    }, {
+                    return $http.get(burl, { cache: true }, {
                         headers: {
                             'Content-Type': 'text/plain'
                         }
                     });
                 };
-
                 var getVersion = function () {
                     return $q(function (resolve, reject) {
-
                         var onWrongVersion = function (e) {
                             httpDoer(url + uuid + ")/@edits")
                                 .then(function (response) {
@@ -1905,8 +1721,6 @@
                                     reject(e);
                                 });
                         };
-
-
                         httpDoer(url + uuid + ")")
                             .then(function (response) {
                                 var s = response.data;
@@ -2819,17 +2633,11 @@
                                 m["$$new"] = true;
                                 //this is used to make a cv element out of the moiety units, which are re-written as strings with each round trip
                                 if (!_.isObject(m.countAmount.type)) {
-                                    var temp = {
-                                        value: m.countAmount.type,
-                                        display: m.countAmount.type
-                                    };
+                                    var temp = { value: m.countAmount.type, display: m.countAmount.type };
                                     m.countAmount.type = temp;
                                 }
                                 if (!_.isObject(m.countAmount.units)) {
-                                    var temp = {
-                                        value: m.countAmount.units,
-                                        display: m.countAmount.units
-                                    };
+                                    var temp = { value: m.countAmount.units, display: m.countAmount.units };
                                     m.countAmount.units = temp;
                                 }
                                 var moi = {};
@@ -2918,12 +2726,9 @@
 
                         return _.chain(charges)
                             .chunk(8)
-                            .map(function (c) {
-                                return chgCount(c.length) +
+                            .map(function(c){ return chgCount(c.length) +
                                     _.chain(c)
-                                    .map(function (ic) {
-                                        return ic.toString();
-                                    })
+                                    .map(function(ic){return ic.toString();})
                                     .value()
                                     .join("");
                             })
@@ -2997,9 +2802,7 @@
                 }
                 if (structureid) {
                     var url = baseurl + 'api/v1/structures/' + structureid;
-                    $http.get(url, {
-                        cache: true
-                    }).then(function (response) {
+                    $http.get(url, { cache: true }).then(function (response) {
                         scope.sketcher.setMolfile(response.data.molfile);
                         _.set(scope.parent, 'q', response.data.smiles);
                         localStorageService.remove('structureid');
@@ -3258,15 +3061,14 @@
                             if(dataURL.length>100000){
                             	dataURL = canvas.toDataURL('image/jpeg', 100000/dataURL.length);
                             	console.log(dataURL.length);
+
                             }
                             setLoading(true);
                             //TODO: Change to use angular
                             $.ajax({
                                 url: "/ginas/app/api/v1/foo/ocrStructure",
                                 type: "POST",
-                                headers: {
-                                    'Access-Control-Allow-Origin': 'http://localhost:9000'
-                                },
+                                headers: {  'Access-Control-Allow-Origin': 'http://localhost:9000' },
                                 data: dataURL,
                                 contentType: 'application/json',
                                 success: function (response) {
@@ -3445,10 +3247,16 @@
                             scope.exportData = response;
                             if (scope.format != 'fas') {
                                 url = baseurl + 'export/' + scope.structureid + '.smiles';
-                                $http.get(url, {
+
+                                $http({
+                                    url: url,
+                                    method: 'GET',
+                                    transformResponse:[]
+                                }, {
                                     headers: {
                                         'Content-Type': 'text/plain'
-                                    }
+                                    },
+                                    responseType: 'text'
                                 }).success(function (response) {
                                     scope.exportSmiles = response;
                                 });
@@ -4146,8 +3954,7 @@ function restoreVersion(uuid, version) {
                     }
                 };
                 //
-                var raw = (function () {
-                    /*
+                var raw=(function(){/*
                                 <div id="{{mid}}" style="z-index:999999;position:fixed;top:0px;width:100%;height:100%;background: rgba(0, 0, 0, 0.6);">
                                    <div style="
                                        text-align: center;
@@ -4166,8 +3973,7 @@ function restoreVersion(uuid, version) {
                                          <button onclick="rawModDone('{{mid}}',true)">OK</button>
                                       </div>
                                    </div>
-                                </div>*/
-                }.toString()).substring(14).replace(/\*\/.*/g, "");
+            </div>*/}.toString()).substring(14).replace(/\*\/.*/g,"");
                 raw = raw.replace(/\{\{mid\}\}/g, mod.id)
                     .replace("{{title}}", mod._title);
                 raw = raw.replace("{{contents}}", mod._contents);

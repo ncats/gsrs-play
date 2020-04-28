@@ -1,13 +1,18 @@
 package ix.ginas.utils.validation.validators;
 
+import ix.core.models.DefinitionalElement;
 import ix.core.models.DefinitionalElements;
+import ix.core.models.DefinitionalElements.DefinitionalElementDiff.OP;
+import ix.core.models.Role;
+import ix.core.models.UserProfile;
 import ix.core.validator.GinasProcessingMessage;
-import ix.core.validator.ValidationMessage;
 import ix.core.validator.ValidatorCallback;
 import ix.ginas.models.v1.Substance;
+import java.util.ArrayList;
 
 import java.util.Arrays;
 import java.util.List;
+import play.Logger;
 
 /**
  * Created by katzelda on 2/11/19.
@@ -24,35 +29,105 @@ public class DefinitionalHashValidator  extends AbstractValidatorPlugin<Substanc
 
 //        System.out.println("in def hash Validator");
 
-        if(objold ==null || objnew.getApprovalID() ==null || (objnew.getApprovalID() !=null && objold.getApprovalID() ==null)){
+        /*if(objold ==null || objnew.getApprovalID() ==null || (objnew.getApprovalID() !=null && objold.getApprovalID() ==null)){
             //new substance or not approved don't validate
             return;
-        }
-//        System.out.println("still in in def hash Validator");
-        //if we're here, we are changing an approved substance
+        }*/
         DefinitionalElements newDefinitionalElements = objnew.getDefinitionalElements();
-        DefinitionalElements oldDefinitionalElements = objold.getDefinitionalElements();
+        DefinitionalElements oldDefinitionalElements = new DefinitionalElements(new ArrayList<DefinitionalElement>());
+				try	{
+					oldDefinitionalElements =objold.getDefinitionalElements();
+				}
+				catch(Exception e){
+						Logger.warn("Unable to access definitional elements for old substance");
+					return;
+				}
 
-//        System.out.println("new def elements =\n " + newDefinitionalElements);
-//        System.out.println("===========\nold def elements =\n " + oldDefinitionalElements);
-
-//        System.out.println(Substance.toHexString(newDefinitionalElements.getDefinitionalHash()));
-//        System.out.println(Substance.toHexString(oldDefinitionalElements.getDefinitionalHash()));
         if(!Arrays.equals(newDefinitionalElements.getDefinitionalHash(),
                 oldDefinitionalElements.getDefinitionalHash())){
             //we have changed something "definitional"
-
-            // only for approved substances
-            //re-affirm can be a new warning that can be dismissed
 
             List<DefinitionalElements.DefinitionalElementDiff> diff = newDefinitionalElements.diff(oldDefinitionalElements);
             //quick hack in case the definitional elements are in a different order,
             //Arrays.equals() won't cut it. so need to do the more involved diff...
             if(!diff.isEmpty()) {
-                callback.addMessage(GinasProcessingMessage
-                        .WARNING_MESSAGE("Definitional change(s) has been made: please re-affirm.  " + diff));
-            }
-        }
+								if( changesContainLayer(diff, 1) && objnew.status.equals("approved")) {
+										Logger.debug("approved substance with change to layer 1 ");
+										// only for approved substances
+										//confirm can be a new warning that can be dismissed
+										UserProfile up=getCurrentUser();
+										if(!up.hasRole(Role.Admin)) {
+											/*
+											This section related to GSRS-1347 (March 2020)
+											When a user makes a change to an approved sustance (with a UNII) and the user is _not_ an admin
+											-- but _is_ a super updated because regular updaters are not allowed to update approved substances
+											we display a strong warning.
+											Test this by making these types of changes:
+											1) To a substance's level 1 hash (for example, by changing the structure of a Chemical)
+												-> we expect a non-admin user to get the warning below
+												-> we expect an admin user to get a warning about the specific changes to the def hash
+											2) To a substance's level 2 hash (for example, by changing the stereochemistry field of a Chemical)
+												-> we expect both types of user to get a warning about the specific changes to the def hash
+											3) To a field outside of the def hash (for example, adding a name or code)
+												-> no warning.
+											*/
+												String message =
+													"WARNING! You have made a change to the fundamental definition of a validated substance. Are you sure you want to proceed with this change?";
+												callback.addMessage(GinasProcessingMessage
+													.WARNING_MESSAGE(message));
+												return;
+										}
+								}
+								String message= createDiffMessage(diff);
+								callback.addMessage(GinasProcessingMessage
+										.WARNING_MESSAGE(message));
+								Logger.debug("in DefinitionalHashValidator, apending message " + message);
+						} else {
+								Logger.debug("diffs empty ");
+						}
+				} else {
+					Logger.debug("Arrays equal");
+				}
+    }
 
+		private boolean changesContainLayer(List<DefinitionalElements.DefinitionalElementDiff> changes, int layer) {
+			Logger.debug("changed: ");
+
+			boolean result= changes.stream().anyMatch(c-> (c.getOp().equals(OP.ADD) && c.getNewValue().getLayer()==layer)
+							|| (c.getOp().equals(OP.REMOVED) && (c.getOldValue().getLayer() == layer))
+							|| (c.getOp().equals(OP.CHANGED) && (c.getNewValue().getLayer() == layer || c.getOldValue().getLayer() == layer))
+							);
+			Logger.debug("changesContainLayer to return " + result);
+			return result;
+		}
+
+		private String createDiffMessage(List<DefinitionalElements.DefinitionalElementDiff> diffs) {
+			List<String> messageParts = new ArrayList();
+			for(DefinitionalElements.DefinitionalElementDiff d : diffs){
+								switch(d.getOp()) {
+									case CHANGED :
+										messageParts.add( String.format("definitional element %s changed from '%s' to '%s'",
+												d.getNewValue().getKey(), d.getOldValue().getValue(), d.getNewValue().getValue()));
+										break;
+									case ADD :
+										messageParts.add( String.format("definitional element %s added with value '%s'",
+												d.getNewValue().getKey(), d.getNewValue().getValue()));
+										break;
+									case REMOVED :
+										messageParts.add(String.format("definitional element %s with value '%s' was removed",
+												d.getOldValue().getKey(), d.getOldValue().getValue()));
+										break;
+								}
+							}
+							String message;
+							if(messageParts.size() == 1) {
+								message ="A definitional change has been made: " +
+															messageParts.get(0) +" please reaffirm.  ";
+							} else {
+								message ="Definitional changes have been made: " +
+															String.join("; ", messageParts) +"; please reaffirm.  ";
+							}
+
+			return message;
     }
 }

@@ -32,7 +32,7 @@
                                         <span class="sr-only">Edit Nucleic Acid</span>
                                         <span class="fa fa-pencil fa-2x success"></span></a>
                                 </li>
-                                <li class = "col-md-2"> <a href="@routes.Assets.at("gsrs2/index.html")#/substance/@nuc.getUuid()/names" target="_blank" uib-tooltip="New Form" aria-label="Edit Nucleic Acid">
+                                <li class = "col-md-2"> <a href="@ix.ginas.controllers.routes.GinasApp.index()/beta/substances/@nuc.getUuid()/edit" target="_blank" uib-tooltip="New Form" aria-label="Edit Nucleic Acid">
                                     <span class="sr-only">Edit New Form</span>
                                     <i class="fa fa-pencil-square fa-2x" aria-hidden="true" ></i></a></li>
 
@@ -53,7 +53,7 @@
                         		@for(subunit <- nuc.nucleicAcid.getSubunits()) {
                         			<div>
 		                               	<a href="@ix.ginas.controllers.routes.GinasApp.sequence(subunit.uuid.toString(), "nucleicAcid")" target="_self" uib-tooltip="Sequence Subunit @subunit.subunitIndex Search" aria-label="Structure Subunit @subunit.subunitIndex Search">
-	                                    	<span>Subunit <code>@subunit.subunitIndex</code> (@subunit.sequence.length) Similarity Search</span>
+	                                    	<span>Subunit <code>@subunit.subunitIndex</code> (@{if(subunit.sequence==null) 0 else subunit.sequence.length}) Similarity Search</span>
 	                                	</a>
                                 	</div>
                                 }
@@ -78,7 +78,7 @@
   		         @if(r != null) {
 			        <br>
 			        <em>Subunit @subunit.subunitIndex</em> <code>@subunit.uuid</code>
-		            <pre ng-click="toggle()" class = "struc-thumb img-responsive">
+		            <pre ng-click="toggle()" class = "struc-thumb img-responsive sequence-alignment">
 @{"identity = %.3f".format(r.alignments(0).global)}
 @{"local    = %.3f".format(r.alignments(0).iden)}
 @{"sub      = %.3f".format(r.alignments(0).sub)}

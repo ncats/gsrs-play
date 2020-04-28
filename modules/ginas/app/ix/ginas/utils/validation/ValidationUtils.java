@@ -16,8 +16,11 @@ import ix.core.UserFetcher;
 import ix.core.validator.*;
 import ix.core.chem.StructureProcessor;
 import ix.core.controllers.AdminFactory;
+import ix.core.controllers.search.SearchRequest;
+import ix.core.controllers.search.SearchRequest.Builder;
 import ix.core.models.*;
 import ix.core.plugins.PayloadPlugin;
+import ix.core.search.SearchResult;
 import ix.core.util.CachedSupplier;
 import ix.ginas.controllers.v1.ReferenceFactory;
 import ix.ginas.controllers.v1.SubstanceFactory;
@@ -1764,4 +1767,70 @@ public class ValidationUtils {
 			return resp;
 		}
 	}
+
+	public static List<Substance> findDefinitionaLayer1lDuplicateCandidates(Substance substance){
+		Logger.debug("starting in findDefinitionaLayer1lDuplicateCandidates. ");
+		List<Substance> candidates = new ArrayList<>();
+		try	{
+			String layer1Search = "root_definitional_hash_layer_1:"
+											+ substance.getDefinitionalElements().getDefinitionalHashLayers().get(0);
+			Logger.debug("	layer1Search: " + layer1Search);
+			SearchResult sres = new SearchRequest.Builder()
+							.query(layer1Search)
+							.kind(Substance.class)
+							.fdim(0)
+							.build()
+							.execute();
+			sres.waitForFinish();
+			List<Substance> submatches = (List<Substance>) sres.getMatches();
+			Logger.debug("size of intial match list in findDefinitionaLayer1lDuplicateCandidates: "
+							+ submatches.size());
+
+			//return submatches.stream().filter(s -> !s.getUuid().equals(substance.getUuid())).collect(Collectors.toList());
+			for (int i = 0; i < submatches.size(); i++)	{
+				Substance s = submatches.get(i);
+				if (!s.getUuid().equals(substance.getUuid()))	{
+					candidates.add(s);
+				}
+			}
+		} catch (Exception ex){
+			Logger.error("Error running query", ex);
+		}
+		return candidates;
+	}
+
+	public static List<Substance> findFullDefinitionalDuplicateCandidates(Substance substance){
+		Logger.debug("starting in findFullDefinitionalDuplicateCandidates. def has: "
+						+ substance.getDefinitionalElements().getDefinitionalHashLayers().get(0));
+		List<Substance> candidates = new ArrayList<>();
+		try	{
+			Builder searchBuilder= new SearchRequest.Builder();
+			List<String> hashes= substance.getDefinitionalElements().getDefinitionalHashLayers();
+			for(int layer = 0; layer < hashes.size(); layer++) {
+				Logger.debug("handling layer: " + (layer+1));
+				String searchItem = "root_definitional_hash_layer_" + (layer+1) + ":"
+								+ substance.getDefinitionalElements().getDefinitionalHashLayers().get(layer);
+				searchBuilder = searchBuilder.query(searchItem);
+			}
+			SearchResult sres = searchBuilder
+							.kind(Substance.class)
+							.fdim(0)
+							.build()
+							.execute();
+			sres.waitForFinish();
+			List<Substance> submatches = (List<Substance>) sres.getMatches();
+			Logger.debug("total submatches: " + submatches.size());
+
+			for (int i = 0; i < submatches.size(); i++)	{
+				Substance s = submatches.get(i);
+				if (!s.getUuid().equals(substance.getUuid()))	{
+					candidates.add(s);
+				}
+			}
+		} catch (Exception ex) {
+			Logger.error("Error running query", ex);
+		}
+		return candidates;
+	}
+
 }

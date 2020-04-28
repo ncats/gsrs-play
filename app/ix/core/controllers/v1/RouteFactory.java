@@ -13,9 +13,15 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
-import gov.nih.ncats.molwitch.Chemical;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import ix.core.chem.ChemCleaner;
+import ix.core.chem.PolymerDecode;
+import ix.core.chem.StructureProcessor;
 import ix.core.chem.StructureProcessorTask;
 import ix.core.controllers.search.SearchRequest;
+import ix.ginas.models.v1.Amount;
+import ix.ginas.models.v1.Moiety;
 import org.reflections.Reflections;
 
 import com.avaje.ebean.Expr;
@@ -351,6 +357,67 @@ public class RouteFactory extends Controller {
 
 
 
+        @BodyParser.Of(value = BodyParser.Text.class, maxLength = 1024 * 1024)
+        public static Result interpretStructure(String contextIgnored) {
+            ObjectMapper mapper = EntityFactory.EntityMapper.FULL_ENTITY_MAPPER();
+            ObjectNode node = mapper.createObjectNode();
+            try {
+                String opayload = request().body().asText();
+                String payload = ChemCleaner.getCleanMolfile(opayload);
+                if (payload != null) {
+                    List<Structure> moieties = new ArrayList<Structure>();
+
+                    try {
+                        Structure struc = StructureProcessor.instrument(payload, moieties, false); // don't
+                        // standardize!
+                        // we should be really use the PersistenceQueue to do this
+                        // so that it doesn't block
+
+                        // in fact, it probably shouldn't be saving this at all
+                        if (payload.contains("\n") && payload.contains("M  END")) {
+                            struc.molfile = payload;
+                        }
+
+                        StructureFactory.saveTempStructure(struc);
+
+                        ArrayNode an = mapper.createArrayNode();
+                        for (Structure m : moieties) {
+                            // m.save();
+                            StructureFactory.saveTempStructure(m);
+                            ObjectNode on = mapper.valueToTree(m);
+                            Amount c1 = Moiety.intToAmount(m.count);
+                            JsonNode amt = mapper.valueToTree(c1);
+                            on.set("countAmount", amt);
+                            an.add(on);
+                        }
+                        node.put("structure", mapper.valueToTree(struc));
+                        node.put("moieties", an);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                    try {
+
+                        Collection<PolymerDecode.StructuralUnit> o = PolymerDecode.DecomposePolymerSU(payload, true);
+                        for (PolymerDecode.StructuralUnit su : o) {
+                            Structure struc = StructureProcessor.instrument(su.structure, null, false);
+                            // struc.save();
+                            StructureFactory.saveTempStructure(struc);
+                            su._structure = struc;
+                        }
+                        node.put("structuralUnits", mapper.valueToTree(o));
+                    } catch (Exception e) {
+                        Logger.error("Can't enumerate polymer", e);
+                    }
+                }
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                Logger.error("Can't process payload", ex);
+                return internalServerError("Can't process mol payload");
+            }
+            return ok(node);
+        }
+
+
     @BodyParser.Of(value = BodyParser.Raw.class, maxLength = 500_000)
     public static Result ocrStructure(String contextIgnored){
 
@@ -544,12 +611,16 @@ public class RouteFactory extends Controller {
         	InstantiatedNamedResource nr = _registry.get()
                     .getResource(context);
         	
-        	Object id = nr.resolveID(someid).orElse(null);        	
-            return nr.get(id, expand);
+            return getFlex(nr, someid, expand);
         }catch (Exception ex) {
-            Logger.error("["+context+"]", ex);
+            Logger.trace("["+context+"]", ex);
             return _apiInternalServerError (ex);
         }
+    }
+
+    private static Result getFlex(InstantiatedNamedResource nr, String someid, String expand) {
+        	Object id = nr.resolveID(someid).orElse(null);
+            return nr.get(id, expand);
     }
     
     public static Result fieldFlex (String context, String someid, String field) {
@@ -568,20 +639,61 @@ public class RouteFactory extends Controller {
     
     public static Result get (String context, Long id, String expand) {
         try {
+            InstantiatedNamedResource<Object, Object> resource = _registry.get()
+                    .getResource(context);
+            //GSRS-1138 if a name or code or approval id happens to be all digits then it
+            //gets routed here and we try to fetch it as a database id which will fail.
+            //So instead check to see if the id of this context is an long and
+            //if it's not then use flex look up.
+            if(resource.getIdType().isAssignableFrom(Long.class)) {
+                return resource
+                        .get(id, expand);
+            }else{
+                return getFlex(resource, Long.toString(id),expand);
+            }
+        }catch (Exception ex) {
+            Logger.trace("["+context+"]", ex);
+            return _apiInternalServerError (ex);
+        }
+    }
+    public static Result hierarchyFlex (String context, String someid) {
+        try {
+            InstantiatedNamedResource nr = _registry.get()
+                    .getResource(context);
+
+            Object id = nr.resolveID(someid).orElse(null);
+            if(id ==null){
+                return _apiNotFound(someid);
+            }
+            return nr.hierarchy(id);
+
+        }catch (Exception ex) {
+            Logger.trace("["+context+"]", ex);
+            return _apiInternalServerError (ex);
+        }
+    }
+
+    public static Result hierarchyUUID (String context, String id) {
+        try {
             return _registry.get()
                     .getResource(context)
-                    .get(id,expand);
+                    .hierarchy(EntityFactory.toUUID(id));
         }catch (Exception ex) {
             Logger.error("["+context+"]", ex);
             return _apiInternalServerError (ex);
         }
     }
-
     public static Result doc (String context, Long id) {
         try {
-            return _registry.get()
-                    .getResource(context)
+            InstantiatedNamedResource<Object, Object> resource = _registry.get()
+                    .getResource(context);
+            //GSRS-1138
+            if(resource.getIdType().isAssignableFrom(Long.class)) {
+                return resource
                     .doc(id);
+            }else{
+                return resource.doc(resource.resolveID(Long.toString(id)).orElse(null));
+            }
         }catch (Exception ex) {
             Logger.error("["+context+"]", ex);
             return _apiInternalServerError (ex);
@@ -616,9 +728,15 @@ public class RouteFactory extends Controller {
 
     public static Result edits (String context, Long id) {
         try {
-            return _registry.get()
-                    .getResource(context)
+            InstantiatedNamedResource<Object, Object> resource = _registry.get()
+                    .getResource(context);
+            //GSRS-1138
+            if(resource.getIdType().isAssignableFrom(Long.class)) {
+                return resource
                     .edits(id);
+            }else{
+                return resource.edits(resource.resolveID(Long.toString(id)).orElse(null));
+            }
         }catch (Exception ex) {
             Logger.error("["+context+"]", ex);
             return _apiInternalServerError (ex);
@@ -651,9 +769,15 @@ public class RouteFactory extends Controller {
 
     public static Result field (String context, Long id, String field) {
         try {
-            return _registry.get()
-                    .getResource(context)
+            InstantiatedNamedResource<Object, Object> resource = _registry.get()
+                    .getResource(context);
+            //GSRS-1138
+            if(resource.getIdType().isAssignableFrom(Long.class)) {
+                return resource
                     .field(id, field);
+            }else{
+                return resource.field(resource.resolveID(Long.toString(id)).orElse(null), field);
+            }
         }catch (Exception ex) {
             Logger.error("["+context+"]", ex);
             return _apiInternalServerError (ex);
@@ -861,7 +985,7 @@ public class RouteFactory extends Controller {
      * for each UUID context until one returns a passing (<400) status
      * code, and then forwarding that result.
      * @param uuid
-     * @param expand
+     * @param field
      * @return
      */
     public static Result _fieldUUID (String uuid, String field) {
@@ -904,7 +1028,7 @@ public class RouteFactory extends Controller {
             ObjectMapper om=new ObjectMapper();
             return Java8Util.ok(om.valueToTree(p));
         }
-        return _apiNotFound("No user logged in");
+        return Results.notFound("No user logged in");
     }
 
     public static Result profileResetKey(){
@@ -915,7 +1039,7 @@ public class RouteFactory extends Controller {
             ObjectMapper om=new ObjectMapper();
             return Java8Util.ok(om.valueToTree(p));
         }
-        return _apiNotFound("No user logged in");
+        return Results.notFound("No user logged in");
     }
 
 

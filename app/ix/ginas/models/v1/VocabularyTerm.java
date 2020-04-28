@@ -62,6 +62,8 @@ public class VocabularyTerm extends IxModel{
 	@Column(length=4000)
 	public String description;
 
+	@Column(length=4000)
+	public String regex;
 
 	public String origin;
 	//    public String filter;

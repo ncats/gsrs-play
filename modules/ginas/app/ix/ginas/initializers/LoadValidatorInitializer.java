@@ -1,10 +1,10 @@
 package ix.ginas.initializers;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonValue;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.type.TypeFactory;
 import ix.core.initializers.Initializer;
-import ix.core.util.EntityUtils;
+import ix.core.util.IOUtil;
 import ix.ginas.models.v1.Substance;
 import ix.ginas.utils.validation.ValidatorFactory;
 import ix.ginas.utils.validation.ValidatorPlugin;
@@ -25,12 +25,21 @@ public class LoadValidatorInitializer implements Initializer{
         private static ThreadLocal<ObjectMapper> mapper = new ThreadLocal<ObjectMapper>(){
             @Override
             protected ObjectMapper initialValue() {
-                return new ObjectMapper();
+                ObjectMapper mapper= new ObjectMapper();
+                TypeFactory tf = TypeFactory.defaultInstance()
+                        .withClassLoader(IOUtil.getGinasClassLoader());
+                mapper.setTypeFactory(tf);
+
+                return mapper;
+
             }
         };
         private Class validatorClass;
-
-        private Map<String, Object> validatorJsonProperties;
+        /**
+         * Additional parameters to initialize in your instance returned by
+         * {@link #getValidatorClass()}.
+         */
+        private Map<String, Object> parameters;
         private Class newObjClass;
         private Substance.SubstanceDefinitionType type;
         private METHOD_TYPE methodType;
@@ -50,6 +59,15 @@ public class LoadValidatorInitializer implements Initializer{
             public String jsonValue(){
                 return name();
             }
+        }
+
+        public Map<String, Object> getParameters() {
+            return parameters;
+        }
+
+        public ValidatorConfig setParameters(Map<String, Object> parameters) {
+            this.parameters = parameters;
+            return this;
         }
 
         public Class getValidatorClass() {
@@ -93,11 +111,12 @@ public class LoadValidatorInitializer implements Initializer{
         }
 
         public ValidatorPlugin newValidatorPlugin()  {
-            if(validatorJsonProperties ==null){
+
+            if(parameters ==null){
                 return (ValidatorPlugin) mapper.get().convertValue(Collections.emptyMap(), validatorClass);
 
             }
-            return (ValidatorPlugin) mapper.get().convertValue(validatorJsonProperties, validatorClass);
+            return (ValidatorPlugin) mapper.get().convertValue(parameters, validatorClass);
 
         }
         public  <T> boolean meetsFilterCriteria(T obj, LoadValidatorInitializer.ValidatorConfig.METHOD_TYPE methodType){

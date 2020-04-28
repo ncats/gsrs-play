@@ -7,14 +7,18 @@ import scala.collection.JavaConversions.mapAsScalaMap
 
 
 object ApplicationBuild extends Build {
+  val displayVersion = "2.5.1"
+  val now = new java.util.Date();
   val branch = "git rev-parse --abbrev-ref HEAD".!!.trim
   val commit = "git rev-parse --short HEAD".!!.trim
   val author = s"git show --format=%an -s $commit".!!.trim
   val buildDate = (new java.text.SimpleDateFormat("yyyyMMdd"))
-    .format(new java.util.Date())
-  val appVersion = "%s-%s-%s".format(branch, buildDate, commit)
+    .format(now)
+  val buildTime = (new java.text.SimpleDateFormat("HHmmss"))
+    .format(now)
+  val appVersion = "%s-%s-%s-%s".format(branch, buildDate,buildTime, commit)
 
-  val displayVersion = "version 2.4 beta"
+
   val commonSettings = Seq(
     version := appVersion,    
     scalaVersion := "2.11.7",
@@ -46,7 +50,7 @@ object ApplicationBuild extends Build {
 
 
 
-    "gov.nih.ncats" % "molvec" % "0.9.3",
+    "gov.nih.ncats" % "molvec" % "0.9.5",
     "com.twelvemonkeys.imageio" % "imageio-core" % "3.4.1",
     "com.twelvemonkeys.imageio" % "imageio" % "3.4.1",
     "com.twelvemonkeys.imageio" % "imageio-tiff" % "3.4.1",
@@ -183,9 +187,7 @@ public class BuildInfo {
   ).dependsOn(ncats).aggregate(ncats)
 
 
-
   val ginasTestOptions = "-Dconfig.file=" + Option(System.getProperty("config.file")).getOrElse("application.conf")
-
   val ginas = Project("ginas", file("modules/ginas"))
     .enablePlugins(PlayJava).settings(commonSettings:_*).settings(
       libraryDependencies ++= commonDependencies,
@@ -203,12 +205,13 @@ public class BuildInfo {
     libraryDependencies += "org.apache.poi" % "poi" % "3.17",
     libraryDependencies += "org.apache.poi" % "poi-ooxml" % "3.17",
     libraryDependencies += "org.apache.poi" % "poi-ooxml-schemas" % "3.17",
+
+    libraryDependencies +="pl.joegreen" % "lambda-from-string" % "1.6",
    /* //libraryDependencies += "com.wordnik" %% "swagger-play2" % "1.3.12",
     libraryDependencies += "com.wordnik" %% "swagger-play2" % "1.3.12" exclude("org.reflections", "reflections"),
    // libraryDependencies += "org.reflections" % "reflections" % "0.9.8" notTransitive () ,
     libraryDependencies += "io.swagger" %% "swagger-play2" % "1.5.1",
     libraryDependencies += "org.webjars" % "swagger-ui" % "2.1.8-M1",*/
-
 
 	  javaOptions ++= Seq("-Xmx4096M", "-Xms512M", "-XX:MaxPermSize=2048M"),
       javacOptions in (Compile, compile) ++= javaBuildOptions,

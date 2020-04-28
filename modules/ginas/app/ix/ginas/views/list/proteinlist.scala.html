@@ -35,7 +35,7 @@
                                         <i class="fa fa-pencil fa-2x success"></i></a>
                                 </li>
 
-                                <li class = "col-md-2"> <a href="@routes.Assets.at("gsrs2/index.html")#/substance/@prot.getUuid()/names" target="_blank" uib-tooltip="New Form" aria-label="Edit Protein Substance">
+                                <li class = "col-md-2"> <a href="@ix.ginas.controllers.routes.GinasApp.index()/beta/substances/@prot.getUuid()/edit" target="_blank" uib-tooltip="New Form" aria-label="Edit Protein Substance">
                                     <span class="sr-only">Edit New Form</span>
                                     <i class="fa fa-pencil-square fa-2x" aria-hidden="true" ></i></a></li>
 
@@ -81,7 +81,7 @@
   		         @if(r != null) {
 			        <br>
 			        <em>Subunit @subunit.subunitIndex</em> <code>@subunit.uuid</code>
-		            <pre ng-click="toggle()" class = "struc-thumb img-responsive">
+		            <pre ng-click="toggle()" class = "struc-thumb img-responsive sequence-alignment">
 @{"identity = %.3f".format(r.alignments(0).global)}
 @{"local    = %.3f".format(r.alignments(0).iden)}
 @{"sub      = %.3f".format(r.alignments(0).sub)}

@@ -7,6 +7,7 @@ GET        /webjars/*file        controllers.WebJarAssets.at(file)
 GET        /webjars/*file        controllers.WebJarAssets.at(file)
 
 OPTIONS	   /api*path             ix.core.controllers.cors.ApiHTTPHelper.checkPreFlight(path)
+OPTIONS       /*path             ix.core.controllers.cors.ApiHTTPHelper.checkPreFlight(path)
 
 ->         /api                  ix.core.api.Routes
 ->         /admin                ix.core.admin.Routes

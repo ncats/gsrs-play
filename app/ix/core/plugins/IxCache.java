@@ -213,14 +213,8 @@ public class IxCache extends Plugin {
 
 	@SuppressWarnings("unchecked")
 	public static <T> T getOrElseTemp(String key, TypedCallable<T> generator) throws Exception{
-		Object o=getTemp(key);
-		if(o==null){
-			o=generator.call();
-			if(o!=null){
-				setTemp(key,o);
-			}
-		}
-		return (T)o;
+		checkInitialized();
+        return _instance.gateKeeper.getOrElseRaw(key, _instance.lastNotifiedChange.get(), generator,0);
 	}
 	
 	public static Object getOrFetchTempRecord(Key k) throws Exception {

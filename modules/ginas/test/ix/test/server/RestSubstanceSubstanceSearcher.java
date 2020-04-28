@@ -396,10 +396,8 @@ public class RestSubstanceSubstanceSearcher implements SubstanceSearcher{
                 .post(post)
                 .get(3000);
 
-        System.out.println(resp.getBody());
-        String uriString = resp.getUri().toString();
-        System.out.println(uriString);
-        String uuid= uriString.split("[?]q=")[1].split("&")[0];
+//        System.out.println(resp.getBody());
+        String uuid=resp.getUri().toString().split("[?]q=")[1].split("&")[0];
         return uuid;
     }
     @Override

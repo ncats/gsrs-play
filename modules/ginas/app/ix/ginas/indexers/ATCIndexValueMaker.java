@@ -27,16 +27,16 @@ public class ATCIndexValueMaker implements IndexValueMaker<Substance> {
 				}
 	            String[] parts = act.split("\\|");
 	            if(parts.length>0){
-	            	consumer.accept(IndexableValue.simpleFacetStringValue("ATC Level 1", parts[1]).suggestable());
+	            	consumer.accept(IndexableValue.simpleFacetStringValue("ATC Level 1", parts[1].trim()).suggestable());
 	            }
 	            if(parts.length>1){
-	            	consumer.accept(IndexableValue.simpleFacetStringValue("ATC Level 2", parts[2]).suggestable());
+	            	consumer.accept(IndexableValue.simpleFacetStringValue("ATC Level 2", parts[2].trim()).suggestable());
 	            }
 	            if(parts.length>2){
-	            	consumer.accept(IndexableValue.simpleFacetStringValue("ATC Level 3", parts[3]).suggestable());
+	            	consumer.accept(IndexableValue.simpleFacetStringValue("ATC Level 3", parts[3].trim()).suggestable());
 	            }
 	            if(parts.length>3){
-	            	consumer.accept(IndexableValue.simpleFacetStringValue("ATC Level 4", parts[4]).suggestable());
+	            	consumer.accept(IndexableValue.simpleFacetStringValue("ATC Level 4", parts[4].trim()).suggestable());
 	            }
 	        }
         }catch(Exception e){

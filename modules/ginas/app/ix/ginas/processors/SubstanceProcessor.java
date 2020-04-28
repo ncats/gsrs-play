@@ -95,9 +95,10 @@ public class SubstanceProcessor implements EntityProcessor<Substance>{
     private void savingSubstance(final Substance s, boolean newInsert) {
 
 
+
         Logger.debug("Persisting substance:" + s);
         if (s.isAlternativeDefinition()) {
-//            System.out.println("IN ALTERNATE DEF");
+
             Logger.debug("It's alternative");
             //If it's alternative, find the primary substance (there should only be 1, but this returns a list anyway)
             List<Substance> realPrimarysubs=SubstanceFactory.getSubstanceWithAlternativeDefinition(s);
@@ -109,7 +110,6 @@ public class SubstanceProcessor implements EntityProcessor<Substance>{
 
 
             SubstanceReference sr = s.getPrimaryDefinitionReference();
-//            System.out.println("primary ref = " + sr);
             if (sr != null) {
 
                 Logger.debug("Enforcing bidirectional relationship");
@@ -124,7 +124,6 @@ public class SubstanceProcessor implements EntityProcessor<Substance>{
                     EntityPersistAdapter.performChangeOn(oldPri, obj->{
                         List<Relationship> related=oldPri.removeAlternativeSubstanceDefinitionRelationship(s);
                         for(Relationship r:related){
-                            System.out.println("deleting alternative relationship " + r);
                             r.delete();
                         }
                         oldPri.forceUpdate();
@@ -141,9 +140,9 @@ public class SubstanceProcessor implements EntityProcessor<Substance>{
                 }catch(Exception e){
                     e.printStackTrace();
                 }
+
                 if (subPrimary != null) {
                     Logger.debug("Got parent sub, which is:" + subPrimary.getName());
-
                     if (subPrimary.definitionType == SubstanceDefinitionType.PRIMARY) {
 
                         Logger.debug("Going to save");
@@ -158,9 +157,6 @@ public class SubstanceProcessor implements EntityProcessor<Substance>{
                         });
 
                     }
-                }else{
-                    Logger.debug("Got null parent sub");
-
                 }
 
             }else{

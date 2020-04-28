@@ -21,12 +21,16 @@ import ix.core.models.Role;
 import ix.core.util.EntityUtils;
 import ix.seqaln.SequenceIndexer.CutoffType;
 import ix.utils.Global;
+import ix.utils.UUIDUtil;
+import org.apache.commons.lang3.StringUtils;
 import play.mvc.Result;
 
 
 @Experimental
 public interface InstantiatedNamedResource<I,V> {
     
+
+
     public static enum Operations{
         CREATE_OPERATION(new Operation("create")),
         VALIDATE_OPERATION(new Operation("validate")),
@@ -85,7 +89,13 @@ public interface InstantiatedNamedResource<I,V> {
                 Argument.of(0, int.class, "skip"),
                 Argument.of(0, int.class, "fdim"),
                 Argument.of("", String.class, "field"),
-                Argument.of("", String.class, "seqType")));
+                Argument.of("", String.class, "seqType"))),
+
+
+		HIERARCHY_OPERATION(new Operation("hierarchy",
+				Argument.of(null, Id.class, "id")))
+
+		;
         
         private final Operation op;
         public Operation op(){
@@ -166,7 +176,10 @@ public interface InstantiatedNamedResource<I,V> {
 	default Result doc(I id){
 		return operate(Operations.DOC_OPERATION.with(id));
 	}
-	
+	default Result hierarchy(V id){
+		return operate(Operations.HIERARCHY_OPERATION.with(id));
+	}
+
 	default Result edits(I id){
 		return operate(Operations.EDITS_OPERATION.with(id));
 	}
@@ -221,9 +234,9 @@ public interface InstantiatedNamedResource<I,V> {
 	
 		
 	default Optional<I> resolveID(String synonym){
-		if(Long.class.equals(this.getIdType())){
+		if(Long.class.equals(this.getIdType()) && StringUtils.isNumeric(synonym)){
 			return (Optional<I>) Optional.of(Long.parseLong(synonym));
-		}else if(UUID.class.equals(this.getIdType())){
+		}else if(UUID.class.equals(this.getIdType()) && UUIDUtil.isUUID(synonym)){
 			return (Optional<I>) Optional.of(UUID.fromString(synonym));
 		}
 		return Optional.empty();

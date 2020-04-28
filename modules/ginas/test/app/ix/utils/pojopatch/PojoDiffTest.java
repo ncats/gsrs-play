@@ -50,7 +50,7 @@ public class PojoDiffTest{
 
     
     private List<UUID> uuids = new ArrayList<>();
-    ObjectMapper mapper = EntityFactory.EntityMapper.INTERNAL_ENTITY_MAPPER();
+    ObjectMapper mapper = EntityFactory.EntityMapper.JSON_DIFF_ENTITY_MAPPER();
     
     
     

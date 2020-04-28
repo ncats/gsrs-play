@@ -291,7 +291,14 @@ public class PolymerDecode {
 							newca = newOldMap.get(oAtom);
 							if (newca != null) {
 								if (!sub.getBond(newca, nAtom1).isPresent()) {
-									Bond newBond = sub.addBond(nAtom1, newca, cb.getBondType());
+									//GSRS-1132 : make sure the order of atom1 and atom2 in the bond
+									//match the stereo since the direction of the stereo matters on order of atom1 and 2.
+									Bond newBond;
+									if(ca.equals(cb.getAtom1())) {
+										newBond = sub.addBond(nAtom1, newca, cb.getBondType());
+									}else{
+										newBond = sub.addBond(newca, nAtom1, cb.getBondType());
+									}
 									newBond.setStereo(cb.getStereo());
 								}
 							}
@@ -301,7 +308,12 @@ public class PolymerDecode {
 				sub.setProperty("amap", amapSet.toString());
 				sub.setProperty("component", "SRU-BLOCK");
 				sub.setProperty("attach", (attachType- satt)+"");
+				if(sg.getType() == SGroup.SGroupType.SRU){
+
+					sg.getSruLabel().ifPresent(s -> sub.setProperty("subScript", s));
+				}else {
 				sg.getSubscript().ifPresent(s->sub.setProperty("subScript", s));
+				}
 
 				sg.getSuperscript().ifPresent(s->sub.setProperty("superScript", s));
 				SGroup.PolymerSubType subType = sg.getPolymerSubType();

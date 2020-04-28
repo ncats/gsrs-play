@@ -127,7 +127,9 @@ public class StaticDelegatingNamedResource<I,V> implements InstantiatedNamedReso
 		try{
 			if(resolver!=null){
 				Optional<I> id1=resolver.apply(synonym);
-				if(id1.isPresent())return id1;
+				if(id1.isPresent()){
+					return id1;
+				}
 			}
 		}catch(Exception e){
 			 Logger.info("Error resolving ID for :" + this.getName());

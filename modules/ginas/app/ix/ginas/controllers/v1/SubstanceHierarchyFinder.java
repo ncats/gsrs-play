@@ -1,12 +1,6 @@
 package ix.ginas.controllers.v1;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -17,11 +11,14 @@ import java.util.stream.Stream;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import ix.core.plugins.IxCache;
 import ix.core.util.CachedSupplier;
 import ix.core.util.EntityUtils;
 import ix.core.util.EntityUtils.EntityWrapper;
 import ix.core.util.StreamUtil;
+import ix.ginas.initializers.HierarchyFinderInitializer;
 import ix.ginas.models.utils.RelationshipUtil;
 import ix.ginas.models.v1.Relationship;
 import ix.ginas.models.v1.SpecifiedSubstanceGroup1Substance;
@@ -60,6 +57,7 @@ public class SubstanceHierarchyFinder {
 	
 	
 	private CachedSupplier<List<HierarchyFinder>> hfinders=CachedSupplier.of(()->{
+		/*
 		List<HierarchyFinder> finders= new ArrayList<>();
 		finders.add(new NonInvertibleRelationshipHierarchyFinder(Relationship.ACTIVE_MOIETY_RELATIONSHIP_TYPE).renameChildType((p,c)->"HAS ACTIVE MOIETY:\"" + p.getName() + "\""));
 		finders.add(new InvertibleRelationshipHierarchyFinder("SALT/SOLVATE->PARENT").renameChildType("IS SALT/SOLVATE OF"));
@@ -70,6 +68,9 @@ public class SubstanceHierarchyFinder {
 		//StructurallyDiverseParentFinder
 		//finders.add(new InvertibleRelationshipHierarchyFinder("SUB_CONCEPT->SUBSTANCE"));
 		return finders;		
+
+		 */
+		return HierarchyFinderInitializer.getInstance().getFinders();
 	});
 	
 	private List<Tuple<String,Substance>> getRelated(Substance s, Stream<HierarchyFinder> finders, String type){
@@ -575,6 +576,34 @@ public class SubstanceHierarchyFinder {
 		return new Html("<pre>" + tn.map(s->s.asSubstanceReference()).stringHierarchy(t->t.value.getName() + "[" + t.type + "]") + "</pre>");
 	}
 	
+	public static List<TreeNode2> makeJsonTreeForAPI(Substance sub) {
+
+		List<TreeNode<Substance>> tnlist = (new SubstanceHierarchyFinder())
+				.getHierarchies(sub);
+
+
+		TreeNode2Builder builder = new TreeNode2Builder();
+		for (TreeNode<Substance> n : tnlist) {
+			n.traverseDepthFirst(l -> {
+				TreeNode<Substance> fin = l.get(l.size() - 1);
+				String text = ("[" + fin.value.getApprovalIDDisplay() + "] "
+						+ fin.value.getName()
+						+ (fin.type.equals(ROOT_TYPE) ? "" : " {" + fin.type + "}")).toUpperCase();
+
+				builder.addNode(text, fin.type, l.size() - 1, fin.value.asSubstanceReference());
+//				System.out.println(text + "\n  " + namer.apply(fin) + "  depth = " + l.size() );
+				return true;
+			});
+		}
+		List<TreeNode2> nodes = builder.build();
+//		try {
+//			System.out.println(new ObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(nodes));
+//		} catch (JsonProcessingException e) {
+//			e.printStackTrace();
+//		}
+
+		return nodes;
+	}
 	public static List<JsNodeTree> makeJsonTree(Substance sub){
 
 		List<TreeNode<Substance>> tnlist = (new SubstanceHierarchyFinder())
@@ -588,7 +617,8 @@ public class SubstanceHierarchyFinder {
 
 		AtomicInteger ai = new AtomicInteger(0);
 
-		return 
+
+		return
 				tnlist.stream()
 				.flatMap(tn->tn.streamPaths()
 						.map(l->{
@@ -607,7 +637,7 @@ public class SubstanceHierarchyFinder {
 							if(l.size()==1){
 								path="#";
 							}
-							
+
 							String showID="NO UNII";
 							
 
@@ -626,9 +656,158 @@ public class SubstanceHierarchyFinder {
 
 						}))
 				.collect(Collectors.toList());
+
 	}
 	
 	public static String makeRawJsonTree(Substance s){
 		return EntityWrapper.of(makeJsonTree(s)).toFullJson();
 	}
+
+	public static class TreeNode2{
+		String text;
+		String type;
+		SubstanceReference value;
+		int depth;
+		boolean expandable;
+
+		String id;
+		String path;
+		String parent;
+
+		public String getParent() {
+			return parent;
+		}
+
+		public void setParent(String parent) {
+			this.parent = parent;
+		}
+
+		public String getId() {
+			return id;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public String getPath() {
+			return path;
+		}
+
+		public void setPath(String path) {
+			this.path = path;
+		}
+
+		public String getText() {
+			return text;
+		}
+
+		public void setText(String text) {
+			this.text = text;
+		}
+
+		public String getType() {
+			return type;
+		}
+
+		public void setType(String type) {
+			this.type = type;
+		}
+
+		public SubstanceReference getValue() {
+			return value;
+		}
+
+		public void setValue(SubstanceReference value) {
+			this.value = value;
+		}
+
+		public int getDepth() {
+			return depth;
+		}
+
+		public void setDepth(int depth) {
+			this.depth = depth;
+		}
+
+		public boolean isExpandable() {
+			return expandable;
+		}
+
+		public void setExpandable(boolean expandable) {
+			this.expandable = expandable;
+		}
+	}
+
+	public static class TreeNode2Builder{
+		LinkedList<TreeNode2> nodes = new LinkedList<>();
+		AtomicInteger counter= new AtomicInteger();
+		Deque<TreeNode2> nestedNodes = new ArrayDeque<>();
+		TreeNode2 root= null;
+		public TreeNode2Builder addNode(String text,
+				String type,
+				int depth,
+				SubstanceReference value){
+			TreeNode2 node = new TreeNode2();
+			node.setText(text);
+			node.setType(type);
+			node.setValue(value);
+			node.setDepth(depth);
+			node.setId(Integer.toString(counter.getAndAdd(1)));
+			TreeNode2 last = nodes.peekLast();
+
+			if(last ==null){
+				node.setParent("#");
+				nestedNodes.add(node);
+				root = node;
+			}else {
+				int lastDepth = last.getDepth();
+				if(lastDepth == depth){
+					//sibling same parent
+					node.setParent(last.getParent());
+				}else{
+					//different depth as last
+					if(!nestedNodes.contains(last)) {
+						nestedNodes.push(last);
+					}
+					if (lastDepth < depth) {
+						//depth increasing
+						last.setExpandable(true);
+						//last is the parent
+						node.setParent(last.getId());
+						nestedNodes.push(node);
+
+					}else {
+						//depth decreasing
+						int numberOfLevelsToPop = depth - lastDepth;
+
+						TreeNode2 sameDepth = null;
+						while (!nestedNodes.isEmpty() && sameDepth == null) {
+							TreeNode2 popped = nestedNodes.pop();
+							if (popped.getDepth() == depth) {
+								sameDepth = popped;
+
+							}
+						}
+						if(sameDepth ==null) {
+							//this probably can't happen but just in case
+							sameDepth = root;
+						}
+						node.setParent(sameDepth.getParent());
+					}
+
+					}
+				}
+
+
+			nodes.add(node);
+
+			return this;
+		}
+
+		public List<TreeNode2> build(){
+			return new ArrayList<>(nodes);
+		}
+	}
+
 }

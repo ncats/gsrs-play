@@ -9,7 +9,8 @@ public class NucleicAcidUtils {
 	public static int getBaseCount(NucleicAcidSubstance nas){
 		int l=0;
 		for(Subunit su:nas.nucleicAcid.getSubunits()){
-			l+=su.sequence.length();
+			String sequence = su.sequence;
+			l+= sequence==null? 0 :sequence.length();
 		}
 		return l;
 	}

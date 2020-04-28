@@ -1,4 +1,6 @@
 {
+  "apiBaseUrl" : "/ginas/app/",
+  "version": "2.5.1",
   "substanceDetailsCards": [{
       "card": "substance-overview",
       "title": "overview"
@@ -97,8 +99,8 @@
           "value": "protein"
         },
         {
-          "filterName": "exists",
-          "propertyToCheck": "protein.glycosylation.glycosylationType"
+          "filterName": "anyExists",
+          "propertyToCheck": "protein.glycosylation.glycosylationType|protein.glycosylation.CGlycosylationSites|protein.glycosylation.NGlycosylationSites|protein.glycosylation.OGlycosylationSites"
         }
       ]
     },
@@ -188,15 +190,29 @@
     },
     {
       "card": "substance-relationships",
+      "type": "SUB_CONCEPT->SUBSTANCE",
+      "title": "variant concepts",
+      "filters": [{
+        "filterName": "exists",
+        "propertyToCheck": "relationships"
+      },
+        {
+          "filterName": "substanceRelationships",
+          "value": "SUB_CONCEPT->SUBSTANCE"
+        }
+      ]
+    },
+    {
+      "card": "substance-relationships",
       "type": "RELATIONSHIPS",
       "title": "relationships",
       "filters": [{
-          "filterName": "exists",
-          "propertyToCheck": "relationships"
-        },
+        "filterName": "exists",
+        "propertyToCheck": "relationships"
+      },
         {
           "filterName": "substanceRelationships",
-          "value": ["METABOLITE", "IMPURITY", "ACTIVE MOIETY", "CONSTITUENT"]
+          "value": ["METABOLITE", "IMPURITY", "ACTIVE MOIETY", "CONSTITUENT", "SUB_CONCEPT->SUBSTANCE"]
         }
       ]
     },
@@ -267,6 +283,20 @@
       ]
     },
     {
+      "card": "substance-structural-units",
+      "title": "Structural Units",
+      "filters": [{
+        "filterName": "equals",
+        "propertyToCheck": "substanceClass",
+        "value": "polymer"
+      },
+        {
+          "filterName": "exists",
+          "propertyToCheck": "polymer.structuralUnits"
+        }
+      ]
+    },
+    {
       "card": "substance-mixture-components",
       "title": "mixture components",
       "filters": [{
@@ -277,6 +307,20 @@
         {
           "filterName": "exists",
           "propertyToCheck": "mixture.components"
+        }
+      ]
+    },
+    {
+      "card": "substance-constituents",
+      "title": "specified substance constituents",
+      "filters": [{
+        "filterName": "equals",
+        "propertyToCheck": "substanceClass",
+        "value": "specifiedSubstanceG1"
+      },
+        {
+          "filterName": "exists",
+          "propertyToCheck": "specifiedSubstance.constituents"
         }
       ]
     },
@@ -298,8 +342,8 @@
       "card": "substance-modifications",
       "title": "substance modifications",
       "filters": [{
-        "filterName": "exists",
-        "propertyToCheck": "modifications.structuralModifications"
+        "filterName": "anyExists",
+        "propertyToCheck": "modifications.structuralModifications|modifications.physicalModifications|modifications.agentModifications"
       }]
     },
     {
@@ -383,5 +427,12 @@
       "Family",
       "Parts"
     ]
-  }
+  },
+  "codeSystemOrder": [
+    "BDNUM",
+    "CAS",
+    "WHO-ATC",
+    "EVMPD",
+    "NCI"
+  ]
 }

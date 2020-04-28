@@ -15,7 +15,7 @@ public class BracketTermIndexValueMaker implements IndexValueMaker<Substance> {
     @Override
     public void createIndexableValues(Substance substance, Consumer<IndexableValue> consumer) {
         
-        Pattern p = Pattern.compile("(?:[ \\]])\\[([-A-Za-z0-9]+)\\]");
+        Pattern p = Pattern.compile("(?:[ \\]])\\[([ \\-A-Za-z0-9]+)\\]");
         if (substance.names != null) {
             substance.names.stream()
                     .filter(a -> a.getName().trim().endsWith("]"))
@@ -24,7 +24,6 @@ public class BracketTermIndexValueMaker implements IndexValueMaker<Substance> {
                         Matcher m = p.matcher(n.getName());
                         while (m.find()) {
                             String loc = m.group(1);
-        
                             consumer.accept(IndexableValue.simpleFacetStringValue("GInAS Tag",loc));
         
                         }

@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import gov.nih.ncats.molwitch.Chemical;
-import ix.core.util.RunOnly;
 import org.junit.Test;
 
 import ix.AbstractGinasServerTest;

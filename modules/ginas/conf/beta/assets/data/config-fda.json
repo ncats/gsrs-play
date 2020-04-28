@@ -1,7 +1,15 @@
 {
+  "version": "2.5.1",
+  "contactEmail": "GSRSSupport@fda.hhs.gov",
   "substanceDetailsCards": [{
       "card": "substance-overview",
       "title": "overview"
+    },
+    {
+      "card": "fda-substance-product",
+      "title": "Products, Applications, Clinical Trials, Adverse Events",
+      "filters": [{
+      }]
     },
     {
       "card": "substance-primary-definition",
@@ -75,6 +83,20 @@
       ]
     },
     {
+      "card": "substance-subunits",
+      "title": "subunits",
+      "filters": [{
+        "filterName": "equals",
+        "propertyToCheck": "substanceClass",
+        "value": "nucleicAcid"
+      },
+        {
+          "filterName": "exists",
+          "propertyToCheck": "nucleicAcid.subunits"
+        }
+      ]
+    },
+    {
       "card": "substance-glycosylation",
       "title": "glycosylation",
       "filters": [{
@@ -83,8 +105,8 @@
           "value": "protein"
         },
         {
-          "filterName": "exists",
-          "propertyToCheck": "protein.glycosylation.glycosylationType"
+          "filterName": "anyExists",
+          "propertyToCheck": "protein.glycosylation.glycosylationType|protein.glycosylation.CGlycosylationSites|protein.glycosylation.NGlycosylationSites|protein.glycosylation.OGlycosylationSites"
         }
       ]
     },
@@ -174,6 +196,20 @@
     },
     {
       "card": "substance-relationships",
+      "type": "SUB_CONCEPT->SUBSTANCE",
+      "title": "variant concepts",
+      "filters": [{
+        "filterName": "exists",
+        "propertyToCheck": "relationships"
+      },
+        {
+          "filterName": "substanceRelationships",
+          "value": "SUB_CONCEPT->SUBSTANCE"
+        }
+      ]
+    },
+    {
+      "card": "substance-relationships",
       "type": "RELATIONSHIPS",
       "title": "relationships",
       "filters": [{
@@ -182,7 +218,7 @@
         },
         {
           "filterName": "substanceRelationships",
-          "value": ["METABOLITE", "IMPURITY", "ACTIVE MOIETY", "CONSTITUENT"]
+          "value": ["METABOLITE", "IMPURITY", "ACTIVE MOIETY", "CONSTITUENT", "SUB_CONCEPT->SUBSTANCE"]
         }
       ]
     },
@@ -253,6 +289,20 @@
       ]
     },
     {
+      "card": "substance-structural-units",
+      "title": "Structural Units",
+      "filters": [{
+        "filterName": "equals",
+        "propertyToCheck": "substanceClass",
+        "value": "polymer"
+      },
+        {
+          "filterName": "exists",
+          "propertyToCheck": "polymer.structuralUnits"
+        }
+      ]
+    },
+    {
       "card": "substance-mixture-components",
       "title": "mixture components",
       "filters": [{
@@ -263,6 +313,20 @@
         {
           "filterName": "exists",
           "propertyToCheck": "mixture.components"
+        }
+      ]
+    },
+    {
+      "card": "substance-constituents",
+      "title": "specified substance constituents",
+      "filters": [{
+        "filterName": "equals",
+        "propertyToCheck": "substanceClass",
+        "value": "specifiedSubstanceG1"
+      },
+        {
+          "filterName": "exists",
+          "propertyToCheck": "specifiedSubstance.constituents"
         }
       ]
     },
@@ -284,8 +348,8 @@
       "card": "substance-modifications",
       "title": "substance modifications",
       "filters": [{
-        "filterName": "exists",
-        "propertyToCheck": "modifications.structuralModifications"
+        "filterName": "anyExists",
+        "propertyToCheck": "modifications.structuralModifications|modifications.physicalModifications|modifications.agentModifications"
       }]
     },
     {
@@ -362,11 +426,30 @@
       "Product Name Type",
       "Product Dosage Form"
     ],
+    "ctclinicaltrial": [
+      "Has Substances",
+      "CT Matching Complete",
+      "Last Updated Year",
+      "Primary Completion Year",
+      "First Posted Year",
+      "Study Types",
+      "Gender",
+      "Age Groups",
+      "Intervention Type",
+      "Study Results"
+    ],
     "admin": [
       "root_lastEditedBy",
       "Material Type",
       "Family",
       "Parts"
     ]
-  }
+  },
+  "codeSystemOrder": [
+    "BDNUM",
+    "CAS",
+    "WHO-ATC",
+    "EVMPD",
+    "NCI"
+  ]
 }

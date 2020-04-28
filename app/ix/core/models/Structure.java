@@ -215,13 +215,13 @@ public class Structure extends BaseModel implements ForceUpdatableModel{
     public Double mwt; // molecular weight
 
     @ManyToMany(cascade = CascadeType.ALL)
-    @JsonView(BeanViews.Internal.class)
+    @JsonView(BeanViews.JsonDiff.class)
     @JoinTable(name = "ix_core_structure_property")
     @JsonDeserialize(contentUsing=AbstractValueDeserializer.class)
     public List<Value> properties = new ArrayList<Value>();
 
     @ManyToMany(cascade = CascadeType.ALL)
-    @JsonView(BeanViews.Internal.class)
+    @JsonView(BeanViews.JsonDiff.class)
     @JoinTable(name = "ix_core_structure_link")
     public List<XRef> links = new ArrayList<XRef>();
 
@@ -290,15 +290,15 @@ public class Structure extends BaseModel implements ForceUpdatableModel{
     	return this.id;
     }
     
-    @JsonProperty(value="uuid")
-    public String getUUID(){
-    	return getId();
-    }
-    
-    @JsonProperty(value="uuid")
-    public void setUUID(UUID id){
-    	this.setId(id);
-    }
+//    @JsonProperty(value="uuid")
+//    public String getUUID(){
+//    	return getId();
+//    }
+//
+//    @JsonProperty(value="uuid")
+//    public void setUUID(UUID id){
+//    	this.setId(id);
+//    }
 
     @JsonProperty(value="hash")
     public String getExactHash(){
@@ -457,7 +457,7 @@ public class Structure extends BaseModel implements ForceUpdatableModel{
         	messages.add(GinasProcessingMessage
                     .WARNING_MESSAGE("Structure format modified due to standardization"));
         	try {
-                c = Chemical.parse(ChemCleaner.removeSGroups(mfile));
+                c = Chemical.parseMol(ChemCleaner.removeSGroups(mfile));
 
         	c.setProperty("WARNING", "Structure format modified due to standardization: removed SGROUPs");
             }catch(Exception e){

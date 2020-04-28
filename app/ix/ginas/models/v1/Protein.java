@@ -119,9 +119,15 @@ public class Protein extends GinasCommonSubData {
 				if (glyc.glycosylationType != null) {
 					n.put("type", glyc.glycosylationType);
 				}
-				n.put("nsites", glyc._NGlycosylationSiteContainer.siteCount);
-				n.put("osites", glyc._OGlycosylationSiteContainer.siteCount);
-				n.put("csites", glyc._CGlycosylationSiteContainer.siteCount);
+				if(glyc._NGlycosylationSiteContainer !=null) {
+					n.put("nsites", glyc._NGlycosylationSiteContainer.siteCount);
+				}
+				if(glyc._OGlycosylationSiteContainer !=null) {
+					n.put("osites", glyc._OGlycosylationSiteContainer.siteCount);
+				}
+				if(glyc._CGlycosylationSiteContainer !=null) {
+					n.put("csites", glyc._CGlycosylationSiteContainer.siteCount);
+				}
 				n.put("href", Global.getRef(getProteinSubstance().getClass(), getProteinSubstance().getUuid())
 						+ "/protein/glycosylation");
 				node = n;
