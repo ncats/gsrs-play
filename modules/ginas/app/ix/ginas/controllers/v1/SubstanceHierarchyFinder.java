@@ -637,7 +637,7 @@ public class SubstanceHierarchyFinder {
 							if(l.size()==1){
 								path="#";
 							}
-							
+
 							String showID="NO UNII";
 							
 
@@ -742,6 +742,8 @@ public class SubstanceHierarchyFinder {
 	public static class TreeNode2Builder{
 		LinkedList<TreeNode2> nodes = new LinkedList<>();
 		AtomicInteger counter= new AtomicInteger();
+		Deque<TreeNode2> nestedNodes = new ArrayDeque<>();
+		TreeNode2 root= null;
 		public TreeNode2Builder addNode(String text,
 				String type,
 				int depth,
@@ -753,19 +755,51 @@ public class SubstanceHierarchyFinder {
 			node.setDepth(depth);
 			node.setId(Integer.toString(counter.getAndAdd(1)));
 			TreeNode2 last = nodes.peekLast();
+
 			if(last ==null){
 				node.setParent("#");
+				nestedNodes.add(node);
+				root = node;
 			}else {
 				int lastDepth = last.getDepth();
-				if (lastDepth < depth) {
-					last.setExpandable(true);
-					//last is the parent
-					node.setParent(last.getId());
-				}else{
+				if(lastDepth == depth){
 					//sibling same parent
 					node.setParent(last.getParent());
+				}else{
+					//different depth as last
+					if(!nestedNodes.contains(last)) {
+						nestedNodes.push(last);
+					}
+					if (lastDepth < depth) {
+						//depth increasing
+						last.setExpandable(true);
+						//last is the parent
+						node.setParent(last.getId());
+						nestedNodes.push(node);
+
+					}else {
+						//depth decreasing
+						int numberOfLevelsToPop = depth - lastDepth;
+
+						TreeNode2 sameDepth = null;
+						while (!nestedNodes.isEmpty() && sameDepth == null) {
+							TreeNode2 popped = nestedNodes.pop();
+							if (popped.getDepth() == depth) {
+								sameDepth = popped;
+
+							}
+						}
+						if(sameDepth ==null) {
+							//this probably can't happen but just in case
+							sameDepth = root;
+						}
+						node.setParent(sameDepth.getParent());
+					}
+
+					}
 				}
-			}
+
+
 			nodes.add(node);
 
 			return this;
