@@ -1,5 +1,5 @@
 {
-  "apiBaseUrl" : "/ginas/app/",
+  "apiBaseUrl" : "/gsrs/app/",
   "version": "2.5.1",
   "substanceDetailsCards": [{
       "card": "substance-overview",
