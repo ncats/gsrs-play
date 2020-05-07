@@ -271,7 +271,7 @@ function mergeConcept() {
 
     var updateRecord = function updateRecord(nsub, cb) {
         $.ajax({
-            url: '/ginas/app/api/v1/substances',
+            url: '/gsrs/app/api/v1/substances',
             contentType: "application/json",
             type: 'PUT',
             data: JSON.stringify(nsub),
@@ -779,7 +779,7 @@ function addFragment() {
 
     function addTerm(domain, term) {
         $.ajax({
-            url: '/ginas/app/api/v1/vocabularies/search?q=root_domain:"^' + domain + '$"',
+            url: '/gsrs/app/api/v1/vocabularies/search?q=root_domain:"^' + domain + '$"',
             success: function success(data) {
                 var cvt = data.content[0].id;
                 addTermToCVID(cvt, term);
@@ -789,12 +789,12 @@ function addFragment() {
 
     function addTermToCVID(id, term) {
         $.ajax({
-            url: '/ginas/app/api/v1/vocabularies(' + id + ')',
+            url: '/gsrs/app/api/v1/vocabularies(' + id + ')',
             success: function success(data) {
                 var cv = data;
                 cv.terms.push(term);
                 $.ajax({
-                    url: '/ginas/app/api/v1/vocabularies',
+                    url: '/gsrs/app/api/v1/vocabularies',
                     contentType: "application/json",
                     type: 'PUT',
                     data: JSON.stringify(cv),
@@ -900,7 +900,7 @@ function addFragment() {
     }
 
     $.ajax({
-        url: '/ginas/app/api/v1/vocabularies/search?facet=ix.Class/ix.ginas.models.v1.FragmentControlledVocabulary',
+        url: '/gsrs/app/api/v1/vocabularies/search?facet=ix.Class/ix.ginas.models.v1.FragmentControlledVocabulary',
         success: function success(data) {
             var dat = {};
 
@@ -944,7 +944,7 @@ function addFragment() {
                 $(".smilesForm-overlay .cont").append("Select which connectivity form you want to add:<br><br>" + _.chain(smilesforms).map(function (t) {
                     return [t, t.replace(/%/g, "%25").replace(/#/g, "%23").replace(/[;]/g, "%3B").replace(/[+]/g, "%2B")];
                 }).map(function (t) {
-                    return '<a href="#"><img onclick="_procDoSomething(\'' + t[0] + '\')" width="height=150" height="150" src="/ginas/app/render?structure=' + t[1] + '&amp;size=150&amp;standardize=true"></a>';
+                    return '<a href="#"><img onclick="_procDoSomething(\'' + t[0] + '\')" width="height=150" height="150" src="/gsrs/app/render?structure=' + t[1] + '&amp;size=150&amp;standardize=true"></a>';
                 }).value().join("\n") + "<br><br><a onclick='_procDoSomething(false)' href='#'>Cancel</a>");
 
                 window["_procDoSomething"] = function (smi) {
@@ -1272,7 +1272,7 @@ function definitionSwitch() {
         console.log('SENDING THE FOLLOWING DATA FOR STEP ' + step);
         console.log(nsub);
         $.ajax({
-            url: '/ginas/app/api/v1/substances',
+            url: '/gsrs/app/api/v1/substances',
             contentType: "application/json",
             type: 'PUT',
             data: JSON.stringify(nsub),

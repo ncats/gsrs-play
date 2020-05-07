@@ -3066,7 +3066,7 @@
                             setLoading(true);
                             //TODO: Change to use angular
                             $.ajax({
-                                url: "/ginas/app/api/v1/foo/ocrStructure",
+                                url: "/gsrs/app/api/v1/foo/ocrStructure",
                                 type: "POST",
                                 headers: {  'Access-Control-Allow-Origin': 'http://localhost:9000' },
                                 data: dataURL,
