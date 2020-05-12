@@ -73,29 +73,49 @@ public class ProcessExecutionService {
         		return stream;
     		};
     	}
-    	
-    	//Trying to use paging list for testing
-    	//purposes
-    	public static <T> EntityStreamSupplier<T> ofQuery(Supplier<Query<T>> source){
-    	    
-            return ()->{
-                AtomicInteger ai = new AtomicInteger(0);
-                
-                
-                Query<T> q=source.get();
-                PagingList<T> plist=q.findPagingList(1000);
-                int pcount = plist.getTotalPageCount();
-                
-                Stream<List<T>> stream = StreamUtil.forNullableGenerator(()->{
-                    if(ai.get()>=pcount){
-                        return null;
-                    }
-                    return plist.getPage(ai.getAndIncrement())
-                                .getList();
-                });
-                return stream.flatMap(l->l.stream());
-            };
-        }
+
+		//Here's a hacky solution we can refactor later
+		//Trying to use paging list for testing
+		//purposes
+		public static <T> EntityStreamSupplier<T> ofQuery(Supplier<Query<T>> source) {
+			return () -> {
+				AtomicInteger ai = new AtomicInteger(0);
+				Query<T> q = source.get();
+				String[] orderBys = new String[]{"id", "uuid", null};
+				PagingList<T> plistTemp = null;
+				int pcountTemp;				//try until order works
+				for (int i = 0; i < orderBys.length; i++) {
+					try {
+						if (orderBys[i] != null) {
+							plistTemp = q.orderBy(orderBys[i]).findPagingList(1000);
+							pcountTemp = plistTemp.getTotalPageCount();
+							plistTemp.getPage(0).getList();
+						}
+						else {
+							plistTemp = q.findPagingList(1000);
+							pcountTemp = plistTemp.getTotalPageCount();
+							plistTemp.getPage(0).getList();
+						}
+					} catch (Exception e) {
+						//column didn't exist
+						plistTemp = null;
+					}
+					if (plistTemp != null) {
+						break;
+					}
+				}
+				PagingList<T> plist = plistTemp;
+				int pcount = plist.getTotalPageCount();
+				Stream<List<T>> stream = StreamUtil.forNullableGenerator(() -> {
+					if (ai.get() >= pcount) {
+						return null;
+					}
+					return plist.getPage(ai.getAndIncrement())
+							.getList();
+				});
+				return stream.flatMap(l -> l.stream());
+			};
+		}
     	
     	public default <U> EntityStreamSupplier<U> map(ThrowableFunction<T,U> map){
     		EntityStreamSupplier<T> me = this;
