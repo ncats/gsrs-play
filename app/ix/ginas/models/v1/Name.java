@@ -309,6 +309,7 @@ public class Name extends CommonDataElementOfCollection {
 	}
 
 	public void setName(String name) {
+		this.fullName=null;
 		this.name=name;
 	}
 	
