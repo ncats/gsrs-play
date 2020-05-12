@@ -8,7 +8,6 @@ import ix.ginas.controllers.ViewType;
 import ix.ginas.models.v1.Substance;
 import play.twirl.api.Html;
 
-import javax.xml.soap.Detail;
 
 /**
  * Information in a "card" section should implement this interface.
