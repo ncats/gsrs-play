@@ -57,7 +57,9 @@ public class TrustHeaderAuthenticator implements Authenticator {
 			UserInfo ui=getUserInfoFromHeaders(r);
 			if (ui.username != null) {
 				UserProfile up = Authentication.setUserProfileSessionUsing(ui.username, ui.email);
-				up.setRoles(ui.roles);
+				if (!ui.roles.isEmpty()) {
+					up.setRoles(ui.roles);
+				}
 				return up;
 			}
 		} catch (Exception e) {
