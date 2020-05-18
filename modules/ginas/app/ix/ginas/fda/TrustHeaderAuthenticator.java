@@ -1,8 +1,12 @@
 package ix.ginas.fda;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import ix.core.auth.AuthenticationCredentials;
 import ix.core.auth.Authenticator;
 import ix.core.auth.DefaultAuthenticator;
+import ix.core.models.Role;
 import ix.core.models.UserProfile;
 import ix.core.util.CachedSupplier;
 import ix.ncats.controllers.auth.Authentication;
@@ -32,6 +36,11 @@ public class TrustHeaderAuthenticator implements Authenticator {
 				.configuration()
 				.getString("ix.authentication.useremailheader");
 	});
+	CachedSupplier<String> userrolesheader = CachedSupplier.of(() -> {
+		return Play.application()
+				.configuration()
+				.getString("ix.authentication.userrolesheader");
+	});
 
 	@Override
 	public UserProfile authenticate(AuthenticationCredentials credentials) {
@@ -47,7 +56,9 @@ public class TrustHeaderAuthenticator implements Authenticator {
 		try {
 			UserInfo ui=getUserInfoFromHeaders(r);
 			if (ui.username != null) {
-				return Authentication.setUserProfileSessionUsing(ui.username, ui.email);
+				UserProfile up = Authentication.setUserProfileSessionUsing(ui.username, ui.email);
+				up.setRoles(ui.roles);
+				return up;
 			}
 		} catch (Exception e) {
 			Logger.warn("Error authenticating", e);
@@ -58,10 +69,20 @@ public class TrustHeaderAuthenticator implements Authenticator {
 	private class UserInfo{
 		String username;
 		String email;
+		List<Role> roles = new ArrayList<Role>();
 		
-		UserInfo(String username, String email){
+		UserInfo(String username, String email, String roles){
 			this.username=username;
 			this.email=email;
+			if (roles != null) {
+				for (String r : roles.split(";")) {
+					try {
+						this.roles.add(Role.valueOf(r));
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+				}
+			}
 		}
 	}
 	
@@ -69,6 +90,7 @@ public class TrustHeaderAuthenticator implements Authenticator {
 	private UserInfo getUserInfoFromHeaders(Http.Request r){
 		String username = r.getHeader(usernameheader.get());
 		String useremail = r.getHeader(useremailheader.get());
-		return new UserInfo(username, useremail);
+		String userroles = r.getHeader(userrolesheader.get());
+		return new UserInfo(username, useremail, userroles);
 	}
 }
