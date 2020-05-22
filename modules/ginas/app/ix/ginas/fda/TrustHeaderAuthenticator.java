@@ -2,6 +2,7 @@ package ix.ginas.fda;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Pattern;
 
 import ix.core.auth.AuthenticationCredentials;
 import ix.core.auth.Authenticator;
@@ -42,6 +43,8 @@ public class TrustHeaderAuthenticator implements Authenticator {
 				.getString("ix.authentication.userrolesheader");
 	});
 
+	private static Pattern ROLE_PATTERN = Pattern.compile(";");
+
 	@Override
 	public UserProfile authenticate(AuthenticationCredentials credentials) {
 		if(!trustheader.get())return null;
@@ -71,20 +74,13 @@ public class TrustHeaderAuthenticator implements Authenticator {
 	private class UserInfo{
 		String username;
 		String email;
-		List<Role> roles = new ArrayList<Role>();
+		List<Role> roles;
 		
-		UserInfo(String username, String email, String roles){
+		UserInfo(String username, String email, List<Role> roles){
 			this.username=username;
 			this.email=email;
-			if (roles != null) {
-				for (String r : roles.split(";")) {
-					try {
-						this.roles.add(Role.valueOf(r));
-					} catch (Exception e) {
-						e.printStackTrace();
-					}
-				}
-			}
+			this.roles = roles;
+
 		}
 	}
 	
@@ -92,7 +88,21 @@ public class TrustHeaderAuthenticator implements Authenticator {
 	private UserInfo getUserInfoFromHeaders(Http.Request r){
 		String username = r.getHeader(usernameheader.get());
 		String useremail = r.getHeader(useremailheader.get());
+
+
 		String userroles = r.getHeader(userrolesheader.get());
-		return new UserInfo(username, useremail, userroles);
+		List<Role> roles = new ArrayList<>();
+		if(userroles != null){
+
+			for (String role : ROLE_PATTERN.split(userroles)) {
+				try {
+					roles.add(Role.valueOf(role));
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		}
+		return new UserInfo(username, useremail, roles);
+
 	}
 }
