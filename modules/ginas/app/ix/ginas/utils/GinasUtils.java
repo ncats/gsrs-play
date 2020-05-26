@@ -39,15 +39,15 @@ public class GinasUtils {
 	
 	public static GinasProcessingStrategy DEFAULT_BATCH_STRATEGY = GinasProcessingStrategy
 			.ACCEPT_APPLY_ALL_MARK_FAILED();
-	private static IDGenerator<String> APPROVAL_ID_GEN = new UNIIGenerator();
+	private static IdGeneratorForType<Substance, String> APPROVAL_ID_GEN = new UNIIGenerator();
 	
 
 
-	public static IDGenerator<String> getAPPROVAL_ID_GEN() {
+	public static IdGeneratorForType<Substance, String> getAPPROVAL_ID_GEN() {
 		return APPROVAL_ID_GEN;
 	}
 
-	public static void setAPPROVAL_ID_GEN(IDGenerator<String> aPPROVAL_ID_GEN) {
+	public static void setAPPROVAL_ID_GEN(IdGeneratorForType<Substance, String> aPPROVAL_ID_GEN) {
 		APPROVAL_ID_GEN = aPPROVAL_ID_GEN;
 	}
 

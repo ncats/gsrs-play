@@ -71,7 +71,6 @@ import ix.seqaln.SequenceIndexer.ResultEnumeration;
 import ix.utils.Tuple;
 import ix.utils.UUIDUtil;
 import ix.utils.Util;
-import org.jcvi.jillion.core.residue.nt.NucleotideSequenceBuilder;
 import play.Logger;
 import play.Play;
 import play.db.ebean.Model;
@@ -695,7 +694,7 @@ public class SubstanceFactory extends EntityFactory {
 			}
 		}
 
-		s.approvalID = GinasUtils.getAPPROVAL_ID_GEN().generateID();
+		s.approvalID = GinasUtils.getAPPROVAL_ID_GEN().generateId(s);
 		s.approved = TimeUtil.getCurrentDate();
 		s.approvedBy = user;
 		s.status = Substance.STATUS_APPROVED;

@@ -5,7 +5,7 @@ import java.util.Objects;
 import java.util.Random;
 import java.util.Set;
 
-public abstract class RandomAlphaNumericIDGenerator implements IDGenerator<String>{
+public abstract class RandomAlphaNumericIDGenerator<T> extends AbstractNoDependencyIDGenerator<T, String> {
 	private char[] alphabet;
 	private int idLen=9;
 	private boolean check=false;
