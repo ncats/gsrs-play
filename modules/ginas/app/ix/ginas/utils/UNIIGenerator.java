@@ -5,7 +5,7 @@ import ix.ginas.models.v1.Substance;
 
 import java.util.regex.Pattern;
 
-public class UNIIGenerator extends RandomAlphaNumericIDGenerator{
+public class UNIIGenerator extends RandomAlphaNumericIDGenerator<Substance>{
 
 	public static char[] alphabet = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ".toCharArray();
 	public static int idLen=9;

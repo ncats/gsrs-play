@@ -7,7 +7,7 @@ import scala.collection.JavaConversions.mapAsScalaMap
 
 
 object ApplicationBuild extends Build {
-  val displayVersion = "2.5.1"
+  val displayVersion = "2.5.1.2"
   val now = new java.util.Date();
   val branch = "git rev-parse --abbrev-ref HEAD".!!.trim
   val commit = "git rev-parse --short HEAD".!!.trim
