@@ -15,8 +15,9 @@
             </div>
         </div>
         <div class="collapse navbar-collapse navbar-default" id="mymenubar">
-            <ul class="nav navbar-nav pull-left">
-                <li ng-class="getClass('substances')"><a ng-href="@ix.ginas.controllers.routes.GinasApp.substances()" target="_self"><span>Browse Substances</span></a></li>
+          <ul class="nav navbar-nav pull-left">
+            <li ng-class=""><a ng-href="@ix.ginas.controllers.routes.GinasApp.index()" target="_self"><span>Home</span></a></li>
+            <li ng-class="getClass('substances')"><a ng-href="@ix.ginas.controllers.routes.GinasApp.substances()" target="_self"><span>Browse Substances</span></a></li>
                 @subjectPresent(new ix.ncats.controllers.security.IxDeadboltHandler()) {
                     <li ng-class="getClass('register')"><a ng-href="@ix.ginas.controllers.routes.GinasApp.register()" target="_self"><span>
                         Register Substance</span></a></li>
