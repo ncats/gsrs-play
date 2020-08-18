@@ -1,3 +1,5 @@
+// wrapped by build app
+define("dojox/lang/aspect/counter", ["dojo","dijit","dojox"], function(dojo,dijit,dojox){
 dojo.provide("dojox.lang.aspect.counter");
 
 (function(){
@@ -25,3 +27,4 @@ dojo.provide("dojox.lang.aspect.counter");
 		return new Counter;	// Object
 	};
 })();
+});

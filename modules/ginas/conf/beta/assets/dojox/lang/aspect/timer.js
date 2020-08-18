@@ -1,3 +1,5 @@
+// wrapped by build app
+define("dojox/lang/aspect/timer", ["dojo","dijit","dojox"], function(dojo,dijit,dojox){
 dojo.provide("dojox.lang.aspect.timer");
 
 (function(){
@@ -31,3 +33,4 @@ dojo.provide("dojox.lang.aspect.timer");
 		return new Timer(name);	// Object
 	};
 })();
+});

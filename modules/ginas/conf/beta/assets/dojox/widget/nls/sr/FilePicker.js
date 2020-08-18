@@ -1,4 +1,4 @@
-define({      
+define("dojox/widget/nls/sr/FilePicker", {      
 //begin v1.x content
 	name: "Ime",
 	path: "Putanja",

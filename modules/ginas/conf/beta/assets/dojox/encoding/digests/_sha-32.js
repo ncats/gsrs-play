@@ -1,4 +1,4 @@
-define(["./_base"], function(base){
+define("dojox/encoding/digests/_sha-32", ["./_base"], function(base){
 	//	basic functions for 32-bit word based SHA-2 processing.
 
 	//	create a new object that uses a delegated base.

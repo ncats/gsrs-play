@@ -1,4 +1,4 @@
-define(["dojo/_base/declare"],
+define("dojox/charting/bidi/action2d/ZoomAndPan", ["dojo/_base/declare"],
 	function(declare){
 	// module:
 	//		dojox/charting/bidi/action2d/ZoomAndPan	

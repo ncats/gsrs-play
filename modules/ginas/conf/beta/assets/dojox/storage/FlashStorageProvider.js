@@ -1,3 +1,5 @@
+// wrapped by build app
+define("dojox/storage/FlashStorageProvider", ["dojo","dijit","dojox","dojo/require!dojox/flash,dojox/storage/manager,dojox/storage/Provider"], function(dojo,dijit,dojox){
 dojo.provide("dojox.storage.FlashStorageProvider");
 
 dojo.require("dojox.flash");
@@ -342,3 +344,5 @@ dojo.declare("dojox.storage.FlashStorageProvider", dojox.storage.Provider, {
 
 dojox.storage.manager.register("dojox.storage.FlashStorageProvider",
 								new dojox.storage.FlashStorageProvider());
+
+});

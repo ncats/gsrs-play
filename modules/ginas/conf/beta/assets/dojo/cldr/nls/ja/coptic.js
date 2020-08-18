@@ -1,5 +1,5 @@
 define(
-//begin v1.x content
+"dojo/cldr/nls/ja/coptic", //begin v1.x content
 {
 	"field-sat-relative+0": "今週の土曜日",
 	"field-sat-relative+1": "来週の土曜日",

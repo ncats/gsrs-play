@@ -1,3 +1,5 @@
+// wrapped by build app
+define("dojox/sql/_crypto", ["dojo","dijit","dojox"], function(dojo,dijit,dojox){
 dojo.provide("dojox.sql._crypto");
 dojo.mixin(dojox.sql._crypto, {
 	// summary:
@@ -438,4 +440,6 @@ dojo.mixin(dojox.sql._crypto, {
 			gearsWorkerPool.sendMessage(String(results), sender);
 		}
 	}
+});
+
 });

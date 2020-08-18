@@ -1,4 +1,4 @@
-define([
+define("dojox/mvc/_atBindingExtension", [
 	"dojo/_base/config",
 	"dojo/has",
 	"dijit/_WidgetBase",

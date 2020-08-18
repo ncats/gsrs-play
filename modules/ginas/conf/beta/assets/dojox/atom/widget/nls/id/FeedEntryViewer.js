@@ -1,5 +1,5 @@
 define(
-({
+"dojox/atom/widget/nls/id/FeedEntryViewer", ({
 	displayOptions: "[pilihan tampilan]",
 	title: "Judul",
 	authors: "Penulis",

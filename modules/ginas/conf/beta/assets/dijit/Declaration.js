@@ -1,4 +1,4 @@
-define([
+define("dijit/Declaration", [
 	"dojo/_base/array", // array.forEach array.map
 	"dojo/aspect",	// aspect.after
 	"dojo/_base/declare", // declare

@@ -1,4 +1,4 @@
-define(['dojo/_base/lang', 'dojo/Deferred', 'dojo/when'], function(lang, Deferred, when){
+define("dojox/store/priority", ['dojo/_base/lang', 'dojo/Deferred', 'dojo/when'], function(lang, Deferred, when){
 // summary:
 //		This is a store wrapper that provides prioritized operations. One can include a "priority" property in the options
 //		property that is a number representing the priority, for get, put, add, remove, or query calls. The associated

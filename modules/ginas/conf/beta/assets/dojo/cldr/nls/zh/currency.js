@@ -1,5 +1,5 @@
 define(
-//begin v1.x content
+"dojo/cldr/nls/zh/currency", //begin v1.x content
 {
 	"HKD_displayName": "港元",
 	"CHF_displayName": "瑞士法郎",

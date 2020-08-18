@@ -1,4 +1,4 @@
-define(["dojo/_base/lang", "dojo/_base/declare", "dojo/sniff", "dojo/_base/window", "dojo/_base/config",
+define("dojox/app/controllers/LayoutBase", ["dojo/_base/lang", "dojo/_base/declare", "dojo/sniff", "dojo/_base/window", "dojo/_base/config",
 		"dojo/dom-attr", "dojo/topic", "dojo/dom-style", "../utils/constraints", "../Controller"],
 function(lang, declare, has, win, config, domAttr, topic, domStyle, constraints, Controller){
 	// module:

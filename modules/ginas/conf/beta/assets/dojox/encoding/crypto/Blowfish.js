@@ -1,4 +1,4 @@
-define([
+define("dojox/encoding/crypto/Blowfish", [
 	"dojo/_base/lang",	// dojo.isString
 	"dojo/_base/array",	// dojo.map
 	"../base64",

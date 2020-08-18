@@ -1,4 +1,4 @@
-define({      
+define("dojox/editor/plugins/nls/bs/CollapsibleToolbar", {      
 //begin v1.x content
 	"collapse": "Skupi traku s alatima editora",
 	"expand": "Proširi traku s alatima editora"

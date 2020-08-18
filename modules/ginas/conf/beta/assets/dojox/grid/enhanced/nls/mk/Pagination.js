@@ -1,4 +1,4 @@
-define({      
+define("dojox/grid/enhanced/nls/mk/Pagination", {      
 //begin v1.x content
 	"descTemplate": "${2} - ${3} од ${1} ${0}",
 	"firstTip": "Прва страница",

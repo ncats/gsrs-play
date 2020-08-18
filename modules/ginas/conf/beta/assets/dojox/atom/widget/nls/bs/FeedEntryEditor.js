@@ -1,4 +1,4 @@
-define({      
+define("dojox/atom/widget/nls/bs/FeedEntryEditor", {      
 //begin v1.x content
 	doNew: "[novo]",
 	edit: "[uredi]",

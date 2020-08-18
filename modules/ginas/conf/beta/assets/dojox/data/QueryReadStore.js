@@ -1,4 +1,4 @@
-define(["dojo", "dojox", "dojo/data/util/sorter", "dojo/string"], function(dojo, dojox) {
+define("dojox/data/QueryReadStore", ["dojo", "dojox", "dojo/data/util/sorter", "dojo/string"], function(dojo, dojox) {
 
 	return dojo.declare("dojox.data.QueryReadStore", null, {
 		// summary:

@@ -1,4 +1,4 @@
-define(["./db/has!indexeddb?./db/IndexedDB:./db/SQL"],
+define("dojox/store/LocalDB", ["./db/has!indexeddb?./db/IndexedDB:./db/SQL"],
 	function(LocalDB){
 	//	summary:
 	//		The module defines an object store based on local database access

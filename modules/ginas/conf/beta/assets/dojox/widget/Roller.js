@@ -1,4 +1,4 @@
-define(["dojo", "dijit", "dijit/_Widget"], function(dojo, dijit){
+define("dojox/widget/Roller", ["dojo", "dijit", "dijit/_Widget"], function(dojo, dijit){
 
 	var Roller = dojo.declare("dojox.widget.Roller", dijit._Widget, {
 		// summary:

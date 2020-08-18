@@ -1,4 +1,4 @@
-define(["../../_base/array", "../../_base/lang", "../../when"
+define("dojo/store/util/QueryResults", ["../../_base/array", "../../_base/lang", "../../when"
 ], function(array, lang, when){
 
 // module:

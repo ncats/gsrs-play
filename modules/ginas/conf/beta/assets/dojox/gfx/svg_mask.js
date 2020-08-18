@@ -1,4 +1,4 @@
-define([
+define("dojox/gfx/svg_mask", [
 	"dojo/_base/declare",
 	"dojo/_base/lang",
 	"./_base",

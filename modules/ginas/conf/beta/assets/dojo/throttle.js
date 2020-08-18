@@ -1,4 +1,4 @@
-define([], function(){
+define("dojo/throttle", [], function(){
 	// module:
 	//		dojo/throttle
 	// summary:

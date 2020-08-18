@@ -1,4 +1,4 @@
-define([
+define("dojox/editor/plugins/SpellCheck", [
 	"dojo",
 	"dijit",
 	"dojo/io/script",

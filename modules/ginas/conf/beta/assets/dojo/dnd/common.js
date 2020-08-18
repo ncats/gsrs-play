@@ -1,4 +1,4 @@
-define(["../sniff", "../_base/kernel", "../_base/lang", "../dom"],
+define("dojo/dnd/common", ["../sniff", "../_base/kernel", "../_base/lang", "../dom"],
 	function(has, kernel, lang, dom){
 
 // module:

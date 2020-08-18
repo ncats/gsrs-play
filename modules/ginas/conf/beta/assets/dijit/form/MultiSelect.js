@@ -1,4 +1,4 @@
-define([
+define("dijit/form/MultiSelect", [
 	"dojo/_base/array", // indexOf, map, forEach
 	"dojo/_base/declare", // declare
 	"dojo/dom-geometry", // domGeometry.setMarginBox

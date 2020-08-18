@@ -1,4 +1,4 @@
-define({      
+define("dojox/grid/enhanced/nls/bs/Pagination", {      
 //begin v1.x content
 	"descTemplate": "${2} - ${3} od ${1} ${0}",
 	"firstTip": "Prva stranica",

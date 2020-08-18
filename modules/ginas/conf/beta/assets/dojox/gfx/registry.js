@@ -1,4 +1,4 @@
-define(["dojo/has","./shape"], function(has, shapeLib){
+define("dojox/gfx/registry", ["dojo/has","./shape"], function(has, shapeLib){
 
 	has.add("gfxRegistry", 1);
 

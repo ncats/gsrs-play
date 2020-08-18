@@ -1,4 +1,4 @@
-define(["dojo/_base/declare", "./common"], function(declare, common){
+define("dojox/mobile/bidi/Button", ["dojo/_base/declare", "./common"], function(declare, common){
 
 	// module:
 	//		mobile/bidi/Button

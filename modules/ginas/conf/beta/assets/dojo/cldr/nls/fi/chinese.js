@@ -1,5 +1,5 @@
 define(
-//begin v1.x content
+"dojo/cldr/nls/fi/chinese", //begin v1.x content
 {
 	"field-sat-relative+0": "tänä lauantaina",
 	"dateFormatItem-yyyyMMMEd": "E d.M.y",

@@ -1,4 +1,4 @@
-define([
+define("dojox/mvc/atBindingExtension", [
 	"dojo/aspect",
 	"dojo/_base/array",
 	"dojo/_base/lang",

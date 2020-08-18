@@ -1,4 +1,4 @@
-define({      
+define("dojox/editor/plugins/nls/eu/SpellCheck", {      
 //begin v1.x content
 	widgetLabel: "Sortaren ortografia-egiaztapena",
 	unfound: "Ez da aurkitu",

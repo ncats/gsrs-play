@@ -1,4 +1,4 @@
-define(['./global', './has'], function(global, has){
+define("dojo/domReady", ['./global', './has'], function(global, has){
 	var doc = document,
 		readyStates = { 'loaded': 1, 'complete': 1 },
 		fixReadyState = typeof doc.readyState != "string",

@@ -1,4 +1,4 @@
-define({      
+define("dojox/atom/widget/nls/eu/FeedEntryViewer", {      
 //begin v1.x content
 	displayOptions: "[bistaratu aukerak]",
 	title: "Titulua",

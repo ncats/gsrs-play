@@ -1,4 +1,4 @@
-define(["dojo/_base/declare"],
+define("dojox/charting/bidi/widget/Chart", ["dojo/_base/declare"],
 	function(declare){
 	// module:
 	//		dojox/charting/bidi/widget/Chart						

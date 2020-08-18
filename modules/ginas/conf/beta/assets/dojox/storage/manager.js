@@ -1,4 +1,4 @@
-define([
+define("dojox/storage/manager", [
 	"dojo/_base/config",
 	"dojo/_base/lang",
 	"dojo/_base/array"

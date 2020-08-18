@@ -1,5 +1,5 @@
 define(
-//begin v1.x content
+"dojo/cldr/nls/bs/generic", //begin v1.x content
 {
 	"dateFormatItem-yyyyMMMEd": "E, dd. MMM y. G",
 	"field-dayperiod": "prijepodne/poslijepodne",

@@ -1,4 +1,4 @@
-define(["dijit/Tooltip", "dojo/_base/lang", "dojo/_base/declare", "dojo/_base/window", "dojo/_base/connect", "dojo/dom-style",
+define("dojox/charting/action2d/Tooltip", ["dijit/Tooltip", "dojo/_base/lang", "dojo/_base/declare", "dojo/_base/window", "dojo/_base/connect", "dojo/dom-style",
 	"./PlotAction", "dojox/gfx/matrix", "dojo/has", "dojo/has!dojo-bidi?../bidi/action2d/Tooltip", 
 	"dojox/lang/functional", "dojox/lang/functional/scan", "dojox/lang/functional/fold"],
 	function(DijitTooltip, lang, declare, win, hub, domStyle, PlotAction, m, has, BidiTooltip, df){

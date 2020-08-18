@@ -1,3 +1,5 @@
+// wrapped by build app
+define("dojox/mobile/app/SceneController", ["dojo","dijit","dojox","dojo/require!dojox/mobile/_base"], function(dojo,dijit,dojox){
 dojo.provide("dojox.mobile.app.SceneController");
 dojo.experimental("dojox.mobile.app.SceneController");
 dojo.require("dojox.mobile._base");
@@ -168,3 +170,4 @@ dojo.require("dojox.mobile._base");
 	});
 
 })();
+});

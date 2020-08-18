@@ -1,4 +1,4 @@
-define([
+define("dojox/gfx/svgext", [
 	"dojo/dom",
 	"dojo/_base/array",
 	"dojo/_base/window",

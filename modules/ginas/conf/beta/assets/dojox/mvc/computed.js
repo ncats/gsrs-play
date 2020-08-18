@@ -1,4 +1,4 @@
-define([
+define("dojox/mvc/computed", [
 	"dojo/_base/array",
 	"dojo/_base/lang",
 	"dojo/has"

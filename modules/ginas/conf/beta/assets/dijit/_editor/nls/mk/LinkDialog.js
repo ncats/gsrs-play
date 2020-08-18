@@ -1,4 +1,4 @@
-define({      
+define("dijit/_editor/nls/mk/LinkDialog", {      
 //begin v1.x content
 	createLinkTitle: "Својства на врска",
 	insertImageTitle: "Својства на слика",

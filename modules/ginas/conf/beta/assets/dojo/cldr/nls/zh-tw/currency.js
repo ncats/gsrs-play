@@ -1,5 +1,5 @@
 define(
-//begin v1.x content
+"dojo/cldr/nls/zh-tw/currency", //begin v1.x content
 {
 	"HKD_displayName": "港幣",
 	"JPY_symbol": "¥",

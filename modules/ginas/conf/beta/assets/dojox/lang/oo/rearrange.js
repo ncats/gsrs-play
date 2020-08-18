@@ -1,3 +1,5 @@
+// wrapped by build app
+define("dojox/lang/oo/rearrange", ["dojo","dijit","dojox"], function(dojo,dijit,dojox){
 dojo.provide("dojox.lang.oo.rearrange");
 
 (function(){
@@ -62,3 +64,5 @@ dojo.provide("dojox.lang.oo.rearrange");
 		return bag;	// Object
 	};
 })();
+
+});

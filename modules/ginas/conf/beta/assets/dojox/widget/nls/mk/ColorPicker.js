@@ -1,4 +1,4 @@
-define({      
+define("dojox/widget/nls/mk/ColorPicker", {      
 //begin v1.x content
 redLabel: "r",
 greenLabel: "g",

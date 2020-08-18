@@ -1,4 +1,4 @@
-define([
+define("dojo/dnd/Mover", [
 	"../_base/array", "../_base/declare", "../_base/lang", "../sniff", "../_base/window",
 	"../dom", "../dom-geometry", "../dom-style", "../Evented", "../on", "../touch", "./common", "./autoscroll"
 ], function(array, declare, lang, has, win, dom, domGeom, domStyle, Evented, on, touch, dnd, autoscroll){

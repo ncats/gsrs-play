@@ -1,4 +1,4 @@
-define(["../global", "../has", "require"], function(global, has, require){
+define("dojo/_base/config", ["../global", "../has", "require"], function(global, has, require){
 	// module:
 	//		dojo/_base/config
 
@@ -149,7 +149,7 @@ return {
 =====*/
 
 	var result = {};
-	if(has("dojo-config-api")){
+	if( 1 ){
 		// must be the dojo loader; take a shallow copy of require.rawConfig
 		var src = require.rawConfig, p;
 		for(p in src){
@@ -161,7 +161,7 @@ return {
 				p!="has" && has.add(prefix + p, featureSet[p], 0, booting);
 			}
 		};
-		result = has("dojo-loader") ?
+		result =  1  ?
 			// must be a built version of the dojo loader; all config stuffed in require.rawConfig
 			require.rawConfig :
 			// a foreign loader

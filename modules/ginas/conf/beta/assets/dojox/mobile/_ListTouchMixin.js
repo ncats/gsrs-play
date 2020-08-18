@@ -1,4 +1,4 @@
-define([
+define("dojox/mobile/_ListTouchMixin", [
 	"dojo/_base/declare",
 	"dojo/touch",
 	"./sniff",

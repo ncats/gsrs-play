@@ -1,4 +1,4 @@
-define([
+define("dojo/parser", [
 	"require", "./_base/kernel", "./_base/lang", "./_base/array", "./_base/config", "./dom", "./_base/window",
 		"./_base/url", "./aspect", "./promise/all", "./date/stamp", "./Deferred", "./has", "./query", "./on", "./ready"
 ], function(require, dojo, dlang, darray, config, dom, dwindow, _Url, aspect, all, dates, Deferred, has, query, don, ready){
@@ -907,7 +907,7 @@ define([
 		}
 	};
 
-	if(has("extend-dojo")){
+	if( 1 ){
 		dojo.parser = parser;
 	}
 

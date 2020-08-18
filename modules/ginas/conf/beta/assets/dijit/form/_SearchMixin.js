@@ -1,4 +1,4 @@
-define([
+define("dijit/form/_SearchMixin", [
 	"dojo/_base/declare", // declare
 	"dojo/keys", // keys
 	"dojo/_base/lang", // lang.clone lang.hitch

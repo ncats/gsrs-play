@@ -1,5 +1,5 @@
 define(
-//begin v1.x content
+"dojo/cldr/nls/en/generic", //begin v1.x content
 {
 	"dateFormatItem-Ehm": "E h:mm a",
 	"field-second-relative+0": "now",

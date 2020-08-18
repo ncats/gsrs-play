@@ -1,4 +1,4 @@
-define(["dojo/_base/declare", "dojo/on"], function(declare, on){
+define("dojox/mobile/TransitionEvent", ["dojo/_base/declare", "dojo/on"], function(declare, on){
 
 	return declare("dojox.mobile.TransitionEvent", null, {
 		// summary:

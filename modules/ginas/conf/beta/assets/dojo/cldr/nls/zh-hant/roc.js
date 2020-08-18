@@ -1,5 +1,5 @@
 define(
-//begin v1.x content
+"dojo/cldr/nls/zh-hant/roc", //begin v1.x content
 {
 	"field-second-relative+0": "現在",
 	"field-weekday": "週天",

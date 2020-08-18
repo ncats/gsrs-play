@@ -1,4 +1,4 @@
-define([], function(){
+define("dijit/_BidiMixin", [], function(){
 
 	// module:
 	//		dijit/_BidiMixin

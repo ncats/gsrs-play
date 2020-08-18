@@ -1,4 +1,4 @@
-define({      
+define("dojox/grid/enhanced/nls/eu/Filter", {      
 //begin v1.x content
 	"clearFilterDialogTitle": "Garbitu iragazkia",
 	"filterDefDialogTitle": "Iragazi",

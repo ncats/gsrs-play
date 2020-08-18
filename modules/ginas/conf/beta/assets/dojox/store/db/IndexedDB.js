@@ -1,4 +1,4 @@
-define(['dojo/_base/declare', 'dojo/_base/lang', 'dojo/Deferred', 'dojo/when', 'dojo/promise/all', 'dojo/store/util/SimpleQueryEngine', 'dojo/store/util/QueryResults'],
+define("dojox/store/db/IndexedDB", ['dojo/_base/declare', 'dojo/_base/lang', 'dojo/Deferred', 'dojo/when', 'dojo/promise/all', 'dojo/store/util/SimpleQueryEngine', 'dojo/store/util/QueryResults'],
 	function(declare, lang, Deferred, when, all,  SimpleQueryEngine, QueryResults){
 
 	function makePromise(request) {

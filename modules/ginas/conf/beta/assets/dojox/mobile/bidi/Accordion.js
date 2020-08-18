@@ -1,4 +1,4 @@
-define([
+define("dojox/mobile/bidi/Accordion", [
 	"dojo/_base/declare",
 	"./common",
 	"dojo/dom-class"

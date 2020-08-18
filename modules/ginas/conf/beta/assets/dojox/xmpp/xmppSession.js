@@ -1,3 +1,5 @@
+// wrapped by build app
+define("dojox/xmpp/xmppSession", ["dojo","dijit","dojox","dojo/require!dojox/xmpp/TransportSession,dojox/xmpp/RosterService,dojox/xmpp/PresenceService,dojox/xmpp/UserService,dojox/xmpp/ChatService,dojox/xmpp/sasl"], function(dojo,dijit,dojox){
 dojo.provide("dojox.xmpp.xmppSession");
 
 dojo.require("dojox.xmpp.TransportSession");
@@ -849,5 +851,7 @@ dojo.extend(dojox.xmpp.xmppSession, {
 			}
 			return "";
 		}
+
+});
 
 });

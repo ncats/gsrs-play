@@ -1,4 +1,4 @@
-define([
+define("dijit/_AttachMixin", [
 	"require",
 	"dojo/_base/array", // array.forEach
 	"dojo/_base/connect",	// remove for 2.0

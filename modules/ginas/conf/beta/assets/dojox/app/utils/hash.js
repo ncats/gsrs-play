@@ -1,4 +1,4 @@
-define(["dojo/_base/lang"], function(lang){
+define("dojox/app/utils/hash", ["dojo/_base/lang"], function(lang){
 
 // module:
 //		dojox/app/utils/hash

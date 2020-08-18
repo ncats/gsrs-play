@@ -1,5 +1,5 @@
 define(
-({
+"dojox/editor/plugins/nls/uk/SpellCheck", ({
 	widgetLabel: "Перевірка правопису",
 	unfound: "Не знайдено",
 	skip: "Пропустити",

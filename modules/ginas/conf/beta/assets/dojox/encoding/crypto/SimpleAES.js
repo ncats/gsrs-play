@@ -1,4 +1,4 @@
-define(["../base64", "./_base"], 
+define("dojox/encoding/crypto/SimpleAES", ["../base64", "./_base"], 
  function(base64, crypto){
 
 	// Sbox is pre-computed multiplicative inverse in GF(2^8) used in SubBytes and KeyExpansion [5.1.1]

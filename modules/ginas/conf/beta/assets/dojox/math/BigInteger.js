@@ -1,5 +1,5 @@
 // AMD-ID "dojox/math/BigInteger"
-define(["dojo", "dojox", "dojo/has"], function(dojo, dojox, has) {
+define("dojox/math/BigInteger", ["dojo", "dojox", "dojo/has"], function(dojo, dojox, has) {
 
 	dojo.getObject("math.BigInteger", true, dojox);
 	dojo.experimental("dojox.math.BigInteger");
