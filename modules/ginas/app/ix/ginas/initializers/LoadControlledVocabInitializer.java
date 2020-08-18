@@ -18,13 +18,21 @@ public class LoadControlledVocabInitializer implements Initializer {
     @Override
     public Initializer initializeWith(Map<String, ?> m)
     {
-//		m.keySet().forEach((key) ->
-//		{
-//			System.out.println(String.format("key: %s; value: %s", key, m.get(key).toString()));
-//		});
-        cvPath = new File((String) m.get("cv.path"));
-        if(!cvPath.canRead()){
-            throw new IllegalStateException("could not read controlled vocabulary json : " + cvPath.getAbsolutePath());
+        File workingDir;
+
+        if(Play.isTest()){
+            //ginas tests are run from the module directory
+            workingDir = new File("../../");
+        }else{
+            workingDir = new File(".");
+        }
+        String cvPath = (String) m.get("path");
+        if(cvPath ==null){
+            throw new IllegalStateException("controlled vocabulary path file must be set");
+        }
+        this.cvPath = new File(workingDir, cvPath);
+        if(!this.cvPath.canRead()){
+            throw new IllegalStateException("could not read controlled vocabulary json : " + this.cvPath.getAbsolutePath());
         }
         return this;
     }
