@@ -41,7 +41,7 @@ public class ExportProcessFactory {
 
 
     //need to synchronize
-    public synchronized ExportProcess getProcess(ExportMetaData metaData, Supplier<Stream<Substance>> substanceSupplier) throws Exception{
+    public synchronized <T> ExportProcess getProcess(ExportMetaData metaData, Supplier<Stream<T>> substanceSupplier) throws Exception{
         return createExportProcessFor(metaData, substanceSupplier);
     }
 
@@ -61,7 +61,7 @@ public class ExportProcessFactory {
 
 
 
-    private ExportProcess createExportProcessFor(ExportMetaData metadata, Supplier<Stream<Substance>> substanceSupplier){
+    private <T> ExportProcess createExportProcessFor(ExportMetaData metadata, Supplier<Stream<T>> substanceSupplier){
 
         //might be a better way to do this as a one-liner using paths
         //but I don't think Path's path can contain null
@@ -70,8 +70,7 @@ public class ExportProcessFactory {
 
         
         inProgress.put(metadata.id, metadata);
-        return new ExportProcess(exportFile, substanceSupplier);
-//        return new ExportProcess(exportFile.getFile(), metadata, exportFile.getMetaDataFile(), substanceSupplier);
+        return new ExportProcess<T>(exportFile, substanceSupplier);
     }
 
     private Optional<ExportDir.ExportFile<ExportMetaData>> getExportFile(String username, String filename){
@@ -142,7 +141,7 @@ public class ExportProcessFactory {
         return Arrays.stream(files)
 
                      .filter(f->f.getName().endsWith(".metadata"))
-                     .peek(f-> System.out.println(f.getAbsolutePath()))
+//                     .peek(f-> System.out.println(f.getAbsolutePath()))
                      .map(f->{
                             try {
                                 return em.readValue(f, ExportMetaData.class);

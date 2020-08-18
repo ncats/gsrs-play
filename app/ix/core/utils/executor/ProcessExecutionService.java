@@ -33,7 +33,7 @@ import ix.core.util.EntityUtils;
 import ix.core.util.EntityUtils.EntityWrapper;
 import ix.core.util.IOUtil;
 import ix.core.util.StreamUtil;
-import ix.core.util.StreamUtil.ThrowableFunction;
+import ix.core.util.ThrowableFunction;
 import play.Application;
 import play.Logger;
 import play.Play;
@@ -117,6 +117,7 @@ public class ProcessExecutionService {
 			};
 		}
     	
+
     	public default <U> EntityStreamSupplier<U> map(ThrowableFunction<T,U> map){
     		EntityStreamSupplier<T> me = this;
     		return new EntityStreamSupplier<U>(){

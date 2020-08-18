@@ -5,10 +5,13 @@ import java.util.function.Consumer;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import ix.core.controllers.v1.routes;
 import ix.core.models.Principal;
+import ix.core.util.RestUrlLink;
 import ix.core.util.TimeUtil;
 import ix.ginas.models.utils.JSONEntity;
 import ix.utils.Global;
+import play.api.mvc.Call;
 
 /**
  * Created by katzelda on 4/18/17.
@@ -116,30 +119,33 @@ public class ExportMetaData implements Comparable<ExportMetaData>{
     }
     
     
-    public String getSelf(){
-        return Global.getHost() + ix.ginas.controllers.routes.GinasApp.getStatusFor(this.id).url();
+    public RestUrlLink getSelf(){
+        return RestUrlLink.from(routes.DownloadController.getDownloadRecordAsJson(this.id));
     }
     
     
-    public String getDownloadUrl(){
+    public RestUrlLink getDownloadUrl(){
         if(this.isComplete()){
-            return Global.getHost() + ix.ginas.controllers.routes.GinasApp.downloadExport(this.id).url();    
+            return RestUrlLink.from(routes.DownloadController.downloadExport(this.id));
         }else{
             return null;
         }
     }
     
-    public String getCancelUrl(){
+    public RestUrlLink getCancelUrl(){
         if(!this.isComplete()){
-            return Global.getHost() + ix.ginas.controllers.routes.GinasApp.cancelExport(this.id).url();    
+            Call call = ix.ginas.controllers.routes.GinasApp.cancelExport(this.id);
+            return RestUrlLink.from( call);
         }else{
+
             return null;
         }
     }
     
-    public String getRemoveUrl(){
+    public RestUrlLink getRemoveUrl(){
         if(this.isComplete()){
-            return Global.getHost() + ix.ginas.controllers.routes.GinasApp.removeExport(this.id).url();    
+            Call call = routes.DownloadController.deleteDownload(this.id);
+            return RestUrlLink.from(call);
         }else{
             return null;
         }

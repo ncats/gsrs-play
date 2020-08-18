@@ -22,10 +22,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import com.avaje.ebean.Expr;
-import com.avaje.ebean.Expression;
-import com.avaje.ebean.FutureRowCount;
-import com.avaje.ebean.Query;
+import com.avaje.ebean.*;
 import com.avaje.ebean.annotation.Transactional;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.core.JsonParser;
@@ -36,12 +33,12 @@ import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.deser.DeserializationProblemHandler;
-import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import com.flipkart.zjsonpatch.JsonPatch;
 import ix.core.*;
-import ix.core.util.EntityUtils;
+import ix.core.controllers.v1.GsrsApiUtil;
 import ix.core.validator.*;
 import ix.core.adapters.EntityPersistAdapter;
 import ix.core.adapters.InxightTransaction;
@@ -57,6 +54,7 @@ import ix.core.util.EntityUtils.Key;
 import ix.core.util.GinasPortalGun;
 import ix.core.util.Java8Util;
 import ix.core.util.pojopointer.PojoPointer;
+import ix.ginas.models.serialization.AmountSerializerModifier;
 import ix.utils.Util;
 import ix.utils.pojopatch.PojoDiff;
 import ix.utils.pojopatch.PojoPatch;
@@ -217,6 +215,10 @@ public class EntityFactory extends Controller {
                 _serializationConfig = _serializationConfig.withView(v);
 
             }
+
+            SimpleModule module = new SimpleModule();
+            module.setSerializerModifier(new AmountSerializerModifier());
+            registerModule(module);
             addHandler ();
         }
 
@@ -242,11 +244,13 @@ public class EntityFactory extends Controller {
             (DeserializationContext ctx, JsonParser parser,
              JsonDeserializer deser, Object bean, String property) {
             try {
+                /*
                 Logger.warn("Unknown property \""
                             +property+"\" (token="
                             +parser.getCurrentToken()
                             +") while parsing "
                             +bean+"; skipping it..");
+                            */
                 parser.skipChildren();
             }
             catch (IOException ex) {
@@ -561,7 +565,8 @@ public class EntityFactory extends Controller {
             T inst = finder.byId(id);
             //query.setId(id).findUnique();
             if (inst == null) {
-                throw new IllegalArgumentException("Bad request: "+request().uri());
+                //GSRS-1414
+                return GsrsApiUtil.notFound("could not find record with id " + Objects.toString(id));
             }
             return field (inst, field);
     }
@@ -576,34 +581,32 @@ public class EntityFactory extends Controller {
     }
     
     
-    //Prime canididate for rewrite with EntityWrapper
+    //Prime candidate for rewrite with EntityWrapper
     protected static Result field (Object inst, String field) {
     	//return fieldOld(inst,field);
     	try{
-	    	Object o = atFieldSerialized(inst,PojoPointer.fromURIPath(field));
-	    	if(o instanceof JsonNode){
-	        	return ok((JsonNode)o);
-	        }else{
-	        	return ok(o.toString());
-	        }
+	    	return atFieldSerialized(inst,PojoPointer.fromURIPath(field));
+
     	}catch(Exception e){
-    		e.printStackTrace();
-    		throw e;
+    		//GSRS-1414 make this  400 error instead of 500
+    		return GsrsApiUtil.badRequest(e);
     	}
     }
     
     
-    protected static Object atFieldSerialized (Object inst, PojoPointer cpath) {
+    private static Result atFieldSerialized (Object inst, PojoPointer cpath) {
         Optional<EntityWrapper<?>> at = EntityWrapper.of(inst).at(cpath);
         if(!at.isPresent()){
             //incase there isn't something with that field
-            return JsonNodeFactory.instance.objectNode();
+//            return JsonNodeFactory.instance.objectNode();
+            //GSRS-1414
+            return GsrsApiUtil.notFound("could not find field path " + cpath.toURIpath());
         }
         EntityWrapper ew= at.get();
     	if(cpath.isLeafRaw()){
-    		return ew.getRawValue();
+    		return ok(Objects.toString(ew.getRawValue()));
     	}else{
-    		return ew.toFullJsonNode();
+    		return ok(ew.toFullJsonNode());
     	}
     }
     
@@ -840,7 +843,9 @@ public class EntityFactory extends Controller {
 				.where(Util.andAll(
 						Expr.eq("refid", id.toString()),
 						Util.orAll(kindExpressions)
-						));
+						))
+                .orderBy()
+                .desc("created");
 		
 		fe.applyToQuery(q);
 		
@@ -1202,11 +1207,13 @@ public class EntityFactory extends Controller {
 
             Object rawOld = oldValue.getValue();
             Object rawNew = newValue.getValue();
-//            System.out.println("=================");
-//            System.out.println(EntityWrapper.of(rawOld).toInternalJson());
-//            System.out.println("=================");
-//            System.out.println(EntityWrapper.of(rawNew).toInternalJson());
-//            System.out.println("=================");
+            /*
+            System.out.println("=================");
+            System.out.println(EntityWrapper.of(rawOld).toJsonDiffJson());
+            System.out.println("=================");
+            System.out.println(EntityWrapper.of(rawNew).toJsonDiffJson());
+            System.out.println("=================");
+            */
 
     	//Get the difference as a patch
         PojoPatch patch =PojoDiff.getDiff(rawOld, rawNew);

@@ -1,14 +1,6 @@
 package ix.core.search;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.TreeMap;
+import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -47,7 +39,7 @@ public class SearchOptions implements RequestOptions {
 
 	public static class FacetLongRange {
 		public String field;
-		public Map<String, long[]> range = new TreeMap<String, long[]>();
+		public Map<String, long[]> range = new LinkedHashMap<>();
 
 		public FacetLongRange(String field) {
 			this.field = field;

@@ -3,6 +3,9 @@ package ix.core.plugins;
 import java.io.File;
 import java.io.IOException;
 
+import ix.core.search.text.IndexerServiceFactory;
+import ix.core.search.text.Lucene4IndexServiceFactory;
+import ix.core.util.ConfigHelper;
 import org.apache.lucene.store.AlreadyClosedException;
 
 import ix.core.search.text.TextIndexer;
@@ -19,12 +22,13 @@ public class TextIndexerPlugin extends Plugin {
     private static int initCount=0;
 
     private static boolean updateStoarageCount = true;
-
+    private static IndexerServiceFactory indexerServiceFactory;
     private static File storageDir;
 
     public TextIndexerPlugin (Application app) {
         this.app = app;
     }
+
 
 
     public static synchronized File getStorageRootDir(){
@@ -48,14 +52,25 @@ public class TextIndexerPlugin extends Plugin {
         updateStoarageCount=true;
         try {
             storageDir = getStorageDir(ctx);
-            indexer = TextIndexer.getInstance(storageDir);
+            //we have to use reflection here be because GSRSDependency is in ginas module!
+            Class<IndexerServiceFactory> factory = ConfigHelper.getClass("gsrs.textIndexer.serviceFactory");
+
+                                                            ;
+
+            indexerServiceFactory = factory.newInstance();
+            indexer = TextIndexer.getInstance(storageDir, indexerServiceFactory.createForDir(storageDir));
+
             if(indexer==null){
             	throw new IllegalStateException("Trouble getting textindexer");
             }
         }
-        catch (IOException ex) {
+        catch (Exception ex) {
             Logger.trace("Can't initialize text indexer", ex);
         }
+    }
+
+    public static IndexerServiceFactory getIndexerServiceFactory(){
+        return indexerServiceFactory;
     }
 
     private static synchronized File getStorageDir(IxContext ctx){

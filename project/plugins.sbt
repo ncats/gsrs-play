@@ -1,12 +1,14 @@
-resolvers += "Typesafe repository" at "http://repo.typesafe.com/typesafe/releases/"
+resolvers += "Typesafe repository" at "https://repo.typesafe.com/typesafe/releases/"
 
-resolvers += Resolver.url("artifactory", url("http://scalasbt.artifactoryonline.com/scalasbt/sbt-plugin-releases"))(Resolver.ivyStylePatterns)
+resolvers += Resolver.url("artifactory", url("https://scalasbt.artifactoryonline.com/scalasbt/sbt-plugin-releases"))(Resolver.ivyStylePatterns)
 
 
 // The Play plugin
 addSbtPlugin("com.typesafe.play" % "sbt-plugin" % "2.3.10")
 
 addSbtPlugin("com.eed3si9n" % "sbt-assembly" % "0.11.2")
+
+addSbtPlugin("com.typesafe.sbt" % "sbt-native-packager" % "0.7.4")
 
 //addSbtPlugin("com.eed3si9n" % "sbt-buildinfo" % "0.3.2")
 

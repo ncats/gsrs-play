@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import play.db.ebean.Model;
 import javax.persistence.*;
@@ -29,7 +30,7 @@ public class Group extends LongBaseModel {
     @ManyToMany(cascade=CascadeType.ALL)
     @Basic(fetch=FetchType.EAGER)
     @JoinTable(name="ix_core_group_principal")
-    @JsonView(BeanViews.Full.class)
+    @JsonIgnore
     public Set<Principal> members = new HashSet<Principal>();
 
    @JsonCreator

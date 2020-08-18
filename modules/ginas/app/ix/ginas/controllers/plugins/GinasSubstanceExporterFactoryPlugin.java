@@ -18,6 +18,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.ThreadPoolExecutor;
 
 import ix.core.util.IOUtil;
+import ix.core.exporters.OutputFormat;
 import ix.ginas.exporters.SubstanceExporterFactory;
 import org.apache.poi.util.DefaultTempFileCreationStrategy;
 import org.apache.poi.util.TempFile;
@@ -36,7 +37,7 @@ public class GinasSubstanceExporterFactoryPlugin implements Plugin {
 
     private final Set<SubstanceExporterFactory> exporters = new LinkedHashSet<>();
 
-    private Map<String, SubstanceExporterFactory.OutputFormat> extensionMap = new LinkedHashMap<>();
+    private Map<String, OutputFormat> extensionMap = new LinkedHashMap<>();
 
     private ThreadPoolExecutor executor;
 
@@ -75,12 +76,12 @@ public class GinasSubstanceExporterFactoryPlugin implements Plugin {
                 exporters.add(exporter.newInstance());
             }catch(Exception e){
                 Logger.error("Error initializing exporter:" + clazz);
-            	//e.printStackTrace();
+            	e.printStackTrace();
                 //ignore
             }
         }
 
-        for(SubstanceExporterFactory.OutputFormat fmt : getAllSupportedFormats()){
+        for(OutputFormat fmt : getAllSupportedFormats()){
             extensionMap.put(fmt.getExtension(), fmt);
         }
     }
@@ -94,13 +95,13 @@ public class GinasSubstanceExporterFactoryPlugin implements Plugin {
     }
 
     /**
-     * Get the {@link ix.ginas.exporters.SubstanceExporterFactory.OutputFormat} associated
+     * Get the {@link OutputFormat} associated
      * with the given file extension.
      * @param extension the extension to look for.
-     * @return the {@link ix.ginas.exporters.SubstanceExporterFactory.OutputFormat} for that extension;
+     * @return the {@link OutputFormat} for that extension;
      * or {@code null} if no format is mapped.
      */
-    public SubstanceExporterFactory.OutputFormat getFormatFor(String extension){
+    public OutputFormat getFormatFor(String extension){
         return extensionMap.get(extension);
     }
 
@@ -124,12 +125,12 @@ public class GinasSubstanceExporterFactoryPlugin implements Plugin {
     }
 
     /**
-     * Get all the Supported {@link ix.ginas.exporters.SubstanceExporterFactory.OutputFormat}s
+     * Get all the Supported {@link OutputFormat}s
      * by this plugin.
-     * @return a Set of {@link ix.ginas.exporters.SubstanceExporterFactory.OutputFormat}s, may be an
+     * @return a Set of {@link OutputFormat}s, may be an
      * empty set if no exporters are found.
      */
-    public Set<SubstanceExporterFactory.OutputFormat> getAllSupportedFormats(){
+    public Set<OutputFormat> getAllSupportedFormats(){
 
 
         //This mess with reverse iterating and then reversing again
@@ -145,17 +146,17 @@ public class GinasSubstanceExporterFactoryPlugin implements Plugin {
         //the final display order matches the input list order.
 
 
-        List<SubstanceExporterFactory.OutputFormat> list = getAllOutputsAsList();
+        List<OutputFormat> list = getAllOutputsAsList();
         //go in reverse order to prefer the factories listed first
-        ListIterator<SubstanceExporterFactory.OutputFormat> iterator = list.listIterator(list.size());
-        Set<SubstanceExporterFactory.OutputFormat> set = new LinkedHashSet<>();
+        ListIterator<OutputFormat> iterator = list.listIterator(list.size());
+        Set<OutputFormat> set = new LinkedHashSet<>();
         while(iterator.hasPrevious()){
             set.add(iterator.previous());
         }
         //reverse it again
-        List<SubstanceExporterFactory.OutputFormat> resortList = new ArrayList<>(set.size());
+        List<OutputFormat> resortList = new ArrayList<>(set.size());
 
-        for(SubstanceExporterFactory.OutputFormat f : set){
+        for(OutputFormat f : set){
             resortList.add(f);
         }
         Collections.reverse(resortList);
@@ -164,8 +165,8 @@ public class GinasSubstanceExporterFactoryPlugin implements Plugin {
         return new LinkedHashSet<>(resortList);
     }
 
-    private List<SubstanceExporterFactory.OutputFormat> getAllOutputsAsList() {
-        List<SubstanceExporterFactory.OutputFormat> list = new ArrayList<>();
+    private List<OutputFormat> getAllOutputsAsList() {
+        List<OutputFormat> list = new ArrayList<>();
 
         for(SubstanceExporterFactory factory : exporters){
             list.addAll(factory.getSupportedFormats());

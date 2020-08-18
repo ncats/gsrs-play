@@ -1,6 +1,7 @@
 package ix.ginas.exporters;
 
 import gov.nih.ncats.molwitch.Chemical;
+import ix.core.exporters.OutputFormat;
 import ix.core.validator.GinasProcessingMessage;
 import ix.ginas.models.v1.Code;
 import ix.ginas.models.v1.Name;

@@ -16,6 +16,7 @@ import ix.core.controllers.search.SearchFactory;
 import ix.core.models.Role;
 import ix.core.util.CachedSupplier;
 import play.Logger;
+import play.libs.F;
 import play.mvc.Result;
 
 /**
@@ -71,7 +72,14 @@ public class StaticDelegatingNamedResource<I,V> implements InstantiatedNamedReso
 					Method m = ef.getMethod(op.getOperationName(), op.asSigniture());
 					resultList.put(op, (realOperation)->{
 						Object[] raw= realOperation.asRawArguments();
-						return CachedSupplier.ofCallable(()->(Result)m.invoke(null, raw)).get();
+						return CachedSupplier.ofCallable(()->{
+							Object ret = m.invoke(null, raw);
+							if(ret instanceof F.Promise){
+								//TODO improve this timeout!!
+								return ((F.Promise<Result>)ret).get(1, TimeUnit.HOURS);
+							}
+							return (Result)ret;
+						}).get();
 					});
 				}catch(Exception e){
 				    Logger.info("Not found operation:" +op.getOperationName() + " in " + factory.getName());

@@ -108,8 +108,8 @@ public abstract class AbstractStructureResolver implements Resolver<Structure> {
                         Proxy proxy = null;
                         if (PROXY_ENABLED) {
                             proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress(PROXY_NAME, PORT_NUMBER));
-                            System.out.println("Checking for Config file values");
-                            System.out.println("Proxy Name is :" + PROXY_NAME + "\n" + "Port Number is :" + PORT_NUMBER);
+                            Logger.trace("Checking for Config file values");
+                            Logger.trace("Proxy Name is :" + PROXY_NAME + "\n" + "Port Number is :" + PORT_NUMBER);
                         } else {
                             proxy = Proxy.NO_PROXY;
                         }
@@ -120,7 +120,7 @@ public abstract class AbstractStructureResolver implements Resolver<Structure> {
                         con.setConnectTimeout(connTimeout);
 
                         int status = con.getResponseCode();
-                        Logger.debug("Resolving " + url + "..." + status);
+                        Logger.trace("Resolving " + url + "..." + status);
                         if (status == HttpURLConnection.HTTP_NOT_FOUND) {
                             break;
                         }

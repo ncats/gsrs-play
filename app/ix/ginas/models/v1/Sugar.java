@@ -12,6 +12,7 @@ import javax.persistence.Table;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import ix.core.SingleParent;
+import ix.core.models.Indexable;
 import ix.ginas.models.GinasAccessReferenceControlled;
 import ix.ginas.models.GinasCommonSubData;
 
@@ -55,6 +56,7 @@ public class Sugar extends GinasCommonSubData {
     	siteContainer.setShorthand(sites);
     }
 
+    @Indexable
 	public String getSugar() {
 		return sugar;
 	}

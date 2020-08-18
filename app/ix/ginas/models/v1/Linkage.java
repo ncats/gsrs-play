@@ -3,6 +3,7 @@ package ix.ginas.models.v1;
 
 import ix.core.SingleParent;
 import ix.core.models.BeanViews;
+import ix.core.models.Indexable;
 import ix.ginas.models.GinasAccessReferenceControlled;
 import ix.ginas.models.GinasCommonSubData;
 
@@ -50,7 +51,7 @@ public class Linkage extends GinasCommonSubData {
     	}
     	siteContainer.setShorthand(sites);
     }
-
+	@Indexable
 	public String getLinkage() {
 		return linkage;
 	}

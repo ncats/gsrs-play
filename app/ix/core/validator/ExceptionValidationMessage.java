@@ -21,7 +21,7 @@ public class ExceptionValidationMessage implements ValidationMessage {
 		String message = e.getMessage();
 		//some throwables don't have messages (like NPE)
 		//this causes problems because when converted to JSON we will lose the message
-		if(message !=null || !message.isEmpty()){
+		if(message !=null && !message.isEmpty()){
 			return message;
 		}
 		StringWriter sw = new StringWriter();

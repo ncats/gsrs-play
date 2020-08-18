@@ -25,6 +25,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import gov.nih.ncats.molwitch.Chemical;
 import gov.nih.ncats.molwitch.inchi.Inchi;
+import gov.nih.ncats.molwitch.io.CtTableCleaner;
 import ix.core.AbstractValueDeserializer;
 import ix.core.validator.GinasProcessingMessage;
 import ix.core.chem.Chem;
@@ -197,7 +198,7 @@ public class Structure extends BaseModel implements ForceUpdatableModel{
     public Optical opticalActivity;
     
     @Column(name = "atropi")
-    public NYU atropisomerism;
+    public NYU atropisomerism = NYU.No;
     
     @Lob
     @Basic(fetch = FetchType.EAGER)
@@ -211,7 +212,7 @@ public class Structure extends BaseModel implements ForceUpdatableModel{
     
     public Integer ezCenters; // counter of E/Z centers
     public Integer charge; // formal charge
-    @Indexable(name = "Molecular Weight", dranges = { 0, 200, 400, 600, 800, 1000 }, format = "%1$.0f", sortable=true)
+    @Indexable(sortable=true)
     public Double mwt; // molecular weight
 
     @ManyToMany(cascade = CascadeType.ALL)
@@ -268,7 +269,6 @@ public class Structure extends BaseModel implements ForceUpdatableModel{
     }
 
 
-    @JsonProperty(value="_self")
     public String getSelf() {
         return id != null ? Global.getRef(this) + "?view=full" : null;
     }
@@ -277,8 +277,21 @@ public class Structure extends BaseModel implements ForceUpdatableModel{
     @PreUpdate
     public void modified() {
         this.lastEdited = TimeUtil.getCurrentDate();
+        if(atropisomerism==null){
+            atropisomerism=NYU.No;
+        }
+//        System.out.println("before = "+ this.molfile);
+        //GSRS-1515 clean up structure
+        if(this.molfile !=null && !this.molfile.trim().isEmpty()){
+            try {
+                this.molfile = CtTableCleaner.clean(this.molfile);
+            } catch (IOException e) {
+               Logger.error("error cleaning mol file \n"+ this.molfile, e);
+                //don't update it
     }
-
+        }
+//        System.out.println("after = "+ this.molfile);
+    }
 
 
     public String getId() {
@@ -289,16 +302,6 @@ public class Structure extends BaseModel implements ForceUpdatableModel{
     public UUID getRealId(){
     	return this.id;
     }
-    
-//    @JsonProperty(value="uuid")
-//    public String getUUID(){
-//    	return getId();
-//    }
-//
-//    @JsonProperty(value="uuid")
-//    public void setUUID(UUID id){
-//    	this.setId(id);
-//    }
 
     @JsonProperty(value="hash")
     public String getExactHash(){
@@ -403,19 +406,33 @@ public class Structure extends BaseModel implements ForceUpdatableModel{
     @Transient
     public String getInChIKey() {
     	try{
-            return Inchi.asStdInchi(Chem.RemoveQueryAtomsForPseudoInChI(toChemical()), true).getKey();
+            return getInChIKeyAndThrow();
     	}catch(Exception e){
     		e.printStackTrace();
     		return null;
     	}
     }
 
-    
+    @JsonIgnore
+    @Transient
+    public String getInChIKeyAndThrow() throws Exception{
+       return Inchi.asStdInchi(Chem.RemoveQueryAtomsForPseudoInChI(toChemical()), true).getKey();
+
+    }
+
+
+    @JsonIgnore
+    @Transient
+    public String getInChIAndThrow() throws Exception{
+        return Inchi.asStdInchi(Chem.RemoveQueryAtomsForPseudoInChI(toChemical()), true).getInchi();
+
+    }
+
     @JsonIgnore
     @Transient
     public String getInChI() {
     	try{
-    		return Inchi.asStdInchi(toChemical(), true).getInchi();
+            return getInChIAndThrow();
     	}catch(Exception e){
     		e.printStackTrace();
     		return null;

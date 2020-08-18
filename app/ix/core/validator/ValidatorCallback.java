@@ -6,7 +6,7 @@ package ix.core.validator;
 public interface ValidatorCallback {
     void addMessage(ValidationMessage message);
 
-    void addMessage(ValidationMessage message, Runnable appyAction);
+    void addMessage(ValidationMessage message, Runnable applyAction);
 
     void setInvalid();
 
