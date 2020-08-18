@@ -240,12 +240,13 @@ public class EntityPersistAdapter extends BeanPersistAdapter implements ProcessL
     public EntityPersistAdapter(Application app) {
         //EPA will be called multiple times by ebean once for each datasource that adds the adapters
         if(_instance ==null) {
-            this.application = app;
+
             textIndexerPlugin = app.plugin(TextIndexerPlugin.class);
             strucProcessPlugin = app.plugin(StructureIndexerPlugin.class);
             seqProcessPlugin = app.plugin(SequenceIndexerPlugin.class);
             _instance = this;
         }
+        this.application = app;
     }
 
     boolean debug(int level) {
