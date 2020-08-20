@@ -1211,7 +1211,7 @@ public class GinasTestServer extends ExternalResource{
                     sessions.clear();
                     //explicitly shutdown indexer to clear file locks
                     App.getTextIndexer().shutdown();
-
+                    EntityPersistAdapter.clearInstance();
                     EntityProcessorFactory.clearInstance();
                 } finally {
                     ts.stop();
