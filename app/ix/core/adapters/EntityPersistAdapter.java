@@ -338,7 +338,15 @@ public class EntityPersistAdapter extends BeanPersistAdapter implements ProcessL
     }
 
     public static StandardizedStructureIndexer getStructureIndexer() {
-        return getInstance().structureIndexer();
+        EntityPersistAdapter instance = getInstance();
+        if(instance ==null){
+            System.out.println("EPA INSTANCE IS NULL");
+        }
+        StandardizedStructureIndexer indexer = instance.structureIndexer();
+        if(indexer ==null){
+            System.out.println("STRUCTURE INDEXER IS NULL");
+        }
+        return indexer;
     }
 
     public StandardizedStructureIndexer structureIndexer() {
