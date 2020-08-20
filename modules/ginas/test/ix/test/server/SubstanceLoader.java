@@ -221,7 +221,7 @@ public class SubstanceLoader {
     }
 
     protected String postLoadUrl(GinasHttpResolver resolver) {
-        return resolver.apiV1("/admin/load", true);
+        return session.constructUrlFor(resolver.apiV1("/admin/load", true));
     }
 
 
