@@ -98,6 +98,7 @@ public class SubstanceLoader {
 //            if(preserveAuditInfo){
 //                params.add(new NameValuePair("preserve-audit", "preserve-audit"));
 //            }
+            System.out.println("postUrl = " + postUrl);
             List<com.ning.http.multipart.Part> parts = new ArrayList<>();
             try {
                 File json;
