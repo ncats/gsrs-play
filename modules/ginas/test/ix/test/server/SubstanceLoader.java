@@ -1,33 +1,22 @@
 package ix.test.server;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.gargoylesoftware.htmlunit.FormEncodingType;
-import com.gargoylesoftware.htmlunit.WebRequest;
-import com.gargoylesoftware.htmlunit.html.HtmlPage;
-import com.gargoylesoftware.htmlunit.util.KeyDataPair;
-import com.gargoylesoftware.htmlunit.util.NameValuePair;
-import com.ning.http.client.FluentCaseInsensitiveStringsMap;
-import com.ning.http.client.multipart.StringPart;
-import com.ning.http.client.providers.jdk.MultipartRequestEntity;
-import ix.core.models.Keyword;
+import com.ning.http.client.FluentStringsMap;
+import com.ning.http.multipart.FilePart;
+import com.ning.http.multipart.MultipartRequestEntity;
+import com.ning.http.multipart.StringPart;
 import ix.core.models.ProcessingJob;
-import ix.core.util.RestUrlLink;
-import org.apache.commons.io.Charsets;
-import play.api.mvc.MultipartFormData.*;
 import play.libs.F;
 import play.libs.ws.WS;
 import play.libs.ws.WSRequestHolder;
 import play.libs.ws.WSResponse;
 
 import java.io.*;
-import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
@@ -108,7 +97,7 @@ public class SubstanceLoader {
 //            if(preserveAuditInfo){
 //                params.add(new NameValuePair("preserve-audit", "preserve-audit"));
 //            }
-            List<com.ning.http.client.multipart.Part> parts = new ArrayList<>();
+            List<com.ning.http.multipart.Part> parts = new ArrayList<>();
             try {
                 File json;
                 if(numRecordsToLoad !=null || numRecordsToSkip !=null){
@@ -116,13 +105,13 @@ public class SubstanceLoader {
                 }else{
                     json = fullInputJsonFile;
                 }
-                parts.add(new com.ning.http.client.multipart.FilePart("file-name", json, "application/json", Charsets.UTF_8));
-                parts.add(new StringPart("file-type", "JSON"));
+                parts.add(new FilePart("file-name", json, "application/json", "UTF-8"));
+                parts.add(new com.ning.http.multipart.StringPart("file-type", "JSON"));
                 if(preserveAuditInfo) {
                     parts.add(new StringPart("preserve-audit", "preserve-audit"));
                 }
                 // Add it to the multipart request entity
-                MultipartRequestEntity requestEntity = new MultipartRequestEntity(parts, new FluentCaseInsensitiveStringsMap());
+                MultipartRequestEntity requestEntity = new MultipartRequestEntity(parts.toArray(new com.ning.http.multipart.Part[parts.size()]), new FluentStringsMap());
                 ByteArrayOutputStream bos = new ByteArrayOutputStream();
                 requestEntity.writeRequest(bos);
                 InputStream reqIS = new ByteArrayInputStream(bos.toByteArray());
