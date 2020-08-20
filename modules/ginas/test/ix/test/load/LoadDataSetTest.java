@@ -285,8 +285,10 @@ public class LoadDataSetTest extends AbstractLoadDataSetTest{
 
             File f = new File(TEST_TESTDUMPS_REP90_GINAS);
 
-            expectedException.expectMessage("401 Unauthorized");
             loader.loadJson(f);
+            fail("should throw 401 error");
+        }catch(SubstanceLoader.HttpErrorCode e){
+            assertEquals(401, e.getStatus());
         }
     }
 
@@ -295,7 +297,7 @@ public class LoadDataSetTest extends AbstractLoadDataSetTest{
     @Test  
     public void noDataLoadedShouldReturnZeroResults() throws IOException {
 
-        BrowserSubstanceSearcher searcher = new BrowserSubstanceSearcher(ts.notLoggedInBrowserSession());
+        RestSubstanceSubstanceSearcher searcher = new RestSubstanceSubstanceSearcher(ts.notLoggedInRestSession());
 
         SearchResult results = searcher.substructure("C1=CC=CC=C1");
 
@@ -327,9 +329,10 @@ public class LoadDataSetTest extends AbstractLoadDataSetTest{
         TestUtil.tryToDeleteRecursively(new File(home, "structure"));
 
         ts.start();
-        try(BrowserSession session = ts.newBrowserSession(admin)){
+        try(RestSession session = ts.newRestSession(admin)){
 
-            BrowserSubstanceSearcher searcher = new BrowserSubstanceSearcher(session);
+            RestSubstanceSubstanceSearcher searcher = new RestSubstanceSubstanceSearcher(session);
+
 
             SearchResult results = searcher.substructure("C1=CC=CC=C1");
 

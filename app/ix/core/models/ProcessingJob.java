@@ -30,7 +30,15 @@ public class ProcessingJob extends LongBaseModel {
 	private static final String PERSISTER_KEYWORD = "PERSISTER";
 	
     public enum Status {
-        COMPLETE, RUNNING, NOT_RUN, FAILED, PENDING, STOPPED, UNKNOWN
+        COMPLETE, RUNNING, NOT_RUN, FAILED, PENDING, STOPPED, UNKNOWN;
+
+        public boolean isComplete(){
+            return this == COMPLETE;
+        }
+
+        public boolean isInFinalState(){
+            return this == COMPLETE || this == FAILED || this == STOPPED;
+        }
     }
     
     @Id
