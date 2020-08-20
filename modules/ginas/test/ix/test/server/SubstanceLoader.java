@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
@@ -84,7 +85,7 @@ public class SubstanceLoader {
             return this;
         }
 
-        F.Promise<WSResponse> generateParametersFor(File fullInputJsonFile, String postUrl) throws IOException{
+        F.Promise<WSResponse> generateParametersFor(File fullInputJsonFile, Supplier<WSRequestHolder> wsSupplier) throws IOException{
 //            List<NameValuePair> params = new ArrayList<>();
 //            params.add(new NameValuePair("file-type", "JSON"));
 //            File json;
@@ -98,7 +99,6 @@ public class SubstanceLoader {
 //            if(preserveAuditInfo){
 //                params.add(new NameValuePair("preserve-audit", "preserve-audit"));
 //            }
-            System.out.println("postUrl = " + postUrl);
             List<com.ning.http.multipart.Part> parts = new ArrayList<>();
             try {
                 File json;
@@ -117,7 +117,7 @@ public class SubstanceLoader {
                 ByteArrayOutputStream bos = new ByteArrayOutputStream();
                 requestEntity.writeRequest(bos);
                 InputStream reqIS = new ByteArrayInputStream(bos.toByteArray());
-                return WS.url(postUrl)
+                return  wsSupplier.get()
                         .setContentType(requestEntity.getContentType())
                         .post(reqIS);
 
@@ -216,7 +216,7 @@ public class SubstanceLoader {
 
 
     protected WSResponse submitFileForLoading(File json, LoadOptions options) throws IOException {
-        return options.generateParametersFor(json, postLoadUrl(session.getHttpResolver()))
+        return options.generateParametersFor(json, ()-> session.createRequestHolder(postLoadUrl(session.getHttpResolver())))
                                     .get(2_000, TimeUnit.MILLISECONDS);
     }
 
