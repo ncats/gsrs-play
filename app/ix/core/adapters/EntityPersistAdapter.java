@@ -241,12 +241,14 @@ public class EntityPersistAdapter extends BeanPersistAdapter implements ProcessL
         //EPA will be called multiple times by ebean once for each datasource that adds the adapters
         if(_instance ==null) {
 
-            textIndexerPlugin = app.plugin(TextIndexerPlugin.class);
-            strucProcessPlugin = app.plugin(StructureIndexerPlugin.class);
-            seqProcessPlugin = app.plugin(SequenceIndexerPlugin.class);
+
             _instance = this;
         }
         this.application = app;
+        textIndexerPlugin = app.plugin(TextIndexerPlugin.class);
+        strucProcessPlugin = app.plugin(StructureIndexerPlugin.class);
+        seqProcessPlugin = app.plugin(SequenceIndexerPlugin.class);
+
     }
 
     boolean debug(int level) {
@@ -359,6 +361,9 @@ public class EntityPersistAdapter extends BeanPersistAdapter implements ProcessL
     public SequenceIndexer sequenceIndexer() {
         if (seqProcessPlugin == null || !seqProcessPlugin.enabled()) {
             seqProcessPlugin = application.plugin(SequenceIndexerPlugin.class);
+        }
+        if(seqProcessPlugin ==null) {
+            System.out.println("SEQ PROCESS PLUGIN NULL");
         }
         return seqProcessPlugin.getIndexer();
     }
