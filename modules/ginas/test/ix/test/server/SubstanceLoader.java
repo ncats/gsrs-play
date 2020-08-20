@@ -1,5 +1,7 @@
 package ix.test.server;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ning.http.client.FluentCaseInsensitiveStringsMap;
@@ -7,6 +9,7 @@ import com.ning.http.multipart.FilePart;
 import com.ning.http.multipart.MultipartRequestEntity;
 import com.ning.http.multipart.StringPart;
 import ix.core.models.ProcessingJob;
+import ix.core.util.RestUrlLink;
 import play.libs.F;
 import play.libs.ws.WSRequestHolder;
 import play.libs.ws.WSResponse;
@@ -193,11 +196,11 @@ public class SubstanceLoader {
     private void waitUntilComplete(WSResponse response ) throws IOException {
         waitUntilComplete(parseJob(response.asJson()), 2_000L);
     }
-    private void waitUntilComplete(ProcessingJob job) throws IOException {
+    private void waitUntilComplete(JobStatus job) throws IOException {
         waitUntilComplete(job, 2_000L);
     }
-    private void waitUntilComplete(ProcessingJob originalJob, long sleeptimeMillis) throws IOException {
-        ProcessingJob job = originalJob;
+    private void waitUntilComplete(JobStatus originalJob, long sleeptimeMillis) throws IOException {
+        JobStatus job = originalJob;
 
         while(!job.status.isInFinalState()){
             try {
@@ -205,7 +208,7 @@ public class SubstanceLoader {
             } catch (InterruptedException e) {
                 throw new IOException(e);
             }
-            WSRequestHolder request = session.getRequest(job.selfUrl().url);
+            WSRequestHolder request = session.getRequest(job._self.url);
             JsonNode json = session.getAsJson(request);
             job = parseJob( json);
 
@@ -224,14 +227,64 @@ public class SubstanceLoader {
 
 
 
-    protected ProcessingJob parseJob(JsonNode json) {
+    protected JobStatus parseJob(JsonNode json) {
         try {
-            ProcessingJob job =MAPPER.convertValue(json, ProcessingJob.class);
-            return job;
+            System.out.println(json);
+            /*
+            "JSON ="{
+   "id":1,
+   "keys":[
+      {
+         "id":70,
+         "label":"ix.core.plugins.GinasRecordProcessorPlugin",
+         "term":"bff401efbdb7dfa7e401"
+      },
+      {
+         "id":71,
+         "label":"EXTRACTOR",
+         "term":"ix.ginas.utils.GinasUtils$GinasDumpExtractor"
+      },
+      {
+         "id":72,
+         "label":"PERSISTER",
+         "term":"ix.ginas.utils.GinasUtils$GinasSubstancePersister"
+      }
+   ],
+   "status":"PENDING",
+   "start":1597890680785,
+   "message":"Preparing payload for processing",
+   "statistics":{
+      "recordsExtractedSuccess":0,
+      "recordsProcessedSuccess":0,
+      "recordsPersistedSuccess":0,
+      "recordsExtractedFailed":0,
+      "recordsProcessedFailed":0,
+      "recordsPersistedFailed":0,
+      "estimatedTimeLeft":51,
+      "averageTimeToPersist":51.0
+   },
+   "version":1,
+   "name":"Import batch file \"rep90.ginas\"",
+   "_self":{
+      "url":"http://localhost:9005/ginas/app/api/v1/admin/load/bff401efbdb7dfa7e401",
+      "type":"GET"
+   },
+   "_payload":"http://localhost:9005/ginas/app/api/v1/jobs(1)/payload",
+   "_owner":"http://localhost:9005/ginas/app/api/v1/jobs(1)/owner"
+}
+             */
+
+            return MAPPER.convertValue(json, JobStatus.class);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
 
     }
 
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public static class JobStatus{
+        public ProcessingJob.Status status;
+        public String message;
+        public RestUrlLink _self;
+    }
 }
