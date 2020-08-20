@@ -45,6 +45,17 @@ public class RestSubstanceSubstanceSearcher implements SubstanceSearcher{
         public String results;
         public boolean finished;
 
+        @Override
+        public String toString() {
+            return "SearchResultStatus{" +
+                    "key='" + key + '\'' +
+                    ", status='" + status + '\'' +
+                    ", url='" + url + '\'' +
+                    ", results='" + results + '\'' +
+                    ", finished=" + finished +
+                    '}';
+        }
+
         public Optional<RestExportSupportSearchResult> getSomeResults(RestSubstanceSubstanceSearcher searcher, ObjectMapper mapper, int skip) throws IOException {
             return _getResults(searcher, mapper, "skip="+skip);
         }
@@ -221,6 +232,7 @@ public class RestSubstanceSubstanceSearcher implements SubstanceSearcher{
         long start = System.currentTimeMillis();
         JsonNode currentNode = node;
         while(!status.finished && System.currentTimeMillis() - start < timeout){
+            System.out.println("STATUS = " + status);
             currentNode = restSession.createRequestHolder(status.url).get().get(timeout).asJson();
             status = mapper.treeToValue(currentNode, SearchResultStatus.class);
         }
@@ -322,12 +334,15 @@ public class RestSubstanceSubstanceSearcher implements SubstanceSearcher{
 //        String url = restSession.getHttpResolver().apiV1("substances/structureSearch?q="+ URLEncoder.encode(smiles, "UTF-8")+"");
         String url = restSession.getHttpResolver().apiV1("substances/structureSearch");
 
-        JsonNode node = restSession.createRequestHolder(url)
+        WSResponse response = restSession.createRequestHolder(url)
                 .setQueryParameter("q", smiles)
                 .setQueryParameter("cutoff", Double.toString(cutoff))
                 .get()
-                .get(3000)
-                .asJson();
+                .get(3000);
+        if(response.getStatus() >=300){
+            throw new HttpErrorCodeException(response);
+        }
+        JsonNode node = response.asJson();
 
         return waitForResults(node, 10_000);
 

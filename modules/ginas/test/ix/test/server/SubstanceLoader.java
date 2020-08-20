@@ -3,13 +3,11 @@ package ix.test.server;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ning.http.client.FluentCaseInsensitiveStringsMap;
-import com.ning.http.client.FluentStringsMap;
 import com.ning.http.multipart.FilePart;
 import com.ning.http.multipart.MultipartRequestEntity;
 import com.ning.http.multipart.StringPart;
 import ix.core.models.ProcessingJob;
 import play.libs.F;
-import play.libs.ws.WS;
 import play.libs.ws.WSRequestHolder;
 import play.libs.ws.WSResponse;
 
@@ -179,7 +177,7 @@ public class SubstanceLoader {
 
         WSResponse response = submitFileForLoading(json, options);
         if(response.getStatus()>=300){
-            throw new HttpErrorCode(response);
+            throw new HttpErrorCodeException(response);
         }
         waitUntilComplete(response);
         if(options.sleepAmount !=null){
@@ -234,23 +232,6 @@ public class SubstanceLoader {
             throw new RuntimeException(e);
         }
 
-    }
-
-    public static class HttpErrorCode extends IOException{
-        private WSResponse response;
-
-        public HttpErrorCode(WSResponse response) {
-            super(response.getStatus() + " : " + response.getStatusText());
-            this.response = response;
-        }
-
-        public WSResponse getResponse() {
-            return response;
-        }
-
-        public int getStatus(){
-            return response.getStatus();
-        }
     }
 
 }

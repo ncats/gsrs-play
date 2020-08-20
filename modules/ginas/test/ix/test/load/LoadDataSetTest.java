@@ -16,7 +16,6 @@ import org.junit.rules.ExpectedException;
 
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
 
-import ix.ginas.utils.GinasGlobal;
 import ix.test.util.TestUtil;
 import ix.utils.Util;
 /**
@@ -275,7 +274,8 @@ public class LoadDataSetTest extends AbstractLoadDataSetTest{
     }
 
     
-    @Test  
+    @Test
+    @RunOnly
     public void nonAdminCanNotLoad() throws IOException{
         GinasTestServer.User normalUser = ts.createNormalUser("peon", "pass");
 
@@ -287,14 +287,15 @@ public class LoadDataSetTest extends AbstractLoadDataSetTest{
 
             loader.loadJson(f);
             fail("should throw 401 error");
-        }catch(SubstanceLoader.HttpErrorCode e){
+        }catch(HttpErrorCodeException e){
             assertEquals(401, e.getStatus());
         }
     }
 
 
     
-    @Test  
+    @Test
+    @RunOnly
     public void noDataLoadedShouldReturnZeroResults() throws IOException {
 
         RestSubstanceSubstanceSearcher searcher = new RestSubstanceSubstanceSearcher(ts.notLoggedInRestSession());
