@@ -2,6 +2,7 @@ package ix.test.server;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.ning.http.client.FluentCaseInsensitiveStringsMap;
 import com.ning.http.client.FluentStringsMap;
 import com.ning.http.multipart.FilePart;
 import com.ning.http.multipart.MultipartRequestEntity;
@@ -111,7 +112,7 @@ public class SubstanceLoader {
                     parts.add(new StringPart("preserve-audit", "preserve-audit"));
                 }
                 // Add it to the multipart request entity
-                MultipartRequestEntity requestEntity = new MultipartRequestEntity(parts.toArray(new com.ning.http.multipart.Part[parts.size()]), new FluentStringsMap());
+                MultipartRequestEntity requestEntity = new MultipartRequestEntity(parts.toArray(new com.ning.http.multipart.Part[parts.size()]), new FluentCaseInsensitiveStringsMap());
                 ByteArrayOutputStream bos = new ByteArrayOutputStream();
                 requestEntity.writeRequest(bos);
                 InputStream reqIS = new ByteArrayInputStream(bos.toByteArray());
