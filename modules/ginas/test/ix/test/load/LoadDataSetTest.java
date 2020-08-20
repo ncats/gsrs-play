@@ -65,8 +65,6 @@ public class LoadDataSetTest extends AbstractLoadDataSetTest{
     }
 
     private void substructureSearchShouldWait(BrowserSession session) throws IOException, AssertionError{
-    	BrowserSubstanceSearcher searcher = new BrowserSubstanceSearcher(session);
-    	searcher.setSearchOrder("Name Count");
 
         RestSession restSession = session.newRestSession();
     	RestSubstanceSubstanceSearcher restSearcher = restSession.searcher();
@@ -79,7 +77,6 @@ public class LoadDataSetTest extends AbstractLoadDataSetTest{
                                                 opts.setWait(true);
     	SearchResult restResult1 = restSearcher.structureSearch(opts).getAllResults(restSearcher, mapper).get();
 
-    	System.out.println("rest results total was " + restResult1.getUuids().size());
 
     	List<String> expected = new ArrayList<>(restResult1.getUuids()).subList(5, restResult1.getUuids().size());
 
@@ -89,31 +86,6 @@ public class LoadDataSetTest extends AbstractLoadDataSetTest{
 //        assertEquals(restResult2.getUuids().size() - 5, expected.size());
 
         assertEquals(expected, new ArrayList<>(restResult2.getUuids()));
-    	/* SearchResult results1 =searcher.getSubstructureSearch("CC1=CC=CC=C1", 1, 1,false);
-    	//System.out.println("This was the first uuid:" + results1.getUuids().toString());
-    	
-    	
-    	try{
-//    	    Thread.sleep(1_000);
-    	}catch(Exception e){}
-    	
-    	SearchResult results2 =searcher.getSubstructureSearch("CC1=CC=CC=C1", 1, 6,true);
-    	
-    	
-    	
-    	
-    	//System.out.println("Found results size:" + results2.getUuids().toString());
-    	assertEquals(1, results2.getUuids().size());
-    	String findUUID="445d5a83";
-		assertTrue(
-				"15th page of substructure search should have the same substance every time: looking for \""
-						+ findUUID
-						+ "\" but found \""
-						+ results2.getUuids().toString() + "\"", results2
-						.getUuids().contains(findUUID));
-        assertTrue("15th page of substructure search should have no other substances",results2.getUuids().size()==1);
-
-   */
     }
 
     private void substructureSearchShouldWaitAndLaterPagesShouldReturn(BrowserSession session) throws IOException, AssertionError{
@@ -136,17 +108,10 @@ public class LoadDataSetTest extends AbstractLoadDataSetTest{
     	HtmlPage lastResults =searcher.getSubstructurePage("C1=CC=CC=C1", 1, 10,true);
 //    	System.out.println(lastResults.asXml());
     	Set<String> img_urls= searcher.getStructureImagesFrom(lastResults);
-//    	try {
-//            Thread.sleep(1200_000);
-//        } catch (InterruptedException e) {
-//            // TODO Auto-generated catch block
-//            e.printStackTrace();
-//            throw new IOException(e);
-//        }
+
     	assertEquals(1,img_urls.size());
     	RestSession rs=ts.newRestSession(session.getUser());
-    	
-    	CountDownLatch cdl = new CountDownLatch(1);
+
     	
     	
     	
@@ -275,7 +240,6 @@ public class LoadDataSetTest extends AbstractLoadDataSetTest{
 
     
     @Test
-    @RunOnly
     public void nonAdminCanNotLoad() throws IOException{
         GinasTestServer.User normalUser = ts.createNormalUser("peon", "pass");
 
@@ -295,7 +259,6 @@ public class LoadDataSetTest extends AbstractLoadDataSetTest{
 
     
     @Test
-    @RunOnly
     public void noDataLoadedShouldReturnZeroResults() throws IOException {
 
         RestSubstanceSubstanceSearcher searcher = new RestSubstanceSubstanceSearcher(ts.notLoggedInRestSession());
