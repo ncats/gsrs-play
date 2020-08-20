@@ -1269,6 +1269,9 @@ public class App extends Authentication {
 	    StructureSeachTask task = new StructureSeachTask(){
             @Override
             public void search(ResultProcessor processor2) throws Exception {
+            	if(EntityPersistAdapter.getStructureIndexer() ==null){
+            		System.out.println("EPA IS NULL !!!!!!!!!!!!!!!");
+				}
                 processor2.setResults(min, EntityPersistAdapter.getStructureIndexer().substructure(query, 0));
             }
 	    };
@@ -1302,9 +1305,11 @@ public class App extends Authentication {
             final String key = task.getKey();
             return getOrElse(task.getLastUpdatedTime(), key,
                             TypedCallable.of(() -> {
+                            	System.out.println("IN GET OR ELSE SEARCH");
                                 task.search(processor);
                                 SearchResultContext ctx = processor.getContext();
                                 ctx.setKey(key);
+                                System.out.println("done search ctx =" + ctx);
                                 return ctx;
                             },SearchResultContext.class));
         }catch (Exception ex) {
