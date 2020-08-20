@@ -24,6 +24,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.typesafe.config.ConfigFactory;
 import com.typesafe.config.ConfigValueFactory;
+import ix.core.adapters.EntityPersistAdapter;
 import ix.core.factories.EntityProcessorFactory;
 import ix.core.models.*;
 import ix.core.util.ConfigHelper;
@@ -689,7 +690,7 @@ public class GinasTestServer extends ExternalResource{
         cacheManager = CacheManager.getInstance();
         cacheManager.removalAll();
         cacheManager.shutdown();
-
+        EntityPersistAdapter.clearInstance();
         EntityProcessorFactory.clearInstance();
 
         extendedBefore(() -> testSpecificConfig.resolve());

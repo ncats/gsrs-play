@@ -75,6 +75,12 @@ public class EntityPersistAdapter extends BeanPersistAdapter implements ProcessL
     }
 
     /**
+     * Should only be called by tests.
+     */
+    public static void clearInstance(){
+        _instance=null;
+    }
+    /**
      * Preparing the edit ...
      * 
      * @param ew
@@ -241,13 +247,13 @@ public class EntityPersistAdapter extends BeanPersistAdapter implements ProcessL
         //EPA will be called multiple times by ebean once for each datasource that adds the adapters
         if(_instance ==null) {
 
-
+            textIndexerPlugin = app.plugin(TextIndexerPlugin.class);
+            strucProcessPlugin = app.plugin(StructureIndexerPlugin.class);
+            seqProcessPlugin = app.plugin(SequenceIndexerPlugin.class);
             _instance = this;
         }
         this.application = app;
-        textIndexerPlugin = app.plugin(TextIndexerPlugin.class);
-        strucProcessPlugin = app.plugin(StructureIndexerPlugin.class);
-        seqProcessPlugin = app.plugin(SequenceIndexerPlugin.class);
+
 
     }
 
