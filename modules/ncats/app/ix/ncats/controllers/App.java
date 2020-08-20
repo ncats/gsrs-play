@@ -1307,9 +1307,11 @@ public class App extends Authentication {
                             TypedCallable.of(() -> {
                             	System.out.println("IN GET OR ELSE SEARCH");
                                 task.search(processor);
+								System.out.println("done search");
                                 SearchResultContext ctx = processor.getContext();
+								System.out.println("done search ctx =" + ctx);
                                 ctx.setKey(key);
-                                System.out.println("done search ctx =" + ctx);
+
                                 return ctx;
                             },SearchResultContext.class));
         }catch (Exception ex) {
