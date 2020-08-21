@@ -129,6 +129,7 @@ public class InheritanceTypeIdResolver implements TypeIdResolver {
 
 
         subtypes.forEach(type -> {
+            System.out.println("found subtype " + type);
             String key = computeNameFor(type);
 
             JavaType value = TypeFactory.defaultInstance().constructSpecializedType(baseType, type);
