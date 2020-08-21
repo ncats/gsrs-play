@@ -786,7 +786,7 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
     @JsonIgnore
     public boolean addAlternativeSubstanceDefinitionRelationship(Substance sub) {
         for(Relationship sref:getAlternativeDefinitionRelationships()){
-            if(sref.relatedSubstance.refuuid.equals(sub.getUuid().toString())){
+            if(sref.relatedSubstance.refuuid.equals(sub.getOrGenerateUUID().toString())){
                 return true;
             }
         }
