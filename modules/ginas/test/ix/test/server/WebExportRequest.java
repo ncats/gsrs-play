@@ -93,7 +93,7 @@ public class WebExportRequest {
             Optional<WSResponse> resp =new WaitChecker<>(
                     ()->session.get(pingUrl).asJson(),
                     n -> n.at("/complete").asBoolean(),
-                    n -> session.get(n.at("/downloadUrl").asText())
+                    n -> session.get(n.at("/downloadUrl/url").asText())
             ).setMaxNumTries(10)
 //                        .setAwaitTime(1, TimeUnit.SECONDS)  //default is 1 sec
                     .execute();
