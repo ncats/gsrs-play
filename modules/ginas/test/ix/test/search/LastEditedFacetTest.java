@@ -202,8 +202,8 @@ public class LastEditedFacetTest extends AbstractLoadDataSetTest {
         //only care about the keys we expect ignore everything else
 
 
-        System.out.println("expected before " + expected.keySet());
-        System.out.println("actual before " + actual.keySet());
+//        System.out.println("expected before " + expected.keySet());
+//        System.out.println("actual before " + actual.keySet());
 
         actual.keySet().retainAll(expected.keySet());
 
@@ -291,12 +291,12 @@ public class LastEditedFacetTest extends AbstractLoadDataSetTest {
         assertTrue(results.numberOfResults() > 0);
         assertTrue(!results.getAllFacets().isEmpty());
 
-        System.out.println("all facets = " + results.getAllFacets());
+//        System.out.println("all facets = " + results.getAllFacets());
 
         lastEditMap = results.getFacet(Last_Edited_Facet);
 
         int beforeCount = lastEditMap.get("Today");
-        System.out.println("Last Edited "+lastEditMap);
+//        System.out.println("Last Edited "+lastEditMap);
         assertEquals(45,  beforeCount);
         assertEquals(0, lastEditMap.get("Older than 2 years").intValue());
 
@@ -318,7 +318,6 @@ public class LastEditedFacetTest extends AbstractLoadDataSetTest {
     }
 
     @Test
-    @RunOnly
     public void directReindex() throws IOException {
         session = ts.newRestSession(admin);
 
@@ -362,7 +361,7 @@ public class LastEditedFacetTest extends AbstractLoadDataSetTest {
         try( RestSession session2 = ts.newRestSession(admin)) {
             RestSubstanceSubstanceSearcher searcher2 = session2.searcher();
 
-            System.out.println(TimeUtil.getCurrentDate());
+//            System.out.println(TimeUtil.getCurrentDate());
             results = searcher2.all();
             lastEditMap = results.getFacet(Last_Edited_Facet);
 
