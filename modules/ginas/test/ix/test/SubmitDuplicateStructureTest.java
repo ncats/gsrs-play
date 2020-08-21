@@ -123,7 +123,7 @@ public class SubmitDuplicateStructureTest extends AbstractGinasServerTest {
 
 
     @Test
-    public void submitSameStructureTwiceAsPeonShouldBeError() throws Throwable{
+    public void submitSameStructureTwiceShouldBeMarkedAsFullDuplicate() throws Throwable{
 
 
 
@@ -140,7 +140,7 @@ public class SubmitDuplicateStructureTest extends AbstractGinasServerTest {
 
 
             SubstanceAPI.ValidationResponse validationResponse = peonApi.validateSubstance(js);
-            ValidationMessage duplicateMessage = getDuplicateSubstructureMessage(validationResponse);
+            ValidationMessage duplicateMessage = getFullDuplicateSubstructureMessage(validationResponse);
 
 
             assertEquals(expectedType, duplicateMessage.getMessageType());
@@ -155,5 +155,14 @@ public class SubmitDuplicateStructureTest extends AbstractGinasServerTest {
                         .orElseThrow(() -> {
                             throw new AssertionError("no duplicate structure message in " + validationResponse.getMessages());
                         });
+    }
+
+    private ValidationMessage getFullDuplicateSubstructureMessage(SubstanceAPI.ValidationResponse validationResponse) throws Throwable{
+        return validationResponse.getMessages().stream()
+                .filter(m -> m.getMessage().contains("appears to be a full duplicate"))
+                .findAny()
+                .orElseThrow(() -> {
+                    throw new AssertionError("no duplicate structure message in " + validationResponse.getMessages());
+                });
     }
 }
