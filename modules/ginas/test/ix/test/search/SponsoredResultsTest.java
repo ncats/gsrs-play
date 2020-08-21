@@ -81,7 +81,6 @@ public class SponsoredResultsTest extends AbstractGinasServerTest{
 	}
 	
 	@Test
-	@RunOnly
     public void exactMatchOnSpecialFieldsShowFirst() throws IOException, InterruptedException{
 
 	        String theName = "ANYTHING";
@@ -106,8 +105,8 @@ public class SponsoredResultsTest extends AbstractGinasServerTest{
             Set<String> searchUUIDs = new HashSet<>(sr.getUuids());
             searchUUIDs.removeAll(uuids);
             
-            System.out.println("Extras");
-            System.out.println(searchUUIDs);
+//            System.out.println("Extras");
+//            System.out.println(searchUUIDs);
             
             assertEquals(uuids,sr.getUuids());
             assertEquals(max+1,sr.getUuids().size());
@@ -125,13 +124,14 @@ public class SponsoredResultsTest extends AbstractGinasServerTest{
 	        Substance special =new SubstanceBuilder()
 	                .addName(theName)
 					.generateNewUUID() // need to explicitly put this here so we have a reference to it.
-					.andThen(s->{uuids.add(s.getUuid().toString().split("-")[0]);})
+//					.andThen(s->{uuids.add(s.getUuid().toString().split("-")[0]);})
+					.andThen((Consumer <Substance>) s-> uuids.add(s.getUuid().toString()))
 	                .build();
 	            api.submitSubstance(special);
 	            
 	        api.submitSubstance(new SubstanceBuilder()
 	        		.generateNewUUID()
-	        		.andThen(s->{uuids.add(s.getUuid().toString().split("-")[0]);})
+					.andThen((Consumer <Substance>) s-> uuids.add(s.getUuid().toString()))
                     .addName(theName + " WITH MORE THINGS")); // we need the space for lucene to correctly tokenize
             
 	     
@@ -142,7 +142,7 @@ public class SponsoredResultsTest extends AbstractGinasServerTest{
             assertEquals(2,sr.getUuids().size());
             assertEquals(uuids,sr.getUuids());
             Set<String> specialUUIDs = sr.getSpecialUuids();
-            assertEquals(special.getUuid().toString().split("-")[0],
+            assertEquals(special.getUuid().toString(),
                          specialUUIDs.iterator().next());
     }
 }
