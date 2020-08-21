@@ -36,7 +36,7 @@ public class LastEditedFacetTest extends AbstractLoadDataSetTest {
     SubstanceLoader loader;
     RestSession session;
 
-    String Last_Edited_Facet = "Last Edited";
+    String Last_Edited_Facet = "root_lastEdited";
 
     @Rule
     public TemporaryFolder tmpDir = new TemporaryFolder();

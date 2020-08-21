@@ -241,7 +241,7 @@ public class RestSubstanceSubstanceSearcher implements SubstanceSearcher{
     }
 
     private static RestExportSupportSearchResult parseResultsJson(ObjectMapper mapper, String key, JsonNode results, RestSubstanceSubstanceSearcher searcher) throws com.fasterxml.jackson.core.JsonProcessingException {
-//        System.out.println("parsing rest results for " + results);
+        System.out.println("parsing rest results for " + results);
         RestSearchResult restResult = mapper.treeToValue(results, RestSearchResult.class);
 
         Set<String> uuids = new LinkedHashSet<>(restResult.total);
