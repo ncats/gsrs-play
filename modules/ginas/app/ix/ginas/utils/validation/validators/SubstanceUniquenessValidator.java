@@ -18,14 +18,10 @@ import play.Logger;
 public class SubstanceUniquenessValidator extends AbstractValidatorPlugin<Substance> {
 
 	private final String DEFINITION_CHANGED = "Primary defintion of substance has changed!";
-	private final List<String> SubstanceClassesHandled = Arrays.asList("chemical", "mixture", 
+	private static final List<String> SubstanceClassesHandled = Arrays.asList("chemical", "mixture",
 					"structurallyDiverse", "polymer", "concept", "specifiedSubstanceG1");
 
-	/*private enum MessageType {
-		UNKNOWN,
-		ERROR,
-		WARNING
-	}*/
+
 	@Override
 	public void validate(Substance testSubstance, Substance oldSubstance, ValidatorCallback callback) {
 		Logger.debug(String.format("starting in SubstanceUniquenessValidator. substance type: <%s>", testSubstance.substanceClass));
@@ -33,21 +29,25 @@ public class SubstanceUniquenessValidator extends AbstractValidatorPlugin<Substa
 			Logger.debug("skipping this substance because of class");
 			return;
 		}
-		if(testSubstance.getDefinitionalElements().getElements().isEmpty())return;
+		if(testSubstance.getDefinitionalElements().getElements().isEmpty()){
+			return;
+		}
 	
 		List<Substance> fullMatches = ValidationUtils.findFullDefinitionalDuplicateCandidates(testSubstance);
 		Logger.debug("total fullMatches " + fullMatches.size());
 		if (fullMatches.size() > 0) {
 			for (int i = 0; i < fullMatches.size(); i++) {
 				Substance possibleMatch = fullMatches.get(i);
-				GinasProcessingMessage mes;
+
 				UserProfile up=getCurrentUser();
 				//MessageType messageType = MessageType.WARNING;
 				String messageText = String.format("Substance %s (ID: %s) appears to be a full duplicate\n",
 								possibleMatch.getName(), possibleMatch.uuid);
-				mes= GinasProcessingMessage.WARNING_MESSAGE(messageText);
-				if( oldSubstance == null && !up.hasRole(Role.SuperUpdate)) {
+				GinasProcessingMessage mes;
+				if( oldSubstance == null && (!up.hasRole(Role.SuperUpdate) || !up.hasRole(Role.SuperDataEntry))) {
 						mes= GinasProcessingMessage.ERROR_MESSAGE(messageText);
+				}else{
+					mes= GinasProcessingMessage.WARNING_MESSAGE(messageText);
 				}
 				mes.addLink(GinasUtils.createSubstanceLink(possibleMatch));
 				callback.addMessage(mes);
