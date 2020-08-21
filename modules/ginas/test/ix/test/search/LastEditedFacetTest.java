@@ -191,12 +191,11 @@ public class LastEditedFacetTest extends AbstractLoadDataSetTest {
 
 
         Map<String, Map<String, Integer>> expected = new HashMap<>();
-        //ginas will rename this
-        //TODO refactor to reuse abstraction so when we change the translation it doesn't break tests
-        expected.put(GinasApp.translateFacetName("root_lastEditedBy"), asMap(    keys(otherUser.getUserName()),
+
+        expected.put("root_lastEditedBy", asMap(    keys(otherUser.getUserName()),
                                                     values(2)));
 
-        expected.put(GinasApp.translateFacetName("root_codes_lastEditedBy"), asMap(    keys(admin.getUserName(), user3.getUserName()),
+        expected.put("root_codes_lastEditedBy", asMap(    keys(admin.getUserName(), user3.getUserName()),
                                                             values(1,1)));
 
         Map<String, Map<String, Integer>> actual = new HashMap<>(results.getAllFacets());
