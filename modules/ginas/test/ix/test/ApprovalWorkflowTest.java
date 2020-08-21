@@ -138,7 +138,7 @@ public class ApprovalWorkflowTest  extends AbstractGinasServerTest {
 
             SubstanceAPI.ValidationResponse resp = api.validateSubstance(sub.toFullJsonNode());
 
-            assertTrue(resp.getMessages().toString(), resp.getMessages().stream().filter(m-> m.getMessage().contains("Definitional change")).findAny().isPresent());
+            assertTrue(resp.getMessages().toString(), resp.getMessages().stream().filter(m-> m.getMessage().contains("change") && m.getMessage().contains("definition")).findAny().isPresent());
         }
 
     }
