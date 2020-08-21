@@ -1,7 +1,6 @@
 package ix.core.util;
 
 import ix.core.util.ConfigHelper;
-import ix.utils.Util;
 import org.reflections.Reflections;
 import play.api.Play;
 
@@ -119,10 +118,6 @@ public class InheritanceTypeIdResolver implements TypeIdResolver {
         Class<?> clazz = baseType.getRawClass();
 
         List<String> packages = ConfigHelper.getStringList("ix.json.typeIdResolvers", Collections.emptyList());
-        System.out.println("HERE IN TYPE ID RESOLVER!!! packages = " + packages + " clazz = " + clazz);
-        Util.printExecutionStackTrace();
-        System.out.println("=============\n"+ getClass().getClassLoader());
-
         Reflections reflections = new Reflections(packages.toArray(new Object[packages.size()])); // root package to scan for subclasses
         Set<Class<?>> subtypes = (Set<Class<?>>)reflections.getSubTypesOf(clazz);
 
@@ -134,7 +129,6 @@ public class InheritanceTypeIdResolver implements TypeIdResolver {
 
 
         subtypes.forEach(type -> {
-            System.out.println("found subtype " + type);
             String key = computeNameFor(type);
 
             JavaType value = TypeFactory.defaultInstance().constructSpecializedType(baseType, type);
