@@ -148,6 +148,32 @@ public class SubmitDuplicateStructureTest extends AbstractGinasServerTest {
 
     }
 
+    @Test
+    public void submitVerySimilarStructureTwiceShouldBeMarkedAsPossibleDuplicate() throws Throwable{
+
+
+
+        ChemicalSubstanceBuilder builder = new SubstanceBuilder().asChemical()
+                .setStructure(smiles+".C");
+
+        //  builder.setName("differentName");
+        builder.generateNewUUID();
+        JsonNode js = builder.buildJson();
+
+        GinasTestServer.User newUser = ts.createUser(roleUnderTest);
+        try(RestSession peonSession = ts.newRestSession(newUser)) {
+            SubstanceAPI peonApi = new SubstanceAPI(peonSession);
+
+
+            SubstanceAPI.ValidationResponse validationResponse = peonApi.validateSubstance(js);
+            ValidationMessage duplicateMessage = getDuplicateSubstructureMessage(validationResponse);
+
+
+            assertEquals(expectedType, duplicateMessage.getMessageType());
+        }
+
+    }
+
     private ValidationMessage getDuplicateSubstructureMessage(SubstanceAPI.ValidationResponse validationResponse) throws Throwable{
         return validationResponse.getMessages().stream()
                         .filter(m -> m.getMessage().contains("Structure has 1 possible duplicate"))
