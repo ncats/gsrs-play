@@ -154,7 +154,7 @@ public class SubmitDuplicateStructureTest extends AbstractGinasServerTest {
 
 
         ChemicalSubstanceBuilder builder = new SubstanceBuilder().asChemical()
-                .setStructure(smiles+".C");
+                .setStructure("C"+smiles);
 
         //  builder.setName("differentName");
         builder.generateNewUUID();
