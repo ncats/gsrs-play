@@ -811,7 +811,7 @@ public class ChemicalApiTest extends AbstractGinasServerTest {
 			SearchResult result = searcher.substructure(searcher.getStructureAsUUID("S(=O)(=O)(O)OC[#6]"));
 			assertEquals(2, result.getUuids().size());
 
-			result = searcher.substructure("S(=O)(=O)(O)OC@:[#6]", .5);
+			result = searcher.substructure("S(=O)(=O)(O)OC@:C", .5);
 			assertEquals(3, result.getUuids().size());
 
 			result = searcher.substructure("S(=O)(=O)(O)OC@-[#6]");
