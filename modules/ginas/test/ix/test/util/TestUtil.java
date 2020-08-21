@@ -22,7 +22,9 @@ import java.util.jar.Manifest;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import ix.core.util.CachedSupplier;
 import ix.ginas.utils.GinasGlobal;
+import ix.ginas.utils.UNIIGenerator;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.SystemUtils;
 
@@ -33,6 +35,28 @@ import javax.tools.*;
  */
 public class TestUtil {
 
+    private static CachedSupplier<int[]> checkSumArray = CachedSupplier.of(()->{
+
+        char[] chars = UNIIGenerator.alphabet;
+        int[] array = new int[256];
+        for(int i=0; i< chars.length; i++){
+            array[chars[i]] = i;
+        }
+        return array;
+    });
+
+
+    public static String addUniiCheckDigit(String allButCheckDigit){
+        char[] chars = allButCheckDigit.toCharArray();
+        int[] array = checkSumArray.get();
+        int sum=0;
+        for(int i=0; i< chars.length; i++){
+            sum+= array[chars[i]];
+        }
+
+        int checkDigit = sum % UNIIGenerator.alphabet.length;
+        return allButCheckDigit + UNIIGenerator.alphabet[checkDigit];
+    }
     public static void tryToDeleteRecursively(File dir) throws IOException {
         if(!dir.exists()){
             return;

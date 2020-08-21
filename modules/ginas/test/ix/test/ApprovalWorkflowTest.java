@@ -8,11 +8,11 @@ import java.io.InputStream;
 
 import com.flipkart.zjsonpatch.JsonDiff;
 import gov.nih.ncats.molwitch.ChemicalBuilder;
-import ix.core.util.RunOnly;
 import ix.ginas.modelBuilders.ChemicalSubstanceBuilder;
 import ix.ginas.modelBuilders.SubstanceBuilder;
 import ix.ginas.models.v1.ChemicalSubstance;
 import ix.ginas.models.v1.Note;
+import ix.test.util.TestUtil;
 import org.junit.Test;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -24,10 +24,9 @@ import ix.ginas.models.v1.Substance;
 import ix.test.server.RestSession;
 import ix.test.server.SubstanceAPI;
 import util.json.JsonUtil.JsonNodeBuilder;
-import gov.nih.ncats.molwitch.Chemical;
 
 public class ApprovalWorkflowTest  extends AbstractGinasServerTest {
-	public final static String VALID_APPROVAL_ID="0000000000";
+	public final static String VALID_APPROVAL_ID= TestUtil.addUniiCheckDigit("333333333");
 	public final static String INVALID_APPROVAL_ID="0000000001";
     
 	@Test
