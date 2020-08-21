@@ -406,7 +406,6 @@ public class ApprovalWorkflowTest  extends AbstractGinasServerTest {
 	}
 	
 	@Test
-    @RunOnly
 	public void testFailDoubeApproved()  throws Exception {
         final File resource=new File("test/testJSON/toapprove.json");
         try(RestSession session = ts.newRestSession(ts.createUser(Role.SuperDataEntry, Role.SuperUpdate, Role.Approver));
