@@ -146,6 +146,45 @@ public class RestSubstanceSubstanceSearcher implements SubstanceSearcher{
                     '}';
         }
     }
+
+    static class RestSponsoredResult{
+        public String matchType;
+        public int count;
+        public String displayField;
+        public String luceneField;
+        public String luceneQuery;
+        /*
+        "narrowSearchSuggestions": [
+    {
+      "matchType": "FULL",
+      "count": 1,
+      "displayField": "Display Name",
+      "luceneField": "root_Display\\ Name",
+      "luceneQuery": "root_Display\\ Name:\"^anything$\""
+    },
+    {
+      "matchType": "FULL",
+      "count": 1,
+      "displayField": "Any Name",
+      "luceneField": "root_names_name",
+      "luceneQuery": "root_names_name:\"^anything$\""
+    },
+    {
+      "matchType": "WORD",
+      "count": 4,
+      "displayField": "Display Name",
+      "luceneField": "root_Display\\ Name",
+      "luceneQuery": "root_Display\\ Name:anything"
+    },
+    {
+      "matchType": "WORD",
+      "count": 4,
+      "displayField": "Any Name",
+      "luceneField": "root_names_name",
+      "luceneQuery": "root_names_name:anything"
+    }
+         */
+    }
     @JsonIgnoreProperties(ignoreUnknown = true)
     static class RestSearchResult{
         public String sha1;
@@ -160,6 +199,8 @@ public class RestSubstanceSubstanceSearcher implements SubstanceSearcher{
         public String method;
         public List<Facet> facets;
         public List<ContentUUID> content;
+        public List<ContentUUID> exactMatches;
+        public List<RestSponsoredResult> narrowSearchSuggestions;
 
         @Override
         public String toString() {
@@ -175,6 +216,7 @@ public class RestSubstanceSubstanceSearcher implements SubstanceSearcher{
                     ", path='" + path + '\'' +
                     ", method='" + method + '\'' +
                     ", facets=" + facets +
+                    ", narrowSearchSuggestions=" + narrowSearchSuggestions +
                     ", content=" + content +
                     '}';
         }
@@ -270,6 +312,13 @@ public class RestSubstanceSubstanceSearcher implements SubstanceSearcher{
             for (Facet facet : facets) {
 
                 ret.setFacet(facet.name, facet.countMap());
+            }
+        }
+
+        List<ContentUUID> sponsoredResults = restResult.exactMatches;
+        if(sponsoredResults !=null){
+            for(ContentUUID uuid : sponsoredResults) {
+                ret.getSpecialUuids().add(uuid.uuid);
             }
         }
         return ret;
