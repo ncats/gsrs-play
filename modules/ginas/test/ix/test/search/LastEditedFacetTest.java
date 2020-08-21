@@ -318,6 +318,7 @@ public class LastEditedFacetTest extends AbstractLoadDataSetTest {
     }
 
     @Test
+    @RunOnly
     public void directReindex() throws IOException {
         session = ts.newRestSession(admin);
 
@@ -328,9 +329,7 @@ public class LastEditedFacetTest extends AbstractLoadDataSetTest {
 
         searcher = new RestSubstanceSubstanceSearcher(session);
 
-        SearchResult searchResult = session.searcher().all();
-        System.out.println("REST FACETS=\n" + searchResult.getAllFacets());
-        System.out.println("REST LastEdtied FACETS=\n" + searchResult.getLastEditedFacets());
+
         Map<String, Integer> lastEditMap;
 
         SearchResult results = searcher.all();
