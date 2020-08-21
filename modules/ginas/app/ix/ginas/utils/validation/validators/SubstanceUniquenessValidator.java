@@ -44,7 +44,7 @@ public class SubstanceUniquenessValidator extends AbstractValidatorPlugin<Substa
 				String messageText = String.format("Substance %s (ID: %s) appears to be a full duplicate\n",
 								possibleMatch.getName(), possibleMatch.uuid);
 				GinasProcessingMessage mes;
-				if( oldSubstance == null && (!up.hasRole(Role.SuperUpdate) || !up.hasRole(Role.SuperDataEntry))) {
+				if( oldSubstance == null && (!up.hasRole(Role.SuperUpdate) && !up.hasRole(Role.SuperDataEntry))) {
 						mes= GinasProcessingMessage.ERROR_MESSAGE(messageText);
 				}else{
 					mes= GinasProcessingMessage.WARNING_MESSAGE(messageText);
