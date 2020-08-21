@@ -2,6 +2,7 @@ package ix.test;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
+import gov.nih.ncats.molwitch.Chemical;
 import ix.AbstractGinasServerTest;
 import ix.core.validator.ValidationMessage;
 import ix.core.models.Group;
@@ -152,9 +153,11 @@ public class SubmitDuplicateStructureTest extends AbstractGinasServerTest {
     public void submitVerySimilarStructureTwiceShouldBeMarkedAsPossibleDuplicate() throws Throwable{
 
 
+        Chemical chem = Chemical.parse(smiles);
+        chem.generateCoordinates();
 
         ChemicalSubstanceBuilder builder = new SubstanceBuilder().asChemical()
-                .setStructure("C"+smiles);
+                .setStructure(chem.toMol());
 
         //  builder.setName("differentName");
         builder.generateNewUUID();
