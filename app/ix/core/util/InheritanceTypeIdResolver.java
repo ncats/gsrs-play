@@ -121,6 +121,8 @@ public class InheritanceTypeIdResolver implements TypeIdResolver {
         List<String> packages = ConfigHelper.getStringList("ix.json.typeIdResolvers", Collections.emptyList());
         System.out.println("HERE IN TYPE ID RESOLVER!!! packages = " + packages);
         Util.printExecutionStackTrace();
+        System.out.println("=============\n"+ getClass().getClassLoader());
+
         Reflections reflections = new Reflections(packages.toArray(new Object[packages.size()])); // root package to scan for subclasses
         Set<Class<?>> subtypes = (Set<Class<?>>)reflections.getSubTypesOf(clazz);
 
