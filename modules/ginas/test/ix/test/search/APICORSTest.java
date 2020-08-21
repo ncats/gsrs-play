@@ -46,7 +46,7 @@ Access-Control-Max-Age: 300
     	WSResponse ws=api.fetchStructureBrowse();
     	
     	assertTrue("'Access-Control-Allow-Headers' should contain 'Origin' for CORS",ws.getHeader("Access-Control-Allow-Headers").contains("Origin"));
-    	assertEquals(Stream.of("POST", "PUT", "GET", "PATCH").collect(Collectors.toSet()),
+    	assertEquals(Stream.of("DELETE", "POST", "PUT", "GET", "PATCH").collect(Collectors.toSet()),
     				Arrays.stream(ws.getHeader("Access-Control-Allow-Methods").split(","))
     			         .map(f->f.trim())
     			         .collect(Collectors.toSet()));
@@ -60,7 +60,7 @@ Access-Control-Max-Age: 300
     	WSResponse ws=session.createRequestHolder(SubstanceAPI.API_URL_STRUCTURE_BROWSE).options().get(10_000L);
     	
     	assertTrue("'Access-Control-Allow-Headers' should contain 'Origin' for CORS",ws.getHeader("Access-Control-Allow-Headers").contains("Origin"));
-    	assertEquals(Stream.of("POST", "PUT", "GET", "PATCH").collect(Collectors.toSet()),
+    	assertEquals(Stream.of("DELETE", "POST", "PUT", "GET", "PATCH").collect(Collectors.toSet()),
     				Arrays.stream(ws.getHeader("Access-Control-Allow-Methods").split(","))
     			         .map(f->f.trim())
     			         .collect(Collectors.toSet()));
