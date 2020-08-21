@@ -34,7 +34,7 @@ public class FacetCountsTest extends AbstractGinasServerTest{
             SearchResult results = searcher.substructure("C1=CC=CC=C1");
 
 
-            assertEquals(9, results.numberOfResults());
+            assertEquals(10, results.numberOfResults());
 
             Map<String, Map<String,Integer>> partialFacets = new HashMap<>();
 
