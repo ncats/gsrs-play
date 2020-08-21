@@ -81,6 +81,7 @@ public class ApprovalWorkflowTest  extends AbstractGinasServerTest {
 	}
 
     @Test
+    @RunOnly
     public void approvedSubstanceThenDefinitionalChangeShouldThrowWarning() throws Exception {
         String uuid;
         final File resource=new File("test/testJSON/toapprove.json");
@@ -137,7 +138,7 @@ public class ApprovalWorkflowTest  extends AbstractGinasServerTest {
 
             SubstanceAPI.ValidationResponse resp = api.validateSubstance(sub.toFullJsonNode());
 
-            assertTrue(resp.getMessages().stream().filter(m-> m.getMessage().contains("Definitional change")).findAny().isPresent());
+            assertTrue(resp.getMessages().toString(), resp.getMessages().stream().filter(m-> m.getMessage().contains("Definitional change")).findAny().isPresent());
         }
 
     }
