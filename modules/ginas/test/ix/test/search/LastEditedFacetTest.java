@@ -147,6 +147,7 @@ public class LastEditedFacetTest extends AbstractLoadDataSetTest {
     }
 
     @Test
+    @RunOnly
     public void LastEditedFacetOnlyShowsEditForRootSubstanceNotAllSubelements() throws IOException, InterruptedException {
 
 
