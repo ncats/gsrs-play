@@ -793,6 +793,7 @@ public class ChemicalApiTest extends AbstractGinasServerTest {
    	}
 
 	@Test
+	@RunOnly
 	public void testQueryAtomCachingAndSpecificity() throws Exception {
 		// JsonNode entered = parseJsonFile(resource);
 		try (RestSession session = ts.newRestSession(ts.getFakeUser1())) {
