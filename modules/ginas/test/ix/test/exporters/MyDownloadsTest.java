@@ -123,13 +123,14 @@ public class MyDownloadsTest extends AbstractGinasServerTest{
 
             //check again we still only have 1 csv
             File[] files2 = exportDir.listFiles( (dir, name)-> name.endsWith(".csv"));
+
             assertEquals(2, files2.length);
             if(files2[0].lastModified() == lastModifiedDate){
                 assertTrue(files2[1].lastModified() > lastModifiedDate);
             }else{
                 assertEquals(lastModifiedDate, files2[1].lastModified());
             }
-            assertEquals(lastModifiedDate, files2[0].lastModified());
+//            assertEquals(lastModifiedDate, files2[0].lastModified());
 
         }
 
