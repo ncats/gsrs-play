@@ -112,7 +112,7 @@ public class SponsoredResultsTest extends AbstractGinasServerTest{
             assertEquals(uuids,sr.getUuids());
             assertEquals(max+1,sr.getUuids().size());
             Set<String> specialUUIDs = sr.getSpecialUuids();
-            assertEquals(special.getUuid(),
+            assertEquals(special.getUuid().toString(),
                          specialUUIDs.iterator().next());
     }
 	
