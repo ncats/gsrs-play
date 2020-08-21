@@ -119,7 +119,7 @@ public class InheritanceTypeIdResolver implements TypeIdResolver {
         Class<?> clazz = baseType.getRawClass();
 
         List<String> packages = ConfigHelper.getStringList("ix.json.typeIdResolvers", Collections.emptyList());
-        System.out.println("HERE IN TYPE ID RESOLVER!!! packages = " + packages);
+        System.out.println("HERE IN TYPE ID RESOLVER!!! packages = " + packages + " clazz = " + clazz);
         Util.printExecutionStackTrace();
         System.out.println("=============\n"+ getClass().getClassLoader());
 
