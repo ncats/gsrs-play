@@ -77,6 +77,7 @@ public class WebExportRequest {
         JsonNode status =  osess.asJson();
 
         String pingUrl = status.at("/self").asText();
+        System.out.println("PING URL = " + pingUrl);
         /*
         long timeoutTime = System.currentTimeMillis()+10_000;
         while(System.currentTimeMillis()<timeoutTime){
