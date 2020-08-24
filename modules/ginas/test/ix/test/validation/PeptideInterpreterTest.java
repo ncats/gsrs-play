@@ -16,7 +16,7 @@ import static org.junit.Assert.*;
 @RunWith(Parameterized.class)
 public class PeptideInterpreterTest extends AbstractGinasClassServerTest{
 
-    @Parameterized.Parameters
+    @Parameterized.Parameters(name = ("{1}"))
     public static List<Object[]> data(){
         List<Object[]> list = new ArrayList<>();
 

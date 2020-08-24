@@ -986,15 +986,16 @@ public class PeptideInterpreter {
 
 	public static String decodePeptide(String str, boolean weird){
 		//if(true)return str;
-		String str2=new String(str);
+		String str2=str;
 		boolean omod =false;
 
-//		System.out.println("in decode peptide weird = " + weird);
+		System.out.println("in decode peptide weird = " + weird);
 		if(weird){
 			try {
-				//System.out.println(str);
+				System.out.println("before replace " + str2);
 				str2=str2.replace("[55Ne]","C(C([*:2])=O)([NH:9]([*:1]))");
-				Chemical c = Chemical.createFromSmarts(str2);
+				System.out.println("after replace " + str2);
+				Chemical c = Chemical.parse(str2);
 				Atom mat=null;
 				Atom mat2=null;
 				c.setAtomMapToPosition();
@@ -1017,7 +1018,7 @@ public class PeptideInterpreter {
 				try{
 					str2= c.toSmiles();
 				}catch(Exception e){
-//					e.printStackTrace();
+					e.printStackTrace();
 					str2= c.toSmarts();
 				}
 
@@ -1050,7 +1051,7 @@ public class PeptideInterpreter {
 //			System.out.println("now stchange = " + stchange);
 			if(!str2.equals(stchange)){
 				str2=stchange;
-				Chemical c = Chemical.createFromSmarts(str2);
+				Chemical c = Chemical.parse(str2);
 				//MolHandler mh = new MolHandler();
 				//mh.setMolecule(str2);
 				//Molecule m = mh.getMolecule();
