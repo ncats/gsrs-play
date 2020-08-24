@@ -105,6 +105,8 @@ public class PeptideInterpreter {
 		for(String s:aminoAcidsLet.split(";")){
 			AAmap3Let.put(s.split("\t")[0], s.split("\t")[1]);
 		}
+		//katzelda Aug 2020 - add amidated component to be ignored
+		AAmap.put("6NH3", "");
 	}
 	public static String LOOKUP_HASH(Chemical f2) throws Exception{
 		String smiles=null;
@@ -814,20 +816,20 @@ public class PeptideInterpreter {
 							aamap =ma.getAtomToAtomMap().getAsInt()-1;
 						}
 					}
-					System.out.println("looking up " + f2.toSmiles());
+//					System.out.println("looking up " + f2.toSmiles());
 					String hashKey = LOOKUP_HASH(f2);
-					System.out.println(hashKey);
+//					System.out.println(hashKey);
 					String aalet = AAmap.get(hashKey);
-					System.out.println(aalet);
+//					System.out.println(aalet);
 					if(aalet==null){
-						System.out.println("was null!! current map is " + AAmap);
+//						System.out.println("was null!! current map is " + AAmap);
 						String smiles=f2.toSmiles();
 						if(!weirdCycle){
 							smiles=decodePeptide(smiles,false);
 						}else{
 							smiles=decodePeptide(tf.toSmiles(),true);
 						}
-						System.out.println("now smiles = " + smiles);
+//						System.out.println("now smiles = " + smiles);
 						if(modFreq.get(smiles)==null){
 							modFreq.put(smiles, 1);
 						}else{
@@ -989,12 +991,12 @@ public class PeptideInterpreter {
 		String str2=str;
 		boolean omod =false;
 
-		System.out.println("in decode peptide weird = " + weird);
+//		System.out.println("in decode peptide weird = " + weird);
 		if(weird){
 			try {
-				System.out.println("before replace " + str2);
+//				System.out.println("before replace " + str2);
 				str2=str2.replace("[55Ne]","C(C([*:2])=O)([NH:9]([*:1]))");
-				System.out.println("after replace " + str2);
+//				System.out.println("after replace " + str2);
 				Chemical c = Chemical.parse(str2);
 				Atom mat=null;
 				Atom mat2=null;
