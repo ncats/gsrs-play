@@ -30,7 +30,7 @@ public class PeptideInterpreter {
 	static {
 		//katzelda Aug 2020 - add amidated component to be ignored
 		//we are purposely making the amino acid an empty string
-		aminoAcids+="; \t6NH3";
+		aminoAcids+="; \tN([*:2])";
 
 		Pattern TAB_SPLIT = Pattern.compile("\t");
 		for (String s : aminoAcids.split(";")) {
