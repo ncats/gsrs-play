@@ -1,6 +1,7 @@
 package ix.test.exporters;
 
 import ix.AbstractGinasServerTest;
+import ix.core.util.RunOnly;
 import ix.ginas.exporters.ExportMetaData;
 import ix.ginas.exporters.ExportProcessFactory;
 import ix.test.server.BrowserSession;
@@ -100,6 +101,7 @@ public class MyDownloadsTest extends AbstractGinasServerTest{
     }
 
     @Test
+    @RunOnly
     public void searchingSameThingAgainWillMakeNewFile() throws IOException{
         try (BrowserSession browserSession = loadRep90();
              RestSession restSession = ts.newRestSession(browserSession.getUser());
@@ -117,7 +119,7 @@ public class MyDownloadsTest extends AbstractGinasServerTest{
 
             try(BufferedReader reader = new BufferedReader(new InputStreamReader(browserSession.newSubstanceSearcher().all()
                             .newExportRequest("csv").setPublicOnly(false).getInputStream(true)))){
-                Set<String> redownloadLines = reader.lines().collect(Collectors.toSet());
+                List<String> redownloadLines = reader.lines().collect(Collectors.toList());
                 //redownloaded lines might be in different order
                 assertEquals(lines, redownloadLines);
             }

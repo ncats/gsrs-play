@@ -75,7 +75,7 @@ public class WebExportRequest {
         }
 
         JsonNode status =  osess.asJson();
-        System.out.println("STATUS = " + status);
+//        System.out.println("STATUS = " + status);
         String pingUrl = status.at("/self/url").asText();
 //        System.out.println("PING URL = " + pingUrl);
         /*
