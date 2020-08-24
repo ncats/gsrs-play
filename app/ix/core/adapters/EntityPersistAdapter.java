@@ -347,13 +347,7 @@ public class EntityPersistAdapter extends BeanPersistAdapter implements ProcessL
 
     public static StandardizedStructureIndexer getStructureIndexer() {
         EntityPersistAdapter instance = getInstance();
-        if(instance ==null){
-            System.out.println("EPA INSTANCE IS NULL");
-        }
         StandardizedStructureIndexer indexer = instance.structureIndexer();
-        if(indexer ==null){
-            System.out.println("STRUCTURE INDEXER IS NULL");
-        }
         return indexer;
     }
 
@@ -367,9 +361,6 @@ public class EntityPersistAdapter extends BeanPersistAdapter implements ProcessL
     public SequenceIndexer sequenceIndexer() {
         if (seqProcessPlugin == null || !seqProcessPlugin.enabled()) {
             seqProcessPlugin = application.plugin(SequenceIndexerPlugin.class);
-        }
-        if(seqProcessPlugin ==null) {
-            System.out.println("SEQ PROCESS PLUGIN NULL");
         }
         return seqProcessPlugin.getIndexer();
     }

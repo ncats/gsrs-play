@@ -99,7 +99,7 @@ public class CodeGeneratorTest extends AbstractGinasServerTest{
 						codes.add(code);
 					}
 			}catch(Throwable t){
-				System.out.println("seen codes are " + codes);
+//				System.out.println("seen codes are " + codes);
 				//System.out.println(ts.getApplication().configuration());
 				t.printStackTrace();
 				throw t;

@@ -1269,9 +1269,6 @@ public class App extends Authentication {
 	    StructureSeachTask task = new StructureSeachTask(){
             @Override
             public void search(ResultProcessor processor2) throws Exception {
-            	if(EntityPersistAdapter.getStructureIndexer() ==null){
-            		System.out.println("EPA IS NULL !!!!!!!!!!!!!!!");
-				}
                 processor2.setResults(min, EntityPersistAdapter.getStructureIndexer().substructure(query, 0));
             }
 	    };

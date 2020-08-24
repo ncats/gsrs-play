@@ -84,7 +84,7 @@ public abstract class AbstractStructureResolver implements Resolver<Structure> {
             Chemical chemical = struc.toChemical();
 
             if(chemical.getAtomCount() ==0 || chemical.getBondCount() ==0){
-                System.out.println("atom or bond count was 0");
+//                System.out.println("atom or bond count was 0");
                 return null;
             }
 

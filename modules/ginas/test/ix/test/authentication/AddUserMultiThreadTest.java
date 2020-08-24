@@ -68,7 +68,7 @@ public class AddUserMultiThreadTest extends AbstractAddUserTest {
        new Thread(r).start();
         new Thread(r).start();
         List<UserResult> actual = queryAllCurrentUsers();
-        System.out.println("done");
+//        System.out.println("done");
 
         List<UserResult> expected = new ArrayList(DEFAULT_USERS);
         expected.add(new UserResult("fakeUser", false,null));
