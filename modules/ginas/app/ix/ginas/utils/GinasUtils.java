@@ -29,6 +29,7 @@ import ix.core.processing.RecordPersister;
 import ix.core.processing.RecordTransformer;
 import ix.core.util.CachedSupplier;
 import ix.core.util.ConfigHelper;
+import ix.core.util.IOUtil;
 import ix.ginas.models.v1.Substance;
 import ix.ginas.utils.validation.DefaultSubstanceValidator;
 import play.Logger;
@@ -39,9 +40,15 @@ public class GinasUtils {
 	
 	public static GinasProcessingStrategy DEFAULT_BATCH_STRATEGY = GinasProcessingStrategy
 			.ACCEPT_APPLY_ALL_MARK_FAILED();
-	private static IdGeneratorForType<Substance, String> APPROVAL_ID_GEN = new UNIIGenerator();
-	
 
+	public static String APPROVAL_ID_GEN_NAME=
+			ConfigHelper.getOrDefault("ix.ginas.approvalIDGenerator.name", "UNII");
+
+	public static String getAPPROVAL_ID_GEN_NAME() {
+		return APPROVAL_ID_GEN_NAME;
+	}
+
+	private static IdGeneratorForType<Substance, String> APPROVAL_ID_GEN = makeApprovalIdGen();
 
 	public static IdGeneratorForType<Substance, String> getAPPROVAL_ID_GEN() {
 		return APPROVAL_ID_GEN;
@@ -53,11 +60,18 @@ public class GinasUtils {
 
 	public static String NULL_MOLFILE = "\n\n\n  0  0  0     0  0            999 V2000\nM  END\n\n$$$$";
 
-
-
-
-
-
+	private static IdGeneratorForType<Substance, String> makeApprovalIdGen() {
+		try {
+			String className = ConfigHelper.getOrDefault("ix.ginas.approvalIDGenerator.class", APPROVAL_ID_GEN_NAME);
+			if (! className.contains(".")) {
+				className = "ix.ginas.utils." + className + "Generator";
+			}
+			Class<?> idGeneratorCls = IOUtil.getGinasClassLoader().loadClass(className);
+			return (IdGeneratorForType<Substance, String>) idGeneratorCls.newInstance();
+		} catch (Exception e) {
+			return new UNIIGenerator();
+		}
+	}
 
 	public static Substance makeSubstance(InputStream bis) throws Exception {
 		ObjectMapper mapper = new ObjectMapper();
