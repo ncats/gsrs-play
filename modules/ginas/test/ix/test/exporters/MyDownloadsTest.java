@@ -61,9 +61,11 @@ public class MyDownloadsTest extends AbstractGinasServerTest{
             }
         }
     }
-
     private List<String> exportTo(BrowserSession session, String format) throws IOException{
-        try(BufferedReader reader = new BufferedReader(new InputStreamReader(session.newSubstanceSearcher().all().newExportRequest("csv").setPublicOnly(false).getInputStream(true)))){
+        return exportTo(session, format, true);
+    }
+    private List<String> exportTo(BrowserSession session, String format, boolean forceReDownload) throws IOException{
+        try(BufferedReader reader = new BufferedReader(new InputStreamReader(session.newSubstanceSearcher().all().newExportRequest(format).setPublicOnly(false).getInputStream(forceReDownload)))){
             return reader.lines().collect(Collectors.toList());
         }
     }
@@ -85,11 +87,10 @@ public class MyDownloadsTest extends AbstractGinasServerTest{
             File actualCsv = files[0];
             long lastModifiedDate = actualCsv.lastModified();
 
-            try(BufferedReader reader = new BufferedReader(new InputStreamReader(browserSession.newSubstanceSearcher().all().newExportRequest("csv").getInputStream(false)))){
-                List<String> redownloadLines = reader.lines().collect(Collectors.toList());
+            List<String> redownloadLines = exportTo(browserSession, "csv", false);
 
-                assertEquals(lines, redownloadLines);
-            }
+            assertEquals(lines, redownloadLines);
+
 
             //check again we still only have 1 csv
             File[] files2 = exportDir.listFiles( (dir, name)-> name.endsWith(".csv"));
