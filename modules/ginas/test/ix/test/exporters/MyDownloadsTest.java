@@ -101,7 +101,6 @@ public class MyDownloadsTest extends AbstractGinasServerTest{
     }
 
     @Test
-    @RunOnly
     public void searchingSameThingAgainWillMakeNewFile() throws IOException{
         try (BrowserSession browserSession = loadRep90();
              RestSession restSession = ts.newRestSession(browserSession.getUser());
