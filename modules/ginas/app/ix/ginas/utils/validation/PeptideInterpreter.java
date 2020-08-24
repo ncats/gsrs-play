@@ -26,8 +26,11 @@ public class PeptideInterpreter {
 	public static int modNumber=1;
 	public static String aminoAcids = "P\tC1C[Ne]C1;A\tO=C(O)[C@@H](N)C;C\tSC[C@H](N)C(O)=O;D\tOC(C[C@H](N)C(O)=O)=O;E\tO=C(O)[C@@H](N)CCC(O)=O;F\tN[C@H](C(O)=O)CC1=CC=CC=C1;G\tO=C(O)CN;H\tN[C@@H](CC1=CN=CN1)C(O)=O;I\tO=C(O)[C@@H](N)[C@H](C)CC;K\tN[C@H](C(O)=O)CCCCN;L\tN[C@@H](CC(C)C)C(O)=O;M\tOC([C@@H](N)CCSC)=O;N\tNC(C[C@H](N)C(O)=O)=O;P\tO=C([C@@H]1CCCN1)O;Q\tOC([C@@H](N)CCC(N)=O)=O;R\tO=C(O)[C@@H](N)CCCNC(N)=N;R\tN[C@H](C(=O)O)CCCN=C(N)N;S\tOC([C@@H](N)CO)=O;T\tC[C@H]([C@@H](C(=O)O)N)O;V\tN[C@H](C(O)=O)C(C)C;W\tO=C(O)[C@@H](N)CC1=CNC2=C1C=CC=C2;Y\tN[C@@H](CC1=CC=C(O)C=C1)C(O)=O;W\tO=C([C@H](Cc1c2ccccc2[n]c1)N)O;H\tN[C@H](C(=O)O)Cc1c[nH]cn1;I\tO=C(O)[C@@H](N)[C@@H](C)CC;H\tN[C@H](C(=O)O)Cc1cncn1";
 	public static String aminoAcidsLet = "A	Ala;R	Arg;N	Asn;D	Asp;C	Cys;E	Glu;Q	Gln;G	Gly;H	His;I	Ile;L	Leu;K	Lys;M	Met;F	Phe;P	Pro;S	Ser;T	Thr;W	Trp;Y	Tyr;V	Val";
-	//	public static final ChemicalFactory DEF_FAC = ChemicalFactory.DEFAULT_CHEMICAL_FACTORY();
+
 	static {
+		//katzelda Aug 2020 - add amidated component to be ignored
+		aminoAcids+=";\t6NH3";
+
 		Pattern TAB_SPLIT = Pattern.compile("\t");
 		for (String s : aminoAcids.split(";")) {
 			String[] sArray = TAB_SPLIT.split(s);
@@ -105,8 +108,7 @@ public class PeptideInterpreter {
 		for(String s:aminoAcidsLet.split(";")){
 			AAmap3Let.put(s.split("\t")[0], s.split("\t")[1]);
 		}
-		//katzelda Aug 2020 - add amidated component to be ignored
-		AAmap.put("6NH3", "");
+
 	}
 	public static String LOOKUP_HASH(Chemical f2) throws Exception{
 		String smiles=null;
