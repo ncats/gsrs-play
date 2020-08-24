@@ -266,7 +266,7 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
     public List<Reference> references = new ArrayList<Reference>();
 
     @JSONEntity(title = "Approval ID", isReadOnly = true)
-    @Column(length = 10)
+    @Column(length = 20)
     @Indexable(suggest = true, name = "Approval ID", sortable=true)
     public String approvalID;
 
