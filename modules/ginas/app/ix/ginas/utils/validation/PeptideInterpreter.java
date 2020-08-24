@@ -33,14 +33,10 @@ public class PeptideInterpreter {
 		Pattern TAB_SPLIT = Pattern.compile("\t");
 		for (String s : aminoAcids.split(";")) {
 			String[] sArray = TAB_SPLIT.split(s);
-			//if AA is empty string array will be length 1
-			System.out.println(Arrays.toString(sArray));
 
 			Chemical c=null;
 			String AA=sArray[0];
-//			System.out.println(sArray[1]);
 			try {
-				String smiles = sArray[1];
 				c = Chemical.parse(sArray[1]);
 				c.makeHydrogensImplicit();
 				c.aromatize();
