@@ -1020,7 +1020,7 @@ public class PeptideInterpreter {
 				try{
 					str2= c.toSmiles();
 				}catch(Exception e){
-					e.printStackTrace();
+//					e.printStackTrace();
 					str2= c.toSmarts();
 				}
 
