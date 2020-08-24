@@ -1305,16 +1305,13 @@ public class App extends Authentication {
             final String key = task.getKey();
             return getOrElse(task.getLastUpdatedTime(), key,
                             TypedCallable.of(() -> {
-                            	System.out.println("IN GET OR ELSE SEARCH");
                             	try {
 									task.search(processor);
 								}catch(Throwable t){
                             		t.printStackTrace();
                             		throw t;
 								}
-								System.out.println("done search");
                                 SearchResultContext ctx = processor.getContext();
-								System.out.println("done search ctx =" + ctx);
                                 ctx.setKey(key);
 
                                 return ctx;

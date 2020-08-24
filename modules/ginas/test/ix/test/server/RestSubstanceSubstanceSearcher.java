@@ -274,7 +274,6 @@ public class RestSubstanceSubstanceSearcher implements SubstanceSearcher{
         long start = System.currentTimeMillis();
         JsonNode currentNode = node;
         while(!status.finished && System.currentTimeMillis() - start < timeout){
-            System.out.println("STATUS = " + status);
             currentNode = restSession.createRequestHolder(status.url).get().get(timeout).asJson();
             status = mapper.treeToValue(currentNode, SearchResultStatus.class);
         }
@@ -283,7 +282,6 @@ public class RestSubstanceSubstanceSearcher implements SubstanceSearcher{
     }
 
     private static RestExportSupportSearchResult parseResultsJson(ObjectMapper mapper, String key, JsonNode results, RestSubstanceSubstanceSearcher searcher) throws com.fasterxml.jackson.core.JsonProcessingException {
-        System.out.println("parsing rest results for " + results);
         RestSearchResult restResult = mapper.treeToValue(results, RestSearchResult.class);
 
         Set<String> uuids = new LinkedHashSet<>(restResult.total);
@@ -392,27 +390,7 @@ public class RestSubstanceSubstanceSearcher implements SubstanceSearcher{
             throw new HttpErrorCodeException(response);
         }
         JsonNode node = response.asJson();
-
         return waitForResults(node, 10_000);
-
-
-
-
-//        JsonNode node = restSession.getAsJson(url+"?q="+smiles);
-//        System.out.println(url);
-////        Map<String, String[]> map = new LinkedHashMap<>();
-////        map.put("q", new String[]{smiles});
-////        String post = new Util.QueryStringManipulator(map).toQueryString();
-//        String post = "q=\""+smiles+ "\"";
-//        System.out.println("post = " + post);
-//        JsonNode node = restSession.getRequest(url)
-////                .setQueryParameter("q=",smiles)
-//                .post(post)
-//                .get(3000)
-//                .asJson();
-
-//        System.out.println(new ObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(node));
-//        return null;
     }
 
     @Override
