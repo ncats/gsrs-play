@@ -5,21 +5,23 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Stream;
 
+import be.objectify.deadbolt.java.actions.Dynamic;
+import ix.core.NamedResource;
 import ix.core.models.Group;
 import ix.core.models.Principal;
 import ix.core.models.Role;
 import ix.core.models.UserProfile;
 import ix.core.util.CachedSupplier;
 import ix.core.util.StreamUtil;
+import ix.ncats.controllers.security.IxDynamicResourceHandler;
 import ix.utils.Util;
 import play.db.ebean.Model;
 
-/* TODO: make this a resource eventually
-@NamedResource(name="users",
- 
-type=UserProfile.class,
-description="Resource for handling user profiles")
-*/
+//
+//@NamedResource(name="users",
+//
+//type=UserProfile.class,
+//description="Resource for handling user profiles")
 public class UserProfileFactory extends EntityFactory {
 	static private CachedSupplier<Model.Finder<Long, UserProfile>> finder = 
 			Util.finderFor(Long.class,UserProfile.class);
@@ -27,6 +29,12 @@ public class UserProfileFactory extends EntityFactory {
 	
 	public static UserProfile getUserProfileForPrincipal(Principal p){
 		return getUserProfileForUsername(p.username);
+	}
+	public static UserProfile getUserProfileById(long id){
+		return finder.get()
+				.where()
+				.idEq(id)
+				.findUnique();
 	}
 	public static UserProfile getUserProfileForUsername(String username){
 		

@@ -110,4 +110,21 @@ public class UniqueStackTest{
 			
 	}
 
+	@Test
+	public void deepNesting(){
+		UniqueStack<String> ustack = new UniqueStack<>();
+
+		ustack.pushAndPopWith("PARENT", ()->{
+			ustack.pushAndPopWith("child1", ()->{
+				ustack.pushAndPopWith("child2", ()->{
+					assertTrue(ustack.contains("PARENT"));
+					assertTrue(ustack.contains("child1"));
+					assertTrue(ustack.contains("child2"));
+				});
+				assertTrue(ustack.contains("PARENT"));
+				assertTrue(ustack.contains("child1"));
+			});
+			assertTrue(ustack.contains("PARENT"));
+		});
+	}
 }

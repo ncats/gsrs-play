@@ -182,7 +182,7 @@ request().getQueryString("q") != null) { searchFlag =>
             @if(total >= 1) {
             @defining(if (ctx!=null) ctx.getId() else null) { ctxId =>
             @if(ctxId!=null){
-            @if(ctx.hasExactMatches() && current==1){
+            @if(ctx.hasExactMatches() && current==1 && request().getQueryString("facet") == null){
             <div class="specialmatches" ng-init="hideall=true" ng-show="hideall">
                 @if(ctx.getExactMatches().size()==1){
                 <h4>There is one exact (name or code) match for <em>@request().getQueryString("q")</em></h4>

@@ -261,7 +261,7 @@ public class RouteFactory extends Controller {
                     .getResource(context)
                     .count();
         }catch (Exception ex) {
-            Logger.error("["+context+"]", ex);
+            Logger.trace("["+context+"]", ex);
             return _apiInternalServerError (ex);
         }
     }
@@ -273,7 +273,7 @@ public class RouteFactory extends Controller {
                     .getResource(context)
                     .search(q, top, skip, fdim);
         }catch (Exception ex) {
-            Logger.error("["+context+"]", ex);
+            Logger.trace("["+context+"]", ex);
             return _apiInternalServerError (ex);
         }
     }
@@ -323,7 +323,6 @@ public class RouteFactory extends Controller {
         }
 
         Map<String, String[]> params = request().body().asFormUrlEncoded();
-        
         String q =      getLastStringOrElse(params.get("q"), null);
         String type =   getLastStringOrElse(params.get("type"), "SUB");
         Double co =     getLastDoubleOrElse(params.get("cutoff"), 0.8);
@@ -429,7 +428,7 @@ public class RouteFactory extends Controller {
         String raw =  new String(request().body().asRaw().asBytes());
 
         String base64Encoded = raw.substring(raw.indexOf(',')+1);
-        System.out.println("base64 =" +base64Encoded);
+//        System.out.println("base64 =" +base64Encoded);
         byte[] data = Base64.getDecoder().decode(base64Encoded);
         String mol;
         CompletableFuture<String> chemicalCompletableFuture = Molvec.ocrAsync(data);
@@ -448,7 +447,7 @@ public class RouteFactory extends Controller {
         }catch(TimeoutException toe){
             //timeout!!
             chemicalCompletableFuture.cancel(true);
-            return Results.notFound();
+            return GsrsApiUtil.notFound("timedout");
         }catch(Exception e){
             return _apiInternalServerError(e);
         }
@@ -546,7 +545,7 @@ public class RouteFactory extends Controller {
                     .getResource(context)
                     .structureSearch(struc.molfile, type, cutoff, top, skip, fdim, field);
         } catch (Exception ex) {
-            Logger.error("[" + context + "]", ex);
+            Logger.trace("[" + context + "]", ex);
             return _apiInternalServerError(ex);
         }
     }
@@ -566,7 +565,7 @@ public class RouteFactory extends Controller {
                     .getResource(context)
                     .sequenceSearch(sub.sequence,  CutoffType.valueOfOrDefault(type), cutoff, top, skip, fdim, field, seqType);
         } catch (Exception ex) {
-            Logger.error("[" + context + "]", ex);
+            Logger.trace("[" + context + "]", ex);
             return _apiInternalServerError(ex);
         }
     }
@@ -582,7 +581,7 @@ public class RouteFactory extends Controller {
                     .getResource(context)
                     .edits(id);
         }catch (Exception ex) {
-            Logger.error("["+context+"]", ex);
+            Logger.trace("["+context+"]", ex);
             return _apiInternalServerError (ex);
         }
     }
@@ -619,8 +618,12 @@ public class RouteFactory extends Controller {
     }
 
     private static Result getFlex(InstantiatedNamedResource nr, String someid, String expand) {
-        	Object id = nr.resolveID(someid).orElse(null);
-            return nr.get(id, expand);
+        Optional optional = nr.resolveID(someid);
+        //GSRSf-1414 return 404 if can't find not 5xx
+        if(!optional.isPresent()){
+            return GsrsApiUtil.notFound("could not find with flex id " + someid);
+        }
+        return nr.get(optional.get(), expand);
     }
     
     public static Result fieldFlex (String context, String someid, String field) {
@@ -628,10 +631,14 @@ public class RouteFactory extends Controller {
     		  InstantiatedNamedResource nr = _registry.get()
                       .getResource(context);
           	
-          	  Object id = nr.resolveID(someid).orElse(null);        	
-              return nr.field(id, field);
+              Optional optional = nr.resolveID(someid);
+              //GSRSf-1414 return 404 if can't find not 5xx
+              if(!optional.isPresent()){
+                  return GsrsApiUtil.notFound("could not find with flex id " +someid);
+              }
+              return nr.field(optional.get(), field);
           }catch (Exception ex) {
-              Logger.error("["+context+"]", ex);
+              Logger.trace("["+context+"]", ex);
               return _apiInternalServerError (ex);
           }
     }
@@ -661,11 +668,13 @@ public class RouteFactory extends Controller {
             InstantiatedNamedResource nr = _registry.get()
                     .getResource(context);
 
-            Object id = nr.resolveID(someid).orElse(null);
-            if(id ==null){
-                return _apiNotFound(someid);
+            Optional optional = nr.resolveID(someid);
+            //GSRSf-1414 return 404 if can't find not 5xx
+            if(!optional.isPresent()){
+                return GsrsApiUtil.notFound("could not find with flex id " +someid);
             }
-            return nr.hierarchy(id);
+
+            return nr.hierarchy(optional.get());
 
         }catch (Exception ex) {
             Logger.trace("["+context+"]", ex);
@@ -679,7 +688,7 @@ public class RouteFactory extends Controller {
                     .getResource(context)
                     .hierarchy(EntityFactory.toUUID(id));
         }catch (Exception ex) {
-            Logger.error("["+context+"]", ex);
+            Logger.trace("["+context+"]", ex);
             return _apiInternalServerError (ex);
         }
     }
@@ -695,7 +704,7 @@ public class RouteFactory extends Controller {
                 return resource.doc(resource.resolveID(Long.toString(id)).orElse(null));
             }
         }catch (Exception ex) {
-            Logger.error("["+context+"]", ex);
+            Logger.trace("["+context+"]", ex);
             return _apiInternalServerError (ex);
         }
     }
@@ -738,7 +747,7 @@ public class RouteFactory extends Controller {
                 return resource.edits(resource.resolveID(Long.toString(id)).orElse(null));
             }
         }catch (Exception ex) {
-            Logger.error("["+context+"]", ex);
+            Logger.trace("["+context+"]", ex);
             return _apiInternalServerError (ex);
         }
     }
@@ -750,7 +759,7 @@ public class RouteFactory extends Controller {
                     .getResource(context)
                     .edits(EntityFactory.toUUID(id));
         }catch (Exception ex) {
-            Logger.error("["+context+"]", ex);
+            Logger.trace("["+context+"]", ex);
             return _apiInternalServerError (ex);
         }
     }
@@ -762,7 +771,7 @@ public class RouteFactory extends Controller {
                     .getResource(context)
                     .approve(EntityFactory.toUUID(id));
         }catch (Exception ex) {
-            Logger.error("["+context+"]", ex);
+            Logger.trace("["+context+"]", ex);
             return _apiInternalServerError (ex);
         }
     }
@@ -779,7 +788,7 @@ public class RouteFactory extends Controller {
                 return resource.field(resource.resolveID(Long.toString(id)).orElse(null), field);
             }
         }catch (Exception ex) {
-            Logger.error("["+context+"]", ex);
+            Logger.trace("["+context+"]", ex);
             return _apiInternalServerError (ex);
         }
     }
@@ -790,7 +799,7 @@ public class RouteFactory extends Controller {
                     .getResource(context)
                     .field(EntityFactory.toUUID(uuid), field);
         }catch (Exception ex) {
-            Logger.error("["+context+"]", ex);
+            Logger.trace("["+context+"]", ex);
             return _apiInternalServerError (ex);
         }
     }
@@ -804,7 +813,7 @@ public class RouteFactory extends Controller {
                     .page(top, skip, filter);
         }catch (Exception ex) {
 
-            Logger.error("["+context+"]", ex);
+            Logger.trace("["+context+"]", ex);
             return _apiInternalServerError (ex);
         }
     }
@@ -817,7 +826,7 @@ public class RouteFactory extends Controller {
                     .getResource(context)
                     .stream(field, top, skip);
         }catch (Exception ex) {
-            Logger.error("["+context+"]", ex);
+            Logger.trace("["+context+"]", ex);
             return _apiInternalServerError (ex);
         }
     }
@@ -830,7 +839,7 @@ public class RouteFactory extends Controller {
                     .getResource(context)
                     .create();
         }catch (Exception ex) {
-            Logger.error("["+context+"]", ex);
+            Logger.trace("["+context+"]", ex);
             return _apiInternalServerError (ex);
         }
     }
@@ -843,7 +852,7 @@ public class RouteFactory extends Controller {
                     .getResource(context)
                     .validate();
         }catch (Exception ex) {
-            Logger.error("["+context+"]", ex);
+            Logger.trace("["+context+"]", ex);
             return _apiInternalServerError (ex);
         }
     }
@@ -856,7 +865,7 @@ public class RouteFactory extends Controller {
                     .getResource(context)
                     .update(id, field);
         }catch (Exception ex) {
-            Logger.error("["+context+"]", ex);
+            Logger.trace("["+context+"]", ex);
             return _apiInternalServerError (ex);
         }
     }
@@ -869,7 +878,7 @@ public class RouteFactory extends Controller {
                     .getResource(context)
                     .updateEntity();
         }catch (Exception ex) {
-            Logger.error("["+context+"]", ex);
+            Logger.trace("["+context+"]", ex);
             return _apiInternalServerError (ex);
         }
     }
@@ -883,7 +892,7 @@ public class RouteFactory extends Controller {
                     .getResource(context)
                     .update(EntityFactory.toUUID(id), field);
         }catch (Exception ex) {
-            Logger.error("["+context+"]", ex);
+            Logger.trace("["+context+"]", ex);
             return _apiInternalServerError (ex);
         }
     }
@@ -896,7 +905,7 @@ public class RouteFactory extends Controller {
                     .getResource(context)
                     .patch(EntityFactory.toUUID(id));
         }catch (Exception ex) {
-            Logger.error("["+context+"]", ex);
+            Logger.trace("["+context+"]", ex);
             return _apiInternalServerError (ex);
         }
     }
@@ -913,7 +922,7 @@ public class RouteFactory extends Controller {
             return SearchFactory.searchRESTFacets(requestBuilderClass, kind, q, field, fdim, fskip, ffilter);
             
         }catch (Exception ex) {
-            Logger.error("["+context+"]", ex);
+            Logger.trace("["+context+"]", ex);
             return _apiInternalServerError (ex);
         }
     }
@@ -945,7 +954,7 @@ public class RouteFactory extends Controller {
             return Java8Util.ok(em.valueToTree(fm));
             
         }catch (Exception ex) {
-            Logger.error("["+context+"]", ex);
+            Logger.trace("["+context+"]", ex);
             return _apiInternalServerError (ex);
         }
     }
@@ -1028,7 +1037,7 @@ public class RouteFactory extends Controller {
             ObjectMapper om=new ObjectMapper();
             return Java8Util.ok(om.valueToTree(p));
         }
-        return Results.notFound("No user logged in");
+        return _apiNotFound("No user logged in");
     }
 
     public static Result profileResetKey(){
@@ -1039,7 +1048,7 @@ public class RouteFactory extends Controller {
             ObjectMapper om=new ObjectMapper();
             return Java8Util.ok(om.valueToTree(p));
         }
-        return Results.notFound("No user logged in");
+        return _apiNotFound("No user logged in");
     }
 
 
@@ -1062,32 +1071,66 @@ public class RouteFactory extends Controller {
 
 
     public static Result _apiBadRequest(Throwable t){
-        return badRequest(getError(t, play.mvc.Http.Status.BAD_REQUEST));
+        return GsrsApiUtil.badRequest(t);
     }
     public static Result _apiInternalServerError(Throwable t){
-        return internalServerError(getError(t, play.mvc.Http.Status.INTERNAL_SERVER_ERROR));
+        return GsrsApiUtil.internalServerError(t);
     }
     public static Result _apiUnauthorized(Throwable t){
-        return internalServerError(getError(t, play.mvc.Http.Status.UNAUTHORIZED));
+        return GsrsApiUtil.unauthorized(t);
     }
     public static Result _apiNotFound(Throwable t){
-        return notFound(getError(new Throwable(t), play.mvc.Http.Status.NOT_FOUND));
+        return GsrsApiUtil.notFound(t);
     }
 
     public static Result _apiBadRequest(String t){
-        return badRequest(getError(new Throwable(t), play.mvc.Http.Status.BAD_REQUEST));
+        return GsrsApiUtil.badRequest(t);
     }
     public static Result _apiInternalServerError(String t){
-        return internalServerError(getError(new Throwable(t), play.mvc.Http.Status.INTERNAL_SERVER_ERROR));
+        return GsrsApiUtil.internalServerError(t);
     }
     public static Result _apiUnauthorized(String t){
-        return internalServerError(getError(new Throwable(t), play.mvc.Http.Status.UNAUTHORIZED));
+        return GsrsApiUtil.unauthorized(t);
     }
     public static Result _apiNotFound(String t){
-        return notFound(getError(new Throwable(t), play.mvc.Http.Status.NOT_FOUND));
+        return GsrsApiUtil.notFound(t);
     }
     private static Result _apiForbidden(String t) {
-        return forbidden(getError(new Throwable(t), play.mvc.Http.Status.FORBIDDEN));
+        return GsrsApiUtil.forbidden(t);
     }
 
+
+    @Dynamic(value = IxDynamicResourceHandler.CAN_SEARCH, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
+    public static Result getExportFormats(String context) {
+        try {
+            return _registry.get()
+                    .getResource(context)
+                    .getExportFormats();
+        }catch (Exception ex) {
+            Logger.trace("["+context+"]", ex);
+            return _apiInternalServerError (ex);
+        }
+    }
+    @Dynamic(value = IxDynamicResourceHandler.CAN_SEARCH, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
+    public static Result getExportOptions(String context, String etagId, boolean publicOnly) {
+        try {
+            return _registry.get()
+                    .getResource(context)
+                    .getExportOptions(etagId, publicOnly);
+        }catch (Exception ex) {
+            Logger.trace("["+context+"]", ex);
+            return _apiInternalServerError (ex);
+        }
+    }
+    @Dynamic(value = IxDynamicResourceHandler.CAN_SEARCH, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
+    public static Result createExport(String context, String etagId,String format, boolean publicOnly) {
+        try {
+            return _registry.get()
+                    .getResource(context)
+                    .createExport(etagId,format, publicOnly);
+        }catch (Exception ex) {
+            Logger.trace("["+context+"]", ex);
+            return _apiInternalServerError (ex);
+        }
+    }
 }

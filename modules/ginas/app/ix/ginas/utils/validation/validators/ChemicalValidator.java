@@ -5,6 +5,7 @@ import ix.core.validator.ExceptionValidationMessage;
 import ix.core.validator.GinasProcessingMessage;
 import ix.core.chem.StructureProcessor;
 import ix.core.models.Structure;
+import ix.core.validator.ValidationMessage;
 import ix.ginas.models.v1.ChemicalSubstance;
 import ix.ginas.models.v1.GinasChemicalStructure;
 import ix.ginas.models.v1.Moiety;
@@ -16,7 +17,9 @@ import ix.ginas.utils.validation.ValidationUtils;
 import ix.core.validator.ValidatorCallback;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Supplier;
 
 /**
@@ -57,6 +60,7 @@ public class ChemicalValidator extends AbstractValidatorPlugin<Substance> {
 
 
             List<Structure> moieties = new ArrayList<Structure>();
+						//computed, idealized structure info.
             Structure struc = StructureProcessor.instrument(payload, moieties, true); // don't
             // standardize
 
@@ -87,6 +91,8 @@ public class ChemicalValidator extends AbstractValidatorPlugin<Substance> {
                 moietiesForSub.add(m2);
             }
 
+            //GSRS-1648 deduplicate messages in moieties
+            DeduplicateCallback deduplicateCallback = new DeduplicateCallback(callback);
             if (cs.moieties != null
             		&& !cs.moieties.isEmpty()
                     && cs.moieties.size() != moietiesForSub.size()) {
@@ -110,10 +116,10 @@ public class ChemicalValidator extends AbstractValidatorPlugin<Substance> {
                             m.structure.molfile, null, true); // don't
                     // standardize
 
-                    validateChemicalStructure(m.structure, struc2, callback);
+                    validateChemicalStructure(m.structure, struc2, deduplicateCallback);
                 }
             }
-            validateChemicalStructure(cs.structure, struc, callback);
+            validateChemicalStructure(cs.structure, struc, deduplicateCallback);
 
             ChemUtils.fixChiralFlag(cs.structure, callback);
 //            ChemUtils.checkChargeBalance(cs.structure, gpm);
@@ -125,7 +131,7 @@ public class ChemicalValidator extends AbstractValidatorPlugin<Substance> {
 
             ValidationUtils.validateReference(s,cs.structure, callback, ValidationUtils.ReferenceAction.FAIL);
 
-            validateStructureDuplicates(cs, callback);
+            //validateStructureDuplicates(cs, callback);
         } else {
             callback.addMessage(GinasProcessingMessage
                     .ERROR_MESSAGE("Chemical substance must have a valid chemical structure"));
@@ -247,5 +253,59 @@ public class ChemicalValidator extends AbstractValidatorPlugin<Substance> {
 
         ChemUtils.checkValance(newstr, callback);
 
+				ChemUtils.fix0Stereo(oldstr, gpm);
+				gpm.forEach(m->{
+					callback.addMessage(m);
+					System.out.println(m);
+				});
+    }
+
+    private static class DeduplicateCallback implements ValidatorCallback{
+        private ValidatorCallback delegate;
+        private Set<String> warningMessages = new HashSet<>();
+        private Set<String> errorMessages = new HashSet<>();
+
+        public DeduplicateCallback(ValidatorCallback delegate) {
+            this.delegate = delegate;
+        }
+
+        @Override
+        public void addMessage(ValidationMessage message) {
+            addMessage(message, null);
+        }
+
+        private Set<String> getHashFor(ValidationMessage message){
+            switch(message.getMessageType()){
+
+                case ERROR: return errorMessages;
+                case WARNING: return warningMessages;
+                default: return null;
+
+            }
+        }
+
+        @Override
+        public void addMessage(ValidationMessage message, Runnable appyAction) {
+            Set<String> hash = getHashFor(message);
+            if(hash ==null || message.getMessage() ==null || hash.add(message.getMessage())){
+                //always let these through
+                delegate.addMessage(message, appyAction);
+            }
+        }
+
+        @Override
+        public void setInvalid() {
+            delegate.setInvalid();
+        }
+
+        @Override
+        public void haltProcessing() {
+            delegate.haltProcessing();
+        }
+
+        @Override
+        public void setValid() {
+            delegate.setValid();
+        }
     }
 }

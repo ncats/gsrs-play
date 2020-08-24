@@ -11,11 +11,13 @@ import com.fasterxml.jackson.annotation.JsonView;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import ix.core.controllers.v1.routes;
 import ix.core.plugins.GinasRecordProcessorPlugin;
 import ix.core.processing.RecordExtractor;
 import ix.core.processing.RecordPersister;
 import ix.core.processing.RecordTransformer;
 import ix.core.stats.Statistics;
+import ix.core.util.RestUrlLink;
 import ix.core.util.TimeUtil;
 import ix.utils.Global;
 
@@ -33,6 +35,7 @@ public class ProcessingJob extends LongBaseModel {
     
     @Id
     public Long id;
+
 
     @ManyToMany(cascade=CascadeType.ALL)
     @JoinTable(name="ix_core_procjob_key")
@@ -83,7 +86,17 @@ public class ProcessingJob extends LongBaseModel {
 
     public ProcessingJob () {
     }
+    @JsonView(BeanViews.Compact.class)
+    @JsonProperty("_self")
+    public RestUrlLink selfUrl () {
+        for(Keyword key : keys){
 
+            if(GinasRecordProcessorPlugin.class.getName().equals(key.label)){
+                return RestUrlLink.from(routes.LoadController.monitor(key.term));
+            }
+        }
+        return null;
+    }
     @JsonView(BeanViews.Compact.class)
     @JsonProperty("_payload")
     public String getJsonPayload () {

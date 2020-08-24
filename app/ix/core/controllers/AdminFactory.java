@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 import com.avaje.ebean.Ebean;
 import com.avaje.ebean.Transaction;
@@ -374,7 +375,13 @@ public class AdminFactory extends Controller {
     }
     
     
-    
+    public static List<String> getGroupNames(){
+        return groupfinder.get().query().select("name").findList()
+                .stream()
+                .map(g-> g.name)
+                .sorted()
+                .collect(Collectors.toList());
+    }
     
     public static List<Group> allGroups() {
         return groupfinder.get().all();

@@ -19,7 +19,7 @@ public class SaltValidator extends AbstractValidatorPlugin<Substance>
 {
 
 	public SaltValidator(){
-//		System.out.println("starting in SaltValidator.ctor");
+		Logger.trace("starting in SaltValidator.ctor");
 	}
 					
 	@Override
@@ -29,15 +29,15 @@ public class SaltValidator extends AbstractValidatorPlugin<Substance>
 		}
 		ChemicalSubstance substance = (ChemicalSubstance)substanceORIG;
 		
-//		System.out.println("starting in SaltValidator.validate");
+		Logger.trace("starting in SaltValidator.validate");
 		//is this a salt?
-		Logger.debug("starting in SaltValidator.validate. substance.moieties.size() "+ substance.moieties.size());
+		Logger.trace("starting in SaltValidator.validate. substance.moieties.size() "+ substance.moieties.size());
 		if (substance.moieties.size() > 1) {
 			List<String> smilesWithoutMatch = new ArrayList();
 			List<String> smilesWithPartialMatch = new ArrayList();
 			
 			for (Moiety moiety : substance.moieties) {
-				Logger.debug("Looking up moiety with SMILES " + moiety.structure.smiles);
+				Logger.trace("Looking up moiety with SMILES " + moiety.structure.smiles);
 				
 				ChemicalSubstance moietyChemical = new ChemicalSubstance();
 				moietyChemical.structure = moiety.structure;
@@ -45,12 +45,12 @@ public class SaltValidator extends AbstractValidatorPlugin<Substance>
 				moietyChemical.moieties.add(moiety);
 				
 				List<Substance> layer1Matches= ValidationUtils.findDefinitionaLayer1lDuplicateCandidates(moietyChemical);
-				Logger.debug("(SaltValidator) total layer1 matches: " + layer1Matches.size());
+				Logger.trace("(SaltValidator) total layer1 matches: " + layer1Matches.size());
 				
 				//skip the look-up of full matches when there are no layer1 matches
 				List<Substance> fullMatches= (layer1Matches.isEmpty())? new ArrayList() : 
 								ValidationUtils.findFullDefinitionalDuplicateCandidates(moietyChemical);
-				Logger.debug("(SaltValidator) total full matches: " + fullMatches.size());
+				Logger.trace("(SaltValidator) total full matches: " + fullMatches.size());
 				
 				if( fullMatches.isEmpty()) {
 					if( layer1Matches.isEmpty()){
@@ -75,7 +75,7 @@ public class SaltValidator extends AbstractValidatorPlugin<Substance>
 			}
 			
 			if(smilesWithoutMatch.isEmpty() && smilesWithPartialMatch.isEmpty()) {
-				Logger.debug("all moieties are present in the database");
+				Logger.trace("all moieties are present in the database");
 			}
 		}
 	}

@@ -12,11 +12,8 @@ import java.util.PriorityQueue;
 import java.util.Set;
 import java.util.Spliterator;
 import java.util.Spliterators;
-import java.util.Stack;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.Phaser;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiConsumer;
 import java.util.function.BinaryOperator;
 import java.util.function.Consumer;
@@ -24,7 +21,6 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collector;
-import java.util.stream.IntStream;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
@@ -411,28 +407,6 @@ public class StreamUtil {
             return this.s;
         }
     }
-
-    /**
-     * This is just an extension of the {@link Function} interface
-     * which will wrap a checked exception as a {@link RuntimeException}.
-     * This is used for simplifying the Lambda functions that can throw an
-     * error.
-     * 
-     */
-    public static interface ThrowableFunction<T,V> extends Function<T,V>{
-
-        @Override
-        default V apply(T t){
-            try {
-                return applyThrowable(t);
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-        }
-
-        public V applyThrowable(T t) throws Exception;
-    }
-
 
 
     public static <T> Stream<T> forEnumeration(Enumeration<T> enumeration){

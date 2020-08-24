@@ -1,9 +1,6 @@
 package ix.ncats.controllers.auth;
 
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
@@ -319,6 +316,16 @@ public class Authentication extends Controller {
         return session;
     }
     
+    public static void flushSessionByUserProfile(UserProfile up){
+        List<Session> sessions = _sessions.get().query()
+                        .where()
+                        .eq("expired", false)
+                        .eq("profile", up)
+                        .findList();
+        for(Session session: sessions){
+            flush(session);
+        }
+    }
 
     static void flush(Session session) {
         Transaction tx = Ebean.beginTransaction();

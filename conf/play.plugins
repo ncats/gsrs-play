@@ -5,10 +5,12 @@
 200:ix.core.plugins.IxDBPlugin
 #200:com.edulify.play.hikaricp.HikariCPPlugin
 201:ix.core.plugins.ConsoleFilterPlugin
+202:ix.core.plugins.RendererPlugin
 #1500:com.typesafe.plugin.CommonsMailerPlugin
 # inxight plugins
 # this plugin must be first!
 2000:ix.core.plugins.TimeTravellerPlugin
+2001:ix.core.plugins.LoopbackWebRequestPlugin
 2005:ix.core.plugins.IxCache
 2010:ix.core.plugins.PersistenceQueue
 2015:ix.core.plugins.TextIndexerPlugin
@@ -18,6 +20,6 @@
 3001:ix.core.plugins.SequenceIndexerPlugin
 # 3005:ix.core.plugins.StructureProcessorPlugin
 3010:ix.core.plugins.GinasRecordProcessorPlugin
-
+3011:ix.core.plugins.MicroServicePlugin
 4000:ix.core.plugins.SchedulerPlugin
 10000:be.objectify.deadbolt.java.DeadboltPlugin

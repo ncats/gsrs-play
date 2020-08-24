@@ -79,8 +79,13 @@ public class NamesValidator extends AbstractValidatorPlugin<Substance> {
                     nameIterator.remove();
                 });
 
+                continue;
 
-            } else {
+            }
+            if(n.getName() ==null){
+                callback.addMessage(GinasProcessingMessage.ERROR_MESSAGE("name can not be null"));
+                continue;
+            }
                 if (n.preferred) {
                     preferred = true;
                 }
@@ -127,12 +132,14 @@ public class NamesValidator extends AbstractValidatorPlugin<Substance> {
                 }
 
                 for (Replacer r : replacers.get()) {
-                    if (r.matches(n.getName())) {
+                //check for Null
+                String name = n.getName();
+                if(name!=null && r.matches(name)) {
                         GinasProcessingMessage mes = GinasProcessingMessage
                                 .WARNING_MESSAGE(
-                                        r.getMessage(n.getName()))
+                                    r.getMessage(name))
                                 .appliableChange(true);
-                        callback.addMessage(mes, () -> n.setName(r.fix(n.getName())));
+                    callback.addMessage(mes, () -> n.setName(r.fix(name)));
 
                     }
                 }
@@ -153,7 +160,7 @@ public class NamesValidator extends AbstractValidatorPlugin<Substance> {
                     }
                 }
 
-            }
+
             ValidationUtils.validateReference(s, n, callback, ValidationUtils.ReferenceAction.FAIL);
         }
 
@@ -186,8 +193,21 @@ public class NamesValidator extends AbstractValidatorPlugin<Substance> {
 
 
         for (Name n : s.names) {
+            if(n ==null){
+                //skip
+//                callback.addMessage(GinasProcessingMessage
+//                        .ERROR_MESSAGE("Substance name can not be null"));
+                continue;
+            }
+            String name = n.getName();
+            if(name ==null){
+                //skip
+//                callback.addMessage(GinasProcessingMessage
+//                        .ERROR_MESSAGE("Name's name can not be null"));
+                continue;
+            }
             Iterator<Keyword> iter = n.languages.iterator();
-            String uppercasedName = n.getName().toUpperCase();
+            String uppercasedName = name.toUpperCase();
 
             while(iter.hasNext()){
                 String language = iter.next().getValue();
@@ -197,7 +217,7 @@ public class NamesValidator extends AbstractValidatorPlugin<Substance> {
                     GinasProcessingMessage mes = GinasProcessingMessage
                             .ERROR_MESSAGE(
                                     "Name '"
-                                            + n.getName()
+                                            + name
                                             + "' is a duplicate name in the record.")
                             .markPossibleDuplicate();
                     callback.addMessage(mes);

@@ -4,10 +4,71 @@
 ->      /test       ix.core.test.Routes
 
 ##################################
+## Testing..
+##################################
+GET /health ix.core.controllers.v1.HealthController.isUp
+GET /health/info ix.core.controllers.v1.HealthController.info()
+
+##################################
 ## API for entity routing
 ##################################
 GET     /    ix.core.controllers.v1.RouteFactory.listResources()
 GET     /buildInfo                                   ix.core.controllers.v1.ApiBuildInfo.info()
+GET     /buildInfo/                                   ix.core.controllers.v1.ApiBuildInfo.info()
+
+
+GET     /users                   ix.core.controllers.v1.UserController.getUsersSummary()
+GET     /users/                   ix.core.controllers.v1.UserController.getUsersSummary()
+GET     /users($id<[0-9]+>)                   ix.core.controllers.v1.UserController.getUserById(id: Long)
+GET     /users($id<[0-9]+>)/                   ix.core.controllers.v1.UserController.getUserById(id: Long)
+GET     /users/$id<[0-9]+>                   ix.core.controllers.v1.UserController.getUserById(id: Long)
+GET     /users/:username                    ix.core.controllers.v1.UserController.getUserByUsername(username: String)
+GET     /users($username<[^/]+[/]*[a-z0-9_]+>)                    ix.core.controllers.v1.UserController.getUserByUsername(username: String)
+GET     /users($username<[^/]+[/]*[a-z0-9_]+>)/                    ix.core.controllers.v1.UserController.getUserByUsername(username: String)
+
+
+DELETE     /users/$id<[0-9]+>                   ix.core.controllers.v1.UserController.deactivateById(id: Long)
+DELETE     /users($id<[0-9]+>)                   ix.core.controllers.v1.UserController.deactivateById(id: Long)
+DELETE     /users($id<[0-9]+>)/                   ix.core.controllers.v1.UserController.deactivateById(id: Long)
+DELETE     /users/:username                    ix.core.controllers.v1.UserController.deactivateByUsername(username: String)
+DELETE     /users($username<[^/]+[/]*[a-z0-9_]+>)                    ix.core.controllers.v1.UserController.deactivateByUsername(username: String)
+DELETE     /users($username<[^/]+[/]*[a-z0-9_]+>)/                    ix.core.controllers.v1.UserController.deactivateByUsername(username: String)
+
+POST     /users/$id<[0-9]+>/password                    ix.core.controllers.v1.UserController.changePasswordById(id: Long)
+POST     /users/:username/password                    ix.core.controllers.v1.UserController.changePasswordByUsername(username: String)
+POST    /users/                 ix.core.controllers.v1.UserController.createNewUser()
+PUT     /users/:username        ix.core.controllers.v1.UserController.updateUserByUsername(username: String)
+PUT     /users($username<[0-9]+>)        ix.core.controllers.v1.UserController.updateUserById(username: Long)
+PUT     /users($username<[^/]+[/]*[a-z0-9_]+>)        ix.core.controllers.v1.UserController.updateUserByUsername(username: String)
+
+
+GET	    /whoami													ix.core.controllers.v1.RouteFactory.profile()
+
+GET	    /profile							ix.core.controllers.v1.RouteFactory.profile()
+GET	    /profile/							ix.core.controllers.v1.RouteFactory.profile()
+GET	    /profile/@keygen					ix.core.controllers.v1.RouteFactory.profileResetKey()
+POST     /profile/password                    ix.core.controllers.v1.UserController.changeMyPassword()
+
+GET     /profile/downloads                  ix.core.controllers.v1.DownloadController.viewMyDownloads(rows: Int ?= 16, page: Int ?= 1, q: String ?= null)
+GET     /profile/downloads/:id                  ix.core.controllers.v1.DownloadController.getDownloadRecordAsJson(id: String)
+GET     /profile/downloads/:id/download                  ix.core.controllers.v1.DownloadController.downloadExport(id: String)
+DELETE     /profile/downloads/:id/download                  ix.core.controllers.v1.DownloadController.deleteDownload(id: String)
+
+
+
+GET     /admin/groups/@names               ix.core.controllers.v1.UserController.getAllGroupNames
+
+GET     /admin/load/:id              ix.core.controllers.v1.LoadController.monitor(id: String)
+POST     /admin/load              ix.core.controllers.v1.LoadController.loadJsonViaAPI()
+POST     /admin/load/              ix.core.controllers.v1.LoadController.loadJsonViaAPI()
+
+GET     /admin/files            ix.core.controllers.v1.LogController.getAllFilesListAsJsonNode()
+GET     /admin/files/            ix.core.controllers.v1.LogController.getAllFilesListAsJsonNode()
+GET     /admin/logs            ix.core.controllers.v1.LogController.getLogFileListAsJsonNode()
+GET     /admin/logs/           ix.core.controllers.v1.LogController.getLogFileListAsJsonNode()
+GET     /admin/logs/*path           ix.core.controllers.v1.LogController.downloadLogFile(path:String)
+GET     /admin/files/*path           ix.core.controllers.v1.LogController.downloadFile(path:String)
+
 GET	    /edits/:uuid	                     ix.core.controllers.EditFactory.get(uuid: String)
 GET	    /edits/:uuid/	                     ix.core.controllers.EditFactory.get(uuid: String)
 GET	    /edits/:uuid/*field	                 ix.core.controllers.EditFactory.field(uuid: String, field: String)
@@ -16,9 +77,7 @@ GET	    /edits($uuid<[a-fA-F0-9\-]+>)/       ix.core.controllers.EditFactory.get
 GET	    /edits($uuid<[a-fA-F0-9\-]+>)	     ix.core.controllers.EditFactory.get(uuid: String)
 GET	    /edits($uuid<[a-fA-F0-9\-]+>)/*field ix.core.controllers.EditFactory.field(uuid: String, field: String)
 GET	    /edits($uuid<[a-fA-F0-9\-]+>)*field  ix.core.controllers.EditFactory.field(uuid: String, field: String)
-GET	    /whoami													ix.core.controllers.v1.RouteFactory.profile()
-GET	    /profile													ix.core.controllers.v1.RouteFactory.profile()
-GET	    /profile/@keygen												ix.core.controllers.v1.RouteFactory.profileResetKey()
+
 GET     /search         										ix.core.controllers.search.SearchFactory.searchREST(q: String ?= null, top: Int ?= 10, skip: Int ?= 0, fdim: Int ?= 10)
 GET     /status($key<[^/]+[/]*[a-z0-9_]+>)           		    ix.core.controllers.search.SearchFactory.getSearchResultContext(key: String, top: Int ?= 10, skip: Int ?= 0, fdim: Int ?= 10, field: String ?="")
 GET     /status($key<[^/]+[/]*[a-z0-9_]+>)/results/@facets      ix.core.controllers.search.SearchFactory.getSearchResultContextFacets(key: String, field: String)
@@ -30,6 +89,15 @@ GET     /status/$key<[^/]+[/]*[a-z0-9_]+>/results               ix.core.controll
 GET     /suggest/@fields       ix.core.controllers.search.SearchFactory.suggestFields
 GET     /suggest/:field       ix.core.controllers.search.SearchFactory.suggestField(field: String, q: String, max: Int ?= 10)
 GET     /suggest       ix.core.controllers.search.SearchFactory.suggest(q: String, max: Int ?= 10)
+
+
+GET     /$context<[a-z0-9_]+>/export                     ix.core.controllers.v1.RouteFactory.getExportFormats(context: String)
+GET     /$context<[a-z0-9_]+>/export/                     ix.core.controllers.v1.RouteFactory.getExportFormats(context: String)
+GET     /$context<[a-z0-9_]+>/export/:etagId               ix.core.controllers.v1.RouteFactory.getExportOptions(context: String, etagId: String, publicOnly: Boolean ?=true)
+GET     /$context<[a-z0-9_]+>/export/:etagId/               ix.core.controllers.v1.RouteFactory.getExportOptions(context: String, etagId: String, publicOnly: Boolean ?=true)
+
+GET     /$context<[a-z0-9_]+>/export/:etagId/:format               ix.core.controllers.v1.RouteFactory.createExport(context: String, etagId: String, format: String, publicOnly: Boolean ?=true)
+
 GET     /$context<[a-z0-9_]+>/@count       ix.core.controllers.v1.RouteFactory.count(context: String)
 GET     /$context<[a-z0-9_]+>/search                ix.core.controllers.v1.RouteFactory.search(context: String, q: String ?= null, top: Int ?= 10, skip: Int ?= 0, fdim: Int ?= 10)
 GET     /$context<[a-z0-9_]+>/search/@facets        ix.core.controllers.v1.RouteFactory.searchFacets(context: String, q: String ?= null, field ?= null, fdim: Int ?= 10, fskip: Int ?= 0, ffilter ?= "")

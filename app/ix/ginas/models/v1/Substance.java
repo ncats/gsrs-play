@@ -1070,7 +1070,7 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
 
 
     @JsonIgnore
-    @Indexable(facet=true)
+    @Indexable(name="SubstanceDeprecated", facet=true)
     public String getSubstanceDeprecated(){
         return String.valueOf(this.deprecated);
     }
@@ -1452,6 +1452,16 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
      */
     protected void additionalDefinitionalElements(Consumer<DefinitionalElement> consumer){
 
+			if( isNonSubstanceConcept()) {
+					String primaryName = "";
+					for(Name name : this.names) {
+						if( name.displayName ){
+							primaryName =name.name;
+						}
+					}
+					Logger.debug("going to create DE based on primary name " + primaryName);
+					consumer.accept(DefinitionalElement.of("Name", primaryName, 1));
+				}
     }
 
 //    @PostLoad

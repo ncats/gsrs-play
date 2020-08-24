@@ -109,7 +109,7 @@ public class PeptideInterpreter {
 	public static String LOOKUP_HASH(Chemical f2) throws Exception{
 		String smiles=null;
 		try{
-			smiles = Chemical.parseMol(f2.toMol()).toInchi().getKey();
+			smiles = f2.toInchi().getKey();
 			return smiles.substring(0,14);
 		}catch(Exception e){
 			e.printStackTrace();

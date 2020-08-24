@@ -11,10 +11,12 @@ import org.apache.lucene.document.LongField;
 import org.apache.lucene.document.StringField;
 import org.apache.lucene.facet.FacetField;
 
+import ix.core.models.Keyword;
 import ix.core.search.text.PathStack;
 import ix.core.search.text.TextIndexer;
 import ix.core.util.EntityUtils;
 import ix.core.util.EntityUtils.EntityWrapper;
+import ix.core.util.pojopointer.PojoPointer;
 import play.Logger;
 
 public class ReflectingIndexValueMaker<T> implements IndexValueMaker<T>{
@@ -40,6 +42,19 @@ public class ReflectingIndexValueMaker<T> implements IndexValueMaker<T>{
 					toAdd.accept(new IndexableValueDirect(new StringField(ew.getIdField(), o.toString(), NO)));
 				}); //
 	
+
+				if(ew.getEntityClass().equals(Keyword.class)){
+					if(path.getDepth()>0){
+						try{
+							toAdd.accept(new IndexableValueFromRaw(path.getFirst(), ew.at(PojoPointer.fromJsonPointer("/term")).map(ew1->ew1.getRawValue().toString()).orElse(null), path.toPath()));
+						}catch(Exception e){
+							//this shouldn't be possible, but being defensive
+							e.printStackTrace();
+						}
+					}
+
+				}
+
 				// primitive fields only, they should all get indexed
 				ew.streamFieldsAndValues(f -> f.isPrimitive()).forEach(fi -> {
 					path.pushAndPopWith(fi.k().getName(), () -> {

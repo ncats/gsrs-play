@@ -1,5 +1,6 @@
 package ix.ginas.exporters;
 
+import ix.core.exporters.OutputFormat;
 import ix.ginas.models.v1.Substance;
 
 import java.io.IOException;

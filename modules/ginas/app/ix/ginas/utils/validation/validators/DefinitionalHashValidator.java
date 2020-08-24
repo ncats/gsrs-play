@@ -5,6 +5,7 @@ import ix.core.models.DefinitionalElements;
 import ix.core.models.DefinitionalElements.DefinitionalElementDiff.OP;
 import ix.core.models.Role;
 import ix.core.models.UserProfile;
+import ix.core.util.LogUtil;
 import ix.core.validator.GinasProcessingMessage;
 import ix.core.validator.ValidatorCallback;
 import ix.ginas.models.v1.Substance;
@@ -26,8 +27,8 @@ public class DefinitionalHashValidator  extends AbstractValidatorPlugin<Substanc
      */
     @Override
     public void validate(Substance objnew, Substance objold, ValidatorCallback callback) {
-
-//        System.out.println("in def hash Validator");
+//				System.out.println("in def hash Validator with substance of type " + objnew.substanceClass.name());
+		LogUtil.trace(()->"in def hash Validator with substance of type " + objnew.substanceClass.name());
 
         /*if(objold ==null || objnew.getApprovalID() ==null || (objnew.getApprovalID() !=null && objold.getApprovalID() ==null)){
             //new substance or not approved don't validate
@@ -52,7 +53,7 @@ public class DefinitionalHashValidator  extends AbstractValidatorPlugin<Substanc
             //Arrays.equals() won't cut it. so need to do the more involved diff...
             if(!diff.isEmpty()) {
 								if( changesContainLayer(diff, 1) && objnew.status.equals("approved")) {
-										Logger.debug("approved substance with change to layer 1 ");
+										Logger.trace("approved substance with change to layer 1 ");
 										// only for approved substances
 										//confirm can be a new warning that can be dismissed
 										UserProfile up=getCurrentUser();
@@ -81,23 +82,23 @@ public class DefinitionalHashValidator  extends AbstractValidatorPlugin<Substanc
 								String message= createDiffMessage(diff);
 								callback.addMessage(GinasProcessingMessage
 										.WARNING_MESSAGE(message));
-								Logger.debug("in DefinitionalHashValidator, apending message " + message);
+								Logger.trace("in DefinitionalHashValidator, apending message " + message);
 						} else {
-								Logger.debug("diffs empty ");
+								Logger.trace("diffs empty ");
 						}
 				} else {
-					Logger.debug("Arrays equal");
+					Logger.trace("Arrays equal");
 				}
     }
 
 		private boolean changesContainLayer(List<DefinitionalElements.DefinitionalElementDiff> changes, int layer) {
-			Logger.debug("changed: ");
+			Logger.trace("changed: ");
 
 			boolean result= changes.stream().anyMatch(c-> (c.getOp().equals(OP.ADD) && c.getNewValue().getLayer()==layer)
 							|| (c.getOp().equals(OP.REMOVED) && (c.getOldValue().getLayer() == layer))
 							|| (c.getOp().equals(OP.CHANGED) && (c.getNewValue().getLayer() == layer || c.getOldValue().getLayer() == layer))
 							);
-			Logger.debug("changesContainLayer to return " + result);
+			Logger.trace("changesContainLayer to return " + result);
 			return result;
 		}
 

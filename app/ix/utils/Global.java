@@ -235,9 +235,10 @@ public class Global extends GlobalSettings {
 
 	public static String getHost() {
 		try {
-			Http.Request req = Controller.request();
+
 			String h = _instance.ctx.host();
 			if (h == null) {
+				Http.Request req = Controller.request();
 				h = (req.secure() ? "https" : "http") + "://" + req.host();
 			}
 			return h;

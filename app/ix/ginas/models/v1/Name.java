@@ -36,6 +36,7 @@ import ix.ginas.models.serialization.KeywordDeserializer;
 import ix.ginas.models.serialization.KeywordListSerializer;
 import ix.ginas.models.utils.JSONConstants;
 import ix.ginas.models.utils.JSONEntity;
+import org.apache.commons.lang3.ObjectUtils;
 
 @JSONEntity(title = "Name", isFinal = true)
 @Entity
@@ -85,12 +86,12 @@ public class Name extends CommonDataElementOfCollection {
 				}
 				//katzelda GSRS-623 : changed sort order
 				//from #refs, type, alpha -> alpha, type, #refs
-				int nameCompare = o1.name.compareTo(o2.name);
+				int nameCompare = ObjectUtils.compare(o1.name, o2.name);
 				if(nameCompare !=0){
 					return nameCompare;
 				}
 
-				int nameType = o1.type.compareTo(o2.type);
+				int nameType = ObjectUtils.compare(o1.type, o2.type);
 				if(nameType !=0){
 					return nameType;
 				}

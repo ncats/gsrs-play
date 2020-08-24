@@ -2,8 +2,10 @@ package ix.ginas.controllers;
 
 
 import be.objectify.deadbolt.java.actions.Dynamic;
+import ix.core.controllers.EntityFactory;
 import ix.core.controllers.PayloadFactory;
 import ix.core.controllers.ProcessingJobFactory;
+import ix.core.controllers.v1.GsrsApiUtil;
 import ix.core.models.Payload;
 import ix.core.models.ProcessingJob;
 import ix.core.plugins.GinasRecordProcessorPlugin;
@@ -17,6 +19,7 @@ import ix.ginas.utils.DefaultSdfLoader;
 import ix.ginas.utils.GinasSDFUtils;
 import ix.ginas.utils.GinasSDFUtils.GinasSDFExtractor;
 import ix.ginas.utils.GinasSDFUtils.GinasSDFExtractor.FieldStatistics;
+import ix.ginas.utils.GinasUtils;
 import ix.ncats.controllers.App;
 import ix.ncats.controllers.FacetDecorator;
 import ix.ncats.controllers.security.IxDynamicResourceHandler;
@@ -38,6 +41,7 @@ import play.mvc.Result;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import play.mvc.Results;
 
 public class GinasLoad extends App {
 	
@@ -113,6 +117,59 @@ public class GinasLoad extends App {
 	}
 
 	@Dynamic(value = IxDynamicResourceHandler.IS_ADMIN, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
+	public static Result loadJsonViaAPI() {
+		if (!GinasLoad.config.get().ALLOW_LOAD) {
+			return badRequest("Invalid request!");
+		}
+
+		DynamicForm requestData = Form.form().bindFromRequest();
+		String type = requestData.get("file-type");
+		String preserveAudit = requestData.get("preserve-audit");
+		Logger.info("type =" + type);
+		try {
+
+			Class<?> persister = ix.ginas.utils.GinasUtils.GinasSubstancePersister.class;
+
+			if(preserveAudit!=null){
+				persister = ix.ginas.utils.GinasUtils.GinasSubstanceForceAuditPersister.class;
+			}
+
+			Payload payload = payloadPlugin.get().parseMultiPart("file-name",
+					request(), PayloadPersistType.TEMP);
+			switch (type) {
+				case "JSON":
+					Logger.info("JOS =" + type);
+
+					GinasRecordProcessorPlugin.PayloadProcessor payloadProcessor = ginasRecordProcessorPlugin.get()
+							.submit(payload,
+									GinasUtils.GinasDumpExtractor.class,
+									persister);
+					String id = payloadProcessor.key;
+
+					return redirect(ix.core.controllers.v1.routes.LoadController.monitor(id));
+
+//				case "SD-default":
+//					Logger.info("SD-default =" + type);
+//					payload.save();
+//					return ix.ginas.controllers.GinasLoad.loadSDFWithDefaultMappings(payload.id.toString());
+//				case "SD": //this is the full custom version
+//					Logger.info("SD =" + type);
+//
+//					payload.save();
+//					Map<String, FieldStatistics> m = GinasSDFExtractor
+//							.getFieldStatistics(payload, 100);
+//					return ok(ix.ginas.views.html.admin.sdfimportmapping.render(
+//							payload, new ArrayList<FieldStatistics>(m.values())));
+				default:
+					return badRequest("only gsrs files currently supported");
+			}
+
+		} catch (Exception ex) {
+			return _internalServerError(ex);
+		}
+
+	}
+	@Dynamic(value = IxDynamicResourceHandler.IS_ADMIN, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
 	public static Result loadJSON() {
 		if (!GinasLoad.config.get().ALLOW_LOAD) {
 			return badRequest("Invalid request!");
@@ -127,7 +184,6 @@ public class GinasLoad extends App {
 			Class<?> persister = ix.ginas.utils.GinasUtils.GinasSubstancePersister.class;
 			
 			if(preserveAudit!=null){
-				System.out.println("CHECKED");
 				persister = ix.ginas.utils.GinasUtils.GinasSubstanceForceAuditPersister.class;
 			}
 			
@@ -230,9 +286,6 @@ public class GinasLoad extends App {
 		}
 		GinasSDFUtils.setPathMappers(payloadUUID, mappers);
 
-		for (GinasSDFUtils.PATH_MAPPER pth : mappers) {
-			System.out.println("path:" + pth.path);
-		}
 
 		// return ok("test");
 
@@ -269,6 +322,17 @@ public class GinasLoad extends App {
 			msg += "\n\n refresh page for status";
 			return ok("Processing job:" + processID + "\n\n" + msg);
 		
+	}
+	@Dynamic(value = IxDynamicResourceHandler.IS_ADMIN, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
+	public static Result monitorProcessApi(String processID) {
+
+		ProcessingJob job = ProcessingJobFactory.getJob(processID);
+		if(job==null){
+			return GsrsApiUtil.notFound("could not find process Id " + processID);
+		}
+		return Results.ok((JsonNode)EntityFactory.EntityMapper.COMPACT_ENTITY_MAPPER().valueToTree(job))
+							.as("application/json");
+
 	}
 
 	@Dynamic(value = IxDynamicResourceHandler.IS_ADMIN, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)

@@ -19,5 +19,5 @@ public @interface NamedResource {
     boolean adminOnly() default false;
     boolean allowSearch() default true;
 
-    Class<SearchRequest.Builder> searchRequestBuilderClass() default SearchRequest.Builder.class;
+    Class<? extends SearchRequest.Builder> searchRequestBuilderClass() default SearchRequest.Builder.class;
 }

@@ -6,6 +6,7 @@ import java.util.*;
 import java.util.function.Supplier;
 
 import ix.core.plugins.Workers;
+import ix.core.util.GinasPortalGun;
 import org.apache.lucene.search.Filter;
 import org.apache.lucene.search.Query;
 
@@ -84,7 +85,12 @@ public class SearchFactory extends EntityFactory {
             }
         }
         
+        try {
         return indexer.search(searchRequest.getOptions(), searchRequest.getQuery(), searchRequest.getSubset());
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new IOException("error searching", e);
+        }
     }
     
     /**
@@ -133,7 +139,7 @@ public class SearchFactory extends EntityFactory {
         return searchREST (SearchRequest.Builder.class, null, q, top, skip, fdim);
     }
     
-    private static SearchRequest getSearchRequest(Class<SearchRequest.Builder> requestBuilderClass, Class<?> kind, String q, int top, int skip, int fdim) throws IOException {
+    private static SearchRequest getSearchRequest(Class<? extends SearchRequest.Builder> requestBuilderClass, Class<?> kind, String q, int top, int skip, int fdim) throws IOException {
         SearchRequest.Builder builder;
         try {
             builder = requestBuilderClass.newInstance();
@@ -154,14 +160,14 @@ public class SearchFactory extends EntityFactory {
     }
     
     
-    public static SearchResult search (Class<SearchRequest.Builder> requestBuilderClass, Class<?> kind, String q, int top, int skip, int fdim) throws IOException {
+    public static SearchResult search (Class<? extends SearchRequest.Builder> requestBuilderClass, Class<?> kind, String q, int top, int skip, int fdim) throws IOException {
         SearchRequest req = getSearchRequest(requestBuilderClass, kind,q,top,skip,fdim);
         SearchResult result = search(req);
         return result;
 
     }
         
-    public static F.Promise<Result> searchREST (Class<SearchRequest.Builder> requestBuilderClass, Class<?> kind, String q, int top, int skip, int fdim) {
+    public static F.Promise<Result> searchREST (Class<? extends SearchRequest.Builder> requestBuilderClass, Class<?> kind, String q, int top, int skip, int fdim) {
         if (Global.DEBUG(1)) {
             Logger.debug("SearchFactory.search: kind="
                          +(kind != null ? kind.getName():"")+" q="
@@ -193,46 +199,16 @@ public class SearchFactory extends EntityFactory {
                 if (result.hasError()) {
                     return (Result) badRequest(result.getThrowable().get().getMessage());
                 }
+                //the etag only saves the subset result?
+                    String key = GinasPortalGun.getBestKeyForCurrentRequest() + "REST";
+                    result.getMatches();
+                    IxCache.getOrElse(getTextIndexer().lastModified(), key, ()->result);
+
                  return saveAsEtag(pair.resultList, result);
             }
         )
                 .toPromise();
 
-//        ;
-//        try {
-//
-//
-//            SearchResult result = search(kind,q,top,skip,fdim);
-//
-//            List<Object> results = new ArrayList<Object>();
-//
-//            result.copyTo(results, 0, top, true); //this looks wrong, because we're not skipping
-//            									  //anything, but it's actually right,
-//                        						  //because the original request did the skipping.
-//             									  //This mechanism should probably be worked out
-//                                                  //better, as it's not consistent.
-//
-//            final ETag etag = new ETag.Builder()
-//            		.fromRequest(request())
-//    				.options(result.getOptions())
-//    				.count(results.size())
-//    				.total(result.getCount())
-//    				.sha1OfRequest("q", "facet")
-//    				.build();
-//
-//
-//            etag.save();
-//            etag.setContent(results);
-//            etag.setFacets(result.getFacets());
-//            etag.setSelected(result.getOptions().getFacets(), result.getOptions().isSideway());
-//
-//
-//            EntityMapper mapper = getEntityMapper ();
-//            return Java8Util.ok (mapper.valueToTree(etag));
-//        }
-//        catch (IOException ex) {
-//            return badRequest (ex.getMessage());
-//        }
     }
 
     private static class SearchResultPair{
@@ -250,11 +226,13 @@ public class SearchFactory extends EntityFactory {
                 .options(result.getOptions())
                 .count(results.size())
                 .total(result.getCount())
+
                 .sha1OfRequest("q", "facet")
                 .build();
 
-
-        etag.save();
+        if(request().queryString().get("export") ==null) {
+            etag.save();
+        }
         etag.setContent(results);
         etag.setSponosredResults(result.getSponsoredMatches());
         etag.setFacets(result.getFacets());
@@ -282,7 +260,8 @@ public class SearchFactory extends EntityFactory {
             
             TermVectors vec = IxCache.getOrElse(indexer.lastModified(),fkey, TypedCallable.of(()->{
                 try{
-                    Query query=sq.extractFullFacetQuery(indexer.getQueryParser(), indexer.getFacetsConfig(),facetField);
+
+                    Query query = sq.extractFullFacetQuery(indexer, facetField);
                     return indexer
                         .getTermVectors(kind, facetField, (Filter)null,query);
                 }catch(Exception e){
@@ -401,7 +380,7 @@ public class SearchFactory extends EntityFactory {
                     .getEntityClass();
                 
                 
-                Query q=sr.extractFullFacetQuery(indexer.getQueryParser(), indexer.getFacetsConfig(), field);
+                Query q=sr.extractFullFacetQuery(indexer, field);
                 
                 return indexer
                         .getTermVectors(kind, field, (List<Object>)context.getResultsAsList(),q);

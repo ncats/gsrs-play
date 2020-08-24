@@ -18,9 +18,12 @@ import ix.utils.Util;
 import play.Play;
 
 /**
+ *
+ * @param <T> the type being exported.
+ *
  * Created by katzelda on 4/18/17.
  */
-public class ExportProcess {
+public class ExportProcess<T> {
     private static CachedSupplier<GinasSubstanceExporterFactoryPlugin> factoryPlugin = CachedSupplier
             .of(() -> Play.application().plugin(GinasSubstanceExporterFactoryPlugin.class));
 
@@ -32,8 +35,8 @@ public class ExportProcess {
     
     
     
-    private Exporter<Substance> exporter;
-    private final Supplier<Stream<Substance>> substanceSupplier;
+    private Exporter<T> exporter;
+    private final Supplier<Stream<T>> substanceSupplier;
 
     public ExportMetaData getMetaData() {
         try {
@@ -44,14 +47,22 @@ public class ExportProcess {
 
     }
 
-    public ExportProcess(ExportDir.ExportFile<ExportMetaData> exportFile, Supplier<Stream<Substance>> substanceSupplier){
+    /**
+     * Create a new ExportProcess.
+     * @param exportFile the ExportFile to update.
+     *
+     * @param substanceSupplier a {@link Supplier} for the {@link Stream} of objects of type T to process for export.
+     *
+     * @throws NullPointerException if either parameter is null.
+     */
+    public  ExportProcess(ExportDir.ExportFile<ExportMetaData> exportFile, Supplier<Stream<T>> substanceSupplier){
         this.exportFile= Objects.requireNonNull(exportFile);
 
         this.substanceSupplier = Objects.requireNonNull(substanceSupplier);
     }
 
 
-    public synchronized Future<?> run(Function<OutputStream, Exporter<Substance>> exporterFunction) throws IOException{
+    public synchronized Future<?> run(Function<OutputStream, Exporter<T>> exporterFunction) throws IOException{
 
         if(currentState != State.INITIALIZED){
             return null;
@@ -64,7 +75,7 @@ public class ExportProcess {
             out = createOutputFileStream(); // throws IOException
             exporter = exporterFunction.apply(out);
             ExportMetaData metaData = exportFile.getMetaData().orElse(new ExportMetaData());
-            currentState = State.RUNNING;
+            currentState = State.PREPARING;
             metaData.started = TimeUtil.getCurrentTimeMillis();
 
             IOUtil.closeQuietly(() ->  exportFile.saveMetaData(metaData));
@@ -73,8 +84,9 @@ public class ExportProcess {
             //final OutputStream fout = out;
             
             Future<?> future=factoryPlugin.get().submit( ()->{
-                try(Stream<Substance> sstream = substanceSupplier.get()){
-                    System.out.println("Starting export");
+                try(Stream<T> sstream = substanceSupplier.get()){
+                    currentState = State.RUNNING;
+//                    System.out.println("Starting export");
                     sstream.peek(s -> {
                         Unchecked.ioException( () -> exporter.export(s));
                         metaData.addRecord();
@@ -136,6 +148,10 @@ public class ExportProcess {
         INITIALIZED,
         RUNNING,
         DONE,
-        ERRORED_OUT;
+        ERRORED_OUT,
+        /**
+         * Gathering data required to beging export process.
+         */
+        PREPARING;
     }
 }

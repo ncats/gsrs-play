@@ -8,7 +8,6 @@ import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -18,10 +17,14 @@ import javax.imageio.ImageIO;
 
 import gov.nih.ncats.molwitch.*;
 import gov.nih.ncats.molwitch.Chemical;
+import gov.nih.ncats.molwitch.io.CtTableCleaner;
 import gov.nih.ncats.molwitch.renderer.ChemicalRenderer;
 import gov.nih.ncats.molwitch.renderer.RendererOptions;
 
+import ix.core.plugins.*;
+import ix.core.services.RendererService;
 import ix.ncats.resolvers.*;
+import ix.ncats.services.DefaultRenderer;
 import org.freehep.graphicsio.svg.SVGGraphics2D;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -104,6 +107,8 @@ public class App extends Authentication {
 	public static CachedSupplier<PersistenceQueue> _pq = 
 			CachedSupplier.of(()->Play.application().plugin(PersistenceQueue.class));
 
+    public static CachedSupplier<RendererPlugin> _rendererPlugin =
+            CachedSupplier.of(()->Play.application().plugin(RendererPlugin.class)) ;
 
 	public static class BogusPageException extends IllegalArgumentException{
 		public BogusPageException(String string) {
@@ -111,6 +116,16 @@ public class App extends Authentication {
 		}
 	}
 
+	private static RendererService DEFAULT_RENDERER_SERVICE = DefaultRenderer.INSTANCE;
+
+	private static RendererService rendererService = DEFAULT_RENDERER_SERVICE;
+	public static RendererService getRendererService(){
+		return rendererService;
+	}
+
+	public static void setRendererService(RendererService rendererService){
+		App.rendererService = Objects.requireNonNull(rendererService);
+	}
 	public static TextIndexer getTextIndexer(){
 		return Play.application().plugin(TextIndexerPlugin.class).getIndexer();
 	}
@@ -810,7 +825,7 @@ public class App extends Authentication {
 					throws Exception {
 
 		try {
-			RendererOptions rendererOptons = RendererOptions.createDefault();
+			RendererOptions rendererOptons = _rendererPlugin.get().newRendererOptions();
 
 			if (newDisplay != null) {
 
@@ -872,26 +887,11 @@ public class App extends Authentication {
 
 			rendererOptons.captionTop(c -> c.getProperty("TOP_TEXT"));
 			rendererOptons.captionBottom(c -> c.getProperty("BOTTOM_TEXT"));
-			ChemicalRenderer renderer = new ChemicalRenderer(rendererOptons);
-		/*
-        DisplayParams displayParams = new DisplayParams ();
-        displayParams.changeProperty
-            (DisplayParams.PROP_KEY_DRAW_STEREO_LABELS_AS_ATOMS, true);
+			ChemicalRenderer renderer = _rendererPlugin.get().newChemicalRenderer(rendererOptons);
 
-        ChemicalRenderer render = new NchemicalRenderer (displayParams);
-		 */
 
 
 			Chem.fixMetals(chem);
-
-		
-			//ChemicalRenderer renderer = new ChemicalRenderer()
-//		ChemicalRenderer render = new NchemicalRenderer ();
-
-
-//		render.setDisplayParams(dp);
-//		render.addDisplayProperty("TOP_TEXT");
-//		render.addDisplayProperty("BOTTOM_TEXT");
 
 
 		ByteArrayOutputStream bos = new ByteArrayOutputStream ();       
@@ -909,7 +909,7 @@ public class App extends Authentication {
 				}
 		}else {
 				BufferedImage bi = renderer.createImage(chem, size);
-			ImageIO.write(bi, "png", bos); 
+				ImageIO.write(bi, format, bos);
 		}
 
 		return bos.toByteArray();
@@ -945,12 +945,24 @@ public class App extends Authentication {
 		}
 		return c;
 	}
+
+	private static String fixMolIfNeeded(Structure struc ){
+		if(struc.molfile ==null){
+			return struc.smiles;
+		}
+		try {
+			return CtTableCleaner.clean(struc.molfile);
+		} catch (IOException e) {
+			e.printStackTrace();
+			return struc.molfile;
+		}
+	}
 	public static byte[] render (Structure struc, String format, int size, int[] amap)
 			throws Exception {
 		Map<String, Boolean> newDisplay = new HashMap<>();
 		newDisplay.put(RendererOptions.DrawOptions.DRAW_STEREO_LABELS_AS_RELATIVE.name(),
 				Stereo.RACEMIC.equals(struc.stereoChemistry));
-		Chemical c= parseAndComputeCoordsIfNeeded(struc.molfile != null ? struc.molfile : struc.smiles);
+		Chemical c= parseAndComputeCoordsIfNeeded(fixMolIfNeeded(struc));
 
 		if(!Optical.UNSPECIFIED.equals(struc.opticalActivity)
 				&& struc.opticalActivity!=null){
@@ -1043,14 +1055,14 @@ public class App extends Authentication {
 					+ "||" + struc.version + "%" + RendererOptions.createDefault().hashCode()+ "|" + RequestHelper.request().getQueryString("stereo")
                                         + "|" + RequestHelper.request().getQueryString("version");
 			String mime = format.equals("svg") ? "image/svg+xml" : "image/png";
+			Boolean showStereo = getStereoFlagFromRequest();
 			try {
-				byte[] result = getOrElse(key, TypedCallable.of(() -> {
-					return render(struc, format, size, amap);
-				}, byte[].class));
+				byte[] result = getOrElse(key, TypedCallable.of(() -> rendererService.render(struc,format,size, amap, showStereo), byte[].class));
 				if (result != null) {
 					response().setContentType(mime);
 					return ok(result);
 				}
+
 			} catch (Exception ex) {
 				Logger.error("Can't generate image for structure " + struc.id + " format=" + format + " size=" + size, ex);
 				return internalServerError("Unable to retrieve image for structure " + struc.id);
@@ -1425,8 +1437,7 @@ public class App extends Authentication {
 					// result
 					return cacheKey (searchResult, ctx.getId());
 				}, SearchResult.class);
-		// attempt to prevent overcaching if the UI doesn't wait for result poll to finish and immediately gets results
-		//we don't want to cache the results.
+
 		if(ctx.isDetermined()) {
 			return getOrElse(key, tc);
 		}else {
@@ -1628,19 +1639,7 @@ public class App extends Authentication {
 	}
 
 	
-	public static int[] uptime () {
-		int[] ups = null;
-		if (Global.epoch != null) {
-			ups = new int[3];
-			// epoch in seconds
-			long u = (System.currentTimeMillis()
-					- Global.epoch.getTime())/1000;
-			ups[0] = (int)(u/3600); // hour
-			ups[1] = (int)((u/60) % 60); // min
-			ups[2] = (int)((u%60)); // sec
-		}
-		return ups;
-	}
+
 
 	//TODO: Make sure this isn't called when not needed
 	@BodyParser.Of(value = BodyParser.Text.class, maxLength = 1024 * 1024)

@@ -98,26 +98,26 @@ public class StructurallyDiverseSubstance extends Substance implements GinasSubs
 
 		if( this.structurallyDiverse.organismFamily != null && this.structurallyDiverse.organismFamily.length() > 0) {
 			DefinitionalElement familyElement = DefinitionalElement.of("structurallyDiverse.organismFamily",
-                                                                this.structurallyDiverse.organismFamily, 1);
+                                                                this.structurallyDiverse.organismFamily.toUpperCase(), 1);
 			definitionalElements.add(familyElement);
-			Logger.debug("adding family to the def hash: " + this.structurallyDiverse.organismFamily);
+			Logger.debug("adding family to the def hash: " + this.structurallyDiverse.organismFamily.toUpperCase());
 		}
 
 		if( this.structurallyDiverse.organismGenus != null && this.structurallyDiverse.organismGenus.length() > 0) {
 			DefinitionalElement genusElement = DefinitionalElement.of("structurallyDiverse.organismGenus",
-                                                                this.structurallyDiverse.organismGenus, 1);
+                                                                this.structurallyDiverse.organismGenus.toUpperCase(), 1);
 			definitionalElements.add(genusElement);
-			Logger.debug("adding genus to the def hash: " + this.structurallyDiverse.organismGenus);
+			Logger.debug("adding genus to the def hash: " + this.structurallyDiverse.organismGenus.toUpperCase());
 		}
 		if( this.structurallyDiverse.organismSpecies != null && this.structurallyDiverse.organismSpecies.length() > 0) {
 			DefinitionalElement speciesElement = DefinitionalElement.of("structurallyDiverse.organismSpecies",
-                                                                this.structurallyDiverse.organismSpecies, 1);
+                                                                this.structurallyDiverse.organismSpecies.toUpperCase(), 1);
 			definitionalElements.add(speciesElement);
 			Logger.debug("adding species to the def hash: " + this.structurallyDiverse.organismSpecies);
 		}
 		if( this.structurallyDiverse.organismAuthor != null &&  this.structurallyDiverse.organismAuthor.length() > 0) {
 			DefinitionalElement authorElement = DefinitionalElement.of("structurallyDiverse.organismAuthor",
-							structurallyDiverse.organismAuthor, 2);
+							structurallyDiverse.organismAuthor.toUpperCase(), 2);
 			definitionalElements.add(authorElement);
 			Logger.debug("adding author to the def hash: " + authorElement);
 		}
@@ -126,7 +126,7 @@ public class StructurallyDiverseSubstance extends Substance implements GinasSubs
 			for(Keyword p : this.structurallyDiverse.part){
 				//Logger.debug(String.format("part href: %s; id: %s; label: %s; term: %s",	p.href, p.id, p.label, p.term));
 				DefinitionalElement partElement = DefinitionalElement.of("structurallyDiverse.part",
-							p.term, 1);
+							(p.term !=null && p.term.length() >0) ? p.term.toUpperCase() : p.term, 1);
 				definitionalElements.add(partElement);
 				Logger.debug("adding part to the def hash: " + partElement);
 			}
@@ -134,76 +134,53 @@ public class StructurallyDiverseSubstance extends Substance implements GinasSubs
 
 		if( this.structurallyDiverse.partLocation != null && this.structurallyDiverse.partLocation.length() > 0) {
 			DefinitionalElement partLocationElement = DefinitionalElement.of("structurallyDiverse.partLocation",
-							this.structurallyDiverse.partLocation, 2);
+							this.structurallyDiverse.partLocation.toUpperCase(), 2);
 			definitionalElements.add(partLocationElement);
 		}
+		if( this.structurallyDiverse.sourceMaterialClass != null && this.structurallyDiverse.sourceMaterialClass.length() > 0)
+		{
 		DefinitionalElement sourceMaterialClassElement = DefinitionalElement.of("structurallyDiverse.sourceMaterialClass",
-						this.structurallyDiverse.sourceMaterialClass, 1);
+						this.structurallyDiverse.sourceMaterialClass.toUpperCase(), 1);
 		definitionalElements.add(sourceMaterialClassElement);
-		Logger.debug("adding sourceMaterialClass to the def hash: " + this.structurallyDiverse.sourceMaterialClass);
-
+			Logger.debug("adding sourceMaterialClass to the def hash: " + this.structurallyDiverse.sourceMaterialClass.toUpperCase());
+		}
+		if( this.structurallyDiverse.sourceMaterialType != null && this.structurallyDiverse.sourceMaterialType.length() > 0)
+		{
 		DefinitionalElement sourceMaterialTypeElement = DefinitionalElement.of("structurallyDiverse.",
-						this.structurallyDiverse.sourceMaterialType, 1);
+						this.structurallyDiverse.sourceMaterialType.toUpperCase(), 1);
 		definitionalElements.add(sourceMaterialTypeElement);
 		Logger.debug("adding sourceMaterialType to the def hash: " + this.structurallyDiverse.sourceMaterialType);
-
+		}
 		if( this.structurallyDiverse.fractionName != null && this.structurallyDiverse.fractionName.length() >0) {
 			DefinitionalElement fractionNameElement = DefinitionalElement.of("structurallyDiverse.fractionName",
-							structurallyDiverse.fractionName, 1);
+							structurallyDiverse.fractionName.toUpperCase().trim(), 1);
 			definitionalElements.add(fractionNameElement);
-			Logger.debug("adding fractionName to the def hash: " + this.structurallyDiverse.fractionName);
+			Logger.debug("adding fractionName to the def hash: " + this.structurallyDiverse.fractionName.toUpperCase().trim());
 		}
 
 		if( this.structurallyDiverse.fractionMaterialType != null && this.structurallyDiverse.fractionMaterialType.length() >0) {
 			DefinitionalElement fractionTypeElement = DefinitionalElement.of("structurallyDiverse.fractionMaterialType",
-							structurallyDiverse.fractionMaterialType, 1);
+							structurallyDiverse.fractionMaterialType.toUpperCase().trim(), 1);
 			definitionalElements.add(fractionTypeElement);
-			Logger.debug("adding fractionMaterialType to the def hash: " + this.structurallyDiverse.fractionMaterialType);
+			Logger.debug("adding fractionMaterialType to the def hash: " + this.structurallyDiverse.fractionMaterialType.toUpperCase().trim());
 		}
 
 		if( this.structurallyDiverse.infraSpecificType != null && structurallyDiverse.infraSpecificType.length() >0 ) {
 			DefinitionalElement infraSpecTypeElement = DefinitionalElement.of("structurallyDiverse.infraSpecificType",
-							this.structurallyDiverse.infraSpecificType, 2);
+							this.structurallyDiverse.infraSpecificType.toUpperCase(), 2);
 			definitionalElements.add(infraSpecTypeElement);
-			Logger.debug("adding infraSpecificType to the def hash: " + this.structurallyDiverse.infraSpecificType);
+			Logger.debug("adding infraSpecificType to the def hash: " + this.structurallyDiverse.infraSpecificType.toUpperCase());
 		}
 
 		if( this.structurallyDiverse.infraSpecificName != null && structurallyDiverse.infraSpecificName.length() >0 ) {
 			DefinitionalElement infraSpecNameElement = DefinitionalElement.of("structurallyDiverse.infraSpecificName",
-							this.structurallyDiverse.infraSpecificName, 2);
+							this.structurallyDiverse.infraSpecificName.toUpperCase(), 2);
 			definitionalElements.add(infraSpecNameElement);
-			Logger.debug("adding infraSpecificName to the def hash: " + this.structurallyDiverse.infraSpecificName);
+			Logger.debug("adding infraSpecificName to the def hash: " + this.structurallyDiverse.infraSpecificName.toUpperCase());
 		}
 
 		if( this.modifications != null ){
-			if( this.modifications.agentModifications != null){
-					for(int i =0; i < this.modifications.agentModifications.size(); i++)	{
-					AgentModification a = this.modifications.agentModifications.get(i);
-					Logger.debug("processing agent mod " + a.agentModificationProcess);
-					DefinitionalElement agentModElement = DefinitionalElement.of("modifications.agentModificationProcess", a.agentModificationProcess, 2);
-					definitionalElements.add(agentModElement);
-				}
-			}
-
-			for( int i = 0; i < this.modifications.physicalModifications.size(); i++)	{
-				PhysicalModification p = this.modifications.physicalModifications.get(i);
-				Logger.debug("processing physical modification " + p.modificationGroup);
-				DefinitionalElement physicalModElement = DefinitionalElement.of("modifications.physicalModificationGroup", p.modificationGroup, 2);
-				definitionalElements.add(physicalModElement);
-				Logger.debug("processing p.physicalModificationRole " + p.physicalModificationRole);
-				DefinitionalElement physicalModElementProcess = DefinitionalElement.of("modifications.physicalModificationRole", p.physicalModificationRole, 2);
-				definitionalElements.add(physicalModElementProcess);
-			}
-
-			for(int i = 0; i < this.modifications.structuralModifications.size(); i++) {
-				StructuralModification sm = this.modifications.structuralModifications.get(i);
-				Logger.debug("processing structural modification with group " + sm.modificationGroup);
-				DefinitionalElement structModElement = DefinitionalElement.of("modifications.structuralModifications.group", sm.modificationGroup, 2);
-				definitionalElements.add(structModElement);
-				Logger.debug("processing sm.residueModified " + sm.residueModified);
-				DefinitionalElement structModResidueElement = DefinitionalElement.of("modifications.structuralModifications.residueModified", sm.residueModified, 2);
-				definitionalElements.add(structModResidueElement);
-			}
+			definitionalElements.addAll(this.modifications.getDefinitionalElements().getElements());
 		}
 
 		if( this.properties != null ) {
