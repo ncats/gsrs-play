@@ -28,9 +28,7 @@ public class PeptideInterpreter {
 	public static String aminoAcidsLet = "A	Ala;R	Arg;N	Asn;D	Asp;C	Cys;E	Glu;Q	Gln;G	Gly;H	His;I	Ile;L	Leu;K	Lys;M	Met;F	Phe;P	Pro;S	Ser;T	Thr;W	Trp;Y	Tyr;V	Val";
 
 	static {
-		//katzelda Aug 2020 - add amidated component to be ignored
-		//we are purposely making the amino acid an empty string
-		aminoAcids+="; \tN([*:2])";
+
 
 		Pattern TAB_SPLIT = Pattern.compile("\t");
 		for (String s : aminoAcids.split(";")) {
@@ -112,7 +110,8 @@ public class PeptideInterpreter {
 		for(String s:aminoAcidsLet.split(";")){
 			AAmap3Let.put(s.split("\t")[0], s.split("\t")[1]);
 		}
-
+		//katzelda Aug 2020 - add amidated component to be ignored
+		AAmap.put("QGZKDVFQNNGYKY","");
 	}
 	public static String LOOKUP_HASH(Chemical f2) throws Exception{
 		String smiles=null;
