@@ -12,6 +12,7 @@ import org.junit.Test;
 import java.io.*;
 import java.net.URL;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import static org.junit.Assert.*;
@@ -116,8 +117,8 @@ public class MyDownloadsTest extends AbstractGinasServerTest{
 
             try(BufferedReader reader = new BufferedReader(new InputStreamReader(browserSession.newSubstanceSearcher().all()
                             .newExportRequest("csv").setPublicOnly(false).getInputStream(true)))){
-                List<String> redownloadLines = reader.lines().collect(Collectors.toList());
-
+                Set<String> redownloadLines = reader.lines().collect(Collectors.toSet());
+                //redownloaded lines might be in different order
                 assertEquals(lines, redownloadLines);
             }
 
