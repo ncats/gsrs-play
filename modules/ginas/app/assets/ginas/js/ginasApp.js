@@ -561,7 +561,7 @@
             $scope.qmod = qmod;
         }
         $scope.nameFor = function (suggest) {
-            if (suggest === "Approval_ID") return "UNII";
+            if (suggest === "Approval_ID") return "Approval ID";
             if (suggest === "Display_Name") return "Preferred Term";
             return suggest;
         };
@@ -3347,7 +3347,7 @@
      *     substanceuuid="f982d178-7bcb-448a-9fd3-25c59e181c7b"
      *     preview-on="['hover','click']"
      *     
-     *     preview-substance-views="['Preferred Term','img','Approval ID (UNII)']"
+     *     preview-substance-views="['Preferred Term','img','Approval ID']"
      * >
      * </substance-line>
      * 
@@ -3371,7 +3371,7 @@
                 var div = "<span ng-class='iclass' ng-click='click()' aria-label = 'keep open' class='stop-prop' >\n" +
                     "<info-popup ng-mouseleave='mouesOut()' ng-mouseover='mouesIn()'  aria-label = 'info-popup' icon='fa-search-plus' show-popup=showPopup trigger='none' >" +
                     "  <div style='text-align: center;'>" +
-                    "  <substance-preview substance-views=\"['Preferred Term','img','Approval ID (UNII)','iconButtons']\"" +
+                    "  <substance-preview substance-views=\"['Preferred Term','img','Approval ID','iconButtons']\"" +
                     "     substanceuuid='" + scope.substanceuuid + "'>" +
                     "  </substance-preview>" +
                     "  </div>" +
@@ -3450,7 +3450,7 @@
     		4. Link
     		5. etc ...
     		
-    	<substance-preview substance-views="['Preferred Term','img','Approval ID (UNII)']" 
+	<substance-preview substance-views="['Preferred Term','img','Approval ID']"
     	                   substanceuuid="f982d178-7bcb-448a-9fd3-25c59e181c7b">
     	                   
     	</substance-preview>

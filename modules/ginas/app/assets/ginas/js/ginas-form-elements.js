@@ -227,10 +227,10 @@
                     "description":"Any code (database link, classification code, etc) found in a record"
                     },
                     {
-                    "title":"Approval ID (UNII)",
+                    "title":"Approval ID",
                     "field":"root_approvalID",
                     "type":"text",
-                    "description":"The approval ID (UNII) of a record"
+                    "description":"The approval ID of a record"
                     },
                     {
                     "title":"Molecular Weight",
@@ -266,7 +266,7 @@
                         "type":"text",
                     },
                     "root_approvalID": {
-                        "title":"Approval ID (UNII)",
+                        "title":"Approval ID",
                         "type":"text"
                     },
                     "root_structure_mwt": {

@@ -514,7 +514,7 @@ function getDisplayFacetValue(name, label){
         return _.startCase( label);
     }else if(name === "Record Status"){
         if(label === "approved"){
-            return "Validated (UNII)";
+            return "Validated";
         }
     }else if(name === "Relationships"){
         if(label.indexOf("->")>=0){
