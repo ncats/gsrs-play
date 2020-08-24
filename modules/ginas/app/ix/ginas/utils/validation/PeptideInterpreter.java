@@ -30,17 +30,20 @@ public class PeptideInterpreter {
 	static {
 		//katzelda Aug 2020 - add amidated component to be ignored
 		//we are purposely making the amino acid an empty string
-		aminoAcids+=";\t6NH3";
+		aminoAcids+="; \t6NH3";
 
 		Pattern TAB_SPLIT = Pattern.compile("\t");
 		for (String s : aminoAcids.split(";")) {
 			String[] sArray = TAB_SPLIT.split(s);
+			//if AA is empty string array will be length 1
+			System.out.println(Arrays.toString(sArray));
 
 			Chemical c=null;
 			String AA=sArray[0];
 //			System.out.println(sArray[1]);
 			try {
-				c = Chemical.createFromSmiles(sArray[1]);
+				String smiles = sArray[1];
+				c = Chemical.parse(sArray[1]);
 				c.makeHydrogensImplicit();
 				c.aromatize();
 				c.setAtomMapToPosition();
