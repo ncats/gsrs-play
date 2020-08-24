@@ -666,11 +666,15 @@ public class PeptideInterpreter {
 	 *
 	 */
 	public static Protein getAminoAcidSequence(Chemical impMol) {
-		if(impMol==null)return null;
-		if(impMol.getAtomCount()>=1024)throw new IllegalArgumentException("Too many atoms, does not support > 1024");
+		if(impMol==null){
+			return null;
+		}
+		if(impMol.getAtomCount()>=1024){
+			throw new IllegalArgumentException("Too many atoms, does not support >= 1024");
+		}
 		//System.out.println("Number of atoms:" + impMol.getAtomCount());
-		List<String> sequences1Let = new ArrayList<String>();
-		Map<Integer,Integer> canonicalSequenceMap = new HashMap<Integer,Integer>();
+		List<String> sequences1Let = new ArrayList<>();
+		Map<Integer,Integer> canonicalSequenceMap = new HashMap<>();
 
 
 		Chemical stdMol = impMol.copy();
@@ -703,8 +707,8 @@ public class PeptideInterpreter {
 					subunit--;
 					continue;
 				}
-				Map<Integer,Integer> chi = new HashMap<Integer,Integer>();
-				Map<Integer,Integer> alphaAtomIndexToSeqIndex = new LinkedHashMap<Integer,Integer>();
+				Map<Integer,Integer> chi = new HashMap<>();
+				Map<Integer,Integer> alphaAtomIndexToSeqIndex = new LinkedHashMap<>();
 
 				Chemical c2 = c.copy();
 
@@ -810,20 +814,20 @@ public class PeptideInterpreter {
 							aamap =ma.getAtomToAtomMap().getAsInt()-1;
 						}
 					}
-//					System.out.println("looking up " + f2.toSmiles());
+					System.out.println("looking up " + f2.toSmiles());
 					String hashKey = LOOKUP_HASH(f2);
-//					System.out.println(hashKey);
+					System.out.println(hashKey);
 					String aalet = AAmap.get(hashKey);
-//					System.out.println(aalet);
+					System.out.println(aalet);
 					if(aalet==null){
-//						System.out.println("was null!! current map is " + AAmap);
+						System.out.println("was null!! current map is " + AAmap);
 						String smiles=f2.toSmiles();
 						if(!weirdCycle){
 							smiles=decodePeptide(smiles,false);
 						}else{
 							smiles=decodePeptide(tf.toSmiles(),true);
 						}
-//						System.out.println("now smiles = " + smiles);
+						System.out.println("now smiles = " + smiles);
 						if(modFreq.get(smiles)==null){
 							modFreq.put(smiles, 1);
 						}else{
