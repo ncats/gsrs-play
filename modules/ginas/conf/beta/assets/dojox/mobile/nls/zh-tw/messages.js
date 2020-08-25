@@ -1,4 +1,4 @@
-define({      
+define("dojox/mobile/nls/zh-tw/messages", {      
 //begin v1.x content
 	// Title of the previous button in Carousel
 	"CarouselPrevious": "上一步",

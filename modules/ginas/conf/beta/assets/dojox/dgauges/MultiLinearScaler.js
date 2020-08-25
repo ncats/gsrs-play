@@ -1,4 +1,4 @@
-define(["dojo/_base/declare", "dojo/Stateful"], function(declare, Stateful){
+define("dojox/dgauges/MultiLinearScaler", ["dojo/_base/declare", "dojo/Stateful"], function(declare, Stateful){
 	return declare("dojox.dgauges.MultiLinearScaler", Stateful, {
 		// summary:
 		//		The multi-linear scaler. This scaler maps numeric values according 
@@ -26,6 +26,7 @@ define(["dojo/_base/declare", "dojo/Stateful"], function(declare, Stateful){
 		//		The array of generated minor ticks. You should not set this
 		//		property when using the scaler.
 		minorTicks: null,
+		_snapIntervalPrecision: null,
 		_snapCount: 4,
 		_snapIntervalPrecision: 6,
 		

@@ -1,4 +1,4 @@
-define(["dojo/_base/kernel", "dojo/_base/declare", "dojo/_base/Color", "dojo/has", "./Base"],
+define("dojox/charting/plot3d/Bars", ["dojo/_base/kernel", "dojo/_base/declare", "dojo/_base/Color", "dojo/has", "./Base"],
 	function(kernel, declare, Color, has, Base) {
 
 	// reduce function borrowed from dojox.fun

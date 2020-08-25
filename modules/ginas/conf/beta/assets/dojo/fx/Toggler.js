@@ -1,4 +1,4 @@
-define(["../_base/lang","../_base/declare","../_base/fx", "../aspect"],
+define("dojo/fx/Toggler", ["../_base/lang","../_base/declare","../_base/fx", "../aspect"],
   function(lang, declare, baseFx, aspect){
 	// module:
 	//		dojo/fx/Toggler

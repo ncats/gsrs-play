@@ -342,7 +342,7 @@ public class GinasFactory extends EntityFactory {
 		List<GinasProcessingMessage> messages = new ArrayList<GinasProcessingMessage>();
 
 		try {
-			System.out.println(mappingsjson);
+//			System.out.println(mappingsjson);
 			GinasUtils.GinasJSONExtractor ex = new GinasUtils.GinasJSONExtractor(mappingsjson);
 			JsonNode jn = ex.getNextRecord();
 			sub = GinasUtils.makeSubstance(jn);

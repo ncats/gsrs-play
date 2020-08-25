@@ -1,4 +1,4 @@
-define({      
+define("dijit/nls/bs/common", {      
 //begin v1.x content
 	buttonOk: "OK",
 	buttonCancel: "Odustani",

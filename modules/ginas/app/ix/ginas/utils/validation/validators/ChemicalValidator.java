@@ -256,7 +256,7 @@ public class ChemicalValidator extends AbstractValidatorPlugin<Substance> {
 				ChemUtils.fix0Stereo(oldstr, gpm);
 				gpm.forEach(m->{
 					callback.addMessage(m);
-					System.out.println(m);
+//					System.out.println(m);
 				});
     }
 

@@ -205,7 +205,7 @@ public class ChemkitInitializer implements Initializer{
 
         try(ChemicalReader reader = ChemicalReaderFactory.newReader(StandardChemFormats.SDF, new ByteArrayInputStream(sdf.getBytes()))){
             Chemical chemical = reader.read();
-            System.out.println("# atoms from sdf " + chemical.getAtomCount());
+//            System.out.println("# atoms from sdf " + chemical.getAtomCount());
             System.out.println(chemical.toMol());
         }catch(IOException e){
             e.printStackTrace();

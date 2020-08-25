@@ -1302,9 +1302,15 @@ public class App extends Authentication {
             final String key = task.getKey();
             return getOrElse(task.getLastUpdatedTime(), key,
                             TypedCallable.of(() -> {
-                                task.search(processor);
+                            	try {
+									task.search(processor);
+								}catch(Throwable t){
+                            		t.printStackTrace();
+                            		throw t;
+								}
                                 SearchResultContext ctx = processor.getContext();
                                 ctx.setKey(key);
+
                                 return ctx;
                             },SearchResultContext.class));
         }catch (Exception ex) {

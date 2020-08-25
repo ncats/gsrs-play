@@ -1,5 +1,5 @@
 define(
-({
+"dojox/grid/enhanced/nls/uk/EnhancedGrid", ({
 	singleSort: "Однорівневе сортування",
 	nestedSort: "Вкладене сортування",
 	ascending: "Клацніть для сортування за зростанням",

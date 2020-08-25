@@ -1,4 +1,4 @@
-define([
+define("dojox/form/RangeSlider", [
 	"dojo/_base/kernel", // kernel.deprecated
 	"./_RangeSliderMixin",
 	"./HorizontalRangeSlider",

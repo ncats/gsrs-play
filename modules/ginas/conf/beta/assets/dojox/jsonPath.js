@@ -1,4 +1,4 @@
-define(["dojo/_base/kernel", 
+define("dojox/jsonPath", ["dojo/_base/kernel", 
 	"./jsonPath/query"
 ],function(kernel, query){
 	/*=====

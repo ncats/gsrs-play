@@ -268,7 +268,7 @@ public class GinasLoad extends App {
 		DynamicForm requestData = Form.form().bindFromRequest();
 		String mappingsjson = requestData.get("mappings");
 		ObjectMapper om = new ObjectMapper();
-		System.out.println(mappingsjson);
+//		System.out.println(mappingsjson);
 		List<GinasSDFUtils.PATH_MAPPER> mappers = null;
 		try {
 			mappers = new ArrayList<GinasSDFUtils.PATH_MAPPER>();

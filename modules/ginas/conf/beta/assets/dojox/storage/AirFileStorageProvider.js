@@ -1,3 +1,5 @@
+// wrapped by build app
+define("dojox/storage/AirFileStorageProvider", ["dojo","dijit","dojox","dojo/require!dojox/storage/manager,dojox/storage/Provider"], function(dojo,dijit,dojox){
 dojo.provide("dojox.storage.AirFileStorageProvider");
 dojo.require("dojox.storage.manager");
 dojo.require("dojox.storage.Provider");
@@ -226,3 +228,4 @@ if (dojo.isAIR) {
 		dojox.storage.manager.initialize();
 	})();
 }
+});

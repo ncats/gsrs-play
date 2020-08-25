@@ -1,5 +1,5 @@
 define(
-({
+"dojox/editor/plugins/nls/id/SpellCheck", ({
 	widgetLabel: "Batch Spell Check",
 	unfound: "Tidak Ditemukan",
 	skip: "Lewati",

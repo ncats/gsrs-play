@@ -1,4 +1,4 @@
-define([ "dojo/_base/array",
+define("dojox/mobile/LongListMixin", [ "dojo/_base/array",
          "dojo/_base/lang",
          "dojo/_base/declare",
          "dojo/sniff",

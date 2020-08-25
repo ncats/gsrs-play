@@ -368,14 +368,14 @@ public class EntityUtils {
 
 						.flatMap(r -> {
 									if (r.tags.stream()
-											.peek(k -> System.out.println(k))
+//											.peek(k -> System.out.println(k))
 											.filter(k -> k.term.equalsIgnoreCase("fasta"))
 											.findAny()
 											.isPresent()) {
 										Matcher m = PAYLOAD_UUID_PATTERN.matcher(r.uploadedFile);
 										if (m.find()) {
 											String uuid = m.group(1);
-											System.out.println("found payload " + uuid);
+//											System.out.println("found payload " + uuid);
 											Payload payload = PayloadFactory.getPayload(UUID.fromString(uuid));
 											return Stream.of(payload);
 										}

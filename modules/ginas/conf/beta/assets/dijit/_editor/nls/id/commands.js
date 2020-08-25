@@ -1,5 +1,5 @@
 define(
-({
+"dijit/_editor/nls/id/commands", ({
 	'bold': 'Tebal',
 	'copy': 'Salin',
 	'cut': 'Potong',

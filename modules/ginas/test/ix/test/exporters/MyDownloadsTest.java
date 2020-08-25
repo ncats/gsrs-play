@@ -1,6 +1,7 @@
 package ix.test.exporters;
 
 import ix.AbstractGinasServerTest;
+import ix.core.util.RunOnly;
 import ix.ginas.exporters.ExportMetaData;
 import ix.ginas.exporters.ExportProcessFactory;
 import ix.test.server.BrowserSession;
@@ -11,7 +12,9 @@ import org.junit.Test;
 
 import java.io.*;
 import java.net.URL;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import static org.junit.Assert.*;
@@ -58,9 +61,11 @@ public class MyDownloadsTest extends AbstractGinasServerTest{
             }
         }
     }
-
     private List<String> exportTo(BrowserSession session, String format) throws IOException{
-        try(BufferedReader reader = new BufferedReader(new InputStreamReader(session.newSubstanceSearcher().all().newExportRequest("csv").setPublicOnly(false).getInputStream(true)))){
+        return exportTo(session, format, true);
+    }
+    private List<String> exportTo(BrowserSession session, String format, boolean forceReDownload) throws IOException{
+        try(BufferedReader reader = new BufferedReader(new InputStreamReader(session.newSubstanceSearcher().all().newExportRequest(format).setPublicOnly(false).getInputStream(forceReDownload)))){
             return reader.lines().collect(Collectors.toList());
         }
     }
@@ -82,11 +87,10 @@ public class MyDownloadsTest extends AbstractGinasServerTest{
             File actualCsv = files[0];
             long lastModifiedDate = actualCsv.lastModified();
 
-            try(BufferedReader reader = new BufferedReader(new InputStreamReader(browserSession.newSubstanceSearcher().all().newExportRequest("csv").getInputStream(false)))){
-                List<String> redownloadLines = reader.lines().collect(Collectors.toList());
+            List<String> redownloadLines = exportTo(browserSession, "csv", false);
 
-                assertEquals(lines, redownloadLines);
-            }
+            assertEquals(lines, redownloadLines);
+
 
             //check again we still only have 1 csv
             File[] files2 = exportDir.listFiles( (dir, name)-> name.endsWith(".csv"));
@@ -104,7 +108,7 @@ public class MyDownloadsTest extends AbstractGinasServerTest{
              RestSession restSession = ts.newRestSession(browserSession.getUser());
 
         ){
-            List<String> lines = exportTo(browserSession, "csv");
+            Set<String> lines = new HashSet<>(exportTo(browserSession, "csv"));
             MyDownloadsAPI dlApi = restSession.newDownloadAPI();
 
             File exportDir = dlApi.getExportDir();
@@ -116,20 +120,21 @@ public class MyDownloadsTest extends AbstractGinasServerTest{
 
             try(BufferedReader reader = new BufferedReader(new InputStreamReader(browserSession.newSubstanceSearcher().all()
                             .newExportRequest("csv").setPublicOnly(false).getInputStream(true)))){
-                List<String> redownloadLines = reader.lines().collect(Collectors.toList());
-
+                Set<String> redownloadLines = reader.lines().collect(Collectors.toSet());
+                //redownloaded lines might be in different order
                 assertEquals(lines, redownloadLines);
             }
 
             //check again we still only have 1 csv
             File[] files2 = exportDir.listFiles( (dir, name)-> name.endsWith(".csv"));
+
             assertEquals(2, files2.length);
             if(files2[0].lastModified() == lastModifiedDate){
                 assertTrue(files2[1].lastModified() > lastModifiedDate);
             }else{
                 assertEquals(lastModifiedDate, files2[1].lastModified());
             }
-            assertEquals(lastModifiedDate, files2[0].lastModified());
+//            assertEquals(lastModifiedDate, files2[0].lastModified());
 
         }
 

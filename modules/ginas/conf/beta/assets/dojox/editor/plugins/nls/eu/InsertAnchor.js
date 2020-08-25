@@ -1,4 +1,4 @@
-define({      
+define("dojox/editor/plugins/nls/eu/InsertAnchor", {      
 //begin v1.x content
 	insertAnchor: "Jarri aingura",
 	title: "Ainguraren propietateak",

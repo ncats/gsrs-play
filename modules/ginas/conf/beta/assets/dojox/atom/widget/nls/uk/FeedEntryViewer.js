@@ -1,5 +1,5 @@
 define(
-({
+"dojox/atom/widget/nls/uk/FeedEntryViewer", ({
 	displayOptions: "[показати опції]",
 	title: "Заголовок",
 	authors: "Автори",

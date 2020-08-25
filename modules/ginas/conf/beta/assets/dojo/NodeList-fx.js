@@ -1,4 +1,4 @@
-define(["./query", "./_base/lang", "./aspect", "./_base/fx", "./fx"],
+define("dojo/NodeList-fx", ["./query", "./_base/lang", "./aspect", "./_base/fx", "./fx"],
 function(query, lang, aspect, baseFx, coreFx){
 
 // module:

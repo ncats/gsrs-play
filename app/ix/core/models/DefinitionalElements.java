@@ -167,7 +167,7 @@ public class DefinitionalElements {
                 }
                 layers.add(encodeString(digest.digest()));
             } catch (NoSuchAlgorithmException e) {
-                System.out.println("NoSuchAlgorithmException: " + e.getMessage());
+//                System.out.println("NoSuchAlgorithmException: " + e.getMessage());
                 //this shouldn't happen...
                 throw new IllegalStateException(e);
             }

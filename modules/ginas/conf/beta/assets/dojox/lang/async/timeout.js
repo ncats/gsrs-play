@@ -1,3 +1,5 @@
+// wrapped by build app
+define("dojox/lang/async/timeout", ["dojo","dijit","dojox"], function(dojo,dijit,dojox){
 dojo.provide("dojox.lang.async.timeout");
 
 // Source of Deferred for timeouts
@@ -39,3 +41,4 @@ dojo.provide("dojox.lang.async.timeout");
 		};
 	};
 })();
+});

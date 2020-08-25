@@ -161,7 +161,7 @@ public class WebCrawlerTest  extends AbstractGinasClassServerTest {
 
     private static final class WebCrawlerSpy extends AbstractWebCrawlerSpy{
 
-        private static final Pattern SUBSTANCES_ROOT_PATTERN = Pattern.compile("/ginas/app/substance/([a-z0-9]+)$");
+        private static final Pattern SUBSTANCES_ROOT_PATTERN = Pattern.compile("/ginas/app/substance/([a-z0-9\\-]+)$");
         private final Set<String> substancesVisited = new LinkedHashSet<>();
 
         private final Set<URL> _401Links = new LinkedHashSet<>();

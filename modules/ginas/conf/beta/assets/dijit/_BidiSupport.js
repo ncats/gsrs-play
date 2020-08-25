@@ -1,4 +1,4 @@
-define(["dojo/has", "./_WidgetBase", "./_BidiMixin"], function(has, _WidgetBase, _BidiMixin){
+define("dijit/_BidiSupport", ["dojo/has", "./_WidgetBase", "./_BidiMixin"], function(has, _WidgetBase, _BidiMixin){
 
 	// module:
 	//		dijit/_BidiSupport

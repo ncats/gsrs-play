@@ -1,4 +1,4 @@
-define(["dojo/_base/lang", "dojo/_base/declare", "dojo/_base/array", "dojo/sniff",
+define("dojox/charting/plot2d/Grid", ["dojo/_base/lang", "dojo/_base/declare", "dojo/_base/array", "dojo/sniff",
 		"./CartesianBase", "./common", "dojox/lang/utils", "dojox/gfx/fx"],
 	function(lang, declare, arr, has, CartesianBase, dc, du, fx){
 

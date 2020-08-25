@@ -1,4 +1,4 @@
-define(["dojo/_base/array", 
+define("dojox/charting/widget/SelectableLegend", ["dojo/_base/array", 
 		"dojo/_base/declare", 
 		"dojo/query",
 		"dojo/_base/connect", 

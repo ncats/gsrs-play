@@ -1,16 +1,25 @@
 package ix.test.server;
 
-import com.gargoylesoftware.htmlunit.FormEncodingType;
-import com.gargoylesoftware.htmlunit.WebRequest;
-import com.gargoylesoftware.htmlunit.html.HtmlPage;
-import com.gargoylesoftware.htmlunit.util.KeyDataPair;
-import com.gargoylesoftware.htmlunit.util.NameValuePair;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.ning.http.client.FluentCaseInsensitiveStringsMap;
+import com.ning.http.multipart.FilePart;
+import com.ning.http.multipart.MultipartRequestEntity;
+import com.ning.http.multipart.StringPart;
+import ix.core.models.ProcessingJob;
+import ix.core.util.RestUrlLink;
+import play.libs.F;
+import play.libs.ws.WSRequestHolder;
+import play.libs.ws.WSResponse;
 
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.regex.Matcher;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
@@ -23,13 +32,19 @@ public class SubstanceLoader {
     private static final Pattern LOAD_MONITOR_PATTERN = Pattern.compile(" <a href=\"/(ginas/app/monitor/[a-z0-9]+)\" target=\"_self\">");
 
     private static final Pattern LOAD_PROGRESS_PATTERN = Pattern.compile("<code>\\s*(COMPLETE|PENDING|RUNNING)\\s*</code>");
-    private final BrowserSession session;
+
+    private static ObjectMapper MAPPER = new ObjectMapper();
+
+    private final RestSession session;
 
     /**
      * Options to give to the loader to load
      * a specific json file.
      */
     public static class LoadOptions{
+
+        public static LoadOptions DEFAULT_OPTIONS = new LoadOptions();
+
         private boolean preserveAuditInfo;
         private Integer numRecordsToSkip;
         private Integer numRecordsToLoad;
@@ -71,22 +86,46 @@ public class SubstanceLoader {
             return this;
         }
 
-        List<NameValuePair> generateParametersFor(File fullInputJsonFile) throws IOException{
-            List<NameValuePair> params = new ArrayList<>();
-            params.add(new NameValuePair("file-type", "JSON"));
-            File json;
-            if(numRecordsToLoad !=null || numRecordsToSkip !=null){
-                json = createParitalTempFile(fullInputJsonFile);
-            }else{
-                json = fullInputJsonFile;
-            }
-            params.add(new KeyDataPair("file-name", json, json.getName(), "application/json", "utf-8"));
-            //preserve-audit // looks like value just has to be non-null
-            if(preserveAuditInfo){
-                params.add(new NameValuePair("preserve-audit", "preserve-audit"));
-            }
+        F.Promise<WSResponse> generateParametersFor(File fullInputJsonFile, Supplier<WSRequestHolder> wsSupplier) throws IOException{
+//            List<NameValuePair> params = new ArrayList<>();
+//            params.add(new NameValuePair("file-type", "JSON"));
+//            File json;
+//            if(numRecordsToLoad !=null || numRecordsToSkip !=null){
+//                json = createParitalTempFile(fullInputJsonFile);
+//            }else{
+//                json = fullInputJsonFile;
+//            }
+//            params.add(new KeyDataPair("file-name", json, json.getName(), "application/json", "utf-8"));
+//            //preserve-audit // looks like value just has to be non-null
+//            if(preserveAuditInfo){
+//                params.add(new NameValuePair("preserve-audit", "preserve-audit"));
+//            }
+            List<com.ning.http.multipart.Part> parts = new ArrayList<>();
+            try {
+                File json;
+                if(numRecordsToLoad !=null || numRecordsToSkip !=null){
+                    json = createParitalTempFile(fullInputJsonFile);
+                }else{
+                    json = fullInputJsonFile;
+                }
+                parts.add(new FilePart("file-name", json, "application/json", "UTF-8"));
+                parts.add(new com.ning.http.multipart.StringPart("file-type", "JSON"));
+                if(preserveAuditInfo) {
+                    parts.add(new StringPart("preserve-audit", "preserve-audit"));
+                }
+                // Add it to the multipart request entity
+                MultipartRequestEntity requestEntity = new MultipartRequestEntity(parts.toArray(new com.ning.http.multipart.Part[parts.size()]), new FluentCaseInsensitiveStringsMap());
+                ByteArrayOutputStream bos = new ByteArrayOutputStream();
+                requestEntity.writeRequest(bos);
+                InputStream reqIS = new ByteArrayInputStream(bos.toByteArray());
+                return  wsSupplier.get()
+                        .setContentType(requestEntity.getContentType())
+                        .post(reqIS);
 
-            return params;
+            } catch (IOException e) {
+                e.printStackTrace();
+                return null;
+            }
         }
 
         private File createParitalTempFile(File json ) throws IOException{
@@ -119,20 +158,19 @@ public class SubstanceLoader {
         }
     }
 
-
-    public SubstanceLoader(BrowserSession session){
+    public SubstanceLoader(RestSession session){
         Objects.requireNonNull(session);
         this.session = session;
     }
+    public SubstanceLoader(BrowserSession session){
+        Objects.requireNonNull(session);
+        this.session = session.getRestSession();
+    }
+
 
 
     public void loadJson(File json) throws IOException{
-        if(!json.exists()){
-            throw new FileNotFoundException(json.getAbsolutePath());
-        }
-        String url = submitFileForLoading(json);
-
-        waitUntilComplete(url);
+        loadJson(json, LoadOptions.DEFAULT_OPTIONS);
     }
 
     public void loadJson(File json, LoadOptions options) throws IOException{
@@ -140,9 +178,11 @@ public class SubstanceLoader {
             throw new FileNotFoundException(json.getAbsolutePath());
         }
 
-        String url = submitFileForLoading(json, options);
-
-        waitUntilComplete(url);
+        WSResponse response = submitFileForLoading(json, options);
+        if(response.getStatus()>=300){
+            throw new HttpErrorCodeException(response);
+        }
+        waitUntilComplete(response);
         if(options.sleepAmount !=null){
 
             try {
@@ -153,74 +193,98 @@ public class SubstanceLoader {
         }
     }
 
-
-    private void waitUntilComplete(String monitorUrl) throws IOException {
-        waitUntilComplete(monitorUrl, 2_000L);
+    private void waitUntilComplete(WSResponse response ) throws IOException {
+        waitUntilComplete(parseJob(response.asJson()), 2_000L);
     }
-    private void waitUntilComplete(String monitorUrl, long sleeptimeMillis) throws IOException {
-        String status=null;
-        do {
+    private void waitUntilComplete(JobStatus job) throws IOException {
+        waitUntilComplete(job, 2_000L);
+    }
+    private void waitUntilComplete(JobStatus originalJob, long sleeptimeMillis) throws IOException {
+        JobStatus job = originalJob;
+
+        while(!job.status.isInFinalState()){
             try {
                 Thread.sleep(sleeptimeMillis);
             } catch (InterruptedException e) {
                 throw new IOException(e);
             }
-            WebRequest request = session.newGetRequest(monitorUrl).get();
-            HtmlPage monitorPage = session.submit(request);
+            WSRequestHolder request = session.getRequest(job._self.url);
+            JsonNode json = session.getAsJson(request);
+            job = parseJob( json);
 
-           // System.out.println(monitorPage.asXml());
-
-            Matcher matcher = LOAD_PROGRESS_PATTERN.matcher(monitorPage.asXml());
-            if(matcher.find()){
-                status = matcher.group(1);
-            }
-
-        }while(!"COMPLETE".equals(status));
+        };
     }
 
-    private String submitFileForLoading(File json) throws IOException {
-        String url;
+
+    protected WSResponse submitFileForLoading(File json, LoadOptions options) throws IOException {
+        return options.generateParametersFor(json, ()-> session.createRequestHolder(postLoadUrl(session.getHttpResolver())))
+                                    .get(2_000, TimeUnit.MILLISECONDS);
+    }
+
+    protected String postLoadUrl(GinasHttpResolver resolver) {
+        return session.constructUrlFor(resolver.apiV1("/admin/load", true));
+    }
 
 
-        List<NameValuePair> params = new ArrayList<>();
-        params.add(new NameValuePair("file-type", "JSON"));
-        params.add(new KeyDataPair("file-name", json, json.getName(), "application/json", "utf-8"));
-        //preserve-audit // looks like value just has to be non-null
-        WebRequest request = session.newPostRequest("ginas/app/load");
-        request.setEncodingType(FormEncodingType.MULTIPART);
-        request.setRequestParameters(params);
 
-        HtmlPage result = session.submit(request);
+    protected JobStatus parseJob(JsonNode json) {
+        try {
+//            System.out.println(json);
+            /*
+            "JSON ="{
+   "id":1,
+   "keys":[
+      {
+         "id":70,
+         "label":"ix.core.plugins.GinasRecordProcessorPlugin",
+         "term":"bff401efbdb7dfa7e401"
+      },
+      {
+         "id":71,
+         "label":"EXTRACTOR",
+         "term":"ix.ginas.utils.GinasUtils$GinasDumpExtractor"
+      },
+      {
+         "id":72,
+         "label":"PERSISTER",
+         "term":"ix.ginas.utils.GinasUtils$GinasSubstancePersister"
+      }
+   ],
+   "status":"PENDING",
+   "start":1597890680785,
+   "message":"Preparing payload for processing",
+   "statistics":{
+      "recordsExtractedSuccess":0,
+      "recordsProcessedSuccess":0,
+      "recordsPersistedSuccess":0,
+      "recordsExtractedFailed":0,
+      "recordsProcessedFailed":0,
+      "recordsPersistedFailed":0,
+      "estimatedTimeLeft":51,
+      "averageTimeToPersist":51.0
+   },
+   "version":1,
+   "name":"Import batch file \"rep90.ginas\"",
+   "_self":{
+      "url":"http://localhost:9005/ginas/app/api/v1/admin/load/bff401efbdb7dfa7e401",
+      "type":"GET"
+   },
+   "_payload":"http://localhost:9005/ginas/app/api/v1/jobs(1)/payload",
+   "_owner":"http://localhost:9005/ginas/app/api/v1/jobs(1)/owner"
+}
+             */
 
-        Matcher matcher = LOAD_MONITOR_PATTERN.matcher(result.asXml());
-        if(!matcher.find()){
-            throw new IOException("could not parse monitor URL for load");
+            return MAPPER.convertValue(json, JobStatus.class);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
 
-        url = matcher.group(1);
-        return url;
     }
 
-    private String submitFileForLoading(File json, LoadOptions options) throws IOException {
-        String url;
-
-
-        List<NameValuePair> params = options.generateParametersFor(json);
-        WebRequest request = session.newPostRequest(session.getHttpResolver().get("load"));
-        request.setEncodingType(FormEncodingType.MULTIPART);
-        request.setRequestParameters(params);
-
-        HtmlPage result = session.submit(request);
-
-        Matcher matcher = LOAD_MONITOR_PATTERN.matcher(result.asXml());
-        if(!matcher.find()){
-            throw new IOException("could not parse monitor URL for load");
-        }
-
-        url = matcher.group(1);
-        System.out.println("monitor URL = " + url);
-        return url;
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public static class JobStatus{
+        public ProcessingJob.Status status;
+        public String message;
+        public RestUrlLink _self;
     }
-
-
 }

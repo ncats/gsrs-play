@@ -106,6 +106,7 @@ public class CachedSupplier<T> implements Supplier<T>, Callable<T>{
 			try{
 				return callable.call();
 			}catch(final Exception e){
+				e.printStackTrace();
 				throw new IllegalStateException(e);
 			}
 		});

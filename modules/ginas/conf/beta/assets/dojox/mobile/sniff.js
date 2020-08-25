@@ -1,4 +1,4 @@
-define([
+define("dojox/mobile/sniff", [
 	"dojo/_base/kernel",
 	"dojo/sniff"
 ], function(kernel, has){

@@ -1,4 +1,4 @@
-define(["dojo/_base/lang","dojo/_base/declare","dojo/_base/array","dojo/_base/event","dojo/topic","dojo/touch",
+define("dojox/gfx/Moveable", ["dojo/_base/lang","dojo/_base/declare","dojo/_base/array","dojo/_base/event","dojo/topic","dojo/touch",
 	"dojo/dom-class","dojo/_base/window","./Mover"],
   function(lang,declare,arr,event,topic,touch,domClass,win,Mover){
 

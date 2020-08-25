@@ -1,4 +1,4 @@
-define([
+define("dijit/form/NumberTextBox", [
 	"dojo/_base/declare", // declare
 	"dojo/_base/lang", // lang.hitch lang.mixin
 	"dojo/i18n", // i18n.normalizeLocale, i18n.getLocalization

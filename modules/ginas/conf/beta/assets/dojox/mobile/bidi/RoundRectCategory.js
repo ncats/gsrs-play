@@ -1,4 +1,4 @@
-define([
+define("dojox/mobile/bidi/RoundRectCategory", [
 	"dojo/_base/declare",
 	"./common"
 ], function(declare, common){

@@ -87,7 +87,7 @@ public class MixtureValidationTest extends AbstractGinasServerTest{
             //messages.  looks like they are added as notes but the format is different
             //and some information is lost.  could possibly be able to write a lossy converter...
             JsonNode result =  api.validateSubstance(toSubmit).asJson(); /*SubstanceJsonUtil.ensurePass(api.submitSubstance(toSubmit));*/
-            System.out.println("submit result = " + result);
+//            System.out.println("submit result = " + result);
             ValidationResponse response = new ObjectMapper().treeToValue(
                     result, ValidationResponse.class);
 

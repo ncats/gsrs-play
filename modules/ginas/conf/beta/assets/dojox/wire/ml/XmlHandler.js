@@ -1,3 +1,5 @@
+// wrapped by build app
+define("dojox/wire/ml/XmlHandler", ["dojo","dijit","dojox","dojo/require!dojox/wire/ml/RestHandler,dojox/xml/parser,dojox/wire/_base,dojox/wire/ml/util"], function(dojo,dijit,dojox){
 dojo.provide("dojox.wire.ml.XmlHandler");
 
 dojo.require("dojox.wire.ml.RestHandler");
@@ -61,4 +63,6 @@ dojo.declare("dojox.wire.ml.XmlHandler", dojox.wire.ml.RestHandler, {
 		}
 		return data;
 	}
+});
+
 });

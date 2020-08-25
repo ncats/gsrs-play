@@ -1,3 +1,5 @@
+// wrapped by build app
+define("dojox/wire/ml/Service", ["dojo","dijit","dojox","dojo/require!dijit/_Widget,dojox/xml/parser,dojox/wire/_base,dojox/wire/ml/util"], function(dojo,dijit,dojox){
 dojo.provide("dojox.wire.ml.Service");
 
 dojo.require("dijit._Widget");
@@ -105,4 +107,6 @@ dojo.declare("dojox.wire.ml.Service", dijit._Widget, {
 		this.handler.bind(method, parameters, deferred, this.serviceUrl);
 		return deferred;
 	}
+});
+
 });

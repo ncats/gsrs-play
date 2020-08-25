@@ -1,4 +1,4 @@
-define([
+define("dojox/mobile/bidi/_ItemBase", [
 	"dojo/_base/declare",
 	"./common"
 ], function(declare, common){

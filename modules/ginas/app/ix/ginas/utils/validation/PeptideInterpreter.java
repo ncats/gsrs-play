@@ -26,17 +26,18 @@ public class PeptideInterpreter {
 	public static int modNumber=1;
 	public static String aminoAcids = "P\tC1C[Ne]C1;A\tO=C(O)[C@@H](N)C;C\tSC[C@H](N)C(O)=O;D\tOC(C[C@H](N)C(O)=O)=O;E\tO=C(O)[C@@H](N)CCC(O)=O;F\tN[C@H](C(O)=O)CC1=CC=CC=C1;G\tO=C(O)CN;H\tN[C@@H](CC1=CN=CN1)C(O)=O;I\tO=C(O)[C@@H](N)[C@H](C)CC;K\tN[C@H](C(O)=O)CCCCN;L\tN[C@@H](CC(C)C)C(O)=O;M\tOC([C@@H](N)CCSC)=O;N\tNC(C[C@H](N)C(O)=O)=O;P\tO=C([C@@H]1CCCN1)O;Q\tOC([C@@H](N)CCC(N)=O)=O;R\tO=C(O)[C@@H](N)CCCNC(N)=N;R\tN[C@H](C(=O)O)CCCN=C(N)N;S\tOC([C@@H](N)CO)=O;T\tC[C@H]([C@@H](C(=O)O)N)O;V\tN[C@H](C(O)=O)C(C)C;W\tO=C(O)[C@@H](N)CC1=CNC2=C1C=CC=C2;Y\tN[C@@H](CC1=CC=C(O)C=C1)C(O)=O;W\tO=C([C@H](Cc1c2ccccc2[n]c1)N)O;H\tN[C@H](C(=O)O)Cc1c[nH]cn1;I\tO=C(O)[C@@H](N)[C@@H](C)CC;H\tN[C@H](C(=O)O)Cc1cncn1";
 	public static String aminoAcidsLet = "A	Ala;R	Arg;N	Asn;D	Asp;C	Cys;E	Glu;Q	Gln;G	Gly;H	His;I	Ile;L	Leu;K	Lys;M	Met;F	Phe;P	Pro;S	Ser;T	Thr;W	Trp;Y	Tyr;V	Val";
-	//	public static final ChemicalFactory DEF_FAC = ChemicalFactory.DEFAULT_CHEMICAL_FACTORY();
+
 	static {
+
+
 		Pattern TAB_SPLIT = Pattern.compile("\t");
 		for (String s : aminoAcids.split(";")) {
 			String[] sArray = TAB_SPLIT.split(s);
 
 			Chemical c=null;
 			String AA=sArray[0];
-//			System.out.println(sArray[1]);
 			try {
-				c = Chemical.createFromSmiles(sArray[1]);
+				c = Chemical.parse(sArray[1]);
 				c.makeHydrogensImplicit();
 				c.aromatize();
 				c.setAtomMapToPosition();
@@ -105,6 +106,8 @@ public class PeptideInterpreter {
 		for(String s:aminoAcidsLet.split(";")){
 			AAmap3Let.put(s.split("\t")[0], s.split("\t")[1]);
 		}
+		//katzelda Aug 2020 - add amidated component to be ignored
+		AAmap.put("QGZKDVFQNNGYKY","");
 	}
 	public static String LOOKUP_HASH(Chemical f2) throws Exception{
 		String smiles=null;
@@ -666,11 +669,15 @@ public class PeptideInterpreter {
 	 *
 	 */
 	public static Protein getAminoAcidSequence(Chemical impMol) {
-		if(impMol==null)return null;
-		if(impMol.getAtomCount()>=1024)throw new IllegalArgumentException("Too many atoms, does not support > 1024");
+		if(impMol==null){
+			return null;
+		}
+		if(impMol.getAtomCount()>=1024){
+			throw new IllegalArgumentException("Too many atoms, does not support >= 1024");
+		}
 		//System.out.println("Number of atoms:" + impMol.getAtomCount());
-		List<String> sequences1Let = new ArrayList<String>();
-		Map<Integer,Integer> canonicalSequenceMap = new HashMap<Integer,Integer>();
+		List<String> sequences1Let = new ArrayList<>();
+		Map<Integer,Integer> canonicalSequenceMap = new HashMap<>();
 
 
 		Chemical stdMol = impMol.copy();
@@ -703,8 +710,8 @@ public class PeptideInterpreter {
 					subunit--;
 					continue;
 				}
-				Map<Integer,Integer> chi = new HashMap<Integer,Integer>();
-				Map<Integer,Integer> alphaAtomIndexToSeqIndex = new LinkedHashMap<Integer,Integer>();
+				Map<Integer,Integer> chi = new HashMap<>();
+				Map<Integer,Integer> alphaAtomIndexToSeqIndex = new LinkedHashMap<>();
 
 				Chemical c2 = c.copy();
 
@@ -982,15 +989,16 @@ public class PeptideInterpreter {
 
 	public static String decodePeptide(String str, boolean weird){
 		//if(true)return str;
-		String str2=new String(str);
+		String str2=str;
 		boolean omod =false;
 
 //		System.out.println("in decode peptide weird = " + weird);
 		if(weird){
 			try {
-				//System.out.println(str);
+//				System.out.println("before replace " + str2);
 				str2=str2.replace("[55Ne]","C(C([*:2])=O)([NH:9]([*:1]))");
-				Chemical c = Chemical.createFromSmarts(str2);
+//				System.out.println("after replace " + str2);
+				Chemical c = Chemical.parse(str2);
 				Atom mat=null;
 				Atom mat2=null;
 				c.setAtomMapToPosition();
@@ -1046,7 +1054,7 @@ public class PeptideInterpreter {
 //			System.out.println("now stchange = " + stchange);
 			if(!str2.equals(stchange)){
 				str2=stchange;
-				Chemical c = Chemical.createFromSmarts(str2);
+				Chemical c = Chemical.parse(str2);
 				//MolHandler mh = new MolHandler();
 				//mh.setMolecule(str2);
 				//Molecule m = mh.getMolecule();

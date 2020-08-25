@@ -1,4 +1,4 @@
-define([
+define("dojox/form/_BusyButtonMixin", [
 	"dojo/_base/lang",
 	"dojo/dom-attr",
 	"dojo/dom-class",

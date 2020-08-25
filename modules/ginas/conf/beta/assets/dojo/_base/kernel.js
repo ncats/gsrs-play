@@ -1,4 +1,4 @@
-define(["../global", "../has", "./config", "require", "module"], function(global, has, config, require, module){
+define("dojo/_base/kernel", ["../global", "../has", "./config", "require", "module"], function(global, has, config, require, module){
 	// module:
 	//		dojo/_base/kernel
 
@@ -76,10 +76,10 @@ define(["../global", "../has", "./config", "require", "module"], function(global
 
 	// FIXME: dojo.baseUrl and dojo.config.baseUrl should be deprecated
 	dojo.baseUrl = dojo.config.baseUrl = require.baseUrl;
-	dojo.isAsync = !has("dojo-loader") || require.async;
+	dojo.isAsync = ! 1  || require.async;
 	dojo.locale = config.locale;
 
-	var rev = "$Rev: d6e8ff38 $".match(/[0-9a-f]{7,}/);
+	var rev = "$Rev:$".match(/[0-9a-f]{7,}/);
 	dojo.version = {
 		// summary:
 		//		Version number of the Dojo Toolkit
@@ -92,7 +92,7 @@ define(["../global", "../has", "./config", "require", "module"], function(global
 		//		- flag: String: Descriptor flag. If total version is "1.2.0beta1", will be "beta1"
 		//		- revision: Number: The Git rev from which dojo was pulled
 
-		major: 1, minor: 14, patch: 2, flag: "",
+		major: 1, minor: 16, patch: 1, flag: "",
 		revision: rev ? rev[0] : NaN,
 		toString: function(){
 			var v = dojo.version;
@@ -100,11 +100,11 @@ define(["../global", "../has", "./config", "require", "module"], function(global
 		}
 	};
 
-	// If has("extend-dojo") is truthy, then as a dojo module is defined it should push it's definitions
+	// If  1  is truthy, then as a dojo module is defined it should push it's definitions
 	// into the dojo object, and conversely. In 2.0, it will likely be unusual to augment another object
 	// as a result of defining a module. This has feature gives a way to force 2.0 behavior as the code
 	// is migrated. Absent specific advice otherwise, set extend-dojo to truthy.
-	has.add("extend-dojo", 1);
+	 1 || has.add("extend-dojo", 1);
 
 	if(!has("csp-restrictions")){
 		(Function("d", "d.eval = function(){return d.global.eval ? d.global.eval(arguments[0]) : eval(arguments[0]);}"))(dojo);
@@ -137,7 +137,7 @@ define(["../global", "../has", "./config", "require", "module"], function(global
 	=====*/
 
 
-	if(has("host-rhino")){
+	if( 0 ){
 		dojo.exit = function(exitcode){
 			quit(exitcode);
 		};
@@ -148,13 +148,13 @@ define(["../global", "../has", "./config", "require", "module"], function(global
 
 	if(!has("host-webworker")){
 		// console is immutable in FF30+, https://bugs.dojotoolkit.org/ticket/18100
-		has.add("dojo-guarantee-console",
+		 1 || has.add("dojo-guarantee-console",
 			// ensure that console.log, console.warn, etc. are defined
 			1
 		);
 	}
 
-	if(has("dojo-guarantee-console")){
+	if( 1 ){
 		// IE 9 bug: https://bugs.dojotoolkit.org/ticket/18197
 		has.add("console-as-object", function () {
 			return Function.prototype.bind && console && typeof console.log === "object";
@@ -240,11 +240,11 @@ define(["../global", "../has", "./config", "require", "module"], function(global
 		};
 	}
 
-	has.add("dojo-modulePaths",
+	 1 || has.add("dojo-modulePaths",
 		// consume dojo.modulePaths processing
 		1
 	);
-	if(has("dojo-modulePaths")){
+	if( 1 ){
 		// notice that modulePaths won't be applied to any require's before the dojo/_base/kernel factory is run;
 		// this is the v1.6- behavior.
 		if(config.modulePaths){
@@ -257,11 +257,11 @@ define(["../global", "../has", "./config", "require", "module"], function(global
 		}
 	}
 
-	has.add("dojo-moduleUrl",
+	 1 || has.add("dojo-moduleUrl",
 		// include dojo.moduleUrl
 		1
 	);
-	if(has("dojo-moduleUrl")){
+	if( 1 ){
 		dojo.moduleUrl = function(/*String*/module, /*String?*/url){
 			// summary:
 			//		Returns a URL relative to a module.

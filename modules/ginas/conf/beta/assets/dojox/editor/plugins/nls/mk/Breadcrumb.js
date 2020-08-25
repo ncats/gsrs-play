@@ -1,4 +1,4 @@
-define({      
+define("dojox/editor/plugins/nls/mk/Breadcrumb", {      
 //begin v1.x content
 	"nodeActions": "${nodeName} Дејства",
 	"selectContents": "Избери содржинa",

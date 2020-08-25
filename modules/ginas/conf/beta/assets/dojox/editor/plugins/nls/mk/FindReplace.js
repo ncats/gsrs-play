@@ -1,4 +1,4 @@
-define({      
+define("dojox/editor/plugins/nls/mk/FindReplace", {      
 //begin v1.x content
 	"findLabel": "Пронајди:",
 	"findTooltip": "Внесете го текстот што треба да се пронајде",

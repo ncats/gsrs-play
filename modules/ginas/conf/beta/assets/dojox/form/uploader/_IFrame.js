@@ -1,4 +1,4 @@
-define([
+define("dojox/form/uploader/_IFrame", [
 	"dojo/query",
 	"dojo/dom-construct",
 	"dojo/_base/declare",

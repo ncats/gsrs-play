@@ -1,4 +1,4 @@
-define({      
+define("dojox/grid/enhanced/nls/eu/EnhancedGrid", {      
 //begin v1.x content
 	singleSort: "Ordenazio bakuna",
 	nestedSort: "Ordenazio habiaratua",

@@ -44,6 +44,7 @@ object ApplicationBuild extends Build {
     "com.fasterxml.jackson.core" % "jackson-core" % "2.9.7",
         "com.fasterxml.jackson.core" % "jackson-databind" % "2.9.7",
         "com.fasterxml.jackson.core" % "jackson-annotations" % "2.9.7",
+//    "com.ning" % "async-http-client" % "1.7.13" % Test,
 //    "gov.nih.ncats" % "molwitch" % "0.5",
 //    "gov.nih.ncats" % "molwitch-renderer" % "1.0",
 

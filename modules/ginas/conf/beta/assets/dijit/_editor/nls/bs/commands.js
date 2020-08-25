@@ -1,4 +1,4 @@
-define({      
+define("dijit/_editor/nls/bs/commands", {      
 //begin v1.x content
 	'bold': 'Boldirano',
 	'copy': 'Kopiraj',

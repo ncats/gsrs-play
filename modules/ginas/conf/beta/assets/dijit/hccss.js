@@ -1,4 +1,4 @@
-define(["dojo/dom-class", "dojo/hccss", "dojo/domReady", "dojo/_base/window"], function(domClass, has, domReady, win){
+define("dijit/hccss", ["dojo/dom-class", "dojo/hccss", "dojo/domReady", "dojo/_base/window"], function(domClass, has, domReady, win){
 
 	// module:
 	//		dijit/hccss

@@ -1,4 +1,4 @@
-define([
+define("dojox/mobile/_css3", [
 	"dojo/_base/window",
 	"dojo/_base/array",
 	"dojo/has"

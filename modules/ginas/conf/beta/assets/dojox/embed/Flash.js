@@ -1,4 +1,4 @@
-define([
+define("dojox/embed/Flash", [
 	"dojo/_base/lang",
 	"dojo/_base/unload",
 	"dojo/_base/array",

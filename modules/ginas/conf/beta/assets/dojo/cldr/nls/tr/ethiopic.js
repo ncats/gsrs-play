@@ -1,5 +1,5 @@
 define(
-//begin v1.x content
+"dojo/cldr/nls/tr/ethiopic", //begin v1.x content
 {
 	"field-sat-relative+0": "bu cumartesi",
 	"field-sat-relative+1": "gelecek cumartesi",

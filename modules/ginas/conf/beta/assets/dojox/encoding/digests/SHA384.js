@@ -1,4 +1,4 @@
-define(["./_sha-64", "./_sha2"], function(sha64, sha2){
+define("dojox/encoding/digests/SHA384", ["./_sha-64", "./_sha2"], function(sha64, sha2){
 	//	The 384-bit implementation of SHA-2
 	
 	//	Note that for 64-bit hashes, we're actually doing high-order, low-order, high-order, low-order.

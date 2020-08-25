@@ -1,5 +1,5 @@
 define(
-//begin v1.x content
+"dojo/cldr/nls/en-gb/japanese", //begin v1.x content
 {
 	"dateFormat-short": "dd/MM/y GGGGG",
 	"dateFormat-medium": "d MMM y G",

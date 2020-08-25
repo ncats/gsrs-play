@@ -1,4 +1,4 @@
-define(["dojo/_base/declare", "dojo/_base/lang", "dojo/_base/array", "dojo/_base/window",
+define("dojox/app/controllers/Layout", ["dojo/_base/declare", "dojo/_base/lang", "dojo/_base/array", "dojo/_base/window",
 		"dojo/query", "dojo/dom-geometry", "dojo/dom-attr", "dojo/dom-style", "dijit/registry",
 		"./LayoutBase", "../utils/layout", "../utils/constraints", "dojo/sniff"],
 function(declare, lang, array, win, query, domGeom, domAttr, domStyle, registry, LayoutBase, layout, constraints, has){

@@ -197,6 +197,10 @@ structure.moieties[<lychi4>].countAmount->"4 to 5 per mol"
     }
 
     private void addStructureDefinitialElements(Structure structure, Consumer<DefinitionalElement> consumer) {
+        if(structure==null){
+            //shouldn't happen unless we get invalid submission
+            return;
+        }
         play.Logger.debug("starting addStructureDefinitialElements (ChemicalSubstance)");
         consumer.accept(DefinitionalElement.of("structure.properties.hash1",
                 structure.getStereoInsensitiveHash(), 1));

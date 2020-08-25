@@ -1,4 +1,4 @@
-define([
+define("dojox/calendar/RendererManager", [
 	"dojo/_base/declare",
 	"dojo/_base/array",
 	"dojo/_base/html",

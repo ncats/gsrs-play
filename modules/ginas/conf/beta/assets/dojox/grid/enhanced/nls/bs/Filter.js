@@ -1,4 +1,4 @@
-define({      
+define("dojox/grid/enhanced/nls/bs/Filter", {      
 //begin v1.x content
 	"clearFilterDialogTitle": "Brisanje filtera",
 	"filterDefDialogTitle": "Filter",

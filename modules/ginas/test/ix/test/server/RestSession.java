@@ -160,6 +160,8 @@ public class RestSession extends AbstractSession<Void>{
     public WSRequestHolder getRequest(String path){
         return urlWithLogin(constructUrlFor(path));
     }
+
+
     
     public JsonNode getAsJson(WSRequestHolder hold){
         return extractJSON(hold.get().get(timeout));

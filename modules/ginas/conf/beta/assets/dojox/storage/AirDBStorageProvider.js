@@ -1,3 +1,5 @@
+// wrapped by build app
+define("dojox/storage/AirDBStorageProvider", ["dojo","dijit","dojox","dojo/require!dojox/storage/manager,dojox/storage/Provider"], function(dojo,dijit,dojox){
 dojo.provide("dojox.storage.AirDBStorageProvider");
 dojo.require("dojox.storage.manager");
 dojo.require("dojox.storage.Provider");
@@ -246,3 +248,4 @@ if (dojo.isAIR) {
 		dojox.storage.manager.initialize();
 	})();
 }
+});

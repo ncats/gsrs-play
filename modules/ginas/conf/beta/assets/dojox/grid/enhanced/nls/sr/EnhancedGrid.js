@@ -1,4 +1,4 @@
-define({      
+define("dojox/grid/enhanced/nls/sr/EnhancedGrid", {      
 //begin v1.x content
 	singleSort: "Jednokratno sortiranje",
 	nestedSort: "Ugnežđeno sortiranje",

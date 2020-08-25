@@ -1,4 +1,4 @@
-define([
+define("dijit/form/NumberSpinner", [
 	"dojo/_base/declare", // declare
 	"dojo/keys", // keys.END keys.HOME
 	"./_Spinner",

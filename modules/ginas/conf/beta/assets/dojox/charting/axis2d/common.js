@@ -1,4 +1,4 @@
-define(["dojo/_base/lang", "dojo/_base/window", "dojo/dom-geometry", "dojox/gfx", "dojo/has"],
+define("dojox/charting/axis2d/common", ["dojo/_base/lang", "dojo/_base/window", "dojo/dom-geometry", "dojox/gfx", "dojo/has"],
 	function(lang, win, domGeom, g, has){
 
 	var common = lang.getObject("dojox.charting.axis2d.common", true);

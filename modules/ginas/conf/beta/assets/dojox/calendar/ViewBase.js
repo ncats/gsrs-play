@@ -1,4 +1,4 @@
-define([
+define("dojox/calendar/ViewBase", [
 	"dojo/_base/declare",
 	"dojo/_base/lang",
 	"dojo/_base/array",
@@ -1813,7 +1813,7 @@ define([
 				}
 
 				// calendar needs an ID to work with
-				if(store.getIdentity(newItem) == null){
+				if(store.getIdentity(newItem) == undefined){
 					var id = "_tempId_" + (this._tempIdCount++);
 					newItem[store.idProperty] = id;
 					if(this._tempItemsMap == null){
@@ -2314,7 +2314,7 @@ define([
 
 				var s = this._getItemStoreStateObj(e.item);
 
-				if(s != null && s.state === "unstored"){
+				if(s != null && s.state == "unstored"){
 
 					if(e.completed){
 						// renderItemToItem cannot find the original data item
@@ -2340,7 +2340,7 @@ define([
 								id = res;
 							}
 
-							if(id !== oldID){
+							if(id != oldID){
 								this._removeRenderItem(oldID);
 							}
 						}));

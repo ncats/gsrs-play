@@ -1,4 +1,4 @@
-define([], function(){
+define("dojo/debounce", [], function(){
 	// module:
 	//		dojo/debounce
 	// summary:

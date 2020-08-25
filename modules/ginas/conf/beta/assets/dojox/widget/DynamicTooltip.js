@@ -1,3 +1,5 @@
+// wrapped by build app
+define("dojox/widget/DynamicTooltip", ["dojo","dijit","dojox","dojo/i18n!dijit/nls/loading","dojo/require!dijit/Tooltip"], function(dojo,dijit,dojox){
 dojo.provide("dojox.widget.DynamicTooltip");
 dojo.experimental("dojox.widget.DynamicTooltip");
 
@@ -105,3 +107,5 @@ dojo.declare("dojox.widget.DynamicTooltip", dijit.Tooltip,
 		}
 	}
 );
+
+});

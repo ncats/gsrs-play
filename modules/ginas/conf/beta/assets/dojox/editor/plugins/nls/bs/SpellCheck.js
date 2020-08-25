@@ -1,4 +1,4 @@
-define({      
+define("dojox/editor/plugins/nls/bs/SpellCheck", {      
 //begin v1.x content
 	widgetLabel: "Provjera pravopisa za batch",
 	unfound: "Nije pronađeno",

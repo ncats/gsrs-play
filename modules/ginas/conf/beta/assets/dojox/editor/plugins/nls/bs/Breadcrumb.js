@@ -1,4 +1,4 @@
-define({      
+define("dojox/editor/plugins/nls/bs/Breadcrumb", {      
 //begin v1.x content
 	"nodeActions": "${nodeName} Akcije",
 	"selectContents": "Izbor sadržaja",

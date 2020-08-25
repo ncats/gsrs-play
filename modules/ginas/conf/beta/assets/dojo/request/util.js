@@ -1,4 +1,4 @@
-define([
+define("dojo/request/util", [
 	'exports',
 	'../errors/RequestError',
 	'../errors/CancelError',
@@ -9,12 +9,43 @@ define([
 	'../promise/Promise',
 	'../has'
 ], function(exports, RequestError, CancelError, Deferred, ioQuery, array, lang, Promise, has){
+
+	function isArrayBuffer(value) {
+		return has('native-arraybuffer') && value instanceof ArrayBuffer
+	}
+
+	function isBlob(value) {
+		return has('native-blob') && value instanceof Blob
+	}
+	
+	function isElement(value) {
+		if(typeof Element !== 'undefined') { //all other
+			return value instanceof Element;
+		}
+
+		//IE<=7
+		return value.nodeType === 1;
+	}
+
+	function isFormData(value) {
+		return has('native-formdata') && value instanceof FormData;
+	}
+
+	function shouldDeepCopy(value) {
+		return value &&
+			typeof value === 'object' &&
+			!isFormData(value) &&
+			!isElement(value) &&
+			!isBlob(value) &&
+			!isArrayBuffer(value)
+	}
+
 	exports.deepCopy = function(target, source) {
 		for (var name in source) {
 			var tval = target[name],
   			    sval = source[name];
 			if (tval !== sval) {
-				if (sval && typeof sval === 'object' && !(has('native-formdata') && sval instanceof FormData)) {
+				if (shouldDeepCopy(sval)) {
 					if (Object.prototype.toString.call(sval) === '[object Date]') { // use this date test to handle crossing frame boundaries
 						target[name] = new Date(sval);
 					} else if (lang.isArray(sval)) {
@@ -36,13 +67,15 @@ define([
 
 	exports.deepCopyArray = function(source) {
 		var clonedArray = [];
-		source.forEach(function(svalItem) {
+		for (var i = 0, l = source.length; i < l; i++) {
+			var svalItem = source[i];
 			if (typeof svalItem === 'object') {
 				clonedArray.push(exports.deepCopy({}, svalItem));
 			} else {
 				clonedArray.push(svalItem);
 			}
-		});
+		}
+
 		return clonedArray;
 	};
 
@@ -144,7 +177,7 @@ define([
 			query = options.query;
 
 		if(data && !skipData){
-			if(typeof data === 'object' && (!(has('native-xhr2')) || !(data instanceof ArrayBuffer || data instanceof Blob ))){
+			if(typeof data === 'object' && (!(has('native-xhr2')) || !(isArrayBuffer(data) || isBlob(data) ))){
 				options.data = ioQuery.objectToQuery(data);
 			}
 		}

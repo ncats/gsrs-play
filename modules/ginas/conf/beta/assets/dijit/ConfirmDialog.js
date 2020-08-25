@@ -1,4 +1,4 @@
-define([
+define("dijit/ConfirmDialog", [
 	"dojo/_base/declare",
 	"./Dialog",
 	"./_ConfirmDialogMixin"

@@ -45,6 +45,17 @@ public class RestSubstanceSubstanceSearcher implements SubstanceSearcher{
         public String results;
         public boolean finished;
 
+        @Override
+        public String toString() {
+            return "SearchResultStatus{" +
+                    "key='" + key + '\'' +
+                    ", status='" + status + '\'' +
+                    ", url='" + url + '\'' +
+                    ", results='" + results + '\'' +
+                    ", finished=" + finished +
+                    '}';
+        }
+
         public Optional<RestExportSupportSearchResult> getSomeResults(RestSubstanceSubstanceSearcher searcher, ObjectMapper mapper, int skip) throws IOException {
             return _getResults(searcher, mapper, "skip="+skip);
         }
@@ -135,6 +146,45 @@ public class RestSubstanceSubstanceSearcher implements SubstanceSearcher{
                     '}';
         }
     }
+
+    static class RestSponsoredResult{
+        public String matchType;
+        public int count;
+        public String displayField;
+        public String luceneField;
+        public String luceneQuery;
+        /*
+        "narrowSearchSuggestions": [
+    {
+      "matchType": "FULL",
+      "count": 1,
+      "displayField": "Display Name",
+      "luceneField": "root_Display\\ Name",
+      "luceneQuery": "root_Display\\ Name:\"^anything$\""
+    },
+    {
+      "matchType": "FULL",
+      "count": 1,
+      "displayField": "Any Name",
+      "luceneField": "root_names_name",
+      "luceneQuery": "root_names_name:\"^anything$\""
+    },
+    {
+      "matchType": "WORD",
+      "count": 4,
+      "displayField": "Display Name",
+      "luceneField": "root_Display\\ Name",
+      "luceneQuery": "root_Display\\ Name:anything"
+    },
+    {
+      "matchType": "WORD",
+      "count": 4,
+      "displayField": "Any Name",
+      "luceneField": "root_names_name",
+      "luceneQuery": "root_names_name:anything"
+    }
+         */
+    }
     @JsonIgnoreProperties(ignoreUnknown = true)
     static class RestSearchResult{
         public String sha1;
@@ -149,6 +199,8 @@ public class RestSubstanceSubstanceSearcher implements SubstanceSearcher{
         public String method;
         public List<Facet> facets;
         public List<ContentUUID> content;
+        public List<ContentUUID> exactMatches;
+        public List<RestSponsoredResult> narrowSearchSuggestions;
 
         @Override
         public String toString() {
@@ -164,6 +216,7 @@ public class RestSubstanceSubstanceSearcher implements SubstanceSearcher{
                     ", path='" + path + '\'' +
                     ", method='" + method + '\'' +
                     ", facets=" + facets +
+                    ", narrowSearchSuggestions=" + narrowSearchSuggestions +
                     ", content=" + content +
                     '}';
         }
@@ -229,7 +282,6 @@ public class RestSubstanceSubstanceSearcher implements SubstanceSearcher{
     }
 
     private static RestExportSupportSearchResult parseResultsJson(ObjectMapper mapper, String key, JsonNode results, RestSubstanceSubstanceSearcher searcher) throws com.fasterxml.jackson.core.JsonProcessingException {
-//        System.out.println("parsing rest results for " + results);
         RestSearchResult restResult = mapper.treeToValue(results, RestSearchResult.class);
 
         Set<String> uuids = new LinkedHashSet<>(restResult.total);
@@ -258,6 +310,13 @@ public class RestSubstanceSubstanceSearcher implements SubstanceSearcher{
             for (Facet facet : facets) {
 
                 ret.setFacet(facet.name, facet.countMap());
+            }
+        }
+
+        List<ContentUUID> sponsoredResults = restResult.exactMatches;
+        if(sponsoredResults !=null){
+            for(ContentUUID uuid : sponsoredResults) {
+                ret.getSpecialUuids().add(uuid.uuid);
             }
         }
         return ret;
@@ -322,33 +381,16 @@ public class RestSubstanceSubstanceSearcher implements SubstanceSearcher{
 //        String url = restSession.getHttpResolver().apiV1("substances/structureSearch?q="+ URLEncoder.encode(smiles, "UTF-8")+"");
         String url = restSession.getHttpResolver().apiV1("substances/structureSearch");
 
-        JsonNode node = restSession.createRequestHolder(url)
+        WSResponse response = restSession.createRequestHolder(url)
                 .setQueryParameter("q", smiles)
                 .setQueryParameter("cutoff", Double.toString(cutoff))
                 .get()
-                .get(3000)
-                .asJson();
-
+                .get(3000);
+        if(response.getStatus() >=300){
+            throw new HttpErrorCodeException(response);
+        }
+        JsonNode node = response.asJson();
         return waitForResults(node, 10_000);
-
-
-
-
-//        JsonNode node = restSession.getAsJson(url+"?q="+smiles);
-//        System.out.println(url);
-////        Map<String, String[]> map = new LinkedHashMap<>();
-////        map.put("q", new String[]{smiles});
-////        String post = new Util.QueryStringManipulator(map).toQueryString();
-//        String post = "q=\""+smiles+ "\"";
-//        System.out.println("post = " + post);
-//        JsonNode node = restSession.getRequest(url)
-////                .setQueryParameter("q=",smiles)
-//                .post(post)
-//                .get(3000)
-//                .asJson();
-
-//        System.out.println(new ObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(node));
-//        return null;
     }
 
     @Override

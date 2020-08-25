@@ -1,4 +1,4 @@
-define({      
+define("dojox/atom/widget/nls/eu/FeedEntryEditor", {      
 //begin v1.x content
 	doNew: "[berria]",
 	edit: "[editatu]",

@@ -1,3 +1,5 @@
+// wrapped by build app
+define("dojox/storage/WhatWGStorageProvider", ["dojo","dijit","dojox","dojo/require!dojox/storage/Provider,dojox/storage/manager"], function(dojo,dijit,dojox){
 dojo.provide("dojox.storage.WhatWGStorageProvider");
 dojo.require("dojox.storage.Provider");
 dojo.require("dojox.storage.manager");
@@ -270,3 +272,5 @@ dojo.declare("dojox.storage.WhatWGStorageProvider", [ dojox.storage.Provider ], 
 
 dojox.storage.manager.register("dojox.storage.WhatWGStorageProvider",
 								new dojox.storage.WhatWGStorageProvider());
+
+});

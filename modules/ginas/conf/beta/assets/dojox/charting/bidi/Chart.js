@@ -1,4 +1,4 @@
-define(["dojox/main", "dojo/_base/declare", "dojo/_base/lang", "dojo/dom-style", "dojo/_base/array", "dojo/sniff",
+define("dojox/charting/bidi/Chart", ["dojox/main", "dojo/_base/declare", "dojo/_base/lang", "dojo/dom-style", "dojo/_base/array", "dojo/sniff",
 	"dojo/dom","dojo/dom-construct",
 	"dojox/gfx", "dojox/gfx/_gfxBidiSupport", "../axis2d/common", "dojox/string/BidiEngine",
 	"dojox/lang/functional","dojo/dom-attr","./_bidiutils"],

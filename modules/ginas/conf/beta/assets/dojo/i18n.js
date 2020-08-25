@@ -1,4 +1,4 @@
-define(["./_base/kernel", "require", "./has", "./_base/array", "./_base/config", "./_base/lang", "./has!host-browser?./_base/xhr", "./json", "module"],
+define("dojo/i18n", ["./_base/kernel", "require", "./has", "./_base/array", "./_base/config", "./_base/lang", "./_base/xhr", "./json", "module"],
 	function(dojo, require, has, array, config, lang, xhr, json, module){
 
 	// module:
@@ -9,7 +9,7 @@ define(["./_base/kernel", "require", "./has", "./_base/array", "./_base/config",
 		1
 	);
 
-	has.add("dojo-v1x-i18n-Api",
+	 1 || has.add("dojo-v1x-i18n-Api",
 		// if true, define the v1.x i18n functions
 		1
 	);
@@ -300,14 +300,14 @@ define(["./_base/kernel", "require", "./has", "./_base/array", "./_base/config",
 			});
 		};
 
-	if(has("dojo-preload-i18n-Api") || has("dojo-v1x-i18n-Api")){
+	if(has("dojo-preload-i18n-Api") ||  1 ){
 		var normalizeLocale = thisModule.normalizeLocale = function(locale){
 				var result = locale ? locale.toLowerCase() : dojo.locale;
 				return result == "root" ? "ROOT" : result;
 			},
 
 			isXd = function(mid, contextRequire){
-				return (has("dojo-sync-loader") && has("dojo-v1x-i18n-Api")) ?
+				return ( 1  &&  1 ) ?
 					contextRequire.isXdUrl(require.toUrl(mid + ".js")) :
 					true;
 			},
@@ -474,9 +474,10 @@ define(["./_base/kernel", "require", "./has", "./_base/array", "./_base/config",
 				{};
 	}
 
-	if(has("dojo-v1x-i18n-Api")){
+	if( 1 ){
 		// this code path assumes the dojo loader and won't work with a standard AMD loader
 		var amdValue = {},
+			l10nCache = {},
 			evalBundle,
 
 			syncRequire = function(deps, callback, require){
@@ -599,6 +600,11 @@ define(["./_base/kernel", "require", "./has", "./_base/array", "./_base/config",
 		thisModule.getLocalization = function(moduleName, bundleName, locale){
 			var result,
 				l10nName = getBundleName(moduleName, bundleName, locale);
+
+			if (l10nCache[l10nName]) {
+				return l10nCache[l10nName];
+			}
+
 			load(
 				l10nName,
 
@@ -607,7 +613,10 @@ define(["./_base/kernel", "require", "./has", "./_base/array", "./_base/config",
 				// dojo/i18n module, which, itself may have been mapped.
 				(!isXd(l10nName, require) ? function(deps, callback){ syncRequire(deps, callback, require); } : require),
 
-				function(result_){ result = result_; }
+				function(result_){
+					l10nCache[l10nName] = result_;
+					result = result_;
+				}
 			);
 			return result;
 		};

@@ -1,4 +1,4 @@
-define([
+define("dojox/editor/plugins/BidiSupport", [
 	"dojo/_base/declare",
 	"dojo/_base/array",
 	"dojo/aspect",

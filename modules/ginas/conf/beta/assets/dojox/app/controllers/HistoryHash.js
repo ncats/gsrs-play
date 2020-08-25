@@ -1,4 +1,4 @@
-define(["dojo/_base/lang", "dojo/_base/declare", "dojo/topic", "dojo/on", "../Controller", "../utils/hash", "dojo/hash"],
+define("dojox/app/controllers/HistoryHash", ["dojo/_base/lang", "dojo/_base/declare", "dojo/topic", "dojo/on", "../Controller", "../utils/hash", "dojo/hash"],
 	function(lang, declare, topic, on, Controller, hash){
 	// module:
 	//		dojox/app/controllers/HistoryHash

@@ -1,3 +1,5 @@
+// wrapped by build app
+define("dojox/lang/functional/binrec", ["dojo","dijit","dojox","dojo/require!dojox/lang/functional/lambda,dojox/lang/functional/util"], function(dojo,dijit,dojox){
 dojo.provide("dojox.lang.functional.binrec");
 
 dojo.require("dojox.lang.functional.lambda");
@@ -171,3 +173,4 @@ var binrec2 = function(cond, then, before, after){
 };
 
 */
+});

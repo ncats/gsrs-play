@@ -1,4 +1,4 @@
-define(['../on', '../has', '../_base/window', 'dojo/has!host-browser?../dom-construct', 'dojo/has!host-browser?../domReady!'], function(on, has, baseWin, domConstruct){
+define("dojo/on/asyncEventListener", ['../on', '../has', '../_base/window', '../dom-construct', '../domReady!'], function(on, has, baseWin, domConstruct){
 	// summary:
 	//		This sub module provide an event factory for delayed events (like debounce or throttle)
 	// module:

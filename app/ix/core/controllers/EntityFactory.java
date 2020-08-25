@@ -529,8 +529,6 @@ public class EntityFactory extends Controller {
             T inst = query.setId(id).findUnique();
             if (inst != null) {
                 return Java8Util.ok (mapper.valueToTree(inst));
-            }else{
-            	System.out.println("There's no one here by that name");
             }
         }
         else {

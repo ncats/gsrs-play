@@ -1,4 +1,4 @@
-define(["dojo/_base/lang", "dojo/_base/array" ,"dojo/_base/declare", "dojo/dom-geometry", "dojo/_base/Color",
+define("dojox/charting/plot2d/Pie", ["dojo/_base/lang", "dojo/_base/array" ,"dojo/_base/declare", "dojo/dom-geometry", "dojo/_base/Color",
 		"./Base", "./_PlotEvents", "./common",
 		"dojox/gfx", "dojox/gfx/matrix", "dojox/lang/functional", "dojox/lang/utils","dojo/has"],
 	function(lang, arr, declare, domGeom, Color, Base, PlotEvents, dc, g, m, df, du, has){

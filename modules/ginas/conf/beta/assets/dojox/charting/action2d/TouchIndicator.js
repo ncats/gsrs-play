@@ -1,4 +1,4 @@
-define(["dojo/_base/lang", "dojo/_base/declare", "dojo/_base/event", "dojo/has", "dojo/touch", "dojo/_base/connect", "./ChartAction", "./_IndicatorElement", "dojox/lang/utils"],
+define("dojox/charting/action2d/TouchIndicator", ["dojo/_base/lang", "dojo/_base/declare", "dojo/_base/event", "dojo/has", "dojo/touch", "dojo/_base/connect", "./ChartAction", "./_IndicatorElement", "dojox/lang/utils"],
 	function(lang, declare, eventUtil, has, touch, dconnect, ChartAction, IndicatorElement, du){
 	
 	/*=====

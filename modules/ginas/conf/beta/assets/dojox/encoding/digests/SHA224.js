@@ -1,4 +1,4 @@
-define(["./_sha-32", "./_sha2"], function(sha32, sha2){
+define("dojox/encoding/digests/SHA224", ["./_sha-32", "./_sha2"], function(sha32, sha2){
 	//	The 224-bit implementation of SHA-2
 	var hash = [
 		0xc1059ed8, 0x367cd507, 0x3070dd17, 0xf70e5939,

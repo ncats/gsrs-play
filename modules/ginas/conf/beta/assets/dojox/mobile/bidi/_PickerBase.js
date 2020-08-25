@@ -1,4 +1,4 @@
-define([
+define("dojox/mobile/bidi/_PickerBase", [
 	"dojo/_base/declare",
 	"dojo/dom-construct"
 ], function(declare, domConstruct){

@@ -1,4 +1,4 @@
-define(["dojo/_base/lang", "dojo/_base/declare", "dojo/_base/connect", "dojo/_base/array",
+define("dojox/charting/plot2d/Spider", ["dojo/_base/lang", "dojo/_base/declare", "dojo/_base/connect", "dojo/_base/array",
 	"dojo/dom-geometry", "dojo/_base/fx", "dojo/fx", "dojo/sniff",
 	"./Base", "./_PlotEvents", "./common", "../axis2d/common",
 	"dojox/gfx", "dojox/gfx/matrix", "dojox/gfx/fx", "dojox/lang/functional",

@@ -1,4 +1,4 @@
-define([
+define("dojo/request/xhr", [
 	'../errors/RequestError',
 	'./watch',
 	'./handlers',
@@ -25,6 +25,16 @@ define([
 	has.add('native-formdata', function(){
 		// if true, the environment has a native FormData implementation
 		return typeof FormData !== 'undefined';
+	});
+
+	has.add('native-blob', function(){
+		// if true, the environment has a native Blob implementation
+		return typeof Blob !== 'undefined';
+	});
+
+	has.add('native-arraybuffer', function(){
+		// if true, the environment has a native ArrayBuffer implementation
+		return typeof ArrayBuffer !== 'undefined';
 	});
 
 	has.add('native-response-type', function(){

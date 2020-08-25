@@ -1,3 +1,5 @@
+// wrapped by build app
+define("dojox/lang/aspect/cflow", ["dojo","dijit","dojox"], function(dojo,dijit,dojox){
 dojo.provide("dojox.lang.aspect.cflow");
 
 
@@ -41,3 +43,4 @@ dojo.provide("dojox.lang.aspect.cflow");
 		return false;	// Boolean
 	};
 })();
+});

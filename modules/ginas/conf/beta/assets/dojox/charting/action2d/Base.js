@@ -1,4 +1,4 @@
-define(["dojo/_base/lang", "dojo/_base/declare", "dojo/Evented"],
+define("dojox/charting/action2d/Base", ["dojo/_base/lang", "dojo/_base/declare", "dojo/Evented"],
 	function(lang, declare, Evented){
 
 	return declare("dojox.charting.action2d.Base", Evented, {

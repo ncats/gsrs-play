@@ -1,3 +1,5 @@
+// wrapped by build app
+define("dojox/lang/functional/multirec", ["dojo","dijit","dojox","dojo/require!dojox/lang/functional/lambda,dojox/lang/functional/util"], function(dojo,dijit,dojox){
 dojo.provide("dojox.lang.functional.multirec");
 
 dojo.require("dojox.lang.functional.lambda");
@@ -162,3 +164,5 @@ var multirec2 = function(cond, then, before, after){
 };
 
 */
+
+});

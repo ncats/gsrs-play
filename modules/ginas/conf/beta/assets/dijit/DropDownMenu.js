@@ -1,4 +1,6 @@
-define([
+require({cache:{
+'url:dijit/templates/Menu.html':"<table class=\"dijit dijitMenu dijitMenuPassive dijitReset dijitMenuTable\" role=\"menu\" tabIndex=\"${tabIndex}\"\n\t   cellspacing=\"0\">\n\t<tbody class=\"dijitReset\" data-dojo-attach-point=\"containerNode\"></tbody>\n</table>\n"}});
+define("dijit/DropDownMenu", [
 	"dojo/_base/declare", // declare
 	"dojo/keys", // keys
 	"dojo/text!./templates/Menu.html",

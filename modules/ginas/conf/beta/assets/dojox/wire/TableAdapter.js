@@ -1,3 +1,5 @@
+// wrapped by build app
+define("dojox/wire/TableAdapter", ["dojo","dijit","dojox","dojo/require!dojox/wire/CompositeWire"], function(dojo,dijit,dojox){
 dojo.provide("dojox.wire.TableAdapter");
 
 dojo.require("dojox.wire.CompositeWire");
@@ -81,4 +83,6 @@ dojo.declare("dojox.wire.TableAdapter", dojox.wire.CompositeWire, {
 		}
 		return row; //Array||Object
 	}
+});
+
 });

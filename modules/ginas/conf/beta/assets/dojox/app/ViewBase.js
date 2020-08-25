@@ -1,4 +1,4 @@
-define(["require", "dojo/when", "dojo/on", "dojo/dom-attr", "dojo/dom-style", "dojo/_base/declare", "dojo/_base/lang",
+define("dojox/app/ViewBase", ["require", "dojo/when", "dojo/on", "dojo/dom-attr", "dojo/dom-style", "dojo/_base/declare", "dojo/_base/lang",
 	"dojo/Deferred", "./utils/model", "./utils/constraints"],
 	function(require, when, on, domAttr, domStyle, declare, lang, Deferred, model, constraints){
 	return declare("dojox.app.ViewBase", null, {

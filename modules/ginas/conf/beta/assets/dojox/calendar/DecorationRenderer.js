@@ -1,4 +1,4 @@
-define([
+define("dojox/calendar/DecorationRenderer", [
 	"dojo/_base/declare",
 	"dojo/dom-class",
 	"dijit/_WidgetBase",

@@ -899,9 +899,13 @@ public class SubstanceFactory extends EntityFactory {
 		SearchResultContext context;
 		
 		if(type.toLowerCase().startsWith("sub")){
-			context = App.substructure(q, 
-					/*min=*/ 1, 
-					new StructureSearchResultProcessor())
+			SearchResultContext unfocusedContext = App.substructure(q,
+					/*min=*/ 1,
+					new StructureSearchResultProcessor());
+			if(unfocusedContext ==null){
+				System.out.println("unfocused context == null!!!!");
+			}
+			context = unfocusedContext
 					.getFocused(top, skip, fdim, field);
 		}else if(type.toLowerCase().startsWith("sim")){
 			context = App.similarity(q, 

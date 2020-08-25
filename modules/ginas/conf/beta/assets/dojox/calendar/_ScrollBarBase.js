@@ -1,4 +1,4 @@
-define([
+define("dojox/calendar/_ScrollBarBase", [
 "dojo/_base/declare",
 "dojo/_base/event",
 "dojo/_base/lang",

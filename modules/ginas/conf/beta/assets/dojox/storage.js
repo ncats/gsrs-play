@@ -1,4 +1,4 @@
-define(['./storage/_common'],function(){
+define("dojox/storage", ['./storage/_common'],function(){
 	/*=====
 	 return {
 	 // summary:

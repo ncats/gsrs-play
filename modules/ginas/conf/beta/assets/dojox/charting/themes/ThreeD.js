@@ -1,4 +1,4 @@
-define(["dojo/_base/lang", "dojo/_base/array", "../Theme", "./gradientGenerator", "./PrimaryColors", "dojo/colors" /* for sanitize */, "./common"],
+define("dojox/charting/themes/ThreeD", ["dojo/_base/lang", "dojo/_base/array", "../Theme", "./gradientGenerator", "./PrimaryColors", "dojo/colors" /* for sanitize */, "./common"],
 	function(lang, ArrayUtil, Theme, gradientGenerator, PrimaryColors, themes){
 
 	var colors = ["#f00", "#0f0", "#00f", "#ff0", "#0ff", "#f0f", "./common"],	// the same is in PrimaryColors

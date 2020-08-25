@@ -1,5 +1,5 @@
 define(
-//begin v1.x content
+"dojo/cldr/nls/en/buddhist", //begin v1.x content
 {
 	"field-second-relative+0": "now",
 	"field-weekday": "Day of the Week",

@@ -1,4 +1,4 @@
-define([
+define("dijit/form/HorizontalRuleLabels", [
 	"dojo/_base/declare", // declare
 	"dojo/has",
 	"dojo/number", // number.format

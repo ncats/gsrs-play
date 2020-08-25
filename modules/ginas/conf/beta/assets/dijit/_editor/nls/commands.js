@@ -1,4 +1,4 @@
-define({ root:
+define("dijit/_editor/nls/commands", { root:
 //begin v1.x content
 ({
 	'bold': 'Bold',
@@ -88,5 +88,6 @@ define({ root:
 "ca": true,
 "bg": true,
 "az": true,
-"ar": true
+"ar": true,
+"al": true
 });
