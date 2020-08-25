@@ -118,7 +118,7 @@ public class ProteinUtils {
 				ObjectMapper om = new ObjectMapper();
 				JsonNode asJson=om.valueToTree(p);
 				//System.out.println(p.type + "\t" + p.name +"\t" + p.propertyType + "\t" + p.value.average +"\t" + asJson);
-				if(p.getName().startsWith("MOL_WEIGHT")){
+				if(p.getName() != null && p.getName().startsWith("MOL_WEIGHT")){
 					props.add(p);
 				}
 			}

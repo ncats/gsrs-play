@@ -17,13 +17,16 @@ public class ApiBuildInfo extends Controller {
     public static Result info(){
         return ok(EntityFactory.EntityMapper.FULL_ENTITY_MAPPER().toJson(new InfoResult(BuildInfo.VERSION,
                 BuildInfo.COMMIT,
-                LocalDate.parse(BuildInfo.DATE, DateTimeFormatter.BASIC_ISO_DATE))));
+                LocalDate.parse(BuildInfo.DATE, DateTimeFormatter.BASIC_ISO_DATE),
+                BuildInfo.TIME
+                )));
     }
 
     public static class InfoResult{
         private final String version;
         private final String commit;
         private final String buildDate;
+        public final String buildTime;
 
         public String getVersion() {
             return version;
@@ -37,10 +40,14 @@ public class ApiBuildInfo extends Controller {
             return buildDate;
         }
 
-        public InfoResult(String version, String commit, LocalDate buildDate) {
+        public String getBuildTime(){
+            return buildTime;
+        }
+        public InfoResult(String version, String commit, LocalDate buildDate, String buildTime) {
             this.version = version;
             this.commit = commit;
             this.buildDate = DateTimeFormatter.ISO_DATE.format(buildDate);
+            this.buildTime = buildTime;
         }
     }
 }

@@ -1,5 +1,7 @@
 package ix.ginas.exporters;
 
+import ix.core.exporters.OutputFormat;
+
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.UncheckedIOException;

@@ -379,7 +379,7 @@ public class BrowserSubstanceSearcher implements SubstanceSearcher {
     }
     
     private Tuple<String,Set<String>> getSubstancesFrom(HtmlPage page){
-        System.out.println(page.asXml());
+//        System.out.println(page.asXml());
         Set<String> substances =  getSubstanceMatchesIn(page);
         String htmlText = page.asXml();
         return Tuple.of(getKeyFrom(htmlText), substances);

@@ -34,6 +34,8 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import gov.nih.ncats.common.functions.ThrowableFunction;
+import ix.core.plugins.TextIndexerPlugin;
 import ix.core.search.*;
 import ix.core.util.*;
 import ix.core.util.CachedSupplier.CachedThrowingSupplier;
@@ -149,7 +151,14 @@ public class TextIndexer implements Closeable, ProcessListener {
 	
 	public static final boolean INDEXING_ENABLED = ConfigHelper.getBoolean("ix.textindex.enabled",true);
 	private static final boolean USE_ANALYSIS =    ConfigHelper.getBoolean("ix.textindex.fieldsuggest",true);
-	
+    private static final CachedSupplier<Boolean> SHOULD_LOG_INDEXING =    CachedSupplier.of(new Supplier<Boolean>() {
+        @Override
+        public Boolean get() {
+            boolean value= Play.application().configuration().getBoolean("ix.textindex.shouldLog", false);
+            return value;
+        }
+    });
+
 	private static final String ANALYZER_FIELD = "M_FIELD";
 	private static final String ANALYZER_MARKER_FIELD = "ANALYZER_MARKER";
 	private static final String ANALYZER_VAL_PREFIX = "ANALYZER_";
@@ -166,15 +175,38 @@ public class TextIndexer implements Closeable, ProcessListener {
 	public static final String GIVEN_START_WORD = "^";
 	static final String ROOT = "root";
 	
-	
+	private List<IndexListener> listeners = new ArrayList<>();
+
+    /**
+     * DO NOT CALL UNLESS YOU KNOW WHAT YOU ARE DOING.
+     * This is exposed for dependency injection from
+     * another module.
+     * @param indexServiceCreator Function that creates the indexService
+     *                            from the directory to use.
+     */
+    public void setIndexerService(ThrowableFunction<File, IndexerService, IOException> indexServiceCreator) {
+        this.indexerService = indexerService;
+    }
+
+    public void addListender(IndexListener l){
+	    listeners.add(Objects.requireNonNull(l));
+    }
+
+    public void removeListener(IndexListener l){
+        listeners.remove(Objects.requireNonNull(l));
+    }
+
 	public static String FULL_TEXT_FIELD(){
 		return FULL_TEXT_FIELD;
 	}
 
+	private void notifyListenerRemoveAll(){
+	    listeners.forEach(IndexListener::removeAll);
+    }
 	public void deleteAll() {
 		try {
-			indexWriter.deleteAll();
-			indexWriter.commit();
+			indexerService.removeAll();
+            notifyListenerRemoveAll();
 		} catch (Exception e) {
 			// e.printStackTrace();
 		}
@@ -802,7 +834,7 @@ public class TextIndexer implements Closeable, ProcessListener {
 
 
 			AnalyzingInfixSuggester suggester = new AnalyzingInfixSuggester(LUCENE_VERSION,
-					new NIOFSDirectory(dir, NoLockFactory.getNoLockFactory()), indexAnalyzer);
+					new NIOFSDirectory(dir, NoLockFactory.getNoLockFactory()), indexerService.getIndexAnalyzer());
 
 
 			ExactMatchSuggesterDecorator lookupt = new ExactMatchSuggesterDecorator(suggester,()-> ReflectionUtil.getFieldValue(suggester, "searcherMgr"));
@@ -932,7 +964,7 @@ public class TextIndexer implements Closeable, ProcessListener {
 		}
 
 		long build(ExactMatchSuggesterDecorator lookup) throws IOException {
-			try(IndexReader reader = DirectoryReader.open(indexWriter, true)){
+			try(IndexReader reader = indexerService.createIndexReader()){
 
 				// now weight field
 				long start = System.currentTimeMillis();
@@ -1007,24 +1039,23 @@ public class TextIndexer implements Closeable, ProcessListener {
 			if (TextIndexer.this.hasBeenModifiedSince(sortFile.lastModified())) {
 				saveSorters(sortFile, sorters);
 			}
-
-			if (indexWriter.hasUncommittedChanges()) {
+           ;
+			if ( indexerService.flushChangesIfNeeded()) {
 				Logger.debug("Committing index changes...");
 				try {
-					indexWriter.commit();
 					taxonWriter.commit();
 				} catch (IOException ex) {
 					ex.printStackTrace();
 					try {
-						indexWriter.rollback();
 						taxonWriter.rollback();
 					} catch (IOException exx) {
 						exx.printStackTrace();
 					}
 				}
 
-				for (SuggestLookup lookup : lookups.values())
+				for (SuggestLookup lookup : lookups.values()) {
 					lookup.refreshIfDirty();
+			}
 			}
 
 		}
@@ -1032,17 +1063,10 @@ public class TextIndexer implements Closeable, ProcessListener {
 
 	private File baseDir;
 	private File suggestDir;
-	private Directory indexDir;
 	private Directory taxonDir;
-	private IndexWriter indexWriter;
-	// private DirectoryReader indexReader;
-	private Analyzer indexAnalyzer;
+
 	private DirectoryTaxonomyWriter taxonWriter;
 	private FacetsConfig facetsConfig;
-	
-	public FacetsConfig getFacetsConfig() {
-        return facetsConfig;
-    }
 
 
     private ConcurrentMap<String, SuggestLookup> lookups;
@@ -1072,7 +1096,9 @@ public class TextIndexer implements Closeable, ProcessListener {
 
 	SearcherManager searchManager;
 
-	
+	private IndexerService indexerService;
+
+
 	private static Set<String> deepKinds;
 	static {
 		init();
@@ -1111,19 +1137,17 @@ public class TextIndexer implements Closeable, ProcessListener {
 		}
 	}
 
-
-	public static TextIndexer getInstance(File baseDir) throws IOException {
-
+    public static TextIndexer getInstance(File baseDir, IndexerService indexerService){
 		return indexers.computeIfAbsent(baseDir, dir -> {
 			try {
-				return new TextIndexer(dir);
+                return new TextIndexer(dir, indexerService);
 			} catch (IOException ex) {
 				ex.printStackTrace();
 				return null;
 			}
 		});
+    }
 
-	}
 
 	private TextIndexer() {
 		// empty instance should only be used for
@@ -1135,24 +1159,16 @@ public class TextIndexer implements Closeable, ProcessListener {
 		isEmptyPool = true;
 
 	}
-
-	public TextIndexer(File dir) throws IOException {
+    public TextIndexer(File dir, IndexerService indexerService) throws IOException{
 		this.baseDir = dir;
 		threadPool = Executors.newFixedThreadPool(FETCH_WORKERS);
 		scheduler = Executors.newSingleThreadScheduledExecutor();
 		isShutDown = false;
 		isEmptyPool = false;
 
-		// Path dirPath = baseDir.toPath();
-		if (dir.exists() && !dir.isDirectory())
-			throw new IllegalArgumentException("Not a directory: " + dir);
+        this.indexerService = indexerService;
 
-		indexFileDir = new File(dir, "index");
-		Files.createDirectories(indexFileDir.toPath());
-		//
-		// if (!indexFileDir.exists())
-		// indexFileDir.mkdirs();
-		indexDir = new NIOFSDirectory(indexFileDir, NoLockFactory.getNoLockFactory());
+        searchManager = this.indexerService.createSearchManager();
 
 		facetFileDir = new File(dir, "facet");
 		Files.createDirectories(facetFileDir.toPath());
@@ -1160,11 +1176,8 @@ public class TextIndexer implements Closeable, ProcessListener {
 		// facetFileDir.mkdirs();
 		taxonDir = new NIOFSDirectory(facetFileDir, NoLockFactory.getNoLockFactory());
 
-		indexAnalyzer = createIndexAnalyzer();
-		IndexWriterConfig conf = new IndexWriterConfig(LUCENE_VERSION, indexAnalyzer);
-		indexWriter = new IndexWriter(indexDir, conf);
 
-		searchManager = new SearcherManager(indexWriter, true, null);
+//        searchManager = new SearcherManager(indexWriter, true, null);
 
 		// indexReader = DirectoryReader.open(indexWriter, true);
 		taxonWriter = new DirectoryTaxonomyWriter(taxonDir);
@@ -1215,12 +1228,96 @@ public class TextIndexer implements Closeable, ProcessListener {
 		flushDaemon = new FlushDaemon();
 		// run daemon every 10s
 		scheduler.scheduleWithFixedDelay(flushDaemon, 10, 35, TimeUnit.SECONDS);
+
 	}
+
 
 	@FunctionalInterface
 	interface SearcherFunction<R> {
 		R apply(IndexSearcher indexSearcher) throws Exception;
 	}
+
+	//This method is moved from SearchRequest since it belongs here since it uses indexer fields mostly
+
+    public Query extractFullFacetQuery(String queryString, SearchOptions options, String facet) throws ParseException{
+        return extractFullFacetQueryAndFilter(queryString, options,facet).k();
+    }
+    private Query extractFullQuery(String queryString, SearchOptions options) throws ParseException{
+        Query query = extractLuceneQuery(queryString);
+        if (options.getFacets().isEmpty()) {
+            return query;
+        }else{
+            DrillDownQuery ddq = new DrillDownQuery(facetsConfig, query);
+            options.getDrillDownsMap().values()
+                    .stream()
+                    .flatMap(t->t.stream())
+                    .forEach(dp->{
+                        ddq.add(dp.getDrill(), dp.getPaths());
+                    });
+            return ddq;
+        }
+    }
+    /**
+     * Extracts a lucene query from the contained query text,
+     * using the provided {@link QueryParser}. This only
+     * extracts a query from the text, and does not include
+     * kind and subset information. If the query text is null,
+     * this returns a {@link MatchAllDocsQuery}.
+     * @param query the query String to parse into a Lucene {@link Query};
+     *              can be null to mean match everything.
+     * @return the {@link Query} for the given string.
+     * @throws ParseException
+     */
+    private Query extractLuceneQuery(String query) throws ParseException{
+
+        if (query == null) {
+            return new MatchAllDocsQuery();
+        } else {
+            return getQueryParser().parse(query);
+        }
+    }
+
+    private Tuple<Query,Filter> extractFullFacetQueryAndFilter(String queryString, SearchOptions options, String facet) throws ParseException{
+        if(!options.isSideway() || options.getFacets().isEmpty()){
+            return Tuple.of(extractFullQuery(queryString, options),null);
+        }
+
+
+        Query query = extractLuceneQuery(queryString);
+
+
+
+        List<Filter> nonStandardFacets = new ArrayList<>();
+
+        DrillDownQuery ddq = new DrillDownQuery(facetsConfig, query);
+        options.getDrillDownsMap().values()
+                .stream()
+                .flatMap(t->t.stream())
+                .filter(dp->!dp.getDrill().equals(facet))
+                .filter(dp->{
+                    if(dp.getDrill().startsWith("^")){
+                        nonStandardFacets.add(new TermsFilter(new Term(TextIndexer.TERM_VEC_PREFIX + dp.getDrill().substring(1), dp.getPaths()[0])));
+                        return false;
+                    }else if(dp.getDrill().startsWith("!")){
+                        BooleanFilter f = new BooleanFilter();
+                        TermsFilter tf = new TermsFilter(new Term(TextIndexer.TERM_VEC_PREFIX + dp.getDrill().substring(1), dp.getPaths()[0]));
+                        f.add(new FilterClause(tf, BooleanClause.Occur.MUST_NOT));
+                        nonStandardFacets.add(f);
+                        return false;
+                    }
+                    return true;
+                })
+                .forEach(dp->{
+                    ddq.add(dp.getDrill(), dp.getPaths());
+                });
+        Filter filter = null;
+
+        if(!nonStandardFacets.isEmpty()){
+            filter = new ChainedFilter(nonStandardFacets.toArray(new Filter[0])
+                    ,ChainedFilter.AND);
+        }
+        return Tuple.of(ddq,filter);
+    }
 
 	private <R> R withSearcher(SearcherFunction<R> worker) throws Exception {
 		searchManager.maybeRefresh();
@@ -1255,17 +1352,17 @@ public class TextIndexer implements Closeable, ProcessListener {
 	 */
 	public TextIndexer createEmptyInstance() throws IOException {
 		TextIndexer indexer = new TextIndexer();
-		indexer.indexDir = new RAMDirectory();
 		indexer.taxonDir = new RAMDirectory();
 		return config(indexer);
 	}
 
 	protected TextIndexer config(TextIndexer indexer) throws IOException {
-		indexer.indexAnalyzer = createIndexAnalyzer();
-		IndexWriterConfig conf = new IndexWriterConfig(LUCENE_VERSION, indexer.indexAnalyzer);
-		indexer.indexWriter = new IndexWriter(indexer.indexDir, conf);
 
-		indexer.searchManager = new SearcherManager(indexer.indexWriter, true, null);
+
+        indexer.indexerService = Play.application().plugin(TextIndexerPlugin.class)
+                                                    .getIndexerServiceFactory()
+                                                    .createInMemory();
+		indexer.searchManager = indexer.indexerService.createSearchManager();
 		indexer.taxonWriter = new DirectoryTaxonomyWriter(indexer.taxonDir);
 		indexer.facetsConfig = new FacetsConfig();
 		
@@ -1277,8 +1374,8 @@ public class TextIndexer implements Closeable, ProcessListener {
 		});
 		
 		
-		indexer.lookups = new ConcurrentHashMap<String, SuggestLookup>();
-		indexer.sorters = new ConcurrentHashMap<String, SortField.Type>();
+		indexer.lookups = new ConcurrentHashMap<>();
+		indexer.sorters = new ConcurrentHashMap<>();
 		indexer.sorters.putAll(sorters);
 		return indexer;
 	}
@@ -1415,7 +1512,7 @@ public class TextIndexer implements Closeable, ProcessListener {
     			query = new MatchAllDocsQuery();
     		} else {
     			try {
-    				QueryParser parser = new IxQueryParser(FULL_TEXT_FIELD, indexAnalyzer);
+    				QueryParser parser = new IxQueryParser(FULL_TEXT_FIELD, indexerService.getIndexAnalyzer());
                     turnOnSuffixSearchIfNeeded(qtext, parser);
     				query = parser.parse(qtext);
     			} catch (ParseException ex) {
@@ -1957,7 +2054,7 @@ public class TextIndexer implements Closeable, ProcessListener {
 				    for (String sp : sponsoredFields) {
 						String theQuery = "\"" + toExactMatchString(
 								TextIndexer.replaceSpecialCharsForExactMatch(searchResult.getQuery().trim().replace("\"", ""))).toLowerCase() + "\"";
-						QueryParser parser = new IxQueryParser(sp, indexAnalyzer);
+						QueryParser parser = new IxQueryParser(sp, indexerService.getIndexAnalyzer());
 
 						Query tq = parser.parse(theQuery);
 						if(lsp instanceof DrillSidewaysLuceneSearchProvider){
@@ -2052,7 +2149,7 @@ public class TextIndexer implements Closeable, ProcessListener {
 	}
 	
 	public IxQueryParser getQueryParser(String def){
-		return new IxQueryParser(def, indexAnalyzer);
+		return new IxQueryParser(def, indexerService.getIndexAnalyzer());
 	}
 	
 	public IxQueryParser getQueryParser(){
@@ -2075,7 +2172,7 @@ public class TextIndexer implements Closeable, ProcessListener {
             return;
         }
         String queryPart = q.substring(q.indexOf(':')+1);
-        if(queryPart.charAt(0) == '*'){
+        if(!queryPart.isEmpty() && queryPart.charAt(0) == '*'){
             //suffix search
             parser.setAllowLeadingWildcard(true);
         }
@@ -2092,7 +2189,10 @@ public class TextIndexer implements Closeable, ProcessListener {
 		String qAsIs=q.toString();
 		
 		//replace all mentions of text: with the actual field name provided
-		qAsIs=qAsIs.replace(FULL_TEXT_FIELD + ":", field.replace(" ", "\\ ") + ":");
+		qAsIs=qAsIs.replace(FULL_TEXT_FIELD + ":", field.replace(" ", "\\ ")
+				                                .replace("(", "\\(")
+				    				.replace(")", "\\)")
+				    				.replace("/", "\\/") + ":");
 		
 		//START_WORD and STOP_WORD better be good regexes
 		qAsIs=Util.replaceIgnoreCase(qAsIs,TextIndexer.START_WORD, TextIndexer.GIVEN_START_WORD);
@@ -2422,11 +2522,27 @@ public class TextIndexer implements Closeable, ProcessListener {
 			
 			HashMap<String,List<TextField>> fullText = new HashMap<>();
             Document doc = new Document();
-			
+            if(SHOULD_LOG_INDEXING.get()){
+                LogUtil.debug(()->{
+                    String beanId;
+                    if(ew.hasIdField()){
+                        beanId = ew.getKey().toString();
+                    }else{
+                        beanId = ew.toString();
+                    }
+                    return "[LOG_INDEX] =======================\nINDEXING BEAN "+ beanId;
+                });
+
+            }
 			Consumer<IndexableField> fieldCollector = f->{
+
 					if(f instanceof TextField || f instanceof StringField){
 						String text = f.stringValue();
 						if (text != null) {
+                            if(SHOULD_LOG_INDEXING.get()){
+                                Logger.debug("[LOG_INDEX] .." + f.name() + ":" + text + " [" + f.getClass().getName() + "]");
+                            }
+//						    System.out.println(".." + f.name() + ":" + text + " [" + f.getClass().getName() + "]");
 							if (DEBUG(2)){
 								Logger.debug(".." + f.name() + ":" + text + " [" + f.getClass().getName() + "]");
 							}
@@ -2494,12 +2610,12 @@ public class TextIndexer implements Closeable, ProcessListener {
 			// now index
 			addDoc(doc);
 			
-			if (DEBUG(2))
+			if (DEBUG(2)) {
 				Logger.debug("<<< " + ew.getValue());
+            }
 		}catch(Exception e){
 			e.printStackTrace();
 			Logger.error("Error indexing record [" + ew.toString() + "] This may cause consistency problems", e);
-		}finally{
 		}
 	}
 	
@@ -2512,11 +2628,17 @@ public class TextIndexer implements Closeable, ProcessListener {
 		doc = facetsConfig.build(taxonWriter, doc);
 		if (DEBUG(2))
 			Logger.debug("++ adding document " + doc);
-		indexWriter.addDocument(doc);
+		indexerService.addDocument(doc);
+        listenersAddDocument(doc);
 		markChange();
 	}
 
-	//TODO: Should be an interface, which can throw a DataHasChange event ... or something 
+	private void listenersAddDocument(Document d){
+	    listeners.forEach(l -> l.addDocument(d));
+    }
+
+
+	//TODO: Should be an interface, which can throw a DataHasChange event ... or something
 	// like that
 	public void markChange(){
 		lastModified.set(TimeUtil.getCurrentTimeMillis());
@@ -2556,33 +2678,41 @@ public class TextIndexer implements Closeable, ProcessListener {
 				q.add(new TermQuery(new Term(docKey.k(), docKey.v())), BooleanClause.Occur.MUST);
 				q.add(new TermQuery(new Term(FIELD_KIND, key.getKind())), BooleanClause.Occur.MUST);
 
-				indexWriter.deleteDocuments(q);
+				indexerService.deleteDocuments(q);
+                listenersDeleteDocuments(q);
 				
 				if(USE_ANALYSIS){ //eliminate 
 					BooleanQuery qa = new BooleanQuery();
 					qa.add(new TermQuery(new Term(ANALYZER_VAL_PREFIX+docKey.k(), docKey.v())), BooleanClause.Occur.MUST);
 					qa.add(new TermQuery(new Term(FIELD_KIND, ANALYZER_VAL_PREFIX + key.getKind())), BooleanClause.Occur.MUST);
-					indexWriter.deleteDocuments(qa);
+                    indexerService.deleteDocuments(qa);
+                    listenersDeleteDocuments(qa);
 				}
 				markChange();
 	}
 	
 	public void removeAllType(EntityInfo<?> ei) throws Exception{
 		TermQuery q = new TermQuery(new Term(FIELD_KIND, ei.getName()));
-		indexWriter.deleteDocuments(q);
+        indexerService.deleteDocuments(q);
+        listenersDeleteDocuments(q);
 		markChange();
 	}
 	
+    private void listenersDeleteDocuments(Query q){
+        listeners.forEach(l-> l.deleteDocuments(q));
+    }
+
 	public void removeAllType(Class<?> type) throws Exception{
 		removeAllType(EntityUtils.getEntityInfoFor(type));
 	}
 
 	public void remove(String text) throws Exception {
 		try {
-			QueryParser parser = new QueryParser(LUCENE_VERSION, FULL_TEXT_FIELD, indexAnalyzer);
+			QueryParser parser = new QueryParser(LUCENE_VERSION, FULL_TEXT_FIELD, indexerService.getIndexAnalyzer());
 			Query query = parser.parse(text);
 			Logger.debug("## removing documents: " + query);
-			indexWriter.deleteDocuments(query);
+            indexerService.deleteDocuments(query);
+            listenersDeleteDocuments(query);
 		} catch (ParseException ex) {
 			Logger.warn("Can't parse query expression: " + text, ex);
 			throw new IllegalArgumentException("Can't parse query: " + text, ex);
@@ -2603,9 +2733,12 @@ public class TextIndexer implements Closeable, ProcessListener {
 	 * @return
 	 */
 	static FacetField getRangeFacet(String name, long[] ranges, long value) {		
-		if (ranges.length == 0)return null;
-		if (value < ranges[0])return new FacetField(name, "<" + ranges[0]);
-		
+		if (ranges.length == 0){
+		    return null;
+        }
+		if (value < ranges[0]){
+		    return new FacetField(name, "<" + ranges[0]);
+        }
 		int i=0;
 		for (; i < ranges.length; ++i) {
 			if (value < ranges[i])
@@ -2614,7 +2747,7 @@ public class TextIndexer implements Closeable, ProcessListener {
 		if (i == ranges.length) {
 			return new FacetField(name, ">" + ranges[i - 1]);
 		}
-		return new FacetField(name, ranges[i - 1] + ":" + ranges[i]);
+		return new FacetField(name, ranges[i - 1] + ":" + (ranges[i]-1));
 	}
 
 	static FacetField getRangeFacet(String name, double[] ranges, double value, String format) {
@@ -2722,7 +2855,7 @@ public class TextIndexer implements Closeable, ProcessListener {
 		if (file.exists()) {
 			ObjectMapper mapper = new ObjectMapper();
 			try {
-				JsonNode conf = mapper.readTree(new BufferedInputStream(new FileInputStream(file)));
+				JsonNode conf = mapper.readTree(file);
 				config = getFacetsConfig(conf);
 				Logger.info("## FacetsConfig loaded with " + config.getDimConfigs().size() + " dimensions!");
 			} catch (Exception ex) {
@@ -2855,10 +2988,9 @@ public class TextIndexer implements Closeable, ProcessListener {
 			lookups.clear();
 
 			closeAndIgnore(searchManager);
-			closeAndIgnore(indexWriter);
+			closeAndIgnore(indexerService);
 			closeAndIgnore(taxonWriter);
 
-			closeAndIgnore(indexDir);
 			closeAndIgnore(taxonDir);
 
 		} catch (Exception ex) {
@@ -3041,8 +3173,8 @@ public class TextIndexer implements Closeable, ProcessListener {
 
 
 		if (asText) {
-			String text = value.toString();
-			if(text.isEmpty()){
+			String text = (value ==null?  "" : value.toString());
+			if(text.trim().isEmpty()){
 				if(indexableValue.indexEmpty()){
 					text=indexableValue.emptyString();
 				}else{
@@ -3114,6 +3246,7 @@ public class TextIndexer implements Closeable, ProcessListener {
 
 		String tmp = LEVO_PATTERN.matcher(in).replaceAll(LEVO_WORD);
 		tmp = DEXTRO_PATTERN.matcher(tmp).replaceAll(DEXTRO_WORD);
+        tmp = RACEMIC_PATTERN.matcher(tmp).replaceAll(RACEMIC_WORD);
 		return tmp;
 
 	}
@@ -3130,7 +3263,7 @@ public class TextIndexer implements Closeable, ProcessListener {
 		tmp =  LEVO_PATTERN.matcher(tmp).replaceAll(TextIndexer.LEVO_WORD);
 
 		tmp =  DEXTRO_PATTERN.matcher(tmp).replaceAll(TextIndexer.DEXTRO_WORD);
-
+        tmp =  RACEMIC_PATTERN.matcher(tmp).replaceAll(TextIndexer.RACEMIC_WORD);
 
 		return tmp;
 	}
@@ -3138,11 +3271,12 @@ public class TextIndexer implements Closeable, ProcessListener {
 	private static final Pattern START_PATTERN = Pattern.compile(TextIndexer.GIVEN_START_WORD,Pattern.LITERAL );
 	private static final Pattern STOP_PATTERN = Pattern.compile(TextIndexer.GIVEN_STOP_WORD,Pattern.LITERAL );
 
-	private static final Pattern LEVO_PATTERN = Pattern.compile("\\(-\\)");
-	private static final Pattern DEXTRO_PATTERN = Pattern.compile("\\(\\+\\)");
+	private static final Pattern LEVO_PATTERN = Pattern.compile(Pattern.quote("(-)"));
+	private static final Pattern DEXTRO_PATTERN = Pattern.compile(Pattern.quote("(+)"));
+    private static final Pattern RACEMIC_PATTERN = Pattern.compile(Pattern.quote("(+/-)"));
 
 	private static final String LEVO_WORD = "LEVOROTATION";
-
+    private static final String RACEMIC_WORD = "RACEMICROTATION";
 	private static final String DEXTRO_WORD = "DEXTROROTATION";
 
 

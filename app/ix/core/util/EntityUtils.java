@@ -86,6 +86,7 @@ import ix.core.factories.FieldNameDecoratorFactory;
 import ix.core.factories.SpecialFieldFactory;
 import ix.core.search.EntityFetcher;
 import ix.core.search.EntityFetcher.CacheType;
+import ix.core.search.text.IndexableValueFromIndexable;
 import ix.core.search.text.PathStack;
 import ix.core.search.text.TextIndexer;
 import ix.core.util.pojopointer.ArrayPath;
@@ -266,6 +267,14 @@ public class EntityUtils {
 		public String toJsonDiffJson() {
 			return EntityMapper.JSON_DIFF_ENTITY_MAPPER().toJson(getValue());
 		}
+		/**
+		 * Get the Json of this entity using only the fields that are
+		 * considered when json-diffing different versions of the entity.
+		 * @return
+		 */
+		public JsonNode toJsonDiffJsonNode() {
+			return EntityMapper.JSON_DIFF_ENTITY_MAPPER().valueToTree(getValue());
+		}
 		public String toInternalJson() {
 			return EntityMapper.INTERNAL_ENTITY_MAPPER().toJson(getValue());
 		}
@@ -359,14 +368,14 @@ public class EntityUtils {
 
 						.flatMap(r -> {
 									if (r.tags.stream()
-											.peek(k -> System.out.println(k))
+//											.peek(k -> System.out.println(k))
 											.filter(k -> k.term.equalsIgnoreCase("fasta"))
 											.findAny()
 											.isPresent()) {
 										Matcher m = PAYLOAD_UUID_PATTERN.matcher(r.uploadedFile);
 										if (m.find()) {
 											String uuid = m.group(1);
-											System.out.println("found payload " + uuid);
+//											System.out.println("found payload " + uuid);
 											Payload payload = PayloadFactory.getPayload(UUID.fromString(uuid));
 											return Stream.of(payload);
 										}
@@ -1990,12 +1999,15 @@ public class EntityUtils {
 			}
 			name = m.getName();
 			indexingName = name;
-			if (name.startsWith("get")) {
-				indexingName = name.substring(3);
+			//name length check is to skip over the methods that are just called get()
+			if (name.startsWith("get") && name.length()>3) {
+
+				indexingName = Character.toLowerCase(name.charAt(3)) + name.substring(4);
 				if (args.length == 0) {
 					isGetter = true;
-					serializedName=(indexingName.charAt(0)+"").toLowerCase() + indexingName.substring(1);
-					correspondingFieldName=serializedName;
+					serializedName=indexingName;
+					correspondingFieldName=indexingName;
+
 				}
 			} else if (name.startsWith("set")) {
 				if (args.length == 1) {
@@ -2815,6 +2827,23 @@ public class EntityUtils {
 							next(EntityWrapper.of(fi.v()));
 						});
 					});
+
+					ew.streamMethodsAndValues(m -> m.isArrayOrCollection()).forEach(t -> {
+						path.pushAndPopWith(t.k().getName(), () -> {
+							t.k().forEach(t.v(), (i, o) -> {
+								path.pushAndPopWith(String.valueOf(i), () -> {
+									next(EntityWrapper.of(o));
+								});
+							});
+						});
+					});// each array / collection
+
+					ew.streamMethodsAndValues(m -> !m.isArrayOrCollection()).forEach(t -> {
+						path.pushAndPopWith(t.k().getName(), () -> {
+							next(EntityWrapper.of(t.v()));
+						});
+					});// each non-array
+
 				});
 			}
 		}

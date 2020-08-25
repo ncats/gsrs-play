@@ -37,7 +37,7 @@ public class ChemicalValidationTest extends AbstractGinasServerTest {
                             .addName("aName")
                             .buildJson());
 
-            assertTrue(response.getMessages().stream()
+            assertTrue(response.getMessages().toString(), response.getMessages().stream()
                     .filter(m -> m.isError() && "Chemical substance must have a chemical structure".equals(m.getMessage()))
                     .findAny()
                     .isPresent());

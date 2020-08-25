@@ -1,7 +1,6 @@
 package ix.ginas.models.v1;
 
 
-
 import ix.core.models.Indexable;
 import ix.ginas.models.GinasAccessReferenceControlled;
 import ix.ginas.models.GinasCommonSubData;
@@ -40,7 +39,6 @@ public class NucleicAcid extends GinasCommonSubData {
 	
 	@JSONEntity(title = "Nucleic Acid Subtypes", isUniqueItems = true, format = "table", itemsTitle = "Subtype", itemsFormat = JSONConstants.CV_NUCLEIC_ACID_SUBTYPE)
 	@JsonIgnore
-	
 	private String nucleicAcidSubType;
 	
 	
@@ -61,6 +59,7 @@ public class NucleicAcid extends GinasCommonSubData {
     //@JoinTable(name="ix_ginas_nucleicacid_sugar")
 	List<Sugar> sugars = new ArrayList<>();
 
+	@Indexable
 	public List<Linkage> getLinkages() {
 		return linkages;
 	}
@@ -78,7 +77,7 @@ public class NucleicAcid extends GinasCommonSubData {
 	public void setModifications(Modifications modifications) {
 		this.modifications = modifications;
 	}
-
+	@Indexable
 	public String getNucleicAcidType() {
 		return nucleicAcidType;
 	}
@@ -114,6 +113,7 @@ public class NucleicAcid extends GinasCommonSubData {
 		this.nucleicAcidSubType = sb.toString();
 	}
 
+	@Indexable
 	public String getSequenceOrigin() {
 		return sequenceOrigin;
 	}
@@ -122,6 +122,7 @@ public class NucleicAcid extends GinasCommonSubData {
 		this.sequenceOrigin = sequenceOrigin;
 	}
 
+	@Indexable
 	public String getSequenceType() {
 		return sequenceType;
 	}
@@ -129,7 +130,7 @@ public class NucleicAcid extends GinasCommonSubData {
 	public void setSequenceType(String sequenceType) {
 		this.sequenceType = sequenceType;
 	}
-
+	@Indexable
 	public List<Subunit> getSubunits() {
 		Collections.sort(subunits, new Comparator<Subunit>() {
 			@Override
@@ -154,6 +155,8 @@ public class NucleicAcid extends GinasCommonSubData {
 		adoptChildSubunits();
 	}
 
+
+	@Indexable
 	public List<Sugar> getSugars() {
 		return sugars;
 	}

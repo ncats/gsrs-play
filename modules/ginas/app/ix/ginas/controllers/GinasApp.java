@@ -24,6 +24,8 @@ import be.objectify.deadbolt.java.actions.Dynamic;
 import gov.nih.ncats.molwitch.Atom;
 import gov.nih.ncats.molwitch.Chemical;
 import gov.nih.ncats.molwitch.io.ChemFormat;
+import ix.core.controllers.v1.GsrsApiUtil;
+import ix.core.exporters.OutputFormat;
 import ix.core.validator.GinasProcessingMessage;
 import ix.core.UserFetcher;
 import ix.core.adapters.EntityPersistAdapter;
@@ -71,6 +73,8 @@ import ix.seqaln.SequenceIndexer.CutoffType;
 import ix.utils.CallableUtil.TypedCallable;
 import ix.utils.UUIDUtil;
 import ix.utils.Util;
+import org.jcvi.jillion.core.Range;
+import org.jcvi.jillion.core.Ranges;
 import play.Logger;
 import play.Play;
 import play.data.DynamicForm;
@@ -81,6 +85,7 @@ import play.libs.Json;
 import play.mvc.BodyParser;
 import play.mvc.Call;
 import play.mvc.Result;
+import play.mvc.Results;
 import play.twirl.api.Html;
 import tripod.chem.indexer.StructureIndexer;
 import com.wordnik.swagger.annotations.*;
@@ -680,8 +685,18 @@ public class GinasApp extends App {
 
     public static Result generateExportFileUrl(String collectionID, String extension, int publicOnly) {
         try{
+            ObjectNode on = generateExportMetaDataUrlForApi(collectionID, extension, publicOnly);
+            return ok(on);
+        }catch(Exception e){
+            e.printStackTrace();
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static ObjectNode generateExportMetaDataUrlForApi(String collectionID, String extension, int publicOnly) {
             ObjectNode on = EntityMapper.FULL_ENTITY_MAPPER().createObjectNode();
-            on.put("url", ix.ginas.controllers.routes.GinasApp.export(collectionID, extension, publicOnly).url().toString());
+            String url = routes.GinasApp.export(collectionID, extension, publicOnly).url();
+            on.put("url", url);
 
             on.put("isReady", factoryPlugin.get().isReady());
 
@@ -707,14 +722,11 @@ public class GinasApp extends App {
                 on.put("isPresent", true);
             } catch (Exception e) {
                 Logger.error(e.getMessage(), e);
+            e.printStackTrace();
                 on.put("isPresent", false);
                 on.put("isReady", false);
             }
-            return ok(on);
-        }catch(Exception e){
-            e.printStackTrace();
-            throw new RuntimeException(e);
-        }
+        return on;
     }
 
     /**
@@ -746,8 +758,29 @@ public class GinasApp extends App {
      * @return
      */
     public static F.Promise<Result> export(String collectionID, String extension, int publicOnlyFlag) {
+        return export(collectionID, extension, publicOnlyFlag, ()->getExportStream(collectionID));
+    }
+    /**
+     * Direct method, given collection ID, to return a File-Download result.
+     *
+     * @param collectionID
+     *            The id of the collection (typically the SearchResultContext
+     *            key)
+     * @param extension
+     *            The format extension (e.g. sdf, csv, etc)
+     * @return
+     */
+    public static F.Promise<Result> export(String collectionID, String extension, int publicOnlyFlag, Supplier<Stream<Substance>> streamSupplier) {
 
         return F.Promise.promise(() -> {
+            String fname= request().getQueryString("filename");
+            String qgen = request().getQueryString("genUrl");
+            return exportDirect(collectionID, extension, publicOnlyFlag, streamSupplier, fname, qgen);
+        });
+    }
+
+    public static Result exportDirect(String collectionID, String extension, int publicOnlyFlag,
+                                      Supplier<Stream<Substance>> streamSupplier, String fileName, String generatorUrl) {
             try {
                 boolean publicOnlyBool = publicOnlyFlag == 1;
 
@@ -760,22 +793,11 @@ public class GinasApp extends App {
                 //Dummy version for query
 
                 Principal prof = UserFetcher.getActingUser(true);
-                ExportMetaData emd=new ExportMetaData(collectionID, null, prof, publicOnlyBool, extension);
-
-                String fname= request().getQueryString("filename");
-                String qgen = request().getQueryString("genUrl");
-
-                if(fname!=null){
-                    emd.setDisplayFilename(fname);
-                }
-
-                if(qgen!=null){
-                    emd.originalQuery=qgen;
-                }
+            ExportMetaData emd=new ExportMetaData(collectionID, generatorUrl, prof, publicOnlyBool, extension);
 
 
                 //Not ideal, but gets around user problem
-                Stream<Substance> mstream = getExportStream(collectionID);
+            Stream<Substance> mstream = streamSupplier.get();
 
                 //GSRS-699 REALLY filter out anything that isn't public unless we are looking at private data
                 if(publicOnlyBool){
@@ -783,7 +805,13 @@ public class GinasApp extends App {
                 }
 
                 Stream<Substance> effectivelyFinalStream = mstream;
-                ExportProcess p = new ExportProcessFactory().getProcess(emd,
+
+
+            if(fileName!=null){
+                emd.setDisplayFilename(fileName);
+            }
+
+            ExportProcess<Substance> p = new ExportProcessFactory().getProcess(emd,
                         () -> effectivelyFinalStream);
 
                 p.run(out -> Unchecked.uncheck(() -> getSubstanceExporterFor(extension, out, publicOnlyBool)));
@@ -792,11 +820,9 @@ public class GinasApp extends App {
             } catch (Exception e) {
                 e.printStackTrace();
                 Logger.error(e.getMessage(), e);
-                return error(404, e.getMessage());
+            return GsrsApiUtil.notFound( e.getMessage());
             }
-        });
     }
-
 
 
     //public static InputStream download(String username, String collectionId, String extension, boolean publicOnly) throws IOException{
@@ -808,7 +834,6 @@ public class GinasApp extends App {
                 String filename=request().getQueryString("filename");
 //                System.out.println("here");
                 Optional<ExportMetaData>emeta = ExportProcessFactory.getStatusFor(username, downloadID);
-                System.out.println("optional metadata is present? " + emeta.isPresent());
                 ExportMetaData data=emeta.get();
 
                 if(filename==null){
@@ -816,14 +841,13 @@ public class GinasApp extends App {
                 }
 
                 InputStream in= ExportProcessFactory.download(username, data.getFilename());
-                System.out.println("getting inputstream " + in);
                 response().setContentType("application/x-download");
                 response().setHeader("Content-disposition", "attachment; filename=" + filename);
                 return ok(in);
             } catch (Exception e) {
                 Logger.error(e.getMessage(), e);
                 e.printStackTrace();
-                return error(404, e.getMessage());
+                return GsrsApiUtil.notFound( e.getMessage());
             }
         });
     }
@@ -842,11 +866,31 @@ public class GinasApp extends App {
                 return ok(EntityWrapper.of(data).toFullJsonNode());
             } catch (Exception e) {
                 Logger.error(e.getMessage(), e);
-                return error(404, e.getMessage());
+                return GsrsApiUtil.notFound( e.getMessage());
             }
         });
     }
 
+    @Dynamic(value = IxDynamicResourceHandler.IS_USER_PRESENT, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
+    public static Result deleteDownload(String downloadID){
+            try {
+                String username = UserFetcher.getActingUser(true).username;
+                Optional<ExportMetaData> emeta = ExportProcessFactory.getStatusFor(username, downloadID);
+                if(!emeta.isPresent()){
+                    return GsrsApiUtil.notFound("could not find download " + downloadID);
+                }
+                ExportMetaData data = emeta.get();
+                if (!data.isComplete()) {
+                    return GsrsApiUtil.badRequest("Can not delete an unfinished export.");
+                }
+
+                ExportProcessFactory.remove(data);
+                return GsrsApiUtil.deleted("download deleted");
+            }catch(Exception e){
+                Logger.error(e.getMessage(), e);
+                return error(500, e.getMessage());
+            }
+    }
     @Dynamic(value = IxDynamicResourceHandler.IS_USER_PRESENT, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
     public static F.Promise<Result> removeExport(String downloadID){
         return F.Promise.promise(() -> {
@@ -866,9 +910,50 @@ public class GinasApp extends App {
                 return ok(node);
             } catch (Exception e) {
                 Logger.error(e.getMessage(), e);
-                return error(404, e.getMessage());
+                return GsrsApiUtil.notFound( e.getMessage());
             }
         });
+    }
+    @Dynamic(value = IxDynamicResourceHandler.IS_USER_PRESENT, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
+    public static Result getDownloadRecordAsJson(String downloadId) {
+        String username=UserFetcher.getActingUser(true).username;
+        Optional<ExportMetaData>emeta = ExportProcessFactory.getStatusFor(username, downloadId);
+        if(emeta.isPresent()){
+            return Results.ok(EntityMapper.FULL_ENTITY_MAPPER().toJson(emeta.get()))
+                            .as("application/json");
+        }
+        return GsrsApiUtil.notFound("could not find download " + downloadId);
+    }
+    @Dynamic(value = IxDynamicResourceHandler.IS_USER_PRESENT, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
+    public static JsonNode getDownloadsAsJson(int rows,int page, String key) {
+
+
+                String username=UserFetcher.getActingUser(true).username;
+
+                List<ExportMetaData>list = ExportProcessFactory.getExplicitExportMetaData(username);
+
+                if(key!=null){
+                    list=list.stream()
+                            .filter(m->m.getKey().equals(key))
+                            .sorted(Comparator.comparing(m -> m.finished))
+                            .collect(Collectors.toList());
+                }
+
+                List<ExportMetaData> data =  getPagedDownloads(list,rows,page);
+        DownloadResultPage result = new DownloadResultPage();
+        result.downloads = data;
+        result.page =page;
+        result.row = rows = Math.min(list.size(), Math.max(1, rows));
+
+                return EntityMapper.FULL_ENTITY_MAPPER().valueToTree(result);
+
+    }
+
+    public static class DownloadResultPage{
+       public List<ExportMetaData> downloads;
+       public int page;
+       public int row;
+
     }
 
 
@@ -900,19 +985,30 @@ public class GinasApp extends App {
     static Result createDownloadsResult(List<ExportMetaData> result, int rows,
                                         int page) {
 
-        List<ExportMetaData> jobs = new ArrayList<ExportMetaData>();
         int[] pages = new int[0];
+        if(!result.isEmpty()){
+            pages = paging(rows, page, result.size());
+        }
+        List<ExportMetaData> jobs = getPagedDownloads(result, rows, page);
+
+        return ok(ix.ginas.views.html.downloads.jobs.render(page, rows,
+                result.size(), pages, new FacetDecorator[]{}, jobs));
+
+    }
+    public static List<ExportMetaData> getPagedDownloads(List<ExportMetaData> result, int rows,
+                                        int page) {
+
+        List<ExportMetaData> jobs = new ArrayList<ExportMetaData>();
+
         if (result.size() > 0) {
             rows = Math.min(result.size(), Math.max(1, rows));
-            pages = paging(rows, page, result.size());
             for (int i = (page - 1) * rows, j = 0; j < rows
                     && i < result.size(); ++j, ++i) {
                 jobs.add(result.get(i));
             }
         }
 
-        return ok(ix.ginas.views.html.downloads.jobs.render(page, rows,
-                result.size(), pages, new FacetDecorator[]{}, jobs));
+        return jobs;
 
     }
 
@@ -941,10 +1037,10 @@ public class GinasApp extends App {
                 if(emeta.isPresent()){
                     return ok(EntityWrapper.of(emeta.get()).toFullJsonNode());
                 }
-                return error(404, "download file not found");
+                return GsrsApiUtil.notFound( "download file not found");
             } catch (Exception e) {
                 Logger.error(e.getMessage(), e);
-                return error(404, e.getMessage());
+                return GsrsApiUtil.notFound(e.getMessage());
             }
         });
     }
@@ -1126,17 +1222,17 @@ public class GinasApp extends App {
     }
 
     private static class SubstanceParameters implements SubstanceExporterFactory.Parameters {
-        private final SubstanceExporterFactory.OutputFormat format;
+        private final OutputFormat format;
 
         private final boolean publicOnly;
-        SubstanceParameters(SubstanceExporterFactory.OutputFormat format, boolean publicOnly) {
+        SubstanceParameters(OutputFormat format, boolean publicOnly) {
             Objects.requireNonNull(format);
             this.format = format;
             this.publicOnly = publicOnly;
         }
 
         @Override
-        public SubstanceExporterFactory.OutputFormat getFormat() {
+        public OutputFormat getFormat() {
             return format;
         }
 
@@ -1946,9 +2042,7 @@ public class GinasApp extends App {
                 Matcher m = FASTA_FILE_PATTERN.matcher(r.id);
                 if(m.find()){
                     String parentId = m.group(1);
-                    System.out.println("matched id = "+parentId);
                     ProteinSubstance sub = SubstanceFactory.protfinder.get().byId(UUID.fromString(parentId));
-                    System.out.println("sub = " + sub);
                     return sub;
 
                 }
@@ -1967,6 +2061,37 @@ public class GinasApp extends App {
                 List<SequenceIndexer.Result> alignments = (List<SequenceIndexer.Result>)
                         added.computeIfAbsent("alignments", f->new ArrayList<SequenceIndexer.Result>());
                 alignments.add(r);
+                //GSRS 1512 add target site info
+                // this is the only place in the alignment code we have the aligned sequence
+                //AND we know what subunit it belongs to
+                UUID subunitUUID = UUID.fromString(r.id);
+//                System.out.println("looking for subunit id = " + subunitUUID );
+                Optional<Subunit> foundSubunit = protein.protein.getSubunits().stream()
+
+                        .filter(sub-> Objects.equals(subunitUUID,sub.getUuid())).findAny();
+//                System.out.println("found subunit ? ="+ foundSubunit);
+                if(foundSubunit.isPresent()){
+                    Subunit subunit = foundSubunit.get();
+                    int index = subunit.subunitIndex==null? 0: subunit.subunitIndex;
+//                    System.out.println("index = " + index);
+                    Range.RangeAndCoordinateSystemToStringFunction function = (begin,end, ignored)-> index+"_"+begin + "-" +index+"_"+end;
+                    r.alignments.stream().forEach(a->{
+                            String shorthand = Ranges.asRanges(a.targetSites())
+                                                                    .stream()
+                                                                    .map(range-> range.toString(function, Range.CoordinateSystem.RESIDUE_BASED))
+                                                .collect(Collectors.joining(";","Target Sites: ","\n\n"));
+//                            System.out.println("short hand -  " + shorthand);
+                        //this check is because sometimes we get here twice?
+                        if(a.alignment!=null && !a.alignment.startsWith("Target")) {
+                            a.alignment = shorthand + a.alignment;
+                        }
+//                            System.out.println("new alignment =\n"+a.alignment);
+                    });
+
+
+
+                }
+
                 IxCache.setMatchingContext(this.getContext(), key, added);
             } else {
                 Logger.warn("Can't retrieve protein for subunit " + r.id);
@@ -2373,7 +2498,7 @@ public class GinasApp extends App {
         return ret;
     }
 
-    public static Set<SubstanceExporterFactory.OutputFormat> getAllSubstanceExportFormats() {
+    public static Set<OutputFormat> getAllSubstanceExportFormats() {
         return Play.application().plugin(GinasSubstanceExporterFactoryPlugin.class).getAllSupportedFormats();
     }
 
@@ -2579,7 +2704,7 @@ public class GinasApp extends App {
     }
 
     @Dynamic(value = IxDynamicResourceHandler.IS_ADMIN, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
-    public static String getLogFileListAsJson() throws IOException{
+    public static JsonNode getLogFileListAsJsonNode() throws IOException{
         Path directory = Paths.get(".");
 
         LogFileWalker visitor = new LogFileWalker(directory);
@@ -2587,12 +2712,14 @@ public class GinasApp extends App {
         Files.walkFileTree(directory, visitor);
 
         Collections.sort(visitor.fileInfoList);
-        String ret = Json.toJson(visitor.fileInfoList).toString();
-        return ret;
+        return Json.toJson(visitor.fileInfoList);
     }
-
     @Dynamic(value = IxDynamicResourceHandler.IS_ADMIN, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
-    public static String getLogFileListAsJson(String path) throws IOException{
+    public static String getLogFileListAsJson() throws IOException{
+        return getLogFileListAsJsonNode().toString();
+    }
+    @Dynamic(value = IxDynamicResourceHandler.IS_ADMIN, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
+    public static JsonNode getLogFileListAsJsonNode(String path) throws IOException{
         Path directory = Paths.get(path);
 
         LogFileWalker visitor = new LogFileWalker(directory);
@@ -2600,8 +2727,11 @@ public class GinasApp extends App {
         Files.walkFileTree(directory, visitor);
 
         Collections.sort(visitor.fileInfoList);
-        String ret = Json.toJson(visitor.fileInfoList).toString();
-        return ret;
+        return Json.toJson(visitor.fileInfoList);
+    }
+    @Dynamic(value = IxDynamicResourceHandler.IS_ADMIN, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
+    public static String getLogFileListAsJson(String path) throws IOException{
+        return getLogFileListAsJsonNode(path).toString();
     }
 
     private static class LogFileWalker extends SimpleFileVisitor<Path> {
@@ -2715,18 +2845,26 @@ public class GinasApp extends App {
 
     @Dynamic(value = IxDynamicResourceHandler.IS_ADMIN, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
     public static Result downloadFile(String fName){
-        response().setContentType("application/x-download");
-        response().setHeader("Content-disposition","attachment; filename=" + fName);
 
         Path root = new File(".").toPath().toAbsolutePath();
-
-
+        try {
         File file = new File(fName);
+            boolean exists = file.exists();
+            if (!exists) {
+                return GsrsApiUtil.notFound("could not find download " + fName);
+            }
         //must be a subdirectory of ginas
         if(file.toPath().toAbsolutePath().startsWith(GINAS_ROOT.get())) {
+                response().setContentType("application/x-download");
+                response().setHeader("Content-disposition","attachment; filename=" + fName);
+
             return ok(file);
         }
         return forbidden("not allowed to access file : " + fName);
+        }catch(Exception e){
+            e.printStackTrace();
+            throw e;
+        }
     }
 
     public static Result createTestChemical(int count){
@@ -2789,6 +2927,31 @@ public class GinasApp extends App {
                 List<SequenceIndexer.Result> alignments = (List<SequenceIndexer.Result>)
                         added.computeIfAbsent("alignments", f->new ArrayList<SequenceIndexer.Result>());
                 alignments.add(r);
+                //GSRS 1512 add target site info
+                // this is the only place in the alignment code we have the aligned sequence
+                //AND we know what subunit it belongs to
+                UUID subunitUUID = UUID.fromString(r.id);
+//                System.out.println("looking for subunit id = " + subunitUUID );
+                Optional<Subunit> foundSubunit = nuc.nucleicAcid.getSubunits().stream()
+                                                .filter(sub-> Objects.equals(subunitUUID,sub.getUuid())).findAny();
+                if(foundSubunit.isPresent()) {
+                    Subunit subunit = foundSubunit.get();
+                    int index = subunit.subunitIndex == null ? 0 : subunit.subunitIndex;
+//                    System.out.println("index = " + index);
+                    Range.RangeAndCoordinateSystemToStringFunction function = (begin, end, ignored) -> index + "_" + begin + "-" + index + "_" + end;
+                    r.alignments.stream().forEach(a -> {
+                        String shorthand = Ranges.asRanges(a.targetSites())
+                                .stream()
+                                .map(range -> range.toString(function, Range.CoordinateSystem.RESIDUE_BASED))
+                                .collect(Collectors.joining(";", "Target Sites: ", "\n\n"));
+//                            System.out.println("short hand -  " + shorthand);
+                        //this check is because sometimes we get here twice?
+                        if (a.alignment != null && !a.alignment.startsWith("Target")) {
+                            a.alignment = shorthand + a.alignment;
+                        }
+//                            System.out.println("new alignment =\n"+a.alignment);
+                    });
+                }
                 IxCache.setMatchingContext(this.getContext(), key, added);
             } else {
                 Logger.warn("Can't retrieve nucleic for subunit " + r.id);

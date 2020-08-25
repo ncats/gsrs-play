@@ -3,7 +3,6 @@ package ix.ginas.indexers;
 import ix.core.search.text.IndexValueMaker;
 import ix.core.search.text.IndexableValue;
 import ix.ginas.models.v1.Substance;
-import org.apache.poi.ss.formula.functions.T;
 
 import play.Logger;
 import java.util.List;

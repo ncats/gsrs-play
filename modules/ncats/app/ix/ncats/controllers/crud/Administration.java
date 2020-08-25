@@ -67,7 +67,7 @@ public class Administration extends App {
     @Dynamic(value = IxDynamicResourceHandler.IS_ADMIN, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
     public static Result addPrincipal() {
     	try{
-    		System.out.println("Adding");
+//    		System.out.println("Adding");
         DynamicForm requestData = Form.form().bindFromRequest();
         if (requestData.hasErrors()) {
 	            throw new IllegalStateException("Malformed User data");

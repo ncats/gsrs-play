@@ -99,7 +99,7 @@ public abstract class EntityClobConverter<K> extends ScalarTypeBase<K> {
 
 	@Override
 	public void writeData(DataOutput dataOutput, Object v) throws IOException {
-		System.out.println("WritingData");
+//		System.out.println("WritingData");
 		if (v == null) {
 		      dataOutput.writeBoolean(false);
 		    } else {

@@ -1,14 +1,8 @@
 package ix.ginas.controllers.v1;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.OptionalInt;
-import java.util.Set;
-import java.util.UUID;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -16,6 +10,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -31,22 +26,25 @@ import ix.core.chem.StructureProcessor;
 import ix.core.controllers.EntityFactory;
 import ix.core.controllers.search.SearchFactory;
 import ix.core.controllers.search.SearchRequest;
+import ix.core.controllers.v1.DownloadController;
+import ix.core.controllers.v1.GsrsApiUtil;
 import ix.core.controllers.v1.RouteFactory;
-import ix.core.models.Edit;
-import ix.core.models.Principal;
-import ix.core.models.Structure;
-import ix.core.models.UserProfile;
+import ix.core.controllers.v1.routes;
+import ix.core.exporters.OutputFormat;
+import ix.core.models.*;
 import ix.core.plugins.TextIndexerPlugin;
 import ix.core.search.ResultProcessor;
+import ix.core.search.SearchOptions;
 import ix.core.search.SearchResult;
 import ix.core.search.SearchResultContext;
-import ix.core.util.CachedSupplier;
-import ix.core.util.EntityUtils;
+import ix.core.util.*;
 import ix.core.util.EntityUtils.EntityWrapper;
 import ix.core.util.EntityUtils.Key;
 import ix.core.util.TimeUtil;
 import ix.core.util.pojopointer.PojoPointer;
+import ix.ginas.controllers.GinasApp;
 import ix.ginas.controllers.GinasApp.StructureSearchResultProcessor;
+import ix.ginas.exporters.SubstanceFromEtagExportService;
 import ix.ginas.models.v1.ChemicalSubstance;
 import ix.ginas.models.v1.Code;
 import ix.ginas.models.v1.MixtureSubstance;
@@ -77,7 +75,10 @@ import play.db.ebean.Model;
 import play.mvc.Result;
 import play.mvc.Results;
 
-@NamedResource(name = "substances", type = Substance.class, description = "Resource for handling of GInAS substances")
+@NamedResource(name = "substances", type = Substance.class, description = "Resource for handling of GInAS substances"
+
+,searchRequestBuilderClass = ix.ginas.controllers.v1.SubstanceFactory.SubstanceSearchRequestBuilder.class
+		)
 public class SubstanceFactory extends EntityFactory {
 	private static final String CODE_TYPE_PRIMARY = "PRIMARY";
 	public static final double SEQUENCE_IDENTITY_CUTOFF = 0.95;
@@ -87,17 +88,42 @@ public class SubstanceFactory extends EntityFactory {
 	// Yes used in GinasApp
 	static public CachedSupplier<Model.Finder<UUID, ProteinSubstance>> protfinder=Util.finderFor(UUID.class, ProteinSubstance.class);
 	static public CachedSupplier<Model.Finder<UUID, NucleicAcidSubstance>> nucfinder=Util.finderFor(UUID.class, NucleicAcidSubstance.class);
+	static CachedSupplier<Model.Finder<Long, ETag>> etagDb = Util.finderFor(Long.class, ETag.class);
 
-	public static Substance getSubstance(String id) {
-		if (id == null)
-			return null;
-		return getSubstance(UUID.fromString(id));
+
+	public static class SubstanceSearchRequestBuilder extends SearchRequest.Builder{
+
+		@Override
+		public SearchRequest build() {
+			SearchRequest sr=super.build();
+			SearchOptions so =sr.getOptions();
+			instrumentSubstanceSearchOptions(so);
+			sr.setOptions(so);
+			return sr;
+		}
+
 	}
-	public static OptionalInt getMaxVersionForSubstance(String id){
-		if (id == null) {
+	/**
+	 * Get a Substance by it's UUID
+	 * @param uuid
+	 * @return
+	 */
+	public static Substance getSubstance(String uuid) {
+		if (uuid == null ||!UUIDUtil.isUUID(uuid)) {
+			return null;
+	}
+		return getSubstance(UUID.fromString(uuid));
+	}
+	/**
+	 * Get the highest version number of this Substance by it's UUID
+	 * @param uuid
+	 * @return
+	 */
+	public static OptionalInt getMaxVersionForSubstance(String uuid){
+		if (uuid == null ||!UUIDUtil.isUUID(uuid)) {
 			return OptionalInt.empty();
 		}
-		return getMaxVersionForSubstance(UUID.fromString(id));
+		return getMaxVersionForSubstance(UUID.fromString(uuid));
 
 	}
 	public static OptionalInt getMaxVersionForSubstance(UUID uuid){
@@ -119,6 +145,116 @@ public class SubstanceFactory extends EntityFactory {
 				.mapToInt(e-> Integer.parseInt(e.version))
 		)
 				.max();
+	}
+
+	//This is mostly a copy and paste from the old UI
+	//to add in long range facets for date ranges like substances
+	//last edited in the past week etc.
+	//The old instrument method this is based on would add a prefix character
+	// as a hack to sort the facets correctly which the legacy UI would strip off with in
+	//GinasFacetDecorator.  But this doesn't do that. Instead it's just an ordered list without a prefix character
+	private static void instrumentSearchOptions(SearchOptions options, Map<String, Function<LocalDateTime, LocalDateTime>> orderedMap) {
+
+		SearchOptions.FacetLongRange editedRange = new SearchOptions.FacetLongRange("root_lastEdited");
+		SearchOptions.FacetLongRange approvedRange = new SearchOptions.FacetLongRange("root_approved");
+
+		List<SearchOptions.FacetLongRange> facetRanges = new ArrayList<>();
+
+		facetRanges.add(editedRange);
+		facetRanges.add(approvedRange);
+
+		LocalDateTime now = TimeUtil.getCurrentLocalDateTime();
+
+
+		// 1 second in future
+		long end = TimeUtil.toMillis(now) + 1000L;
+
+		LocalDateTime last = now;
+
+		for (Map.Entry<String, Function<LocalDateTime, LocalDateTime>> entry : orderedMap.entrySet()) {
+
+			String name = entry.getKey();
+
+			LocalDateTime startDate = entry.getValue().apply(now);
+			long start = TimeUtil.toMillis(startDate);
+
+			// This is terrible, and I hate it, but this is a
+			// quick fix for the calendar problem.
+			if (start > end) {
+				startDate = entry.getValue().apply(last);
+				start = TimeUtil.toMillis(startDate);
+			}
+
+			long[] range = new long[] { start, end };
+
+			if (end < start) {
+				System.out.println("How is this possible?");
+			}
+
+			for (SearchOptions.FacetLongRange facet : facetRanges) {
+				facet.add(name, range);
+			}
+
+			end = start;
+			last = startDate;
+		}
+
+		options.addLongRangeFacets(facetRanges);
+	}
+
+	public static void instrumentSubstanceSearchOptions(SearchOptions options) {
+
+		// Note, this is not really the right terminology.
+		// durations of time are better than actual cal. references,
+		// as they don't behave quite as well, and may cause more confusion
+		// due to their non-overlapping nature. This makes it easier
+		// to have a bug, and harder for a user to understand.
+
+		Map<String, Function<LocalDateTime, LocalDateTime>> map = new LinkedHashMap<>();
+		map.put("Today", now -> LocalDateTime.of(now.toLocalDate(), LocalTime.MIDNIGHT));
+
+		// (Last 7 days)
+		map.put("This week", now -> {
+			return now.minusDays(7);
+			// TemporalField dayOfWeek = weekFields.dayOfWeek();
+			// return LocalDateTime.of(now.toLocalDate(), LocalTime.MIDNIGHT)
+			// .with(dayOfWeek, 1);
+		});
+
+		// (Last 30 days)
+		map.put("This month", now -> {
+			return now.minusDays(30);
+			// LocalDateTime ldt=LocalDateTime.of(now.toLocalDate(),
+			// LocalTime.MIDNIGHT)
+			// .withDayOfMonth(1);
+			// return ldt;
+		});
+
+		// (Last 6 months)
+		map.put("Past 6 months", now -> {
+			return now.minusMonths(6);
+			// LocalDateTime.of(now.toLocalDate(), LocalTime.MIDNIGHT)
+			// .minusMonths(6)
+		});
+
+		// (Last 1 year)
+		map.put("Past 1 year", now -> {
+			return now.minusYears(1);
+			// return LocalDateTime.of(now.toLocalDate(), LocalTime.MIDNIGHT)
+			// .minusYears(1);
+		});
+
+		map.put("Past 2 years", now -> {
+			return now.minusYears(2);
+			// return LocalDateTime.of(now.toLocalDate(), LocalTime.MIDNIGHT)
+			// .minusYears(2);
+		});
+
+		// Older than 2 Years
+		map.put("Older than 2 years", now -> now.minusYears(6000));
+
+		instrumentSearchOptions(options, map);
+
 	}
 
 	/**
@@ -161,7 +297,7 @@ public class SubstanceFactory extends EntityFactory {
 							try{
 								return (Substance) EntityUtils
 									.getEntityInfoFor(e.kind)
-									.fromJsonNode(e.getOldValue().rawJson());
+									.fromJsonNode(e.getOldValueReference().rawJson());
 							}catch(Exception ex){
 								throw new IllegalArgumentException(ex);
 							}
@@ -410,6 +546,55 @@ public class SubstanceFactory extends EntityFactory {
 		return field(uuid, path, finder.get());
 	}
 
+	public static Result getExportFormats() {
+		List<OutputFormat> formats = GinasApp.getAllSubstanceExportFormats()
+				.stream()
+				.sorted(Comparator.comparing(OutputFormat::getDisplayName))
+				.collect(Collectors.toList());
+
+		return Results.ok((JsonNode)EntityFactory.EntityMapper.FULL_ENTITY_MAPPER().valueToTree(formats))
+				.as("application/json");
+	}
+
+	public static Result getExportOptions(String etagId, boolean publicOnly){
+		List<OutputFormat> formats= GinasApp.getAllSubstanceExportFormats()
+				.stream()
+				.sorted(Comparator.comparing(OutputFormat::getDisplayName))
+				.collect(Collectors.toList());
+
+		//TODO is there a better way to get our context?
+		String context = SubstanceFactory.class.getAnnotation(NamedResource.class).name();
+		List<DownloadController.ExportOption> ret = new ArrayList<>();
+		for(OutputFormat format : formats){
+			DownloadController.ExportOption option = new DownloadController.ExportOption();
+			option.displayname = format.getDisplayName();
+			option.extension = format.getExtension();
+//            option.link = GinasPortalGun.generateExportMetaDataUrlForApi(collectionId, format.getExtension(),publicFlag);
+			option.link = RestUrlLink.from(routes.RouteFactory.createExport(context, etagId, format.getExtension(), publicOnly));
+			ret.add(option);
+		}
+		return Results.ok((JsonNode)EntityFactory.EntityMapper.FULL_ENTITY_MAPPER().valueToTree(ret))
+				.as("application/json");
+	}
+
+
+
+
+
+	public static Result createExport(String etagId, String format, boolean publicOnly){
+		ETag etagObj = etagDb.get().query().where().eq("etag", etagId).findUnique();
+		String fname= request().getQueryString("filename");
+
+		if(etagObj ==null){
+			return GsrsApiUtil.notFound("could not find etag with Id " + etagId);
+		}
+
+		return GinasApp.exportDirect(etagId, format, publicOnly ? 1 : 0,
+                new SubstanceFromEtagExportService(request()).generateExportFrom("substances", etagObj),
+				fname, etagObj.uri);
+
+	}
+
 	public static Result create() {
 
 		JsonNode value = request().body().asJson();
@@ -519,7 +704,7 @@ public class SubstanceFactory extends EntityFactory {
 		try {
 			JsonNode value = request().body().asJson();
 			Class<? extends Substance> subClass = getClassFromJson(value);
-			System.out.println("Got:" + value.toString());
+			//System.out.println("Got:" + value.toString());
 			Key k=Key.of(subClass, uuid);
 			PojoPointer pp = PojoPointer.fromURIPath(field);
 			
@@ -714,9 +899,13 @@ public class SubstanceFactory extends EntityFactory {
 		SearchResultContext context;
 		
 		if(type.toLowerCase().startsWith("sub")){
-			context = App.substructure(q, 
-					/*min=*/ 1, 
-					new StructureSearchResultProcessor())
+			SearchResultContext unfocusedContext = App.substructure(q,
+					/*min=*/ 1,
+					new StructureSearchResultProcessor());
+			if(unfocusedContext ==null){
+				System.out.println("unfocused context == null!!!!");
+			}
+			context = unfocusedContext
 					.getFocused(top, skip, fdim, field);
 		}else if(type.toLowerCase().startsWith("sim")){
 			context = App.similarity(q, 
@@ -981,7 +1170,23 @@ public class SubstanceFactory extends EntityFactory {
         }
         
     }
-    
-    
+	private static Pattern QUERY_SPLIT_PATTERN = Pattern.compile("&");
+	private static Map<String, List<String>> splitQuery(String query) {
+		if (query == null || query.trim().isEmpty()) {
+			return Collections.emptyMap();
+		}
+		return Arrays.stream(QUERY_SPLIT_PATTERN.split(query))
+				.map(SubstanceFactory::splitQueryParameter)
+				.collect(Collectors.groupingBy(Map.Entry::getKey, LinkedHashMap::new,
+						Collectors.mapping(Map.Entry::getValue, Collectors.toList())));
+	}
+
+	private static Map.Entry<String, String> splitQueryParameter(String it) {
+		final int idx = it.indexOf("=");
+		final String key = idx > 0 ? it.substring(0, idx) : it;
+		final String value = idx > 0 && it.length() > idx + 1 ? it.substring(idx + 1) : null;
+		return new AbstractMap.SimpleImmutableEntry<>(key, value);
+	}
+
     
 }

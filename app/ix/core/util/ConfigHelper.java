@@ -91,6 +91,15 @@ public class ConfigHelper {
         ObjectMapper mapper = new ObjectMapper();
         return mapper.convertValue(maps, cls);
     }
+
+    public static <T> Class<T> getClass(String className) throws ClassNotFoundException {
+        String path =Play.application().configuration().getString(className);
+        if(path ==null){
+            return null;
+        }
+        return (Class<T>) IOUtil.getGinasClassLoader().loadClass(path);
+    }
+
     private static class SList extends ArrayList<String>{}
     
     

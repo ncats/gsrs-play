@@ -179,90 +179,54 @@ public class NucleicAcidSubstance extends Substance implements GinasSubstanceDef
 	public List<DefinitionalElement> additionalElementsFor() {
 		List<DefinitionalElement> definitionalElements = new ArrayList<>();
 
-		for(int i = 0; i< this.nucleicAcid.subunits.size(); i++) {
-			Subunit s = this.nucleicAcid.subunits.get(i);
-			Logger.debug("processing subunit with sequence " + s.sequence);
-			DefinitionalElement sequenceHash = DefinitionalElement.of("nucleicAcid.subunits.sequence", s.sequence, 1);
-			definitionalElements.add(sequenceHash);
-		}
+		if(this.nucleicAcid !=null) {
+			//this can happen be null for incomplete? so we should check it
 
-		for(int i = 0; i< this.nucleicAcid.linkages.size(); i++) {
-			Linkage l = this.nucleicAcid.linkages.get(i);
-			Logger.debug("processing linkage " + l.linkage);
-			DefinitionalElement linkageHash = DefinitionalElement.of("nucleicAcid.linkages.linkage", l.linkage, 2);
-			definitionalElements.add(linkageHash);
-			Logger.debug("processing l.siteContainer.sitesShortHand " + l.siteContainer.sitesShortHand);
-			DefinitionalElement siteElement = DefinitionalElement.of("nucleicAcid.linkages.site", l.siteContainer.sitesShortHand, 2);
-			definitionalElements.add(siteElement);
-		}
+			if(this.nucleicAcid.subunits !=null) {
+				for(int i = 0; i< this.nucleicAcid.subunits.size(); i++) {
+					Subunit s = this.nucleicAcid.subunits.get(i);
+					Logger.debug("processing subunit with sequence " + s.sequence);
+					DefinitionalElement sequenceHash = DefinitionalElement.of("nucleicAcid.subunits.sequence", s.sequence, 1);
+					definitionalElements.add(sequenceHash);
+				}
+			}
 
-		for(int i = 0; i<this.nucleicAcid.sugars.size(); i++)	{
-			Sugar s = this.nucleicAcid.sugars.get(i);
-			Logger.debug("processing sugar " + s.sugar);
-			DefinitionalElement sugarElement = DefinitionalElement.of("nucleicAcid.sugars.sugar", s.sugar, 2);
-			definitionalElements.add(sugarElement);
-			Logger.debug("processing s.siteContainer.sitesShortHand " + s.siteContainer.sitesShortHand);
-			DefinitionalElement siteElement = DefinitionalElement.of("nucleicAcid.sugars.site", s.siteContainer.sitesShortHand, 2);
-			definitionalElements.add(siteElement);
-		}
+			if(this.nucleicAcid.linkages !=null) {
+				for(int i = 0; i< this.nucleicAcid.linkages.size(); i++) {
+					Linkage l = this.nucleicAcid.linkages.get(i);
+					Logger.debug("processing linkage " + l.getLinkage());
+					DefinitionalElement linkageHash = DefinitionalElement.of("nucleicAcid.linkages.linkage", l.getLinkage(), 2);
+					definitionalElements.add(linkageHash);
 
-		if( this.modifications != null )
-		{
-			if (this.modifications.agentModifications != null) {
-				//todo: canonicalize the keys used in modifications
-				for (int i = 0; i < this.modifications.agentModifications.size(); i++) {
-					AgentModification a = this.modifications.agentModifications.get(i);
-					if( a.agentSubstance == null) {
-						Logger.debug("skipping agent mod because agentSubstance is null" );
-						continue;
+					//check if siteContainer is null
+					if(l.siteContainer!=null) {
+						Logger.debug("processing l.siteContainer.sitesShortHand " + l.siteContainer.sitesShortHand);
+						DefinitionalElement siteElement = DefinitionalElement.of("nucleicAcid.linkages.site", l.siteContainer.sitesShortHand, 2);
+						definitionalElements.add(siteElement);
 					}
-					Logger.debug("processing agent mod " + a.agentModificationProcess);
-					DefinitionalElement agentSubstanceDefElement = DefinitionalElement.of("modifications.agentModification.substance",
-									a.agentSubstance.refuuid, 2);
-					definitionalElements.add(agentSubstanceDefElement);
-					DefinitionalElement agentModElement = DefinitionalElement.of("modifications.agentModificationProcess",
-									a.agentModificationProcess, 2);
-					definitionalElements.add(agentModElement);
 				}
-			}
 
-			for( int i = 0; i < this.modifications.physicalModifications.size(); i++)	{
-				PhysicalModification p = this.modifications.physicalModifications.get(i);
-				Logger.debug("processing physical modification " + p.modificationGroup);
-				DefinitionalElement physicalModElement = DefinitionalElement.of("modifications.physicalModificationGroup", p.modificationGroup, 2);
-				definitionalElements.add(physicalModElement);
-				Logger.debug("processing p.physicalModificationRole " + p.physicalModificationRole);
-				DefinitionalElement physicalModElementProcess = DefinitionalElement.of("modifications.physicalModificationRole", p.physicalModificationRole, 2);
-				definitionalElements.add(physicalModElementProcess);
 			}
-
-			for (int i = 0; i < this.modifications.structuralModifications.size(); i++) {
-				//todo: canonicalize the keys used in modifications
-				StructuralModification sm = this.modifications.structuralModifications.get(i);
-				if( sm.molecularFragment == null){
-					Logger.debug("skipping structural mod because molecularFragment is null");
-					continue;
+			if(this.nucleicAcid.sugars !=null) {
+				for(int i = 0; i<this.nucleicAcid.sugars.size(); i++)	{
+					Sugar s = this.nucleicAcid.sugars.get(i);
+					Logger.debug("processing sugar " + s.sugar);
+					DefinitionalElement sugarElement = DefinitionalElement.of("nucleicAcid.sugars.sugar", s.sugar, 2);
+					definitionalElements.add(sugarElement);
+					//check if siteContainer is null
+					if(s.siteContainer!=null) {
+						Logger.debug("processing s.siteContainer.sitesShortHand " + s.siteContainer.sitesShortHand);
+						DefinitionalElement siteElement = DefinitionalElement.of("nucleicAcid.sugars.site", s.siteContainer.sitesShortHand, 2);
+						definitionalElements.add(siteElement);
+					}
 				}
-				DefinitionalElement structModRefuuidDefElement =
-								DefinitionalElement.of("modifications.structuralModifications.molecularFragment.refuuid", sm.molecularFragment.refuuid, 2);
-				definitionalElements.add(structModRefuuidDefElement);
-
-				Logger.debug("processing structural modification with group " + sm.modificationGroup);
-				DefinitionalElement structModElement = DefinitionalElement.of("modifications.structuralModifications.group",
-								sm.modificationGroup, 2);
-				definitionalElements.add(structModElement);
-				Logger.debug("processing sm.siteContainer " + sm.siteContainer.getShorthand());
-				DefinitionalElement structModResidueElement =
-								DefinitionalElement.of("modifications.structuralModifications.sites",
-								sm.siteContainer.getShorthand(), 2);
-				definitionalElements.add(structModResidueElement);
-
-				Logger.debug("processing structuralModificationType " + sm.structuralModificationType);
-				DefinitionalElement typeDefinitionalElement =
-								DefinitionalElement.of("modifications.structuralModifications.structuralModificationType", sm.structuralModificationType);
-				definitionalElements.add(typeDefinitionalElement);
 			}
 		}
+
+		if( this.modifications != null ){
+			definitionalElements.addAll(this.modifications.getDefinitionalElements().getElements());
+		}
+
 		return definitionalElements;
 	}
 }

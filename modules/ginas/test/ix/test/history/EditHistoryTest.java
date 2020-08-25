@@ -6,10 +6,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.UUID;
-import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
 
 import ix.test.server.JsonHistoryResult;
 import org.junit.Test;
@@ -26,7 +23,6 @@ import ix.test.server.SubstanceAPI;
 import util.json.Changes;
 import util.json.ChangesBuilder;
 import util.json.JsonUtil;
-import util.json.JsonUtilTest;
 
 public class EditHistoryTest  extends AbstractGinasServerTest {
 	public final static String INVALID_APPROVAL_ID="0000000001";
@@ -66,7 +62,7 @@ public class EditHistoryTest  extends AbstractGinasServerTest {
 					}
 
     				
-					Changes expectedChanges = new ChangesBuilder(p.getOldValue().rawJson(), p.getNewValue().rawJson())
+					Changes expectedChanges = new ChangesBuilder(p.getOldValueReference().rawJson(), p.getNewValueReference().rawJson())
 													.replace("/lastEdited")
 													.replace("/version")
 							                        .added("/names/1/displayName")

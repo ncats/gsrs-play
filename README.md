@@ -32,9 +32,11 @@ sbt -Dconfig.file=modules/ginas/conf/ginas.conf ginas/run
 ```
 
 (Instead of ```sbt```, you can also use ```./activator``` instead.)
-Now simply point your browser to [http://localhost:9000/ginas/app](http://localhost:9000/ginas/app).
-
-
+Now simply point your browser to [http://localhost:9000/ginas](http://localhost:9000/ginas).
+Once there, Click the 'Apply SQL script now' button under the header. You may 
+have to apply several SQL scripts as part of the evolutions step, depending on
+how many datasources are used. After the page has loaded again, change the 
+address to [http://localhost:9000/ginas/app](http://localhost:9000/ginas/app).
 
 ### Build a Self-Contained Distribution
 To build a self-contained distribution for production use, simply run

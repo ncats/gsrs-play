@@ -24,7 +24,7 @@ public abstract class AbstractPersistedSubstanceProcessor implements EntityProce
                     Edit e = oldEdit.get();
                     Substance oldSubstance = (Substance) EntityUtils
                             .getEntityInfoFor(e.kind)
-                            .fromJsonNode(e.getOldValue().rawJson());
+                            .fromJsonNode(e.getOldValueReference().rawJson());
 
                     handleUpdatedSubstance(oldSubstance, obj);
                 }catch(Exception ex){

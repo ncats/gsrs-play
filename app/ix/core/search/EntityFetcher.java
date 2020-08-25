@@ -102,8 +102,6 @@ public class EntityFetcher<K> implements NamedCallable<Key,K>{
 			<K> K get(EntityFetcher<K> fetcher) throws Exception {				
 				if(fetcher.theKey.getEntityInfo().hasBackup()){
 					return IxCache.getOrElseTemp(fetcher.theKey.toString(), ()->(K) BackupFactory.getByKey(fetcher.theKey).getInstantiated());
-				}else{
-					System.out.println("Fetching otherwise");
 				}
 				return GLOBAL_CACHE.get(fetcher);
 			}

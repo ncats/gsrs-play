@@ -161,7 +161,7 @@ public class PojoDiff {
 		
 		private JsonNode getPlainOldJsonPatch(){
 			if(plainOldJsonPatch==null){
-				plainOldJsonPatch=	JsonDiff.asJson(EntityWrapper.of(oldV).toFullJsonNode(), EntityWrapper.of(newV).toFullJsonNode(),JSON_DIFF_FLAGS);
+				plainOldJsonPatch=	JsonDiff.asJson(EntityWrapper.of(oldV).toJsonDiffJsonNode(), EntityWrapper.of(newV).toJsonDiffJsonNode(),JSON_DIFF_FLAGS);
 			}
 			return plainOldJsonPatch;
 		}

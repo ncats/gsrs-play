@@ -111,7 +111,7 @@ public class ScheduledExportTaskInitializer extends ScheduledTaskInitializer{
             
             
 
-            ExportProcess p = new ExportProcessFactory().getProcess(emd,
+            ExportProcess<Substance> p = new ExportProcessFactory().getProcess(emd,
                     ProcessExecutionService.CommonStreamSuppliers.allForDeep(Substance.class));
 
             Future<?> future = p.run(out -> Unchecked.uncheck(() -> GinasApp.getSubstanceExporterFor(extension, out, publicOnlyBool)));

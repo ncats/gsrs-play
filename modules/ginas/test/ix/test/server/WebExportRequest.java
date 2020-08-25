@@ -75,8 +75,9 @@ public class WebExportRequest {
         }
 
         JsonNode status =  osess.asJson();
-
-        String pingUrl = status.at("/self").asText();
+//        System.out.println("STATUS = " + status);
+        String pingUrl = status.at("/self/url").asText();
+//        System.out.println("PING URL = " + pingUrl);
         /*
         long timeoutTime = System.currentTimeMillis()+10_000;
         while(System.currentTimeMillis()<timeoutTime){
@@ -92,7 +93,7 @@ public class WebExportRequest {
             Optional<WSResponse> resp =new WaitChecker<>(
                     ()->session.get(pingUrl).asJson(),
                     n -> n.at("/complete").asBoolean(),
-                    n -> session.get(n.at("/downloadUrl").asText())
+                    n -> session.get(n.at("/downloadUrl/url").asText())
             ).setMaxNumTries(10)
 //                        .setAwaitTime(1, TimeUnit.SECONDS)  //default is 1 sec
                     .execute();

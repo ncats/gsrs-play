@@ -35,6 +35,7 @@ import ix.ginas.utils.validation.ValidationUtils;
 import ix.ncats.controllers.security.IxDynamicResourceHandler;
 import ix.utils.UUIDUtil;
 import ix.utils.Util;
+import play.Logger;
 import play.data.DynamicForm;
 import play.data.Form;
 import play.db.ebean.Model;
@@ -341,13 +342,13 @@ public class GinasFactory extends EntityFactory {
 		List<GinasProcessingMessage> messages = new ArrayList<GinasProcessingMessage>();
 
 		try {
-			System.out.println(mappingsjson);
+//			System.out.println(mappingsjson);
 			GinasUtils.GinasJSONExtractor ex = new GinasUtils.GinasJSONExtractor(mappingsjson);
 			JsonNode jn = ex.getNextRecord();
 			sub = GinasUtils.makeSubstance(jn);
 			if (sub instanceof ChemicalSubstance) {
 				messages.addAll(ValidationUtils.validateAndPrepareChemical((ChemicalSubstance) sub,
-						GinasProcessingStrategy.ACCEPT_APPLY_ALL()));
+						GinasProcessingStrategy.ACCEPT_APPLY_ALL(), false));
 			} else {
 				messages.add(GinasProcessingMessage.ERROR_MESSAGE("Subsance is not a chemical substance"));
 			}

@@ -3,6 +3,8 @@ package ix.test.text;
 import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
+
+import ix.core.search.text.Lucene4IndexService;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -51,7 +53,7 @@ public class TextIndexerTest extends AbstractGinasServerTest{
 
 	@Before
 	public void createTextIndexer() throws IOException{
-		ti = TextIndexer.getInstance(tmpDir.getRoot());
+		ti = TextIndexer.getInstance(tmpDir.getRoot(), new Lucene4IndexService(tmpDir.getRoot()));
 	}
 
 

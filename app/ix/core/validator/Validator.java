@@ -68,7 +68,7 @@ public interface Validator<T> {
 	
 			@Override
 			public void setInvalid() {
-				response.setValid();
+				response.setInvalid();
 			}
 
 			@Override
@@ -87,6 +87,10 @@ public interface Validator<T> {
 
 			}
 		});
+		if(response.hasError()){
+			response.setInvalid();
+		}
+
 		return response;
 	}
 

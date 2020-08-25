@@ -26,6 +26,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import ix.core.SingleParent;
+import ix.core.models.Indexable;
 import ix.core.models.VIntArray;
 import ix.ginas.models.GinasAccessReferenceControlled;
 import ix.ginas.models.GinasCommonSubData;
@@ -58,6 +59,7 @@ public class Unit extends GinasCommonSubData {
     
     @Lob
     @Basic(fetch=FetchType.EAGER)
+    @Indexable(indexed = false)
     public String structure;    //TODO: should be changed to be a structure
     
     public String type;

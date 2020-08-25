@@ -4,9 +4,11 @@ import java.util.Optional;
 import java.util.function.BiFunction;
 
 import ix.core.models.Structure;
+import ix.core.util.Unchecked;
 import ix.core.util.pojopointer.LambdaArgumentParser;
 import ix.core.util.pojopointer.LambdaPath;
 import ix.core.util.pojopointer.extensions.InChIRegisteredFunction.InChIPath;
+import play.Logger;
 
 public class InChIRegisteredFunction implements RegisteredFunction<InChIPath, Structure, String> {
 	public static String name = "$inchikey";
@@ -33,9 +35,10 @@ public class InChIRegisteredFunction implements RegisteredFunction<InChIPath, St
 		return (fp, s)->{
 
 			try{
-				return Optional.of(s.getInChIKey());
+				return Optional.ofNullable(s.getInChIKeyAndThrow());
 			}catch(Exception e){
-				return Optional.empty();
+                Logger.error("error computing inchi key of structure ID " + s.id, e);
+				throw new RuntimeException("error computing inchi key of structure ID " + s.id, e);
 			}
 		};
 	}
