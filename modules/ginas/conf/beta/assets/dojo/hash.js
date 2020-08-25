@@ -1,4 +1,4 @@
-define(["./_base/kernel", "require", "./_base/config", "./aspect", "./_base/lang", "./topic", "./domReady", "./sniff"],
+define("dojo/hash", ["./_base/kernel", "require", "./_base/config", "./aspect", "./_base/lang", "./topic", "./domReady", "./sniff"],
 	function(dojo, require, config, aspect, lang, topic, domReady, has){
 
 	// module:

@@ -1,4 +1,4 @@
-define([
+define("dijit/tree/_dndSelector", [
 	"dojo/_base/array", // array.filter array.forEach array.map
 	"dojo/_base/declare", // declare
 	"dojo/_base/kernel",	// global

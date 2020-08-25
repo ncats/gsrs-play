@@ -1,4 +1,4 @@
-define(["dojo/_base/declare", "dijit/_WidgetBase", "dojox/gfx","dojo/_base/array", "dojo/has", "dojo/has!dojo-bidi?../bidi/widget/Legend",
+define("dojox/charting/widget/Legend", ["dojo/_base/declare", "dijit/_WidgetBase", "dojox/gfx","dojo/_base/array", "dojo/has", "dojo/has!dojo-bidi?../bidi/widget/Legend",
 		"dojox/lang/functional", "dojo/dom", "dojo/dom-construct", "dojo/dom-class","dijit/registry"],
 		function(declare, _WidgetBase, gfx, arr, has, BidiLegend, df,
 				dom, domConstruct, domClass, registry){

@@ -1,4 +1,4 @@
-define(["./sniff", "./dom", "./_base/window"], function(has, dom, win){
+define("dojo/dom-style", ["./sniff", "./dom", "./_base/window"], function(has, dom, win){
 	// module:
 	//		dojo/dom-style
 

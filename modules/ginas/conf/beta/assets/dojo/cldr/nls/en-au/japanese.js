@@ -1,5 +1,5 @@
 define(
-//begin v1.x content
+"dojo/cldr/nls/en-au/japanese", //begin v1.x content
 {
 	"field-month-relative+0": "This month",
 	"field-year-relative+0": "This year",

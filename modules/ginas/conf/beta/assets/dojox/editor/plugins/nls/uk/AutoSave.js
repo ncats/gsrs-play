@@ -1,5 +1,5 @@
 define(
-({
+"dojox/editor/plugins/nls/uk/AutoSave", ({
 	"saveLabel": "Зберегти",
 	"saveSettingLabelOn": "Зазначити інтервал автозбереження...",
 	"saveSettingLabelOff": "Вимкнути автозбереження",

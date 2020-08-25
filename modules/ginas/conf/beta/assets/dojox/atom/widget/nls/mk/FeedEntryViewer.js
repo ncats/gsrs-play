@@ -1,4 +1,4 @@
-define({      
+define("dojox/atom/widget/nls/mk/FeedEntryViewer", {      
 //begin v1.x content
 	displayOptions: "[опции за приказ]",
 	title: "Наслов",

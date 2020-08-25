@@ -1,5 +1,5 @@
 define(
-//begin v1.x content
+"dojo/cldr/nls/zh-hk/number", //begin v1.x content
 {
 	"$locale": "zh-hant-hk",
 	"decimalFormat-short": "000T",

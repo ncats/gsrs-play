@@ -1,4 +1,4 @@
-define([
+define("dojox/mobile/bidi/TextBox", [
 	"dojo/_base/declare",
 	"dijit/_BidiSupport"  //load implementation for textDir from dijit (for editable widgets), (no direct references)
 ], function(declare){

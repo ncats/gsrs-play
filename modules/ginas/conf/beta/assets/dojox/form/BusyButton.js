@@ -1,4 +1,4 @@
-define([
+define("dojox/form/BusyButton", [
 	"./_BusyButtonMixin",
 	"dijit/form/Button",
 	"dojo/_base/declare"

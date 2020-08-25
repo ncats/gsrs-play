@@ -1,5 +1,5 @@
 define(
-//begin v1.x content
+"dojo/cldr/nls/sv/dangi", //begin v1.x content
 {
 	"field-sat-relative+0": "lördag denna vecka",
 	"field-sat-relative+1": "lördag nästa vecka",

@@ -1,4 +1,4 @@
-define( {
+define( "dojox/calendar/nls/id/buttons", {
 	previousButton: "◄",
 	nextButton: "►",
 	todayButton: "Hari Ini",

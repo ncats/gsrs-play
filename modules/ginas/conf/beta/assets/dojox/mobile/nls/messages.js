@@ -1,4 +1,4 @@
-define({ root:
+define("dojox/mobile/nls/messages", { root:
 //begin v1.x content
 ({
 	// Title of the previous button in Carousel

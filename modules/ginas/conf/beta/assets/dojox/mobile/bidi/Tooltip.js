@@ -1,4 +1,4 @@
-define([
+define("dojox/mobile/bidi/Tooltip", [
 	"dojo/_base/array",
 	"dojo/_base/declare",
 	"./common"   

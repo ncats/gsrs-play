@@ -1,4 +1,4 @@
-define({      
+define("dijit/_editor/nls/eu/FontChoice", {      
 //begin v1.x content
 	fontSize: "Tamaina",
 	fontName: "Letra-tipoa",

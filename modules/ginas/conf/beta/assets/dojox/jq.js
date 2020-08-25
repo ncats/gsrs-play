@@ -1,3 +1,5 @@
+// wrapped by build app
+define("dojox/jq", ["dojo","dijit","dojox","dojo/require!dojo/NodeList-traverse,dojo/NodeList-manipulate,dojo/io/script"], function(dojo,dijit,dojox){
 //For jQuery 1.3.2
 
 dojo.provide("dojox.jq");
@@ -1937,3 +1939,5 @@ dojo.query differences that cause some tests to fail:
 	
 })();
 
+
+});

@@ -1,3 +1,5 @@
+// wrapped by build app
+define("dojox/wire/TreeAdapter", ["dojo","dijit","dojox","dojo/require!dojox/wire/CompositeWire"], function(dojo,dijit,dojox){
 dojo.provide("dojox.wire.TreeAdapter");
 
 dojo.require("dojox.wire.CompositeWire");
@@ -181,4 +183,6 @@ dojo.declare("dojox.wire.TreeAdapter", dojox.wire.CompositeWire, {
 		}
 		return nodes; //Array
 	}
+});
+
 });

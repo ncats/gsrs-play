@@ -1,4 +1,4 @@
-define([
+define("dojox/mdnd/Moveable", [
 	"dojo/_base/declare",
 	"dojo/_base/array",
 	"dojo/_base/connect",

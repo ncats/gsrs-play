@@ -1,5 +1,5 @@
 define(
-//begin v1.x content
+"dojo/cldr/nls/nl/japanese", //begin v1.x content
 {
 	"field-second-relative+0": "nu",
 	"field-weekday": "Dag van de week",

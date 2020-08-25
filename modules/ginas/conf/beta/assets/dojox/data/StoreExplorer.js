@@ -1,3 +1,5 @@
+// wrapped by build app
+define("dojox/data/StoreExplorer", ["dojo","dijit","dojox","dojo/require!dojox/grid/DataGrid,dojox/data/ItemExplorer,dijit/layout/BorderContainer,dijit/layout/ContentPane"], function(dojo,dijit,dojox){
 dojo.provide("dojox.data.StoreExplorer");
 dojo.require("dojox.grid.DataGrid");
 dojo.require("dojox.data.ItemExplorer");
@@ -188,4 +190,6 @@ dojo.declare("dojox.data.StoreExplorer", dijit.layout.BorderContainer, {
 
 		}
 	}
+});
+
 });

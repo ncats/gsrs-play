@@ -1,4 +1,4 @@
-define([
+define("dojox/form/BusyDropDownButton", [
 	"./_BusyButtonMixin",
 	"dijit/form/DropDownButton",
 	"dojo/_base/declare"

@@ -1,4 +1,4 @@
-define(["require", "dojo/_base/lang", "dojo/_base/declare", "dojo/has", "dojo/on", "dojo/Deferred", "dojo/when",
+define("dojox/app/controllers/Transition", ["require", "dojo/_base/lang", "dojo/_base/declare", "dojo/has", "dojo/on", "dojo/Deferred", "dojo/when",
 	"dojo/dom-style", "../Controller", "../utils/constraints"],
 	function(require, lang, declare, has, on, Deferred, when, domStyle, Controller, constraints){
 

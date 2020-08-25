@@ -1,4 +1,4 @@
-define({      
+define("dojox/grid/enhanced/nls/eu/Pagination", {      
 //begin v1.x content
 	"descTemplate": "${2} - ${3} / ${1} ${0}",
 	"firstTip": "Lehenengo orria",

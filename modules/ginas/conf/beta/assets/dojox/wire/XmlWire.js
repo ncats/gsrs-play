@@ -1,3 +1,5 @@
+// wrapped by build app
+define("dojox/wire/XmlWire", ["dojo","dijit","dojox","dojo/require!dojox/xml/parser,dojox/wire/Wire"], function(dojo,dijit,dojox){
 dojo.provide("dojox.wire.XmlWire");
 
 dojo.require("dojox.xml.parser");
@@ -239,4 +241,6 @@ dojo.declare("dojox.wire.XmlWire", dojox.wire.Wire, {
 			return dojox.xml.parser.parse(); //Document
 		}
 	}
+});
+
 });

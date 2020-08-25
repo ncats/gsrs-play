@@ -1,3 +1,5 @@
+// wrapped by build app
+define("dojox/data/restListener", ["dojo","dijit","dojox"], function(dojo,dijit,dojox){
 dojo.provide("dojox.data.restListener");
 
 dojox.data.restListener = function(message){
@@ -45,3 +47,5 @@ dojox.data.restListener = function(message){
 		}
 	}
 };
+
+});

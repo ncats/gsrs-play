@@ -1,4 +1,4 @@
-define(["dojo/_base/declare", "dojo/_base/lang", "dojo/_base/array", "./linear", "./common"],
+define("dojox/charting/scaler/log", ["dojo/_base/declare", "dojo/_base/lang", "dojo/_base/array", "./linear", "./common"],
     function(declare, lang, arr, linear, common){
         var log = {}, getLabel = common.getNumericLabel;
 

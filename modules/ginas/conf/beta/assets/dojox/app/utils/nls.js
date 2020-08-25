@@ -1,4 +1,4 @@
-define(["require", "dojo/Deferred"],  function(require, Deferred){
+define("dojox/app/utils/nls", ["require", "dojo/Deferred"],  function(require, Deferred){
 	return function(/*Object*/ config, /*Object*/ parent){
 		// summary:
 		//		nsl is called to create to load the nls all for the app, or for a view.

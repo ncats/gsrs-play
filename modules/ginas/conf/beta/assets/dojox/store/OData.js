@@ -1,4 +1,4 @@
-define([
+define("dojox/store/OData", [
 	"dojo/io-query",
 	"dojo/request",
 	"dojo/_base/lang",

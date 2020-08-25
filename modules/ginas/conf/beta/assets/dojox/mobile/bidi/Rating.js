@@ -1,4 +1,4 @@
-define([
+define("dojox/mobile/bidi/Rating", [
 	"dojo/_base/declare",
 	"dojo/dom-style",
 	"../_css3"

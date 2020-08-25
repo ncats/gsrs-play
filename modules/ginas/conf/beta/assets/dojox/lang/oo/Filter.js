@@ -1,3 +1,5 @@
+// wrapped by build app
+define("dojox/lang/oo/Filter", ["dojo","dijit","dojox"], function(dojo,dijit,dojox){
 dojo.provide("dojox.lang.oo.Filter");
 
 (function(){
@@ -42,3 +44,5 @@ dojo.provide("dojox.lang.oo.Filter");
 		return new F(bag, new MapFilter(map));
 	};
 })();
+
+});

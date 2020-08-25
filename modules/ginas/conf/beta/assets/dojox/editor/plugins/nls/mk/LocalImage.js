@@ -1,4 +1,4 @@
-define({      
+define("dojox/editor/plugins/nls/mk/LocalImage", {      
 //begin v1.x content
 	insertImageTitle: "Вметни слика",
 	url: "Слика",

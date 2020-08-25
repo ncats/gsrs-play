@@ -1,5 +1,5 @@
 define(
-({
+"dojox/editor/plugins/nls/id/AutoSave", ({
 	"saveLabel": "Simpan",
 	"saveSettingLabelOn": "Atur Interval Penyimpanan Otomatis...",
 	"saveSettingLabelOff": "Menonaktifkan Penyimpanan Otomatis",

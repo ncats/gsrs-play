@@ -1,4 +1,4 @@
-define([
+define("dijit/form/MappedTextBox", [
 	"dojo/_base/declare", // declare
 	"dojo/sniff", // has("msapp")
 	"dojo/dom-construct", // domConstruct.place

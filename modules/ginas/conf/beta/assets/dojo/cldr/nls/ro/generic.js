@@ -1,5 +1,5 @@
 define(
-//begin v1.x content
+"dojo/cldr/nls/ro/generic", //begin v1.x content
 {
 	"field-second-relative+0": "acum",
 	"field-weekday": "Zi a săptămânii",

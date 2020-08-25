@@ -1,5 +1,5 @@
 define(
-//begin v1.x content
+"dojo/cldr/nls/id/indian", //begin v1.x content
 {
 	"field-sat-relative+0": "Sabtu ini",
 	"field-sat-relative+1": "Sabtu berikutnya",

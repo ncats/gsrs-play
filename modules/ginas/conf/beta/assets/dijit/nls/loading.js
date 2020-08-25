@@ -1,4 +1,4 @@
-define({ root:
+define("dijit/nls/loading", { root:
 //begin v1.x content
 ({
 	loadingState: "Loading...",
@@ -43,5 +43,6 @@ define({ root:
 "ca": true,
 "bg": true,
 "az": true,
-"ar": true
+"ar": true,
+"al": true
 });

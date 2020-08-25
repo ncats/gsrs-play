@@ -1,4 +1,4 @@
-define(["dojo/_base/declare", "dojo/dom-style", "dojo/dom-attr", "./_bidiutils"],
+define("dojox/charting/bidi/Chart3D", ["dojo/_base/declare", "dojo/dom-style", "dojo/dom-attr", "./_bidiutils"],
 	function(declare, domStyle, domAttr, utils){
 	// module:
 	//		dojox/charting/bidi/Chart3D

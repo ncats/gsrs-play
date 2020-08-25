@@ -1,4 +1,4 @@
-define([
+define("dojox/store/DynamoDB", [
 	'dojo/_base/declare',
 	'dojo/Stateful',
 	'dojo/request',
@@ -10,7 +10,7 @@ define([
 	'dojo/Deferred',
 	'../encoding/digests/SHA256',
 	'../encoding/digests/_base',
-	'dojo/has!host-node?dojo/node!url'
+	'require'
 ], function (
 	declare,
 	Stateful,

@@ -1,4 +1,4 @@
-define([
+define("dojox/mobile/bidi/SimpleDialog", [
 	"dojo/_base/declare"
 ], function(declare){
 

@@ -1,4 +1,4 @@
-define({      
+define("dijit/_editor/nls/mk/commands", {      
 //begin v1.x content
 	'bold': 'Задебелено',
 	'copy': 'Копирај',

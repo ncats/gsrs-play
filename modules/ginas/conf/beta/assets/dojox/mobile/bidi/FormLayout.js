@@ -1,4 +1,4 @@
-define([
+define("dojox/mobile/bidi/FormLayout", [
 	"dojo/_base/declare",
 	"dojo/dom-class"
 ], function(declare, domClass){

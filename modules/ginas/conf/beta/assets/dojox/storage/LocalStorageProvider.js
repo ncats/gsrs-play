@@ -1,4 +1,4 @@
-define([
+define("dojox/storage/LocalStorageProvider", [
 	"dojo/_base/declare",
 	"dojox/storage/Provider",
 	"dojox/storage/manager",

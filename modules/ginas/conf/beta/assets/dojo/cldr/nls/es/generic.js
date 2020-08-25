@@ -1,5 +1,5 @@
 define(
-//begin v1.x content
+"dojo/cldr/nls/es/generic", //begin v1.x content
 {
 	"field-second-relative+0": "ahora",
 	"field-weekday": "Día de la semana",

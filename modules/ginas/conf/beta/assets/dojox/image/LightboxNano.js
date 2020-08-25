@@ -1,4 +1,4 @@
-define(["dojo/_base/lang",
+define("dojox/image/LightboxNano", ["dojo/_base/lang",
 		"dojo/_base/declare",
 		"dojo/_base/array",
 		"dojo/_base/fx",

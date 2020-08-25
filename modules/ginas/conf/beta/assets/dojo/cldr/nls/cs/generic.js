@@ -1,5 +1,5 @@
 define(
-//begin v1.x content
+"dojo/cldr/nls/cs/generic", //begin v1.x content
 {
 	"dateFormatItem-yyyyMMMMEd": "E d. MMMM y G",
 	"field-second-relative+0": "nyní",

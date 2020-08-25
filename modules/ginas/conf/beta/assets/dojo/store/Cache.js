@@ -1,4 +1,4 @@
-define(["../_base/lang","../when" /*=====, "../_base/declare", "./api/Store" =====*/],
+define("dojo/store/Cache", ["../_base/lang","../when" /*=====, "../_base/declare", "./api/Store" =====*/],
 function(lang, when /*=====, declare, Store =====*/){
 
 // module:

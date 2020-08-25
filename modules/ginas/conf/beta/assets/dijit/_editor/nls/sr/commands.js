@@ -1,4 +1,4 @@
-define({      
+define("dijit/_editor/nls/sr/commands", {      
 //begin v1.x content
 	'bold': 'Podebljano',
 	'copy': 'Kopiraj',

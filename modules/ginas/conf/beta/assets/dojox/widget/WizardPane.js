@@ -1,4 +1,4 @@
-define([
+define("dojox/widget/WizardPane", [
 	"dojo/_base/lang",
 	"dojo/_base/declare",
 	"dijit/layout/ContentPane"

@@ -1,5 +1,5 @@
 define(
-//begin v1.x content
+"dojo/cldr/nls/hr/japanese", //begin v1.x content
 {
 	"dateFormatItem-yM": "M. y. GGGGG",
 	"field-sat-relative+0": "ova subota",

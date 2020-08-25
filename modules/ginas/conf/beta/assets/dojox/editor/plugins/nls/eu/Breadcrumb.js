@@ -1,4 +1,4 @@
-define({      
+define("dojox/editor/plugins/nls/eu/Breadcrumb", {      
 //begin v1.x content
 	"nodeActions": "${nodeName} Ekintzak",
 	"selectContents": "Hautatu edukiak",

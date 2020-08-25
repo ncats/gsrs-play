@@ -1,4 +1,4 @@
-define({      
+define("dojox/editor/plugins/nls/eu/TableDialog", {      
 //begin v1.x content
 	insertTableTitle: "Txertatu taula",
 	modifyTableTitle: "Aldatu taula",

@@ -1,4 +1,4 @@
-define(["dojo/_base/declare", "dojo/has"], 
+define("dojox/charting/plot3d/Base", ["dojo/_base/declare", "dojo/has"], 
   function(declare, has) {
 	var Base = declare("dojox.charting.plot3d.Base", null, {
 		constructor: function(width, height, kwArgs){

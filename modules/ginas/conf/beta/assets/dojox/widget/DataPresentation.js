@@ -1,3 +1,5 @@
+// wrapped by build app
+define("dojox/widget/DataPresentation", ["dojo","dijit","dojox","dojo/require!dojox/grid/DataGrid,dojox/charting/Chart2D,dojox/charting/widget/Legend,dojox/charting/action2d/Tooltip,dojox/charting/action2d/Highlight,dojo/colors,dojo/data/ItemFileWriteStore"], function(dojo,dijit,dojox){
 dojo.provide("dojox.widget.DataPresentation");
 dojo.experimental("dojox.widget.DataPresentation");
 
@@ -891,3 +893,5 @@ dojo.require("dojo.data.ItemFileWriteStore");
 	});
 		
 })();
+
+});

@@ -1,4 +1,4 @@
-  define ({
+  define ("dojox/charting/bidi/_bidiutils", {
 		reverseMatrix: function(plot, dim, offsets, rtl){
 			//summary:
 			//	reverse the underlying matrix of the plots to perform the mirroring behavior.

@@ -1,54 +1,22 @@
 {
-  "_from": "dojox@1.14.2",
-  "_id": "dojox@1.14.2",
-  "_inBundle": false,
-  "_integrity": "sha512-IOFzVbTGTXEUWskPPL1tEuVU20ANErgRcgjiSq/rY4K3m37L0h7t9k0NRr+vSO2vJH5u3IswvVH23GUrYEDnwg==",
-  "_location": "/dojox",
-  "_phantomChildren": {},
-  "_requested": {
-    "type": "version",
-    "registry": true,
-    "raw": "dojox@1.14.2",
-    "name": "dojox",
-    "escapedName": "dojox",
-    "rawSpec": "1.14.2",
-    "saveSpec": null,
-    "fetchSpec": "1.14.2"
-  },
-  "_requiredBy": [
-    "/"
-  ],
-  "_resolved": "https://registry.npmjs.org/dojox/-/dojox-1.14.2.tgz",
-  "_shasum": "22e0ed2d06255fc207cd4a7a1affe961af39de55",
-  "_spec": "dojox@1.14.2",
-  "_where": "C:\\Users\\neyraj2\\Spotlight\\GSRSFrontend",
-  "bugs": {
-    "url": "http://bugs.dojotoolkit.org/"
-  },
-  "bundleDependencies": false,
-  "dependencies": {
-    "dijit": "1.14.2",
-    "dojo": "1.14.2"
-  },
-  "deprecated": false,
-  "description": "Dojo eXtensions, a rollup of many useful sub-projects and varying states of maturity – from very stable and robust, to alpha and experimental. See individual projects contain README files for details.",
-  "directories": {
-    "lib": "."
-  },
-  "dojoBuild": "dojox.profile.js",
-  "homepage": "http://dojotoolkit.org/",
-  "keywords": [
-    "JavaScript",
-    "Dojo",
-    "Toolkit",
-    "DojoX"
-  ],
-  "license": "BSD-3-Clause OR AFL-2.1",
-  "main": "main",
-  "name": "dojox",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/dojo/dojox.git"
-  },
-  "version": "1.14.2"
+	"name": "dojox",
+	"version": "1.16.1",
+	"directories": {
+		"lib": "."
+	},
+	"main": "main",
+	"dependencies": {
+		"dojo": "1.16.1",
+		"dijit": "1.16.1"
+	},
+	"description": "Dojo eXtensions, a rollup of many useful sub-projects and varying states of maturity – from very stable and robust, to alpha and experimental. See individual projects contain README files for details.",
+	"license" : "BSD-3-Clause OR AFL-2.1",
+	"bugs": "http://bugs.dojotoolkit.org/",
+	"keywords": [ "JavaScript", "Dojo", "Toolkit", "DojoX" ],
+	"homepage": "http://dojotoolkit.org/",
+        "repository": {
+                "type": "git",
+                "url": "https://github.com/dojo/dojox.git"
+        },
+	"dojoBuild": "dojox.profile.js"
 }

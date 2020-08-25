@@ -1,4 +1,4 @@
-define([
+define("dojox/layout/Dock", [
 	"dojo/_base/lang", "dojo/_base/window", "dojo/_base/declare",
 	"dojo/_base/fx", "dojo/on", "dojo/_base/array", "dojo/_base/sniff",
 	"dojo/window", "dojo/dom", "dojo/dom-class", "dojo/dom-geometry", "dojo/dom-construct",

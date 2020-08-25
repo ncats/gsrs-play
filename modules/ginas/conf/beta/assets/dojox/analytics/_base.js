@@ -1,4 +1,4 @@
-define(["dojo/_base/lang", "dojo/_base/config", "dojo/ready", "dojo/_base/unload",
+define("dojox/analytics/_base", ["dojo/_base/lang", "dojo/_base/config", "dojo/ready", "dojo/_base/unload",
         "dojo/_base/sniff", "dojo/request", "dojo/json", "dojo/io-query", "dojo/request/script"
 ], function(lang, config, ready, unload, has, request, JSON, ioQuery, script){
 

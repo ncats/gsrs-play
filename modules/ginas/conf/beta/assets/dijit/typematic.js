@@ -1,4 +1,4 @@
-define([
+define("dijit/typematic", [
 	"dojo/_base/array", // array.forEach
 	"dojo/_base/connect", // connect._keyPress
 	"dojo/_base/lang", // lang.mixin, lang.hitch

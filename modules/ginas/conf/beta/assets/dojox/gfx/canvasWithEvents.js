@@ -1,4 +1,4 @@
-define(["dojo/_base/lang", "dojo/_base/declare", "dojo/has", "dojo/on", "dojo/aspect", "dojo/touch", "dojo/_base/Color", "dojo/dom",
+define("dojox/gfx/canvasWithEvents", ["dojo/_base/lang", "dojo/_base/declare", "dojo/has", "dojo/on", "dojo/aspect", "dojo/touch", "dojo/_base/Color", "dojo/dom",
 		"dojo/dom-geometry", "dojo/_base/window", "./_base","./canvas", "./shape", "./matrix"],
 function(lang, declare, has, on, aspect, touch, Color, dom, domGeom, win, g, canvas, shapeLib, m){
 	function makeFakeEvent(event){

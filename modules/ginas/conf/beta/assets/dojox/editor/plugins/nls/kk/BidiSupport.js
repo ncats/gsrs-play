@@ -1,4 +1,4 @@
-define({      
+define("dojox/editor/plugins/nls/kk/BidiSupport", {      
 //begin v1.x content
 	"ltr": "Солдан оңға қарай мәтін бағыты",
 	"rtl": "Оңнан солға қарай мәтін бағыты"

@@ -1,4 +1,4 @@
-define({      
+define("dijit/_editor/nls/mk/FontChoice", {      
 //begin v1.x content
 	fontSize: "Големина",
 	fontName: "Фонт",

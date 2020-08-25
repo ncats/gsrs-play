@@ -1,4 +1,4 @@
-define(["dojox/gfx3d/matrix", "dojo/_base/declare", "dojo/_base/Color", "dojo/_base/kernel", "dojo/has", "./Base"],
+define("dojox/charting/plot3d/Cylinders", ["dojox/gfx3d/matrix", "dojo/_base/declare", "dojo/_base/Color", "dojo/_base/kernel", "dojo/has", "./Base"],
 	function(matrix3d, declare, Color, kernel, has, Base) {
 
 	// reduce function borrowed from dojox.fun

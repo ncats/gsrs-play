@@ -1,3 +1,5 @@
+// wrapped by build app
+define("dojox/storage/_common", ["dojo","dijit","dojox","dojo/require!dojox/storage/Provider,dojox/storage/manager,dojox/storage/LocalStorageProvider,dojox/storage/GearsStorageProvider,dojox/storage/WhatWGStorageProvider,dojox/storage/FlashStorageProvider,dojox/storage/BehaviorStorageProvider,dojox/storage/CookieStorageProvider"], function(dojo,dijit,dojox){
 dojo.provide("dojox.storage._common");
 dojo.require("dojox.storage.Provider");
 dojo.require("dojox.storage.manager");
@@ -9,13 +11,13 @@ dojo.require("dojox.storage.manager");
 */
 dojo.require("dojox.storage.LocalStorageProvider");
 dojo.require("dojox.storage.GearsStorageProvider");
-//>>excludeStart("offlineProfileExclude", kwArgs.dojoxStorageBuildOption == "offline");
 dojo.require("dojox.storage.WhatWGStorageProvider");
 dojo.require("dojox.storage.FlashStorageProvider");
-//>>excludeEnd("offlineProfileExclude");
 dojo.require("dojox.storage.BehaviorStorageProvider");
 dojo.require("dojox.storage.CookieStorageProvider");
 
 // now that we are loaded and registered tell the storage manager to
 // initialize itself
 dojox.storage.manager.initialize();
+
+});

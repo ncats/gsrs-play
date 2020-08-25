@@ -1,4 +1,4 @@
-define(["dojo/_base/declare", "dojo/_base/array", "dojo/_base/lang", "dojox/gfx",
+define("dojox/charting/plot2d/Base", ["dojo/_base/declare", "dojo/_base/array", "dojo/_base/lang", "dojox/gfx",
 		"../Element", "./common", "../axis2d/common", "dojo/has"],
 	function(declare, arr, lang, gfx, Element, common, ac, has){
 /*=====

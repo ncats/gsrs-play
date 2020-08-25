@@ -1,5 +1,5 @@
 define(
-//begin v1.x content
+"dojo/cldr/nls/sk/generic", //begin v1.x content
 {
 	"field-second-relative+0": "teraz",
 	"field-weekday": "deň v týždni",

@@ -1,4 +1,4 @@
-define(["./query", "./_base/lang", "./_base/array", "./dom-construct", "./dom-attr", "./NodeList-dom"], function(dquery, lang, array, construct, attr){
+define("dojo/NodeList-manipulate", ["./query", "./_base/lang", "./_base/array", "./dom-construct", "./dom-attr", "./NodeList-dom"], function(dquery, lang, array, construct, attr){
 	// module:
 	//		dojo/NodeList-manipulate
 

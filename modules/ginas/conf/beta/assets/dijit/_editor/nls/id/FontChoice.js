@@ -1,5 +1,5 @@
 define(
-({
+"dijit/_editor/nls/id/FontChoice", ({
 	fontSize: "Ukuran",
 	fontName: "Font",
 	formatBlock: "Format",

@@ -1,4 +1,6 @@
-define([
+require({cache:{
+'url:dojox/widget/UpgradeBar/UpgradeBar.html':"<div class=\"dojoxUpgradeBar\">\n\t<div class=\"dojoxUpgradeBarMessage\" dojoAttachPoint=\"messageNode\">message</div>\n\t<div class=\"dojoxUpgradeBarReminderButton\" dojoAttachPoint=\"dontRemindButtonNode\" dojoAttachEvent=\"onclick:_onDontRemindClick\">${noRemindButton}</div>\n\t<span dojoAttachPoint=\"closeButtonNode\" class=\"dojoxUpgradeBarCloseIcon\" dojoAttachEvent=\"onclick: hide, onmouseenter: _onCloseEnter, onmouseleave: _onCloseLeave\" title=\"${buttonCancel}\"></span>\n</div>"}});
+define("dojox/widget/UpgradeBar", [
 	"dojo/_base/kernel", // dojo.eval
 	"dojo/_base/array", // array.forEach
 	"dojo/_base/connect", // connect

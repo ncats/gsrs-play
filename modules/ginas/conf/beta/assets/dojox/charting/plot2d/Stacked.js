@@ -1,4 +1,4 @@
-define(["dojo/_base/declare", "dojo/_base/lang", "./Default", "./commonStacked"], 
+define("dojox/charting/plot2d/Stacked", ["dojo/_base/declare", "dojo/_base/lang", "./Default", "./commonStacked"], 
 	function(declare, lang, Default, commonStacked){
 
 	return declare("dojox.charting.plot2d.Stacked", Default, {

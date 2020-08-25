@@ -1,4 +1,4 @@
-define([
+define("dijit/selection", [
 	"dojo/_base/array",
 	"dojo/dom", // dom.byId
 	"dojo/_base/lang",

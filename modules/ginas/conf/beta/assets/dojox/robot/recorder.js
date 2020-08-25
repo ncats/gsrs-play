@@ -1,3 +1,5 @@
+// wrapped by build app
+define("dojox/robot/recorder", ["dojo","dijit","dojox"], function(dojo,dijit,dojox){
 dojo.provide("dojox.robot.recorder");
 dojo.experimental("dojox.robot.recorder");
 // summary:
@@ -499,3 +501,5 @@ dojo.connect(dojo, "connect",
 		}
 	});
 })();
+
+});

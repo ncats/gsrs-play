@@ -1,5 +1,5 @@
 define(
-({
+"dojox/grid/enhanced/nls/id/Filter", ({
 	"clearFilterDialogTitle": "Kosongkan Filter",
 	"filterDefDialogTitle": "Filter",
 	"ruleTitleTemplate": "Penggaris ${0}",

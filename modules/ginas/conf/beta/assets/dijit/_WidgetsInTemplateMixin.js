@@ -1,4 +1,4 @@
-define([
+define("dijit/_WidgetsInTemplateMixin", [
 	"dojo/_base/array", // forEach()
 	"dojo/aspect", // after()
 	"dojo/_base/declare", // declare()

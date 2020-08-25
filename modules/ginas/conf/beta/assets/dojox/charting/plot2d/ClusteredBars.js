@@ -1,4 +1,4 @@
-define(["dojo/_base/declare", "dojo/_base/array", "./Bars", "./common"], 
+define("dojox/charting/plot2d/ClusteredBars", ["dojo/_base/declare", "dojo/_base/array", "./Bars", "./common"], 
 	function(declare, array, Bars, dc){
 
 	return declare("dojox.charting.plot2d.ClusteredBars", Bars, {

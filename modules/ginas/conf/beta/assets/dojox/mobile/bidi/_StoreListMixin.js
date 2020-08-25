@@ -1,4 +1,4 @@
-define([
+define("dojox/mobile/bidi/_StoreListMixin", [
 	"dojo/_base/declare"
 ], function(declare){
 

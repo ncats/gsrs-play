@@ -1,4 +1,4 @@
-define({      
+define("dojox/editor/plugins/nls/mk/InsertAnchor", {      
 //begin v1.x content
 	insertAnchor: "Вметни сидро",
 	title: "Својства на сидро",

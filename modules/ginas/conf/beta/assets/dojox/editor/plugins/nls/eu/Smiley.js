@@ -1,4 +1,4 @@
-define({      
+define("dojox/editor/plugins/nls/eu/Smiley", {      
 //begin v1.x content
 	smiley: "Txertatu emotikonoa",
 	emoticonSmile: "irribarre handia",

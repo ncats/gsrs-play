@@ -1,4 +1,4 @@
-define(["dojo/_base/lang", "dojo/_base/declare", "dojo/_base/event", "dojo/sniff",
+define("dojox/charting/action2d/TouchZoomAndPan", ["dojo/_base/lang", "dojo/_base/declare", "dojo/_base/event", "dojo/sniff",
 	"./ChartAction", "../Element", "dojo/touch", "../plot2d/common", "dojo/has!dojo-bidi?../bidi/action2d/ZoomAndPan"],
 	function(lang, declare, eventUtil, has, ChartAction, Element, touch, common, BidiTouchZoomAndPan){
 	var GlassView = declare(Element, {

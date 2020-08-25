@@ -1,4 +1,4 @@
-define([
+define("dojox/mobile/EdgeToEdgeDataList", [
 	"dojo/_base/kernel",
 	"dojo/_base/declare",
 	"./EdgeToEdgeList",

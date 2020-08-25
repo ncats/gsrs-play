@@ -1,5 +1,5 @@
 define(
-//begin v1.x content
+"dojo/cldr/nls/sr/indian", //begin v1.x content
 {
 	"field-sat-relative+0": "у суботу",
 	"field-sat-relative+1": "следеће суботе",

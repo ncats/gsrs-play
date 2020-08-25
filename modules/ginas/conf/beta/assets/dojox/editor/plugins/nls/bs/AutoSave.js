@@ -1,4 +1,4 @@
-define({      
+define("dojox/editor/plugins/nls/bs/AutoSave", {      
 //begin v1.x content
 	"saveLabel": "Spremi",
 	"saveSettingLabelOn": "Postavljanje intervala auto-spremanja...",

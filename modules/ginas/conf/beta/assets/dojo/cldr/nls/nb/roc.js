@@ -1,5 +1,5 @@
 define(
-//begin v1.x content
+"dojo/cldr/nls/nb/roc", //begin v1.x content
 {
 	"field-sat-relative+0": "lørdag denne uken",
 	"field-sat-relative+1": "lørdag neste uke",
