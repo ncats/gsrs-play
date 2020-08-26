@@ -1,4 +1,4 @@
-define([
+define("dijit/a11yclick", [
 	"dojo/keys", // keys.ENTER keys.SPACE
 	"dojo/mouse",
 	"dojo/on",

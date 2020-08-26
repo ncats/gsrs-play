@@ -1,4 +1,4 @@
-define({ root:
+define("dijit/nls/common", { root:
 //begin v1.x content
 ({
 	buttonOk: "OK",
@@ -45,5 +45,6 @@ define({ root:
 "ca": true,
 "bg": true,
 "az": true,
-"ar": true
+"ar": true,
+"al": true
 });

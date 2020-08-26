@@ -1,4 +1,4 @@
-define({      
+define("dojox/widget/nls/mk/FilePicker", {      
 //begin v1.x content
 	name: "Име",
 	path: "Патека",

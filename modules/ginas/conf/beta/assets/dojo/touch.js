@@ -1,4 +1,4 @@
-define(["./_base/kernel", "./aspect", "./dom", "./dom-class", "./_base/lang", "./on", "./has", "./mouse", "./domReady", "./_base/window"],
+define("dojo/touch", ["./_base/kernel", "./aspect", "./dom", "./dom-class", "./_base/lang", "./on", "./has", "./mouse", "./domReady", "./_base/window"],
 function(dojo, aspect, dom, domClass, lang, on, has, mouse, domReady, win){
 
 	// module:
@@ -475,7 +475,7 @@ function(dojo, aspect, dom, domClass, lang, on, has, mouse, domReady, win){
 	};
 	=====*/
 
-	has("extend-dojo") && (dojo.touch = touch);
+	 1  && (dojo.touch = touch);
 
 	return touch;
 });

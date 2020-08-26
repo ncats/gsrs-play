@@ -9,6 +9,7 @@ import ix.core.models.Structure;
 import ix.core.util.pojopointer.LambdaArgumentParser;
 import ix.core.util.pojopointer.LambdaPath;
 import ix.core.util.pojopointer.extensions.InChIFullRegisteredFunction.InChIFullPath;
+import play.Logger;
 
 public class InChIFullRegisteredFunction implements RegisteredFunction<InChIFullPath, Structure, String> {
     public static String name = "$inchi";
@@ -34,9 +35,10 @@ public class InChIFullRegisteredFunction implements RegisteredFunction<InChIFull
     public BiFunction<InChIFullPath, Structure, Optional<String>> getOperation() {
         return (fp, s)->{
             try{
-                return Optional.of(Inchi.asStdInchi(Chemical.parse(s.molfile), true).getInchi());
+				return Optional.ofNullable(s.getInChIAndThrow());
             }catch(Exception e){
-                return Optional.empty();
+                Logger.error("error computing inchi of structure ID " + s.id, e);
+				throw new RuntimeException("error computing inchi key of structure ID " + s.id, e);
             }
         };
     }

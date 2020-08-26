@@ -34,7 +34,7 @@ public class FacetCountsTest extends AbstractGinasServerTest{
             SearchResult results = searcher.substructure("C1=CC=CC=C1");
 
 
-            assertEquals(9, results.numberOfResults());
+            assertEquals(10, results.numberOfResults());
 
             Map<String, Map<String,Integer>> partialFacets = new HashMap<>();
 
@@ -76,7 +76,7 @@ public class FacetCountsTest extends AbstractGinasServerTest{
             loader.loadJson(new File("test/testdumps/rep90_part2.ginas"));
 
             SearchResult results2 = searcher.substructure("C1=CC=CC=C1");
-            assertEquals(17, results2.numberOfResults());            
+            assertEquals(20, results2.numberOfResults());
             TestFacetUtil.assertFacetsMatch(TestFacetUtil.createExpectedRep90Facets(), results2);
         }
     }

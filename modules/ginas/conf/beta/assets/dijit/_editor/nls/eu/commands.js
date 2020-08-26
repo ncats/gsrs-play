@@ -1,4 +1,4 @@
-define({      
+define("dijit/_editor/nls/eu/commands", {      
 //begin v1.x content
 	'bold': 'Lodia',
 	'copy': 'Kopiatu',

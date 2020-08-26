@@ -1,4 +1,4 @@
-define([
+define("dijit/form/_AutoCompleterMixin", [
 	"dojo/aspect",
 	"dojo/_base/declare", // declare
 	"dojo/dom-attr", // domAttr.get

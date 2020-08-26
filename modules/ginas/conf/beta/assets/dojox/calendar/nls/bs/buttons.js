@@ -1,4 +1,4 @@
-define({        
+define("dojox/calendar/nls/bs/buttons", {        
 //begin v1.x content
 	previousButton: "◄",
 	nextButton: "►",

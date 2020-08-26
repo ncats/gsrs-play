@@ -3,6 +3,8 @@
 @import ix.ncats.controllers.App
 @import play.Play
 
+@import ix.core.controllers.v1.DBConfigInfo
+@import ix.core.controllers.v1.HealthController
 @(allstats: List[Statistics])
 
 <div class="container-fluid">
@@ -19,7 +21,7 @@
            <td>Epoch</td>
            <td>@ix.utils.Global.epoch<td>
          </tr>
-         @defining(App.uptime) { up =>
+         @defining(HealthController.uptime) { up =>
             @if(up != null) {
              <tr>
            <td>Uptime</td>
@@ -144,7 +146,7 @@
                   <th>Connected</th>
                   <th>Latency (ms)</th>
                 </thead>
-               @for(db <- ix.ncats.controllers.DBConfigInfo.getDefinedDatabases()) {
+               @for(db <- DBConfigInfo.getDefinedDatabases()) {
                 <tr>
                   <td>@db.getName()</td>
                   <td>@db.getDriver()</td>

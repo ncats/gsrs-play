@@ -1,4 +1,4 @@
-define([
+define("dijit/form/_CheckBoxMixin", [
 	"dojo/_base/declare", // declare
 	"dojo/dom-attr" // domAttr.set
 ], function(declare, domAttr){

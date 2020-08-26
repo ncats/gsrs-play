@@ -1,4 +1,4 @@
-define(["./_base"], function(base){
+define("dojox/encoding/digests/SHA1", ["./_base"], function(base){
 /*
  * A port of Paul Johnstone's SHA1 implementation
  *

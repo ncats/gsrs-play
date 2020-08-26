@@ -1,4 +1,4 @@
-define([
+define("dojox/mobile/bidi/Scrollable", [
 	"dojo/_base/declare"
 ], function(declare){
 

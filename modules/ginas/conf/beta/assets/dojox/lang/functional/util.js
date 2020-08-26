@@ -1,3 +1,5 @@
+// wrapped by build app
+define("dojox/lang/functional/util", ["dojo","dijit","dojox","dojo/require!dojox/lang/functional/lambda"], function(dojo,dijit,dojox){
 dojo.provide("dojox.lang.functional.util");
 
 dojo.require("dojox.lang.functional.lambda");
@@ -44,3 +46,5 @@ dojo.require("dojox.lang.functional.lambda");
 		}
 	});
 })();
+
+});

@@ -1,4 +1,4 @@
-define(["dojo/_base/lang", "dojo/_base/array", "dojo/sniff", "dojo/_base/declare",
+define("dojox/charting/axis2d/Default", ["dojo/_base/lang", "dojo/_base/array", "dojo/sniff", "dojo/_base/declare",
 	"dojo/_base/connect", "dojo/dom-geometry", "./Invisible",
 	"../scaler/linear", "./common", "dojox/gfx", "dojox/lang/utils", "dojox/lang/functional",
 	"dojo/has!dojo-bidi?../bidi/axis2d/Default"],

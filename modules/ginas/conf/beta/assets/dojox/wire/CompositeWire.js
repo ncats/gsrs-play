@@ -1,3 +1,5 @@
+// wrapped by build app
+define("dojox/wire/CompositeWire", ["dojo","dijit","dojox","dojo/require!dojox/wire/_base,dojox/wire/Wire"], function(dojo,dijit,dojox){
 dojo.provide("dojox.wire.CompositeWire");
 
 dojo.require("dojox.wire._base");
@@ -96,4 +98,6 @@ dojo.declare("dojox.wire.CompositeWire", dojox.wire.Wire, {
 			}
 		}
 	}
+});
+
 });

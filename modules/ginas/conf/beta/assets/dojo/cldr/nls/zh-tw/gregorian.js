@@ -1,5 +1,5 @@
 define(
-//begin v1.x content
+"dojo/cldr/nls/zh-tw/gregorian", //begin v1.x content
 {
 	"field-sat-relative+0": "本週六",
 	"field-sat-relative+1": "下週六",

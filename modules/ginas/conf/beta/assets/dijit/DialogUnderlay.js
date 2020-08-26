@@ -1,4 +1,4 @@
-define([
+define("dijit/DialogUnderlay", [
 	"dojo/_base/declare", // declare
 	"dojo/_base/lang", // lang.hitch
 	"dojo/aspect", // aspect.after

@@ -1,6 +1,7 @@
 package ix.core;
 
 import java.io.IOException;
+import java.util.Objects;
 import java.util.function.Supplier;
 
 import com.fasterxml.jackson.core.JsonGenerator;
@@ -48,7 +49,18 @@ public class ResourceReference <T>{
 	public static <T> ResourceReference<T> ofRaw(String uri, T raw){
 		return new ResourceReference<T>(uri, ()->raw);
 	}
-	
+	public static ResourceReference<JsonNode> ofSerializedJson(String uri, Supplier<String> rawSupplier){
+		Objects.requireNonNull(rawSupplier);
+		return new ResourceReference<JsonNode>(uri, ()->{
+			ObjectMapper om = new ObjectMapper();
+			try {
+				return om.readTree(rawSupplier.get());
+			} catch (Exception e) {
+				Logger.error(e.getMessage(), e);
+			}
+			return null;
+		});
+	}
 	public static ResourceReference<JsonNode> ofSerializedJson(String uri, String raw){
 		
 		return new ResourceReference<JsonNode>(uri, ()->{

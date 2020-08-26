@@ -1,9 +1,9 @@
-define(["./_base/kernel", "require", "./has", "./has!host-browser?./request"], function(dojo, require, has, request){
+define("dojo/text", ["./_base/kernel", "require", "./has", "./request"], function(dojo, require, has, request){
 	// module:
 	//		dojo/text
 
 	var getText;
-	if(has("host-browser")){
+	if( 1 ){
 		getText= function(url, sync, load){
 			request(url, {sync:!!sync, headers: { 'X-Requested-With': null } }).then(load);
 		};

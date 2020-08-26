@@ -1,4 +1,4 @@
-define(["exports", "./_base/kernel", "./sniff", "./_base/window", "./dom", "./dom-attr"],
+define("dojo/dom-construct", ["exports", "./_base/kernel", "./sniff", "./_base/window", "./dom", "./dom-attr"],
 		function(exports, dojo, has, win, dom, attr){
 	// module:
 	//		dojo/dom-construct

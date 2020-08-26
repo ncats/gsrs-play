@@ -1,4 +1,4 @@
-define([
+define("dijit/layout/LayoutContainer", [
 	"dojo/_base/array",
 	"dojo/_base/declare", // declare
 	"dojo/dom-class",

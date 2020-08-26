@@ -4,7 +4,6 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
@@ -21,7 +20,6 @@ import ix.core.plugins.PayloadPlugin.PayloadPersistType;
 import ix.core.stats.Statistics;
 import ix.ginas.controllers.GinasApp;
 import ix.ginas.controllers.GinasAppAdmin;
-import ix.ginas.controllers.tests.Debug;
 import ix.ginas.controllers.v1.ControlledVocabularyFactory;
 import ix.ginas.fda.TrustHeaderAuthenticator;
 import ix.ncats.controllers.auth.Authentication;
@@ -245,9 +243,7 @@ public class GinasGlobal extends Global {
 		
 		loadStartFile();
 		
-		if(Play.isDev()){
-		    Debug.onInitialize(app);
-		}
+
 	}
 	
 	@Override

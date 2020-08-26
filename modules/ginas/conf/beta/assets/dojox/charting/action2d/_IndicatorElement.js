@@ -1,4 +1,4 @@
-define(["dojo/_base/lang", "dojo/_base/array", "dojo/_base/declare", "../plot2d/Indicator",
+define("dojox/charting/action2d/_IndicatorElement", ["dojo/_base/lang", "dojo/_base/array", "dojo/_base/declare", "../plot2d/Indicator",
         "dojo/has", "../plot2d/common", "../axis2d/common", "dojox/gfx"],
 	function(lang, array, declare, Indicator, has){
 

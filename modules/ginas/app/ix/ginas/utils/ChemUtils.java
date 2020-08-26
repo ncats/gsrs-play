@@ -131,4 +131,18 @@ public class ChemUtils {
 		
 	}
 
+	public static void fix0Stereo(Structure newstr, List<GinasProcessingMessage> gpm) {
+		String debugMessage = String.format("in fix0Stereo, newstr.stereoCenters: %d, stereochemistry: %s, optical: %s",
+						newstr.stereoCenters, newstr.stereoChemistry.toString(), newstr.opticalActivity.toString());
+		play.Logger.debug(debugMessage);
+		if( newstr.stereoCenters == 0 && newstr.stereoChemistry.equals(Stereo.ACHIRAL)
+						&& newstr.opticalActivity.equals(Optical.UNSPECIFIED)) {
+			play.Logger.debug("detected 0 stereocenters, achiral and unspec optical condition");
+			newstr.opticalActivity= Optical.NONE;
+			gpm.add(GinasProcessingMessage.INFO_MESSAGE("Reset optical activity to NONE based on structure information"));
+		}else	if( newstr.stereoChemistry.equals(Stereo.ABSOLUTE) && newstr.opticalActivity.equals(Optical.NONE)) {
+			play.Logger.debug("detected absolute stereo and no optical activity condition");
+			gpm.add(GinasProcessingMessage.WARNING_MESSAGE("Note: Stereo 'Absolute' with Optical Activity 'NONE' does not make sense!"));
+		}
+	}
 }

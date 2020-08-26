@@ -2,6 +2,7 @@ package ix.test;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
+import gov.nih.ncats.molwitch.Chemical;
 import ix.AbstractGinasServerTest;
 import ix.core.validator.ValidationMessage;
 import ix.core.models.Group;
@@ -14,6 +15,7 @@ import ix.test.server.GinasTestServer;
 import ix.test.server.RestSession;
 import ix.test.server.SubstanceAPI;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -123,12 +125,41 @@ public class SubmitDuplicateStructureTest extends AbstractGinasServerTest {
 
 
     @Test
-    public void submitSameStructureTwiceAsPeonShouldBeError() throws Throwable{
+    public void submitSameStructureTwiceShouldBeMarkedAsFullDuplicate() throws Throwable{
 
 
 
         ChemicalSubstanceBuilder builder = new SubstanceBuilder().asChemical()
                 .setStructure(smiles);
+
+        //  builder.setName("differentName");
+        builder.generateNewUUID();
+        JsonNode js = builder.buildJson();
+
+        GinasTestServer.User newUser = ts.createUser(roleUnderTest);
+        try(RestSession peonSession = ts.newRestSession(newUser)) {
+            SubstanceAPI peonApi = new SubstanceAPI(peonSession);
+
+
+            SubstanceAPI.ValidationResponse validationResponse = peonApi.validateSubstance(js);
+            ValidationMessage duplicateMessage = getFullDuplicateSubstructureMessage(validationResponse);
+
+
+            assertEquals(expectedType, duplicateMessage.getMessageType());
+        }
+
+    }
+
+    @Test
+    @Ignore("can't figure out how to trigger it without full duplicate error tested above")
+    public void submitVerySimilarStructureTwiceShouldBeMarkedAsPossibleDuplicate() throws Throwable{
+
+
+        Chemical chem = Chemical.parse(smiles);
+        chem.generateCoordinates();
+
+        ChemicalSubstanceBuilder builder = new SubstanceBuilder().asChemical()
+                .setStructure(chem.toMol());
 
         //  builder.setName("differentName");
         builder.generateNewUUID();
@@ -155,5 +186,14 @@ public class SubmitDuplicateStructureTest extends AbstractGinasServerTest {
                         .orElseThrow(() -> {
                             throw new AssertionError("no duplicate structure message in " + validationResponse.getMessages());
                         });
+    }
+
+    private ValidationMessage getFullDuplicateSubstructureMessage(SubstanceAPI.ValidationResponse validationResponse) throws Throwable{
+        return validationResponse.getMessages().stream()
+                .filter(m -> m.getMessage().contains("appears to be a full duplicate"))
+                .findAny()
+                .orElseThrow(() -> {
+                    throw new AssertionError("no duplicate structure message in " + validationResponse.getMessages());
+                });
     }
 }

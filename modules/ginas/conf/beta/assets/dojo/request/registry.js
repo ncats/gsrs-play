@@ -1,4 +1,4 @@
-define([
+define("dojo/request/registry", [
 	'require',
 	'../_base/array',
 	'./default!platform',
@@ -13,7 +13,7 @@ define([
 
 		while(matcher=matchers[i++]){
 			if(matcher(url, options)){
-				return matcher.request.call(null, url, options);
+				return matcher.request.apply(null, arguments);
 			}
 		}
 

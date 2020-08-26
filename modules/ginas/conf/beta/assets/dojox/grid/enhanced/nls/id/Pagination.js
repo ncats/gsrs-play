@@ -1,5 +1,5 @@
 define(
-({
+"dojox/grid/enhanced/nls/id/Pagination", ({
 	"descTemplate": "${2} - ${3} dari ${1} ${0}",
 	"firstTip": "Halaman Pertama",
 	"lastTip": "Halaman Terakhir",

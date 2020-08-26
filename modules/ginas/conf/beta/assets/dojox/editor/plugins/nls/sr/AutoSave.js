@@ -1,4 +1,4 @@
-define({      
+define("dojox/editor/plugins/nls/sr/AutoSave", {      
 //begin v1.x content
 	"saveLabel": "Sačuvaj",
 	"saveSettingLabelOn": "Podesi interval za automatsko čuvanje...",

@@ -1,3 +1,5 @@
+// wrapped by build app
+define("dojox/lang/docs", ["dojo","dijit","dojox"], function(dojo,dijit,dojox){
 dojo.provide("dojox.lang.docs");
 
 // Extracts information from the API docs to apply a schema representation to dojo classes.
@@ -211,3 +213,5 @@ dojo.provide("dojox.lang.docs");
 		return null;
 	}
 })();
+
+});

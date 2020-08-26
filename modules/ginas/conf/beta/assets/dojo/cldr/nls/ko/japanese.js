@@ -1,5 +1,5 @@
 define(
-//begin v1.x content
+"dojo/cldr/nls/ko/japanese", //begin v1.x content
 {
 	"field-sat-relative+0": "이번 토요일",
 	"field-sat-relative+1": "다음 토요일",

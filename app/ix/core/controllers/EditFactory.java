@@ -5,6 +5,7 @@ import java.util.UUID;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import ix.core.NamedResource;
+import ix.core.controllers.v1.GsrsApiUtil;
 import ix.core.models.Edit;
 import ix.core.util.Java8Util;
 import play.Logger;
@@ -54,7 +55,8 @@ public class EditFactory extends EntityFactory {
 		if (edit != null) {
 			return field(edit, field);
 		}
-		throw new IllegalArgumentException("Bad request: " + request().uri());
+//		throw new IllegalArgumentException("Bad request: " + request().uri());
+        return GsrsApiUtil.internalServerError("Bad request: " + request().uri());
 	}
     
     public static Result page (int top, int skip, String filter) {

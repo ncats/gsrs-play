@@ -10,8 +10,11 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
+import ix.core.util.RunOnly;
+import ix.test.server.*;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -22,11 +25,6 @@ import ix.core.util.EntityUtils;
 import ix.core.util.EntityUtils.EntityInfo;
 import ix.ginas.models.v1.Substance;
 import ix.ginas.modelBuilders.SubstanceBuilder;
-import ix.test.server.BrowserSession;
-import ix.test.server.BrowserSubstanceSearcher;
-import ix.test.server.RestSession;
-import ix.test.server.SearchResult;
-import ix.test.server.SubstanceAPI;
 import play.Play;
 
 public class SponsoredResultsTest extends AbstractGinasServerTest{
@@ -34,7 +32,7 @@ public class SponsoredResultsTest extends AbstractGinasServerTest{
 		
 	BrowserSession bsession;
 	RestSession    rsession;
-	BrowserSubstanceSearcher    searcher;
+	RestSubstanceSubstanceSearcher    searcher;
 	SubstanceAPI api;
 	
 	@Before
@@ -57,7 +55,7 @@ public class SponsoredResultsTest extends AbstractGinasServerTest{
 		ts.restart();
 		bsession= ts.newBrowserSession(ts.getFakeUser1());
 		rsession= ts.newRestSession(ts.getFakeUser1());
-		searcher= new BrowserSubstanceSearcher(bsession);
+		searcher= new RestSubstanceSubstanceSearcher(rsession);
 		api = new SubstanceAPI(rsession);
 		
 	}
@@ -91,13 +89,13 @@ public class SponsoredResultsTest extends AbstractGinasServerTest{
             for(int i=0;i<max;i++){
                 api.submitSubstance(new SubstanceBuilder()
                 	.generateNewUUID() // need to explicitly put this here so we have a reference to it.
-                	.andThen(s->{uuids.add(s.getUuid().toString().split("-")[0]);})
+                	.andThen((Consumer <Substance>) s-> uuids.add(s.getUuid().toString()))
                     .addName(theName + " " + i)); // we need the space for lucene to correctly tokenize
             }
             Substance special =new SubstanceBuilder()
                 .addName(theName)
                 .generateNewUUID() // need to explicitly put this here so we have a reference to it.
-				.andThen(s->{uuids.add(s.getUuid().toString().split("-")[0]);})
+				.andThen((Consumer <Substance>) s-> uuids.add(s.getUuid().toString()))
                 .build();
             
             
@@ -107,13 +105,13 @@ public class SponsoredResultsTest extends AbstractGinasServerTest{
             Set<String> searchUUIDs = new HashSet<>(sr.getUuids());
             searchUUIDs.removeAll(uuids);
             
-            System.out.println("Extras");
-            System.out.println(searchUUIDs);
+//            System.out.println("Extras");
+//            System.out.println(searchUUIDs);
             
             assertEquals(uuids,sr.getUuids());
             assertEquals(max+1,sr.getUuids().size());
             Set<String> specialUUIDs = sr.getSpecialUuids();
-            assertEquals(special.getUuid().toString().split("-")[0],
+            assertEquals(special.getUuid().toString(),
                          specialUUIDs.iterator().next());
     }
 	
@@ -126,13 +124,14 @@ public class SponsoredResultsTest extends AbstractGinasServerTest{
 	        Substance special =new SubstanceBuilder()
 	                .addName(theName)
 					.generateNewUUID() // need to explicitly put this here so we have a reference to it.
-					.andThen(s->{uuids.add(s.getUuid().toString().split("-")[0]);})
+//					.andThen(s->{uuids.add(s.getUuid().toString().split("-")[0]);})
+					.andThen((Consumer <Substance>) s-> uuids.add(s.getUuid().toString()))
 	                .build();
 	            api.submitSubstance(special);
 	            
 	        api.submitSubstance(new SubstanceBuilder()
 	        		.generateNewUUID()
-	        		.andThen(s->{uuids.add(s.getUuid().toString().split("-")[0]);})
+					.andThen((Consumer <Substance>) s-> uuids.add(s.getUuid().toString()))
                     .addName(theName + " WITH MORE THINGS")); // we need the space for lucene to correctly tokenize
             
 	     
@@ -143,7 +142,7 @@ public class SponsoredResultsTest extends AbstractGinasServerTest{
             assertEquals(2,sr.getUuids().size());
             assertEquals(uuids,sr.getUuids());
             Set<String> specialUUIDs = sr.getSpecialUuids();
-            assertEquals(special.getUuid().toString().split("-")[0],
+            assertEquals(special.getUuid().toString(),
                          specialUUIDs.iterator().next());
     }
 }

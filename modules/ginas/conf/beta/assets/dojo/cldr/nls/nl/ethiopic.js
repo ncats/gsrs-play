@@ -1,5 +1,5 @@
 define(
-//begin v1.x content
+"dojo/cldr/nls/nl/ethiopic", //begin v1.x content
 {
 	"field-sat-relative+0": "deze zaterdag",
 	"field-sat-relative+1": "volgende week zaterdag",

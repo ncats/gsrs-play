@@ -1,4 +1,4 @@
-define([
+define("dojox/encoding/crypto/RSAKey", [
 	"dojo/_base/kernel",
 	"dojo/_base/declare",
 	"../../math/BigInteger",

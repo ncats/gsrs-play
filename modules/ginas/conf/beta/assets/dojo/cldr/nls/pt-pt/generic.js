@@ -1,5 +1,5 @@
 define(
-//begin v1.x content
+"dojo/cldr/nls/pt-pt/generic", //begin v1.x content
 {
 	"dateFormatItem-yyyyMMMMEd": "E, d 'de' MMMM 'de' y G",
 	"field-weekday": "Dia da semana",

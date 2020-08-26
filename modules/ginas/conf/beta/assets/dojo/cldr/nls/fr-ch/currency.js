@@ -1,5 +1,5 @@
 define(
-//begin v1.x content
+"dojo/cldr/nls/fr-ch/currency", //begin v1.x content
 {
 	"CHF_symbol": "CHF"
 }

@@ -118,7 +118,7 @@ public class GinasCommonData extends BaseModel implements GinasAccessControlled,
     
     
     
-
+    @Indexable()
     public UUID getUuid() {
         return uuid;
     }

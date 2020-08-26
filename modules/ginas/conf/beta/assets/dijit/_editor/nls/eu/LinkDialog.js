@@ -1,4 +1,4 @@
-define({      
+define("dijit/_editor/nls/eu/LinkDialog", {      
 //begin v1.x content
 	createLinkTitle: "Estekaren propietateak",
 	insertImageTitle: "Irudiaren propietateak",

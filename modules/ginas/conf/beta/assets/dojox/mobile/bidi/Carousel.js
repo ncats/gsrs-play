@@ -1,4 +1,4 @@
-define([
+define("dojox/mobile/bidi/Carousel", [
 	"dojo/_base/declare",
 	"./common",
 	"dojo/dom-style"

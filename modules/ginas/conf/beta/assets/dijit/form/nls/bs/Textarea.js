@@ -1,4 +1,4 @@
-define({      
+define("dijit/form/nls/bs/Textarea", {      
 //begin v1.x content
 // used by both the editor and textarea widgets to provide information to screen reader users
 	iframeEditTitle: 'područje uređivanja',  // primary title for editable IFRAME, for screen readers when focus is in the editing area

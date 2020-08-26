@@ -1,4 +1,4 @@
-define(["dojo/_base/declare", "dojo/_base/window", "dojo/_base/array", "dojo/_base/event",
+define("dojox/charting/action2d/MouseZoomAndPan", ["dojo/_base/declare", "dojo/_base/window", "dojo/_base/array", "dojo/_base/event",
 	"dojo/_base/connect", "dojo/mouse", "./ChartAction", "dojo/sniff", "dojo/dom-prop", "dojo/keys",
 	"dojo/has!dojo-bidi?../bidi/action2d/ZoomAndPan"],
 	function(declare, win, arr, eventUtil, connect, mouse, ChartAction, has, domProp, keys, BidiMouseZoomAndPan){

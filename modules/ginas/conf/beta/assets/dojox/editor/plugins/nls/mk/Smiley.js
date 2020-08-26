@@ -1,4 +1,4 @@
-define({      
+define("dojox/editor/plugins/nls/mk/Smiley", {      
 //begin v1.x content
 	smiley: "Вметни емотикон",
 	emoticonSmile: "насмеан",

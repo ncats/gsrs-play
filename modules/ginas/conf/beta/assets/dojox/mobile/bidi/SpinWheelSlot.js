@@ -1,4 +1,4 @@
-define([
+define("dojox/mobile/bidi/SpinWheelSlot", [
 	"dojo/_base/declare",
 	"dojo/_base/window",
 	"dojo/_base/array",

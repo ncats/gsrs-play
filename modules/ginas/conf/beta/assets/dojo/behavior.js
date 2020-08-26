@@ -1,4 +1,4 @@
-define(["./_base/kernel", "./_base/lang", "./_base/array", "./_base/connect", "./query", "./domReady"],
+define("dojo/behavior", ["./_base/kernel", "./_base/lang", "./_base/array", "./_base/connect", "./query", "./domReady"],
 function(dojo, lang, darray, connect, query, domReady){
 
 // module:

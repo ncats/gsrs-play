@@ -1,4 +1,4 @@
-define([
+define("dojox/mobile/_maskUtils", [
 	"dojo/_base/window",
 	"dojo/dom-style",
 	"./sniff"

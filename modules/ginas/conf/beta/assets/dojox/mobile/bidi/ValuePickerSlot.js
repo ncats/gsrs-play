@@ -1,4 +1,4 @@
-define([
+define("dojox/mobile/bidi/ValuePickerSlot", [
 	"dojo/_base/declare",
 	"./common"   
 ], function(declare, common){

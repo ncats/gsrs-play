@@ -2,6 +2,7 @@ package ix.test.cache;
 
 import static org.junit.Assert.*;
 
+import org.junit.Before;
 import org.junit.Test;
 
 import ix.AbstractGinasClassServerTest;
@@ -10,10 +11,36 @@ import ix.core.models.Structure;
 import ix.core.plugins.IxCache;
 import ix.ginas.models.v1.GinasChemicalStructure;
 import ix.ginas.modelBuilders.SubstanceBuilder;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
+import java.util.ArrayList;
+import java.util.List;
+
+@RunWith(Parameterized.class)
 public class StructureCacheTest extends AbstractGinasClassServerTest{
 
 
+	@Parameterized.Parameters
+	public static List<Object[]> data(){
+		List<Object[]> list = new ArrayList<>();
+		list.add(new Object[]{Boolean.TRUE});
+		list.add(new Object[]{Boolean.FALSE});
+		//ix.cache.useFileDb=false
+		return list;
+	}
+
+	private boolean usePersistenceCache;
+
+	public StructureCacheTest(boolean usePersistenceCache) {
+		this.usePersistenceCache = usePersistenceCache;
+	}
+
+	@Before
+	public void setPersistenceCache(){
+		ts.modifyConfig("ix.cache.useFileDb", usePersistenceCache);
+		ts.restart();
+	}
 
 	@Test
 	public void testStructureCacheStoresAndRetrieves(){
@@ -41,8 +68,11 @@ public class StructureCacheTest extends AbstractGinasClassServerTest{
 		IxCache.clearCache();
 		
 		Structure s2=StructureFactory.getTempStructure(s.id.toString());
-		
-		assertStructureEquals(s,s2);
+		if(usePersistenceCache) {
+			assertStructureEquals(s, s2);
+		}else{
+			assertNull(s2);
+		}
 		
 	}
 	@Test
@@ -57,8 +87,12 @@ public class StructureCacheTest extends AbstractGinasClassServerTest{
 		ts.restart();
 		
 		Structure s2=StructureFactory.getTempStructure(s.id.toString());
-		
-		assertStructureEquals(s,s2);
+
+		if(usePersistenceCache) {
+			assertStructureEquals(s, s2);
+		}else{
+			assertNull(s2);
+		}
 		
 	}
 	

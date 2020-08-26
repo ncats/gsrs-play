@@ -1,5 +1,5 @@
 define(
-//begin v1.x content
+"dojo/cldr/nls/en-au/chinese", //begin v1.x content
 {
 	"dateFormat-medium": "d MMM U",
 	"field-year-relative+-1": "Last year",

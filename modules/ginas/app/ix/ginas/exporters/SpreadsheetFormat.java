@@ -1,10 +1,12 @@
 package ix.ginas.exporters;
 
+import ix.core.exporters.OutputFormat;
+
 import java.io.OutputStream;
 import java.util.Objects;
 import java.util.function.Function;
 
-public abstract class SpreadsheetFormat extends SubstanceExporterFactory.OutputFormat {
+public abstract class SpreadsheetFormat extends OutputFormat {
 
     public SpreadsheetFormat(String extension, String displayname) {
         super(extension, displayname);

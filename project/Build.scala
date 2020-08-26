@@ -4,20 +4,19 @@ import sbt._
 //import play.PlayImport._
 import play.Play.autoImport._
 import scala.collection.JavaConversions.mapAsScalaMap
-
+import com.typesafe.sbt.SbtNativePackager._
+//import NativePackagerKeys._
 
 object ApplicationBuild extends Build {
-  val displayVersion = "2.5.1.2"
+  val displayVersion = "2.6"
   val now = new java.util.Date();
   val branch = "git rev-parse --abbrev-ref HEAD".!!.trim
   val commit = "git rev-parse --short HEAD".!!.trim
-  val author = s"git show --format=%an -s $commit".!!.trim
   val buildDate = (new java.text.SimpleDateFormat("yyyyMMdd"))
     .format(now)
   val buildTime = (new java.text.SimpleDateFormat("HHmmss"))
     .format(now)
   val appVersion = "%s-%s-%s-%s".format(branch, buildDate,buildTime, commit)
-
 
   val commonSettings = Seq(
     version := appVersion,    
@@ -45,16 +44,17 @@ object ApplicationBuild extends Build {
     "com.fasterxml.jackson.core" % "jackson-core" % "2.9.7",
         "com.fasterxml.jackson.core" % "jackson-databind" % "2.9.7",
         "com.fasterxml.jackson.core" % "jackson-annotations" % "2.9.7",
+//    "com.ning" % "async-http-client" % "1.7.13" % Test,
 //    "gov.nih.ncats" % "molwitch" % "0.5",
 //    "gov.nih.ncats" % "molwitch-renderer" % "1.0",
 
 
 
-    "gov.nih.ncats" % "molvec" % "0.9.5",
-    "com.twelvemonkeys.imageio" % "imageio-core" % "3.4.1",
-    "com.twelvemonkeys.imageio" % "imageio" % "3.4.1",
-    "com.twelvemonkeys.imageio" % "imageio-tiff" % "3.4.1",
-    "com.twelvemonkeys.imageio" % "imageio-jpeg"% "3.4.1",
+//    "gov.nih.ncats" % "molvec" % "0.9.3",
+//    "com.twelvemonkeys.imageio" % "imageio-core" % "3.4.1",
+//    "com.twelvemonkeys.imageio" % "imageio" % "3.4.1",
+//    "com.twelvemonkeys.imageio" % "imageio-tiff" % "3.4.1",
+//    "com.twelvemonkeys.imageio" % "imageio-jpeg"% "3.4.1",
     "org.apache.httpcomponents" % "httpclient" %"4.5.2",
     "org.apache.httpcomponents" % "httpcore" %"4.4.4",
     "org.apache.httpcomponents" % "httpclient" %"4.3.1", //required for Ivy bug?
@@ -138,10 +138,9 @@ public class BuildInfo {
    public static final String DATE = "%s";
    public static final String COMMIT = "%s";
    public static final String TIME = "%s";
-   public static final String AUTHOR = "%s";
    public static final String VERSION = "%s";
 }
-""".format(branch, buildDate, commit, new java.util.Date(), author, displayVersion))
+""".format(branch, buildDate, commit, new java.util.Date(), displayVersion))
       Seq(file)
     }
   )
@@ -222,6 +221,10 @@ public class BuildInfo {
                           .filter( prop=> !("config.file".equals(prop._1)) && !("user.dir".equals(prop._1)))
                           .map(prop => s"-D${prop._1}=${prop._2}").toSeq,
 
-      cleanFiles += file("modules/ginas/ginas.ix")
+//    javaOptions in Test ++= Seq(Tests.Argument(TestFrameworks.JUnit, "-a"))
+    cleanFiles += file("modules/ginas/ginas.ix"),
+    //baseDirectory is the ginas module we want to go up a few dirs
+    mappings in Universal ++=(baseDirectory.value / "../../cv" * "*" get) map
+        (x => x -> ("cv/" + x.getName))
   ).dependsOn(ginasEvo).aggregate(ginasEvo)
 }

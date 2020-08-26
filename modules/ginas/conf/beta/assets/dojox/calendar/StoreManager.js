@@ -1,4 +1,4 @@
-define(["dojo/_base/declare", "dojo/_base/array", "dojo/_base/html", "dojo/_base/lang", "dojo/dom-class",
+define("dojox/calendar/StoreManager", ["dojo/_base/declare", "dojo/_base/array", "dojo/_base/html", "dojo/_base/lang", "dojo/dom-class",
 	"dojo/Stateful", "dojo/Evented", "dojo/when"],
 	function(declare, arr, html, lang, domClass, Stateful, Evented, when){
 

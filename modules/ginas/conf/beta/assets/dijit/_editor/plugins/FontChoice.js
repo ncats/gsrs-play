@@ -1,4 +1,4 @@
-define([
+define("dijit/_editor/plugins/FontChoice", [
 	"require",
 	"dojo/_base/array", // array.indexOf array.map
 	"dojo/_base/declare", // declare

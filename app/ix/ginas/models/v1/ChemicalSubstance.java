@@ -19,11 +19,15 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import gov.nih.ncats.molwitch.Chemical;
+import ix.core.chem.StructureProcessor;
 import ix.core.models.DefinitionalElement;
 import ix.core.validator.GinasProcessingMessage;
 import ix.core.models.BeanViews;
 import ix.core.models.Indexable;
 import ix.core.models.Structure;
+import ix.core.validator.ValidationMessage;
+import ix.core.validator.Validator;
+import ix.core.validator.ValidatorCallback;
 import ix.ginas.modelBuilders.ChemicalSubstanceBuilder;
 import ix.ginas.models.GinasAccessReferenceControlled;
 import ix.ginas.models.GinasSubstanceDefinitionAccess;
@@ -72,6 +76,17 @@ public class ChemicalSubstance extends Substance implements GinasSubstanceDefini
         return super.toBuilder().asChemical();
     }
 
+
+    @Indexable(name="moieties")
+    @JsonIgnore
+    public List<GinasChemicalStructure> getMoietiesForIndexing(){
+    	List<GinasChemicalStructure> mlist = new ArrayList<>();
+    	for(Moiety m: this.moieties){
+    		mlist.add(m.structure);
+    	}
+    	return mlist;
+    }
+
     @JsonView(BeanViews.Compact.class)
     @JsonProperty("_moieties")
     public JsonNode getJsonMoieties () {
@@ -91,6 +106,8 @@ public class ChemicalSubstance extends Substance implements GinasSubstanceDefini
         }
         return node;
     }
+
+
     @JsonIgnore
     @Transient 
     public int[] getAtomMaps(){
@@ -162,6 +179,7 @@ public class ChemicalSubstance extends Substance implements GinasSubstanceDefini
     @Override
     protected void additionalDefinitionalElements(Consumer<DefinitionalElement> consumer) {
 
+
         /*
         Key->Value
 structure.properties.lychi4->"<EXAMPLE_LYCHI>"
@@ -179,6 +197,10 @@ structure.moieties[<lychi4>].countAmount->"4 to 5 per mol"
     }
 
     private void addStructureDefinitialElements(Structure structure, Consumer<DefinitionalElement> consumer) {
+        if(structure==null){
+            //shouldn't happen unless we get invalid submission
+            return;
+        }
         play.Logger.debug("starting addStructureDefinitialElements (ChemicalSubstance)");
         consumer.accept(DefinitionalElement.of("structure.properties.hash1",
                 structure.getStereoInsensitiveHash(), 1));

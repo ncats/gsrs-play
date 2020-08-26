@@ -258,7 +258,7 @@ public class ValidationUtils {
 			switch (s.substanceClass) {
 			case chemical:
 				gpm.addAll(validateAndPrepareChemical((ChemicalSubstance) s,
-						strat));
+						strat, true));
 				break;
 			case concept:
 				break;
@@ -1519,7 +1519,7 @@ public class ValidationUtils {
 	}
 
 	public static List<? extends GinasProcessingMessage> validateAndPrepareChemical(
-			ChemicalSubstance cs, GinasProcessingStrategy strat) {
+			ChemicalSubstance cs, GinasProcessingStrategy strat, boolean includeReferenceCheck) {
 		List<GinasProcessingMessage> gpm = new ArrayList<GinasProcessingMessage>();
 		if (cs.structure == null) {
 			gpm.add(GinasProcessingMessage.ERROR_MESSAGE("Chemical substance must have a chemical structure"));
@@ -1615,10 +1615,12 @@ public class ValidationUtils {
 			ChemUtils.fixChiralFlag(cs.structure, gpm);
 			ChemUtils.checkChargeBalance(cs.structure, gpm);
 			
-			
-			validateReferenced((Substance) cs,
-					(GinasAccessReferenceControlled) cs.structure, gpm, strat,
-					ReferenceAction.FAIL);
+			if( includeReferenceCheck) {
+				Logger.debug("validateAndPrepareChemical about to call validateReferenced");
+				validateReferenced((Substance) cs,
+						(GinasAccessReferenceControlled) cs.structure, gpm, strat,
+						ReferenceAction.FAIL);
+			}
 			strat.addAndProcess(validateStructureDuplicates(cs), gpm);
 		} else {
 			gpm.add(GinasProcessingMessage

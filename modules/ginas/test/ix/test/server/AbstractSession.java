@@ -72,10 +72,10 @@ public abstract class AbstractSession<T> implements Closeable{
         Objects.requireNonNull(wsResponse1);
 
         int status2 = wsResponse1.getStatus();
-        if(status2>300){
-            System.out.println("That's an error!");
-            System.out.println(wsResponse1.getBody());
-        }
+//        if(status2>300){
+//            System.out.println("That's an error!");
+//            System.out.println(wsResponse1.getBody());
+//        }
         if(status2 != 200 && status2 != 201){
             throw new IllegalStateException("response status Not OK : " + status2 + " in " + wsResponse1.getBody());
         }
@@ -84,8 +84,8 @@ public abstract class AbstractSession<T> implements Closeable{
         try{
         	returned = (new ObjectMapper()).readTree(body);
         }catch(Exception e){
-        	System.out.println("That's an error!");
-            System.out.println(body);
+//        	System.out.println("That's an error!");
+//            System.out.println(body);
             throw new IllegalStateException(e);
         }
         Objects.requireNonNull(returned);
@@ -94,7 +94,7 @@ public abstract class AbstractSession<T> implements Closeable{
 
     public String getUserName(){
         String path = getTestSever().getHttpResolver().apiV1("whoami", true);
-        System.out.println("path = " + path);
+//        System.out.println("path = " + path);
         WSResponse wsResponse1 = get(path);
 
         if(wsResponse1.getStatus() != 200){

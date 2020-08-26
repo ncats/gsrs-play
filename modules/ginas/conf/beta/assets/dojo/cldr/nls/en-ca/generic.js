@@ -1,5 +1,5 @@
 define(
-//begin v1.x content
+"dojo/cldr/nls/en-ca/generic", //begin v1.x content
 {
 	"dateFormatItem-yyyyMEd": "E, GGGGG y-MM-dd",
 	"dateFormat-short": "GGGGG y-MM-dd",

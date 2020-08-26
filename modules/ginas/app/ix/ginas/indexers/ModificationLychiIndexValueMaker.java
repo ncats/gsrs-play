@@ -1,5 +1,6 @@
 package ix.ginas.indexers;
 
+import java.util.Objects;
 import java.util.function.Consumer;
 
 import ix.core.search.text.IndexValueMaker;
@@ -33,6 +34,7 @@ public class ModificationLychiIndexValueMaker implements IndexValueMaker<Substan
     public void createModificationLychis(Substance s, Consumer<IndexableValue> consumer) {
         s.modifications.structuralModifications
                 .stream()
+				 .filter(Objects::nonNull)
                 .forEach(mc->{
                     String refuuid=mc.molecularFragment.refuuid;
                     if(UUIDUtil.isUUID(refuuid)){

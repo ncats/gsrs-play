@@ -7,6 +7,7 @@ import javax.persistence.*;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import ix.core.models.Indexable;
 import ix.ginas.models.CommonDataElementOfCollection;
 import ix.ginas.models.GinasAccessReferenceControlled;
@@ -24,6 +25,7 @@ public class Relationship extends CommonDataElementOfCollection {
 
 	@JSONEntity(title="Amount")
     @OneToOne(cascade=CascadeType.ALL)
+    @JsonInclude(value= JsonInclude.Include.NON_EMPTY)
     public Amount amount;
     
     @JSONEntity(title = "Comments")

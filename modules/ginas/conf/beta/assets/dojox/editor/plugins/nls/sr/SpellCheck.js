@@ -1,4 +1,4 @@
-define({      
+define("dojox/editor/plugins/nls/sr/SpellCheck", {      
 //begin v1.x content
 	widgetLabel: "Provera pravopisa paketa",
 	unfound: "Nije pronađeno",

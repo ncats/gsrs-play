@@ -1,4 +1,4 @@
-define([
+define("dojox/gfx/bezierutils", [
 	"./_base"
 ], function(gfx){
 

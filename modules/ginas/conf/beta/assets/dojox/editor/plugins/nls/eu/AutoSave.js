@@ -1,4 +1,4 @@
-define({      
+define("dojox/editor/plugins/nls/eu/AutoSave", {      
 //begin v1.x content
 	"saveLabel": "Gorde",
 	"saveSettingLabelOn": "Ezarri automatikoki gordetzeko tartea...",

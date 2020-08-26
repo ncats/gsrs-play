@@ -1,4 +1,4 @@
-define(["../../main", "dojo/_base/lang", "../_Builder", "dijit/_BidiSupport",
+define("dojox/grid/bidi/_BidiMixin", ["../../main", "dojo/_base/lang", "../_Builder", "dijit/_BidiSupport",
 "../_Grid", "../cells/_base", "../cells/dijit"],
 	function(dojox, lang, _Builder, _BidiSupport, _Grid, BaseCell, cellsDijit){
 		// module:

@@ -561,7 +561,7 @@ public class SubstanceAPI {
             List<ValidationMessage> list = new ArrayList<>();
             try {
                 for(JsonNode node : asJson().at(VALIDATION_MESSAGE_PATH)){
-                    list.add(new ObjectMapper().treeToValue(node, GinasProcessingMessage.class));
+                    list.add(EntityFactory.EntityMapper.FULL_ENTITY_MAPPER().treeToValue(node, ValidationMessage.class));
                 }
                return list;
             }catch(Exception e){

@@ -1,5 +1,5 @@
 define(
-//begin v1.x content
+"dojo/cldr/nls/sr/generic", //begin v1.x content
 {
 	"field-second-relative+0": "сада",
 	"field-weekday": "дан у недељи",

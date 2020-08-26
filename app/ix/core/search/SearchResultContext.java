@@ -27,9 +27,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import ix.core.CacheStrategy;
 import ix.core.controllers.search.SearchRequest;
+import ix.core.exporters.OutputFormat;
 import ix.core.models.ETag;
 import ix.core.plugins.IxCache;
 import ix.core.search.FieldedQueryFacet.MATCH_TYPE;
+import ix.core.util.GinasPortalGun;
 import ix.utils.Global;
 import ix.utils.Util;
 import play.Logger;
@@ -78,6 +80,7 @@ public class SearchResultContext {
     private Integer total;
     private String key;
 
+
 	private String originalRequest = null;
     
     public static class SearchResultContextDeterminedFuture extends FutureTask<Void>{
@@ -98,7 +101,7 @@ public class SearchResultContext {
     	}
     	
     	public void onStatusChange(SearchResultContext.Status newStatus, SearchResultContext.Status oldStatus){
-    		System.out.println("Status changed called");
+//    		System.out.println("Status changed called");
     		if(newStatus == Status.Determined || 
     			newStatus==Status.Done || 
     			newStatus == Status.Failed){
@@ -339,8 +342,7 @@ public class SearchResultContext {
     	this.originalRequest=url;
     }
     
-    
-    
+
     @JsonIgnore
     public Call getResultCall(){
     	return getResultCall(10, 0, 10, "");

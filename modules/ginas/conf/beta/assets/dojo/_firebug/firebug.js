@@ -1,4 +1,4 @@
-define([], function(){
+define("dojo/_firebug/firebug", [], function(){
 
 	// module:
 	//		dojo/_firebug/firebug

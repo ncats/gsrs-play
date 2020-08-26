@@ -1,4 +1,4 @@
-define({      
+define("dijit/form/nls/mk/validate", {      
 //begin v1.x content
 	invalidMessage: "Внесената вредност не е важечка.",
 	missingMessage: "Вредноста е задолжителна.",

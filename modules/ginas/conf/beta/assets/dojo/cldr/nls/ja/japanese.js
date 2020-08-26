@@ -1,5 +1,5 @@
 define(
-//begin v1.x content
+"dojo/cldr/nls/ja/japanese", //begin v1.x content
 {
 	"field-second-relative+0": "今すぐ",
 	"field-weekday": "曜日",

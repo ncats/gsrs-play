@@ -1,4 +1,4 @@
-define({      
+define("dojox/editor/plugins/nls/eu/FindReplace", {      
 //begin v1.x content
 	"findLabel": "Bilatu:",
 	"findTooltip": "Idatzi bilatzeko testua",

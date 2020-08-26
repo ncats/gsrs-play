@@ -1,4 +1,4 @@
-define(["dojo/_base/lang", "dojo/_base/array", "dojo/_base/declare", "./CartesianBase", "./_PlotEvents", "./common",
+define("dojox/charting/plot2d/Indicator", ["dojo/_base/lang", "dojo/_base/array", "dojo/_base/declare", "./CartesianBase", "./_PlotEvents", "./common",
     "../axis2d/common", "dojox/gfx", "dojox/lang/utils", "dojox/gfx/fx", "dojo/has"],
 	function(lang, array, declare, CartesianBase, _PlotEvents, dcpc, dcac, gfx, du, fx, has){
 

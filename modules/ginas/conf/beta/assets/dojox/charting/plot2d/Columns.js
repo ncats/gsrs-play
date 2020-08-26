@@ -1,8 +1,6 @@
-define(["dojo/_base/lang", "dojo/_base/array", "dojo/_base/declare", "dojo/has", "./CartesianBase", "./_PlotEvents", "./common",
-		"dojox/lang/functional", "dojox/lang/functional/reversed", "dojox/lang/utils", "dojox/gfx/fx"],
-	function(lang, arr, declare, has, CartesianBase, _PlotEvents, dc, df, dfr, du, fx){
-
-	var purgeGroup = dfr.lambda("item.purgeGroup()");
+define("dojox/charting/plot2d/Columns", ["dojo/_base/lang", "dojo/_base/array", "dojo/_base/declare", "dojo/has", "./CartesianBase", "./_PlotEvents", "./common",
+		"dojox/lang/functional", "dojox/lang/utils", "dojox/gfx/fx"],
+	function(lang, arr, declare, has, CartesianBase, _PlotEvents, dc, df, du, fx){
 
 	var alwaysFalse = function(){ return false; };
 
@@ -85,7 +83,7 @@ define(["dojo/_base/lang", "dojo/_base/array", "dojo/_base/declare", "dojo/has",
 			this.dirty = this.isDirty();
 			var s;
 			if(this.dirty){
-				arr.forEach(this.series, purgeGroup);
+				arr.forEach(this.series, dc.purgeGroup);
 				this._eventSeries = {};
 				this.cleanGroup();
 				s = this.getGroup();
@@ -100,8 +98,7 @@ define(["dojo/_base/lang", "dojo/_base/array", "dojo/_base/declare", "dojo/has",
 				events = this.events(),
 				bar = this.getBarProperties();
 
-			var z = this.series.length;
-			arr.forEach(this.series, function(serie){if(serie.hidden){z--;}});
+			var z = 0; // the non-hidden series index
 
 			// Collect and calculate  all values
 			var extractedValues = this.extractValues(this._hScaler);
@@ -126,7 +123,6 @@ define(["dojo/_base/lang", "dojo/_base/array", "dojo/_base/declare", "dojo/has",
 					run.dyn.fill = theme.series.fill;
 					continue;
 				}
-				z--;
 
 				s = run.group;
 				var indexed = arr.some(run.data, function(item){
@@ -210,6 +206,7 @@ define(["dojo/_base/lang", "dojo/_base/array", "dojo/_base/declare", "dojo/has",
 				}
 				this._eventSeries[run.name] = eventSeries;
 				run.dirty = false;
+				z++;
 			}
 			this.dirty = false;
 			// chart mirroring starts

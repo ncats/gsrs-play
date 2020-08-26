@@ -5,3 +5,5 @@
 500:ix.ginas.controllers.plugins.GinasSubstanceExporterFactoryPlugin
 501:ix.core.plugins.Workers
 505:ix.ginas.controllers.plugins.CardViewPlugin
+#This has to be pretty late so it can see all the other plugins
+9999:ix.ginas.controllers.plugins.GsrsDependencyPlugin

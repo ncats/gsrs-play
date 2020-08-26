@@ -1,4 +1,4 @@
-define(["dojo/_base/array", "dojo/dom-style", "dojo/promise/all", "dojo/sniff", "./transition"],
+define("dojox/css3/transit", ["dojo/_base/array", "dojo/dom-style", "dojo/promise/all", "dojo/sniff", "./transition"],
 	function(darray, domStyle, all, has, transition){
 	// module: 
 	//		dojox/css3/transit

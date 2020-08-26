@@ -1,4 +1,4 @@
-define([], function () {
+define("dojox/encoding/digests/_sha2", [], function () {
 	// Return a hashing function for a _sha helper (_sha-32 or _sha-64), a key length, a block size, and a set
 	// of constants.
 	return function (/* sha32/64 */_sha, /* Number */_keyLength, /* Blocksize */_blockSize, /* Array */_hash) {

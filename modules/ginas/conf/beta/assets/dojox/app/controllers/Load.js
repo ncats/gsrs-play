@@ -1,4 +1,4 @@
-define(["require", "dojo/_base/lang", "dojo/_base/declare", "dojo/on", "dojo/Deferred", "dojo/when", "dojo/dom-style", "../Controller"],
+define("dojox/app/controllers/Load", ["require", "dojo/_base/lang", "dojo/_base/declare", "dojo/on", "dojo/Deferred", "dojo/when", "dojo/dom-style", "../Controller"],
 	function(require, lang, declare, on, Deferred, when, domStyle, Controller, View){
 	// module:
 	//		dojox/app/controllers/Load

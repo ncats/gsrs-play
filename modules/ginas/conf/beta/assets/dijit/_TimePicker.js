@@ -1,4 +1,4 @@
-define([
+define("dijit/_TimePicker", [
 	"dojo/_base/array", // array.forEach
 	"dojo/date", // date.compare
 	"dojo/date/locale", // locale.format

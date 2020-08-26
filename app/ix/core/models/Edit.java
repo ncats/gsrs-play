@@ -70,13 +70,13 @@ public class Edit extends BaseModel {
     
     public String version=null;
 
-    @Basic(fetch=FetchType.EAGER)
+    @Basic(fetch=FetchType.LAZY)
     @Lob
     @JsonDeserialize(as=JsonNode.class)
     @Indexable(indexed=false)
     public String oldValue; // value as Json
 
-    @Basic(fetch=FetchType.EAGER)
+    @Basic(fetch=FetchType.LAZY)
     @Lob
     @JsonDeserialize(as=JsonNode.class)
     @Indexable(indexed=false)
@@ -105,23 +105,34 @@ public class Edit extends BaseModel {
     	if(editor==null)return null;
     	return editor.username;
     }
-    
-    public ResourceReference<JsonNode> getOldValue () {
-    	if(this.oldValue==null)return null;
+    @JsonProperty("oldValue")
+    public ResourceReference<JsonNode> getOldValueReference() {
+    	//we will always have an old value
     	String uri = Global.getNamespace()+"/edits("+id+")/$oldValue";
-    	return ResourceReference.ofSerializedJson(uri, this.oldValue);
+        return ResourceReference.ofSerializedJson(uri, new Supplier<String>() {
+            @Override
+            public String get() {
+                return oldValue;
     }
-    
-    public ResourceReference<JsonNode> getNewValue () {
-    	if(this.newValue==null)return null;
+        });
+    }
+    @JsonProperty("newValue")
+    public ResourceReference<JsonNode> getNewValueReference() {
+        //we will always have new value
+
     	String uri = Global.getNamespace()+"/edits("+id+")/$newValue";
-    	return ResourceReference.ofSerializedJson(uri, this.newValue);
+    	return ResourceReference.ofSerializedJson(uri, new Supplier<String>() {
+            @Override
+            public String get() {
+                return newValue;
+            }
+        });
     }
     
 
     @JsonProperty("diff")
     public ResourceReference<JsonNode> getDiffLink () {
-    	if(this.newValue==null || this.oldValue==null)return null;
+//    	if(this.newValue==null || this.oldValue==null)return null;
     	String uri = Global.getNamespace()+"/edits("+id+")/$diff";
     	return ResourceReference.of(uri, new Supplier<JsonNode>(){
 			@Override

@@ -1,4 +1,4 @@
-define({      
+define("dojox/editor/plugins/nls/bs/Smiley", {      
 //begin v1.x content
 	smiley: "Umetni emotikon",
 	emoticonSmile: "smiješak",

@@ -1,4 +1,4 @@
-define({ root:
+define("dijit/form/nls/ComboBox", { root:
 //begin v1.x content
 ({
 		previousMessage: "Previous choices",
@@ -43,5 +43,6 @@ define({ root:
 "ca": true,
 "bg": true,
 "az": true,
-"ar": true
+"ar": true,
+"al": true
 });

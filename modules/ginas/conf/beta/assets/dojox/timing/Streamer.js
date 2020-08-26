@@ -1,4 +1,4 @@
-define(["./_base"], function(){
+define("dojox/timing/Streamer", ["./_base"], function(){
 	dojo.experimental("dojox.timing.Streamer");
 
 	return dojox.timing.Streamer = function(

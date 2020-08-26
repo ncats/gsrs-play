@@ -138,7 +138,11 @@ public class FortranLikeParserHelper {
 				if(m==null){
 					return 0;
 				}
-				return Integer.parseInt(m.getValueTrimmed());
+				String valueTrimmed = m.getValueTrimmed();
+				if(valueTrimmed.isEmpty()){
+					return 0;
+				}
+				return Integer.parseInt(valueTrimmed);
 			}
 			public String get(String key){
 				ParsedSection m=sections.get(key);

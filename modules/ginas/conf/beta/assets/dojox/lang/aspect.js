@@ -1,3 +1,5 @@
+// wrapped by build app
+define("dojox/lang/aspect", ["dojo","dijit","dojox"], function(dojo,dijit,dojox){
 dojo.provide("dojox.lang.aspect");
 
 (function(){
@@ -365,3 +367,5 @@ JoinPoint = {
 	targetName: ...		// name of the method
 };
 */
+
+});

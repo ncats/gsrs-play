@@ -1,4 +1,4 @@
-define({      
+define("dojox/editor/plugins/nls/mk/SpellCheck", {      
 //begin v1.x content
 	widgetLabel: "Групна проверка на правопис",
 	unfound: "Не е пронајдено",

@@ -1,4 +1,4 @@
-define(['dojo/store/Memory', 'dojo/store/Cache', 'dojo/when', 'dojo/aspect', 'dojo/_base/lang'],
+define("dojox/store/transaction", ['dojo/store/Memory', 'dojo/store/Cache', 'dojo/when', 'dojo/aspect', 'dojo/_base/lang'],
 	function(Memory, Cache, when, aspect, lang){
 // summary:
 //		This is a transaction managing store. When transaction is started, by calling store.transaction(),

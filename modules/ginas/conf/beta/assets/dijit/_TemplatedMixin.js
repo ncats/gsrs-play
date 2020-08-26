@@ -1,4 +1,4 @@
-define([
+define("dijit/_TemplatedMixin", [
 	"dojo/cache",	// dojo.cache
 	"dojo/_base/declare", // declare
 	"dojo/dom-construct", // domConstruct.destroy, domConstruct.toDom

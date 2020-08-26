@@ -1,3 +1,5 @@
+// wrapped by build app
+define("dojox/wire/ml/JsonHandler", ["dojo","dijit","dojox","dojo/require!dojox/wire/ml/RestHandler,dojox/wire/_base,dojox/wire/ml/util"], function(dojo,dijit,dojox){
 dojo.provide("dojox.wire.ml.JsonHandler");
 
 dojo.require("dojox.wire.ml.RestHandler");
@@ -39,4 +41,6 @@ dojo.declare("dojox.wire.ml.JsonHandler", dojox.wire.ml.RestHandler, {
 		}
 		return content; //String
 	}
+});
+
 });

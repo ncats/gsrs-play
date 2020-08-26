@@ -23,7 +23,9 @@ import play.Logger;
 @Entity
 @Inheritance
 @DiscriminatorValue("POL")
-public class PolymerSubstance extends Substance implements GinasSubstanceDefinitionAccess {
+public class PolymerSubstance extends Substance implements GinasSubstanceDefinitionAccess
+{
+
     @OneToOne(cascade=CascadeType.ALL)
     public Polymer polymer;
 
@@ -108,8 +110,15 @@ public class PolymerSubstance extends Substance implements GinasSubstanceDefinit
 				}
 				//Logger.debug("about to process unit structure " + unit.structure);
 				String molfile = unit.structure;//prepend newline to avoid issue later on
-				//guessing as to how to instantiate a structure
-				Structure structure = StructureFactory.getStructureFrom(molfile, false);
+				Structure structure = null;
+				try	{
+					structure= StructureFactory.getStructureFrom(molfile, false);
+				}
+				catch(Exception ex) {
+					Logger.warn("Unable to parse structure from polymer unit molfile: " + molfile);
+					continue;
+				}
+
 				Logger.debug("created structure OK. looking at unit type: " + unit.type);
 				int layer = 1;
 				/* all units are part of layer 1 as of 13 March 2020 based on https://cnigsllc.atlassian.net/browse/GSRS-1361
@@ -133,61 +142,7 @@ public class PolymerSubstance extends Substance implements GinasSubstanceDefinit
 
 		//todo: add additional items to the definitional element list
 		if (this.modifications != null) {
-			if (this.modifications.agentModifications != null) {
-				//todo: canonicalize the keys used in modifications
-				for (int i = 0; i < this.modifications.agentModifications.size(); i++) {
-					AgentModification a = this.modifications.agentModifications.get(i);
-					Logger.debug("processing agent mod " + a.agentModificationProcess);
-					if( a.agentSubstance == null) {
-						Logger.debug("skipping agent mod because agentSubstance is null" );
-						continue;
-					}
-
-					DefinitionalElement agentSubstanceDefElement = DefinitionalElement.of("modifications.agentModification.substance",
-									a.agentSubstance.refuuid, 2);
-					definitionalElements.add(agentSubstanceDefElement);
-					DefinitionalElement agentModElement = DefinitionalElement.of("modifications.agentModificationProcess",
-									a.agentModificationProcess, 2);
-					definitionalElements.add(agentModElement);
-				}
-			}
-
-			for (int i = 0; i < this.modifications.physicalModifications.size(); i++) {
-				PhysicalModification p = this.modifications.physicalModifications.get(i);
-				Logger.debug("processing physical modification " + p.modificationGroup);
-				DefinitionalElement physicalModElement = DefinitionalElement.of("modifications.physicalModificationGroup", p.modificationGroup, 2);
-				definitionalElements.add(physicalModElement);
-				Logger.debug("processing p.physicalModificationRole " + p.physicalModificationRole);
-				DefinitionalElement physicalModElementProcess = DefinitionalElement.of("modifications.physicalModificationRole",
-								p.physicalModificationRole, 2);
-				definitionalElements.add(physicalModElementProcess);
-			}
-
-			for (int i = 0; i < this.modifications.structuralModifications.size(); i++) {
-				//todo: canonicalize the keys used in modifications
-				StructuralModification sm = this.modifications.structuralModifications.get(i);
-				if( sm.molecularFragment == null) {
-					continue;
-				}
-				DefinitionalElement structModRefuuidDefElement =
-								DefinitionalElement.of("modifications.structuralModifications.molecularFragment.refuuid", sm.molecularFragment.refuuid, 2);
-				definitionalElements.add(structModRefuuidDefElement);
-
-				Logger.debug("processing structural modification with group " + sm.modificationGroup);
-				DefinitionalElement structModElement = DefinitionalElement.of("modifications.structuralModifications.group",
-								sm.modificationGroup, 2);
-				definitionalElements.add(structModElement);
-				Logger.debug("processing sm.siteContainer " + sm.siteContainer.getShorthand());
-				DefinitionalElement structModResidueElement =
-								DefinitionalElement.of("modifications.structuralModifications.sites",
-								sm.siteContainer.getShorthand(), 2);
-				definitionalElements.add(structModResidueElement);
-
-				Logger.debug("processing structuralModificationType " + sm.structuralModificationType);
-				DefinitionalElement typeDefinitionalElement =
-								DefinitionalElement.of("modifications.structuralModifications.structuralModificationType", sm.structuralModificationType);
-				definitionalElements.add(typeDefinitionalElement);
-			}
+				definitionalElements.addAll(this.modifications.getDefinitionalElements().getElements());
 		}
 
 		if( this.properties != null ) {

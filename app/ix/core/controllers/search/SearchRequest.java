@@ -167,89 +167,13 @@ public class SearchRequest {
 		this.query = builder.query;
 	}
 
+
 	
-	/**
-	 * Extracts a lucene query from the contained query text,
-	 * using the provided {@link QueryParser}. This only
-	 * extracts a query from the text, and does not include
-	 * kind and subset information. If the query text is null,
-	 * this returns a {@link MatchAllDocsQuery}.
-	 * @param parser
-	 * @return
-	 * @throws ParseException
-	 */
-	public Query extractLuceneQuery(QueryParser parser) throws ParseException{
-	    Query query = null;
-        if (this.query == null) {
-            query = new MatchAllDocsQuery();
-        } else {
-            query = parser.parse(this.query);
-        }
-        return query;
-	}
-	
-	public Query extractFullQuery(QueryParser parser, FacetsConfig facetsConfig) throws ParseException{
-	    Query query = extractLuceneQuery(parser);
-	    if (options.getFacets().isEmpty()) {
-	        return query;
-	    }else{
-    	    DrillDownQuery ddq = new DrillDownQuery(facetsConfig, query);
-            options.getDrillDownsMap().values()
-                                      .stream()
-                                      .flatMap(t->t.stream())
-                                      .forEach(dp->{
-                                          ddq.add(dp.getDrill(), dp.getPaths());
-                                      });
-            return ddq;
-	    }
-	}
-	public Tuple<Query,Filter> extractFullFacetQueryAndFilter(QueryParser parser, FacetsConfig facetsConfig, String facet) throws ParseException{
-	    if(!options.isSideway() || options.getFacets().isEmpty()){
-	        return Tuple.of(extractFullQuery(parser,facetsConfig),null);
+	public Query extractFullFacetQuery(TextIndexer indexer,  String facet) throws ParseException {
+		return indexer.extractFullFacetQuery(this.query, this.options, facet);
 	    }
 	    
-	    
-	    Query query = extractLuceneQuery(parser);
-	    
 
-	    
-	    List<Filter> nonStandardFacets = new ArrayList<Filter>();
-
-	    DrillDownQuery ddq = new DrillDownQuery(facetsConfig, query);
-	    options.getDrillDownsMap().values()
-                    	    .stream()
-                    	    .flatMap(t->t.stream())
-                    	    .filter(dp->!dp.getDrill().equals(facet))
-                    	    .filter(dp->{
-                    	    	if(dp.getDrill().startsWith("^")){
-                		    		nonStandardFacets.add(new TermsFilter(new Term(TextIndexer.TERM_VEC_PREFIX + dp.getDrill().substring(1), dp.getPaths()[0])));
-                		    		return false;
-                		    	}else if(dp.getDrill().startsWith("!")){
-                		    		System.out.println("Found a not!" + dp.getDrill());
-                		    		BooleanFilter f = new BooleanFilter();
-                		    		TermsFilter tf = new TermsFilter(new Term(TextIndexer.TERM_VEC_PREFIX + dp.getDrill().substring(1), dp.getPaths()[0]));
-                		    		f.add(new FilterClause(tf, BooleanClause.Occur.MUST_NOT));
-                		    		nonStandardFacets.add(f);
-                		    		return false;
-                		    	}
-                		    	return true;
-                    	    })
-                    	    .forEach(dp->{
-                    	        ddq.add(dp.getDrill(), dp.getPaths());
-                    	    });
-	    Filter filter = null;
-	    
-	    if(!nonStandardFacets.isEmpty()){
-			filter = new ChainedFilter(nonStandardFacets.toArray(new Filter[0])
-					                  ,ChainedFilter.AND);	
-		}
-	    return Tuple.of(ddq,filter);
-    }
-	
-	public Query extractFullFacetQuery(QueryParser parser, FacetsConfig facetsConfig, String facet) throws ParseException{
-	    return extractFullFacetQueryAndFilter(parser,facetsConfig,facet).k();
-    }
-	
 	
 	
     public Map<String, String[]> asQueryParams() {

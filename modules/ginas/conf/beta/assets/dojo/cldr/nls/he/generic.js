@@ -1,5 +1,5 @@
 define(
-//begin v1.x content
+"dojo/cldr/nls/he/generic", //begin v1.x content
 {
 	"field-second-relative+0": "עכשיו",
 	"field-weekday": "יום בשבוע",

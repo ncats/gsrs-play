@@ -1,4 +1,4 @@
-define(["dojo/_base/kernel",
+define("dojox/jsonPath/query", ["dojo/_base/kernel",
 	"dojo/_base/lang"
 ], function(kernel, lang){
 	var query = function( /*Object*/ obj, /*String*/ expr, /*Object*/ arg){

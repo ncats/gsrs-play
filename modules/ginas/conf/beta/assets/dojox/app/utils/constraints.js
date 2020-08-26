@@ -1,4 +1,4 @@
-define(["dojo/_base/array"], function(arr){
+define("dojox/app/utils/constraints", ["dojo/_base/array"], function(arr){
 	var constraints = [];
 	return {
 		getSelectedChild: function(view, constraint){

@@ -1,3 +1,5 @@
+// wrapped by build app
+define("dojox/secure/fromJson", ["dojo","dijit","dojox"], function(dojo,dijit,dojox){
 dojo.provide("dojox.secure.fromJson");
 
 // Used with permission from Mike Samuel of Google (has CCLA), from the json-sans-eval project:
@@ -237,3 +239,4 @@ dojox.secure.fromJson = typeof JSON != "undefined" ? JSON.parse :
 		return result;
 	};
 })();
+});

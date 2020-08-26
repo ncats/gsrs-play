@@ -259,7 +259,7 @@ public class SequenceIndexer {
         private final SEG segment; // coordinate of query
         public final String query; // segment of query
         public final String target; // segment of sequence
-        public final String alignment; // full alignment string
+        public  String alignment; // full alignment string
         public final int score;
         public final double iden;
         public final double global;
@@ -937,14 +937,12 @@ public class SequenceIndexer {
 		            }
             }
         }
-//        System.out.print(seqMap.size() + "\t");
-//        System.out.print(seqMap.keySet().stream().map(s->s.d+"").collect(Collectors.joining(",")) + "\t");
-        //if(true)return;
+
         SequenceAlignmentHelper alignmentHelper = SequenceAlignmentHelper.createFor(seqType);
 
         ResidueSequence querySeq = alignmentHelper.toSequence(query);
 
-        Map<String,Result> _cachedResults = new ConcurrentHashMap<String,Result>();
+        Map<String,Result> _cachedResults = new ConcurrentHashMap<>();
         int qlength=query.length();
 
         List<Result> alignedResults = seqMap.entrySet().parallelStream()
@@ -1068,12 +1066,11 @@ public class SequenceIndexer {
                                               fullBuilder.append(topBuilder).append(middleBuilder).append(bottomBuilder);
                                           }
 
-	      //GK    1 - 456 [Query
+
+
+
 	                      Alignment aln = new Alignment(null, query, entry.getValue(),
-//                                                  topBuilder + "    " + alignment.getQueryRange().asRange().getBegin(Range.CoordinateSystem.RESIDUE_BASED) + " - " + alignment.getQueryRange().asRange().getEnd(Range.CoordinateSystem.RESIDUE_BASED) + " [Query]\n"
-//                                                          + middleBuilder + "\n" + bottomBuilder + "    " + alignment.getSubjectRange().asRange().getBegin(Range.CoordinateSystem.RESIDUE_BASED) + " - " + alignment.getSubjectRange().asRange().getEnd(Range.CoordinateSystem.RESIDUE_BASED) + " [Target]\n"
-//                                                  topBuilder.to
-//                                                  ,
+
                                                     fullBuilder.toString(),
 
 	                              matched, matched/(double)query.length(),
@@ -1111,32 +1108,7 @@ public class SequenceIndexer {
         for(Result r : alignedResults) {
             results.put(r);
         }
-//	              	System.out.println(entry.getKey() + " score = " + result.score);
-//	              	//Result result=new Result(resultC.id,resultC.query,resultC.target);
-//
-//	              	if(result.score>=0 && result.score<identity){
-//	              		return;
-//	              	}else if(result.score>=identity){
-//	              		Result resultCopy=new Result(entry.getKey().s,result.query,result.target);
-//	              		resultCopy.alignments.addAll(result.alignments);
-//	              		resultCopy.setScore(result.score,result.scoreType);
-//	              		results.put(resultCopy);
-//	              		return;
-//	              	}
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//	                  }
 
-//            	  }catch(Exception e){
-//            		  e.printStackTrace();
-//            	  }
                   //Sub alignment score
                   // (local alignment score, multiplied by the fraction of the
                   //  residues found in the query)
@@ -1155,35 +1127,7 @@ public class SequenceIndexer {
                   //
                  // double sub=iden*score/(double)query.length();
 
-//              });
 
-        /*
-            if(maxaln!=null){
-                double score =0;
-                switch(rt){
-                case GLOBAL:
-                	int totalMatch = result.alignments.stream()
-                	                 .mapToInt(t->t.bsq.cardinality())
-                	                 .sum();
-
-                    score=(totalMatch +0.0)/Math.max(seq.length(),query.length()) ;
-                    break;
-                case LOCAL:
-                    score=maxaln.iden;
-                    break;
-                case SUB:
-                    score=maxaln.sub;
-                    break;
-                default:
-                    break;
-                }
-                result.setScore(score, rt);
-                if (score >= identity) {
-                    results.put(result);
-                }
-            }
-        }
-        */
     }
 
     /**

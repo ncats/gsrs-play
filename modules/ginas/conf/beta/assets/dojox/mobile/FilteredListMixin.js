@@ -1,4 +1,4 @@
-define([
+define("dojox/mobile/FilteredListMixin", [
 	"require",
 	"dojo/_base/array",
 	"dojo/_base/declare",

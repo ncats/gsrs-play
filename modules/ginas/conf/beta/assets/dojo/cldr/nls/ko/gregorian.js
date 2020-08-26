@@ -1,5 +1,5 @@
 define(
-//begin v1.x content
+"dojo/cldr/nls/ko/gregorian", //begin v1.x content
 {
 	"dateFormatItem-Ehm": "(E) a h:mm",
 	"days-standAlone-short": [

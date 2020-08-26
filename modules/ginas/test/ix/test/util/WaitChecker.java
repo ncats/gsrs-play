@@ -57,7 +57,7 @@ public class WaitChecker<T, R> {
         boolean passed=false;
         do{
             if(count >0){
-                System.out.println("waiting.." + count + " / " + maxNumTries);
+//                System.out.println("waiting.." + count + " / " + maxNumTries);
                 Thread.sleep(sleepTime);
             }
 

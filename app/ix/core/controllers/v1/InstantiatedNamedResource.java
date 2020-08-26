@@ -31,7 +31,8 @@ public interface InstantiatedNamedResource<I,V> {
     
 
 
-    public static enum Operations{
+
+	enum Operations{
         CREATE_OPERATION(new Operation("create")),
         VALIDATE_OPERATION(new Operation("validate")),
         //TODO: implement
@@ -93,8 +94,16 @@ public interface InstantiatedNamedResource<I,V> {
 
 
 		HIERARCHY_OPERATION(new Operation("hierarchy",
-				Argument.of(null, Id.class, "id")))
+				Argument.of(null, Id.class, "id"))),
 
+		EXPORT_FORMATS_OPERATION(new Operation("getExportFormats")),
+		EXPORT_OPTIONS_OPERATION(new Operation("getExportOptions",
+				Argument.of(null, String.class, "etagId"),
+				Argument.of(true, boolean.class, "publicOnly"))),
+		EXPORT_OPERATION(new Operation("createExport",
+				Argument.of(null, String.class, "etagId"),
+				Argument.of(null, String.class, "format"),
+				Argument.of(true, boolean.class, "publicOnly"))),
 		;
         
         private final Operation op;
@@ -219,7 +228,6 @@ public interface InstantiatedNamedResource<I,V> {
 	}
 	
 	default Result update(I id, String field){
-	    System.out.println("Calling update method");
 		return operate(Operations.UPDATE_OPERATION.with(id,field));
 	}
 	
@@ -232,7 +240,16 @@ public interface InstantiatedNamedResource<I,V> {
 		return operate(Operations.UPDATE_ENTITY_OPERATION.with());
 	}
 	
-		
+	default Result getExportFormats(){
+		return operate(Operations.EXPORT_FORMATS_OPERATION.with());
+	}
+	default Result getExportOptions(String etagId, boolean publicOnly){
+		return operate(Operations.EXPORT_OPTIONS_OPERATION.with(etagId, publicOnly));
+	}
+	default Result createExport(String etagId, String format, boolean publicOnly){
+		return operate(Operations.EXPORT_OPERATION.with(etagId, format ,publicOnly));
+	}
+
 	default Optional<I> resolveID(String synonym){
 		if(Long.class.equals(this.getIdType()) && StringUtils.isNumeric(synonym)){
 			return (Optional<I>) Optional.of(Long.parseLong(synonym));

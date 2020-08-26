@@ -1,4 +1,4 @@
-define({      
+define("dijit/_editor/nls/bs/FontChoice", {      
 //begin v1.x content
 	fontSize: "Veličina",
 	fontName: "Font",

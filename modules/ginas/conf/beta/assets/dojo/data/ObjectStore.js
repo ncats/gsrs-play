@@ -1,4 +1,4 @@
-define(["../_base/lang", "../Evented", "../_base/declare", "../_base/Deferred",
+define("dojo/data/ObjectStore", ["../_base/lang", "../Evented", "../_base/declare", "../_base/Deferred",
 	"../promise/all", "../_base/array", "../_base/connect", "../regexp"
 ], function(lang, Evented, declare, Deferred, all, array, connect, regexp){
 

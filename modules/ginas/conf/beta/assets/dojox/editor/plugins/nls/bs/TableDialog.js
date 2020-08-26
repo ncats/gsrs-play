@@ -1,4 +1,4 @@
-define({      
+define("dojox/editor/plugins/nls/bs/TableDialog", {      
 //begin v1.x content
 	insertTableTitle: "Umetni tabelu",
 	modifyTableTitle: "Promijeni tabelu",

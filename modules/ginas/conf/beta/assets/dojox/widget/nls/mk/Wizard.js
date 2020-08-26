@@ -1,4 +1,4 @@
-define({      
+define("dojox/widget/nls/mk/Wizard", {      
 //begin v1.x content
 next: "Следно",
 previous: "Претходно",

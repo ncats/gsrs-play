@@ -1,4 +1,4 @@
-define(["dojo/_base/declare", "dojo/dom-style"],
+define("dojox/charting/bidi/axis2d/Default", ["dojo/_base/declare", "dojo/dom-style"],
 	function(declare, domStyle){
 	// module:
 	//		dojox/charting/bidi/axis2d/Default			

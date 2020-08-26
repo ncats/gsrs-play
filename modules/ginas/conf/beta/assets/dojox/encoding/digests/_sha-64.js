@@ -1,4 +1,4 @@
-define(["./_sha-32"], function(sha32){
+define("dojox/encoding/digests/_sha-64", ["./_sha-32"], function(sha32){
 	//	basic functions for 64-bit word based SHA-2 processing.  Includes
 	//	a constructor for int64.  Relies on the sha32 base for encoding functions,
 	//	but provides its own, making it easier for the user to not worry about 64-bit

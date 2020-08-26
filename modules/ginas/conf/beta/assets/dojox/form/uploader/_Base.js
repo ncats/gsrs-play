@@ -1,4 +1,4 @@
-define([
+define("dojox/form/uploader/_Base", [
 	"dojo/dom-form",
 	"dojo/dom-style",
 	"dojo/dom-construct",

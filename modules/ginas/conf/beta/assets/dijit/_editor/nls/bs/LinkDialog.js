@@ -1,4 +1,4 @@
-define({      
+define("dijit/_editor/nls/bs/LinkDialog", {      
 //begin v1.x content
 	createLinkTitle: "Osobine povezivanja",
 	insertImageTitle: "Osobine slike",

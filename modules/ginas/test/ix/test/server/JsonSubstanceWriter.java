@@ -2,6 +2,7 @@ package ix.test.server;
 
 import ix.ginas.exporters.Exporter;
 import ix.ginas.exporters.JsonExporterFactory;
+import ix.core.exporters.OutputFormat;
 import ix.ginas.exporters.SubstanceExporterFactory;
 import ix.ginas.models.v1.Substance;
 
@@ -22,7 +23,7 @@ public class JsonSubstanceWriter implements Closeable{
 
     private static final SubstanceExporterFactory.Parameters IGNORED = new SubstanceExporterFactory.Parameters() {
         @Override
-        public SubstanceExporterFactory.OutputFormat getFormat() {
+        public OutputFormat getFormat() {
             return null;
         }
     };

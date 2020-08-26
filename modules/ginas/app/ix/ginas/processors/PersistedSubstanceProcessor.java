@@ -49,14 +49,14 @@ public abstract class PersistedSubstanceProcessor implements EntityProcessor<Sub
                     Edit e = oldEdit.get();
                     Substance oldSubstance = (Substance) EntityUtils
                             .getEntityInfoFor(e.kind)
-                            .fromJsonNode(e.getOldValue().rawJson());
+                            .fromJsonNode(e.getOldValueReference().rawJson());
 
                     handleUpdatedSubstance(oldSubstance, obj);
                 }catch(Exception ex){
                     throw new IllegalArgumentException(ex);
                 }
             }else{
-                System.out.println("no edit?");
+//                System.out.println("no edit?");
                 //no old edit and not version 1 ?
                 //assume new substance ?
                 handleNewSubstance(obj);

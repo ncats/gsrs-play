@@ -101,7 +101,7 @@ public class APIFacetSearchTest extends AbstractGinasClassServerTest{
         Map<String,AtomicInteger> tmpvalueCounter=new ConcurrentHashMap<>();
         Map<String,AtomicInteger> tmpSmallerValueCounter=new ConcurrentHashMap<>();
         
-        System.out.println("loading");
+//        System.out.println("loading");
         TreeSet<String> seen = new TreeSet<>();
         long timeElapsed = StopWatch.timeElapsed(()->{
             
@@ -144,8 +144,8 @@ public class APIFacetSearchTest extends AbstractGinasClassServerTest{
         smallerFacetValueCounter=new TreeMap<>(tmpSmallerValueCounter.entrySet().stream().map(Tuple::of).map(Tuple.vmap(i->i.get()))
                 .collect(Tuple.toMap()));
         
-        System.out.println("Load time:" + timeElapsed);
-        System.out.println("seen = " + seen);
+//        System.out.println("Load time:" + timeElapsed);
+//        System.out.println("seen = " + seen);
         //Just trigger a basic lucene caching
         //otherwise timing is off for other tests
         api.fetchSubstancesSearch();

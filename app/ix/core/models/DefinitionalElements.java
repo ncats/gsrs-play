@@ -1,11 +1,13 @@
 package ix.core.models;
 
+import ix.core.util.LogUtil;
 import ix.utils.Util;
 import java.nio.charset.Charset;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 /**
  * Created by katzelda on 2/7/19.
@@ -54,21 +56,37 @@ public class DefinitionalElements {
 
     public List<DefinitionalElementDiff> diff(DefinitionalElements other) {
 
+        LogUtil.trace(new Supplier<String>() {
+            @Override
+            public String get() {
+                return String.format("starting in DefinitionalElements.diff. total in current %d; total in other %d ",
+                        elementMap.size(), other.elementMap.size());
+            }
+        });
+
         List<DefinitionalElementDiff> diffs = new ArrayList<>();
         HashSet<String> newKeys = new HashSet<>(elementMap.keySet());
         newKeys.removeAll(other.elementMap.keySet());
         if(!newKeys.isEmpty()){
             for(String k : newKeys) {
+                play.Logger.trace("looking at new key " + k);
                 for(DefinitionalElement newValue : elementMap.get(k)) {
                     diffs.add(new DefinitionalElementDiff(DefinitionalElementDiff.OP.ADD, null, newValue));
                 }
             }
+        } else {
+            play.Logger.trace("newKeys is empty");
         }
         HashSet<String> oldKeys = new HashSet<>(other.elementMap.keySet());
         oldKeys.removeAll(elementMap.keySet());
         if(!oldKeys.isEmpty()){
             for(String k : oldKeys) {
-                List<DefinitionalElement> definitionalElements = elementMap.get(k);
+                LogUtil.trace(new Supplier<String>(){
+                public String get() {
+                    return "looking at old key " + k;
+                }
+            });
+                List<DefinitionalElement> definitionalElements = other.elementMap.get(k);
                 if(definitionalElements ==null){
                     continue;
                 }
@@ -76,6 +94,8 @@ public class DefinitionalElements {
                     diffs.add(new DefinitionalElementDiff(DefinitionalElementDiff.OP.REMOVED,oldValue, null));
                 }
             }
+        } else {
+            play.Logger.trace("oldKeys is empty");
         }
 
         //ok we got the easy ones out of the way
@@ -147,7 +167,7 @@ public class DefinitionalElements {
                 }
                 layers.add(encodeString(digest.digest()));
             } catch (NoSuchAlgorithmException e) {
-                System.out.println("NoSuchAlgorithmException: " + e.getMessage());
+//                System.out.println("NoSuchAlgorithmException: " + e.getMessage());
                 //this shouldn't happen...
                 throw new IllegalStateException(e);
             }

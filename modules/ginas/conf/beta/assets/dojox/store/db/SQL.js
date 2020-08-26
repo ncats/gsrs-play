@@ -1,4 +1,4 @@
-define(['dojo/_base/declare', 'dojo/Deferred', 'dojo/when', 'dojo/store/util/QueryResults', 'dojo/_base/lang', 'dojo/promise/all'], function(declare, Deferred, when, QueryResults, lang, all) {
+define("dojox/store/db/SQL", ['dojo/_base/declare', 'dojo/Deferred', 'dojo/when', 'dojo/store/util/QueryResults', 'dojo/_base/lang', 'dojo/promise/all'], function(declare, Deferred, when, QueryResults, lang, all) {
 	//	module:
 	//		./store/db/SQL
 	//  summary:
