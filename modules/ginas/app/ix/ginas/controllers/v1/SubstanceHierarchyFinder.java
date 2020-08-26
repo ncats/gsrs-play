@@ -11,8 +11,6 @@ import java.util.stream.Stream;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import ix.core.plugins.IxCache;
 import ix.core.util.CachedSupplier;
 import ix.core.util.EntityUtils;
@@ -639,7 +637,7 @@ public class SubstanceHierarchyFinder {
 								path="#";
 							}
 
-							String showID="NO " + GinasUtils.getAPPROVAL_ID_GEN_NAME();
+							String showID="NO " + GinasUtils.getApprovalIdGenerator().getName();
 							
 
 							String text=("[" + fin.value.getApprovalIDDisplay() + "] " 

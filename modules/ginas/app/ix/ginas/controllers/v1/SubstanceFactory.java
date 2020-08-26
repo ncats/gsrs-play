@@ -879,7 +879,7 @@ public class SubstanceFactory extends EntityFactory {
 			}
 		}
 
-		s.approvalID = GinasUtils.getAPPROVAL_ID_GEN().generateId(s);
+		s.approvalID = GinasUtils.getApprovalIdGenerator().generateId(s);
 		s.approved = TimeUtil.getCurrentDate();
 		s.approvedBy = user;
 		s.status = Substance.STATUS_APPROVED;

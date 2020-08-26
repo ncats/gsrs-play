@@ -7,9 +7,9 @@ import java.util.Set;
 
 public abstract class RandomAlphaNumericIDGenerator<T> extends AbstractNoDependencyIDGenerator<T, String> {
 	private char[] alphabet;
-	private int idLen=9;
-	private boolean check=false;
-	Set<String> recentlyGenerated = new HashSet<String>();
+	private int idLen;
+	private boolean check;
+	Set<String> recentlyGenerated = new HashSet<>();
 
 	private final Random random;
 	public RandomAlphaNumericIDGenerator(char[] alphabet, int len, boolean check){
@@ -25,12 +25,28 @@ public abstract class RandomAlphaNumericIDGenerator<T> extends AbstractNoDepende
 	
 	@Override
 	public synchronized String generateID() {
-		int sum=0;		
+		String s = generateRandomID();
+		String decoratedId = decorateRandomID(s);
+		if(recentlyGenerated.add(decoratedId)){
+			if(allowID(s, decoratedId)){
+				return decoratedId;
+			}
+		}
+		//if we get here something was bad
+		return generateID();
+	}
+
+	protected String decorateRandomID(String randomId){
+		return randomId;
+	}
+
+	protected String generateRandomID() {
+		int sum=0;
 		int totalLength=idLen;
-		
+
 		if(check)totalLength++;
 		char[] retid= new char[totalLength];
-		
+
 		for(int i=0;i<idLen;i++){
 			int k=random.nextInt(alphabet.length);
 			retid[i]=alphabet[k];
@@ -40,26 +56,19 @@ public abstract class RandomAlphaNumericIDGenerator<T> extends AbstractNoDepende
 			int chk=sum%alphabet.length;
 			retid[idLen]=alphabet[chk];
 		}
-		
-		String s=new String(retid);
-		if(recentlyGenerated.contains(s)){
-			s=generateID();
-		}
-		
-		recentlyGenerated.add(s);
-		while(!allowID(s)){
-			s=generateID();
-		}
-		return s;
+
+		return new String(retid);
 	}
+
 	/**
 	 * Does additional check to ensure that the id is not a duplicate,
 	 * and / or does not break additional rules. If this function returns false,
 	 * another random ID will be generated.
-	 * @param s
+	 * @param randomPart
+	 * @param fullId
 	 * @return
 	 */
-	public abstract boolean allowID(String s);
+	public abstract boolean allowID(String randomPart, String fullId);
 
 
 	public int charValue(char c){

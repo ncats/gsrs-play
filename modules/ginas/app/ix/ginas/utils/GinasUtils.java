@@ -41,36 +41,15 @@ public class GinasUtils {
 	public static GinasProcessingStrategy DEFAULT_BATCH_STRATEGY = GinasProcessingStrategy
 			.ACCEPT_APPLY_ALL_MARK_FAILED();
 
-	public static String APPROVAL_ID_GEN_NAME=
-			ConfigHelper.getOrDefault("ix.ginas.approvalIDGenerator.name", "UNII");
 
-	public static String getAPPROVAL_ID_GEN_NAME() {
-		return APPROVAL_ID_GEN_NAME;
-	}
+	private static NamedIdGenerator<Substance,String> APPROVAL_ID_GEN;
 
-	private static IdGeneratorForType<Substance, String> APPROVAL_ID_GEN = makeApprovalIdGen();
-
-	public static IdGeneratorForType<Substance, String> getAPPROVAL_ID_GEN() {
+	public static NamedIdGenerator<Substance, String> getApprovalIdGenerator() {
 		return APPROVAL_ID_GEN;
 	}
 
-	public static void setAPPROVAL_ID_GEN(IdGeneratorForType<Substance, String> aPPROVAL_ID_GEN) {
-		APPROVAL_ID_GEN = aPPROVAL_ID_GEN;
-	}
-
-	public static String NULL_MOLFILE = "\n\n\n  0  0  0     0  0            999 V2000\nM  END\n\n$$$$";
-
-	private static IdGeneratorForType<Substance, String> makeApprovalIdGen() {
-		try {
-			String className = ConfigHelper.getOrDefault("ix.ginas.approvalIDGenerator.class", APPROVAL_ID_GEN_NAME);
-			if (! className.contains(".")) {
-				className = "ix.ginas.utils." + className + "Generator";
-			}
-			Class<?> idGeneratorCls = IOUtil.getGinasClassLoader().loadClass(className);
-			return (IdGeneratorForType<Substance, String>) idGeneratorCls.newInstance();
-		} catch (Exception e) {
-			return new UNIIGenerator();
-		}
+	public static void setApprovalIdGenerator(NamedIdGenerator<Substance,String> approvalIDGenerator) {
+		APPROVAL_ID_GEN = approvalIDGenerator;
 	}
 
 	public static Substance makeSubstance(InputStream bis) throws Exception {

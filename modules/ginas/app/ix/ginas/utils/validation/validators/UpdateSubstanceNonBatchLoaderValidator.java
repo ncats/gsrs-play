@@ -55,7 +55,7 @@ public class UpdateSubstanceNonBatchLoaderValidator extends AbstractValidatorPlu
                                 .WARNING_MESSAGE("The approvalID for the record has been removed. Was ('" + objold.approvalID
                                         + "'). This is strongly discouraged."));
                     } else {
-                    if(!GinasUtils.getAPPROVAL_ID_GEN().isValidId(objnew.approvalID)){
+                    if(!GinasUtils.getApprovalIdGenerator().isValidId(objnew.approvalID)){
                         callback.addMessage(GinasProcessingMessage
                                 .ERROR_MESSAGE("The approvalID for the record has changed. Was ('" + objold.approvalID
                                         + "') but now is ('" + objnew.approvalID + "'). This approvalID is either a duplicate or invalid."));

@@ -469,7 +469,7 @@ public class GinasApp extends App {
             }
             if("Record Status".equals(name())){
 	            if (Substance.STATUS_APPROVED.equalsIgnoreCase(label)) {
-	                return "Validated (" + GinasUtils.getAPPROVAL_ID_GEN_NAME() + ")";
+	                return "Validated (" + GinasUtils.getApprovalIdGenerator().getName() + ")";
 	            }
 	            if ("non-approved".equalsIgnoreCase(label)) {
 	                return "Non-Validated";
