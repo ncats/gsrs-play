@@ -151,7 +151,7 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
 	    			Substance parent=(Substance) IOUtil.getGinasClassLoader().loadClass("ix.ginas.controllers.v1.SubstanceFactory").getMethod("getFullSubstance",SubstanceReference.class).invoke(null, sr);
 	    			if(parent!=null){
 		    			if(parent.status.equals(this.STATUS_APPROVED)){
-		    				return "Validated Subconcept (UNII)";
+						return "Validated Subconcept";
 		    			}
 	    			}
     			}catch(Exception e){
@@ -160,7 +160,7 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
     		}
     		
     		if(sr.approvalID!=null){
-    			return "Validated Subconcept (UNII)";
+			return "Validated Subconcept";
     		}
     		return "Pending Subconcept";
     	}else{
@@ -266,7 +266,7 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
     public List<Reference> references = new ArrayList<Reference>();
 
     @JSONEntity(title = "Approval ID", isReadOnly = true)
-    @Column(length = 10)
+    @Column(length = 20)
     @Indexable(suggest = true, name = "Approval ID", sortable=true)
     public String approvalID;
 
@@ -938,7 +938,7 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
     @JsonIgnore
     public String getDisplayStatus(){
         if(STATUS_APPROVED.equalsIgnoreCase(status)){
-            return "Validated (UNII)"; //TODO: move this elsewhere
+            return "Validated";
         }
         return status;
     }

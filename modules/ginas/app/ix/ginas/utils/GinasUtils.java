@@ -29,6 +29,7 @@ import ix.core.processing.RecordPersister;
 import ix.core.processing.RecordTransformer;
 import ix.core.util.CachedSupplier;
 import ix.core.util.ConfigHelper;
+import ix.core.util.IOUtil;
 import ix.ginas.models.v1.Substance;
 import ix.ginas.utils.validation.DefaultSubstanceValidator;
 import play.Logger;
@@ -39,25 +40,17 @@ public class GinasUtils {
 	
 	public static GinasProcessingStrategy DEFAULT_BATCH_STRATEGY = GinasProcessingStrategy
 			.ACCEPT_APPLY_ALL_MARK_FAILED();
-	private static IdGeneratorForType<Substance, String> APPROVAL_ID_GEN = new UNIIGenerator();
-	
 
 
-	public static IdGeneratorForType<Substance, String> getAPPROVAL_ID_GEN() {
+	private static NamedIdGenerator<Substance,String> APPROVAL_ID_GEN;
+
+	public static NamedIdGenerator<Substance, String> getApprovalIdGenerator() {
 		return APPROVAL_ID_GEN;
 	}
 
-	public static void setAPPROVAL_ID_GEN(IdGeneratorForType<Substance, String> aPPROVAL_ID_GEN) {
-		APPROVAL_ID_GEN = aPPROVAL_ID_GEN;
+	public static void setApprovalIdGenerator(NamedIdGenerator<Substance,String> approvalIDGenerator) {
+		APPROVAL_ID_GEN = approvalIDGenerator;
 	}
-
-	public static String NULL_MOLFILE = "\n\n\n  0  0  0     0  0            999 V2000\nM  END\n\n$$$$";
-
-
-
-
-
-
 
 	public static Substance makeSubstance(InputStream bis) throws Exception {
 		ObjectMapper mapper = new ObjectMapper();

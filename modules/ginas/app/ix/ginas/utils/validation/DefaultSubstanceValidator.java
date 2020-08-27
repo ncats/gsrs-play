@@ -222,7 +222,7 @@ public class DefaultSubstanceValidator extends AbstractValidator<Substance> {
 								.WARNING_MESSAGE("The approvalID for the record has been removed. The approvalID was \"" + objold.approvalID
 										+ "\". Removing an approvalID is strongly discouraged."));
 					}else{
-						if(!GinasUtils.getAPPROVAL_ID_GEN().isValidId(objnew.approvalID)){
+						if(!GinasUtils.getApprovalIdGenerator().isValidId(objnew.approvalID)){
 							vlad.add(GinasProcessingMessage
 									.ERROR_MESSAGE("The approvalID for the record has changed. Was ('" + objold.approvalID
 											+ "') but now is ('" + objnew.approvalID + "'). This approvalID is either a duplicate or invalid."));

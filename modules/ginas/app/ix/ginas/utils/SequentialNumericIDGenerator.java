@@ -1,12 +1,13 @@
 package ix.ginas.utils;
 
 
-public abstract class SequentialNumericIDGenerator extends AbstractNoDependencyIDGenerator<Object, String> {
+
+public abstract class SequentialNumericIDGenerator<T> extends AbstractNoDependencyIDGenerator<T, String> implements NamedIdGenerator<T, String> {
 
 	private int len;
 	
 	public String suffix;
-	private boolean padding = true;
+	private boolean padding;
 	
 	public SequentialNumericIDGenerator(int len, String suffix, boolean padding){
 		this.len=len;
@@ -25,16 +26,16 @@ public abstract class SequentialNumericIDGenerator extends AbstractNoDependencyI
 		long next=getNextNumber();
 		String adapt=adapt(next);
 		if(padding){
-			String pad = getPadding(len-suffix.length()-adapt.length());
-			adapt=pad+adapt;
+			return padd(len-suffix.length()-adapt.length(), adapt);
 		}
 		return adapt + suffix;
 	}
-	private String getPadding(int len){
-		StringBuilder sb = new StringBuilder();
+	private String padd(int len, String s){
+		StringBuilder sb = new StringBuilder(len+ s.length() + suffix.length());
 		for(int i=0;i<len;i++){
 			sb.append("0");
 		}
+		sb.append(s).append(suffix);
 		return sb.toString();
 	}
 

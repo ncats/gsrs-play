@@ -906,7 +906,7 @@ create table ix_ginas_substance (
   approved                  timestamp,
   change_reason             varchar(255),
   modifications_uuid        varchar(40),
-  approval_id               varchar(10),
+  approval_id               varchar(20),
   internal_version          bigint not null,
   protein_uuid              varchar(40),
   specified_substance_uuid  varchar(40),

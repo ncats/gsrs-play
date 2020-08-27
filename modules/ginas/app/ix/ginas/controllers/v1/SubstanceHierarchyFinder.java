@@ -11,8 +11,6 @@ import java.util.stream.Stream;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import ix.core.plugins.IxCache;
 import ix.core.util.CachedSupplier;
 import ix.core.util.EntityUtils;
@@ -26,6 +24,7 @@ import ix.ginas.models.v1.StructurallyDiverseSubstance;
 import ix.ginas.models.v1.Substance;
 import ix.ginas.models.v1.SubstanceReference;
 import ix.ginas.models.v1.MixtureSubstance;
+import ix.ginas.utils.GinasUtils;
 import ix.ncats.controllers.App;
 import ix.utils.Tuple;
 import play.db.ebean.Model.Finder;
@@ -638,7 +637,7 @@ public class SubstanceHierarchyFinder {
 								path="#";
 							}
 
-							String showID="NO UNII";
+							String showID="NO " + GinasUtils.getApprovalIdGenerator().getName();
 							
 
 							String text=("[" + fin.value.getApprovalIDDisplay() + "] " 

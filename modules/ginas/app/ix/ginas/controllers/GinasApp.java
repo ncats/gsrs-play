@@ -61,6 +61,7 @@ import ix.ginas.controllers.viewfinders.ListViewFinder;
 import ix.ginas.controllers.viewfinders.ThumbViewFinder;
 import ix.ginas.exporters.*;
 import ix.ginas.models.v1.*;
+import ix.ginas.utils.GinasUtils;
 import ix.core.utils.executor.MultiProcessListener;
 import ix.core.utils.executor.ProcessExecutionService;
 import ix.ncats.controllers.App;
@@ -468,7 +469,7 @@ public class GinasApp extends App {
             }
             if("Record Status".equals(name())){
 	            if (Substance.STATUS_APPROVED.equalsIgnoreCase(label)) {
-	                return "Validated (UNII)";
+	                return "Validated (" + GinasUtils.getApprovalIdGenerator().getName() + ")";
 	            }
 	            if ("non-approved".equalsIgnoreCase(label)) {
 	                return "Non-Validated";

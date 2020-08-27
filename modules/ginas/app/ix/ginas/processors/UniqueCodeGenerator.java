@@ -20,13 +20,13 @@ public class UniqueCodeGenerator implements EntityProcessor<Substance> {
 	
 	
 	public UniqueCodeGenerator(Map m){
-
+		String name = 				(String)  m.get("name");
 		codeSystem = 				(String)  m.get("codesystem");
         String codeSystemSuffix = 	(String)  m.get("suffix");
         int length = 				(Integer) m.get("length");
         boolean padding = 			(Boolean) m.get("padding");
         if(codeSystem!=null){
-        	seqGen=new CodeSequentialGenerator(length,codeSystemSuffix,padding,codeSystem);
+        	seqGen=new CodeSequentialGenerator(name, length,codeSystemSuffix,padding,codeSystem);
         }
         addCodeSystem();
 	}

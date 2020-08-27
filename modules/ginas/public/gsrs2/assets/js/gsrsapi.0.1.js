@@ -1435,7 +1435,7 @@ FetcherRegistry.addFetcher(FetcherMaker.makeCodeFetcher("BDNUM").addTag("Identif
 
 
 FetcherRegistry.addFetcher(FetcherMaker.makeScalarFetcher("_name", "Preferred Term").addTag("Substance"))
-  .addFetcher(FetcherMaker.makeScalarFetcher("_approvalIDDisplay", "Approval ID (UNII)").addTag("Identifiers"))
+  .addFetcher(FetcherMaker.makeScalarFetcher("_approvalIDDisplay", "Approval ID").addTag("Identifiers"))
   .addFetcher(FetcherMaker.makeScalarFetcher("createdBy", "Created By").addTag("Record"))
   .addFetcher(FetcherMaker.makeScalarFetcher("created", "Created Date").andThen(gUtil.toDate).addTag("Record"))
   .addFetcher(FetcherMaker.makeScalarFetcher("lastEditedBy", "Last Edited By").addTag("Record"))
