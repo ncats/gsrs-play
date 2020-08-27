@@ -1,12 +1,21 @@
 package ix.ginas.utils;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import ix.core.util.ConfigHelper;
 import ix.ginas.models.v1.Substance;
 
-public class CodeSystemGenerator implements IdGeneratorForType<Substance, String> {
+public class CodeSystemGenerator implements NamedIdGenerator<Substance, String> {
 
-    private static String codeSystem = ConfigHelper.getOrDefault("ix.ginas.approvalIDGenerator.name", "UNII");
 
+    private final String name;
+    private final String codeSystem;
+    @JsonCreator
+    public CodeSystemGenerator(@JsonProperty("name") String name,
+                                @JsonProperty("codeSystem") String codeSystem){
+        this.name = name;
+        this.codeSystem = codeSystem;
+    }
     @Override
     public synchronized String generateId(Substance s) {
         String code = s.codes.stream().filter(c -> (codeSystem.equals(c.codeSystem) && "PRIMARY".equals(c.type))).findFirst()
@@ -21,5 +30,10 @@ public class CodeSystemGenerator implements IdGeneratorForType<Substance, String
             return true;
         }
         return false;
+    }
+
+    @Override
+    public String getName() {
+        return name;
     }
 }

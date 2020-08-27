@@ -9,6 +9,7 @@ import ix.ginas.utils.DefaultApprovalIDGenerator;
 import ix.ginas.utils.GinasUtils;
 import ix.ginas.utils.NamedIdGenerator;
 import play.Application;
+import play.Logger;
 
 import java.util.Map;
 
@@ -45,7 +46,7 @@ public class ApprovalIdGeneratorInitializer implements Initializer {
         Object obj = app.configuration().getObject("ix.ginas.approvalIDGenerator");
         NamedIdGenerator<Substance,String> idGenerator;
         if(obj ==null){
-            idGenerator = new DefaultApprovalIDGenerator("GSRSID", 8,true, "TMP-");
+            idGenerator = new DefaultApprovalIDGenerator("GID", 8,true, "GID-");
         }else {
 
             ApprovalIDGeneratorConfig config = mapper.get().convertValue(obj, ApprovalIDGeneratorConfig.class);
@@ -59,7 +60,7 @@ public class ApprovalIdGeneratorInitializer implements Initializer {
                 idGenerator = (NamedIdGenerator<Substance, String>) mapper.get().convertValue(config.parameters, config.generatorClass);
             }
         }
-        System.out.println("setting id generator to "+ idGenerator);
+        Logger.debug("setting id generator to "+ idGenerator);
         GinasUtils.setApprovalIdGenerator(idGenerator);
 
     }
