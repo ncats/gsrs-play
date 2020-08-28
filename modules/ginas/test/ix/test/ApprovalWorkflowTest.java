@@ -12,6 +12,7 @@ import ix.ginas.modelBuilders.ChemicalSubstanceBuilder;
 import ix.ginas.modelBuilders.SubstanceBuilder;
 import ix.ginas.models.v1.ChemicalSubstance;
 import ix.ginas.models.v1.Note;
+import ix.test.server.GinasTestServer;
 import ix.test.util.TestUtil;
 import org.junit.Test;
 
@@ -28,8 +29,19 @@ import util.json.JsonUtil.JsonNodeBuilder;
 public class ApprovalWorkflowTest  extends AbstractGinasServerTest {
 	public final static String VALID_APPROVAL_ID= TestUtil.addUniiCheckDigit("333333333");
 	public final static String INVALID_APPROVAL_ID="0000000001";
-    
-	@Test
+
+    @Override
+    public GinasTestServer createGinasTestServer() {
+        GinasTestServer ts = super.createGinasTestServer();
+
+        ts.modifyConfig("ix.ginas.approvalIDGenerator = {\n" +
+                "    \"generatorClass\" : \"ix.ginas.utils.UNIIGenerator\"\n" +
+                "}");
+
+        return ts;
+    }
+
+    @Test
 	public void testApprovalRoundTrip() throws Exception {
         String uuid;
         final File resource=new File("test/testJSON/toapprove.json");
