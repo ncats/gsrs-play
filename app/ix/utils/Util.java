@@ -51,6 +51,8 @@ import play.mvc.Http;
 
 import java.io.*;
 
+import ix.ginas.models.converters.PlainStringConverter;
+import ix.ginas.models.converters.StringConverter;
 import ix.ginas.models.v1.GinasChemicalStructure;
 import ix.ginas.models.GinasCommonData;
 
@@ -66,6 +68,16 @@ public class Util {
     		ConfigHelper.supplierOf("ix.tokenexpiretime",(long)(3600*1000*24));
 
     private static int BUFFER_SIZE = 8192; //8K
+
+    private static StringConverter STRING_CONVERTER = new PlainStringConverter();
+
+    public static StringConverter getStringConverter() {
+        return STRING_CONVERTER;
+    }
+
+    public static void setStringConverter(StringConverter stringConverter) {
+        STRING_CONVERTER = stringConverter;
+    }
 
     static Random rand = new Random ();
     public static String randomUserAgent () {
