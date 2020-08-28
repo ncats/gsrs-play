@@ -1,4 +1,4 @@
-{
+{"apiBaseUrl" : "/app/",
   "version": "2.6",
   "approvalString": "UNII",
   "substanceDetailsCards": [
