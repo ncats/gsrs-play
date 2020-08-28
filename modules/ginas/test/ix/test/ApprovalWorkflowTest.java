@@ -36,7 +36,7 @@ public class ApprovalWorkflowTest  extends AbstractGinasServerTest {
 
         ts.modifyConfig("ix.ginas.approvalIDGenerator = {\n" +
                 "    \"generatorClass\" : \"ix.ginas.utils.UNIIGenerator\"\n" +
-                "}");
+                "}", GinasTestServer.ConfigOptions.ALL_TESTS);
 
         return ts;
     }
