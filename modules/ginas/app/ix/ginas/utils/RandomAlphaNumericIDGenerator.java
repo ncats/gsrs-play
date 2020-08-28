@@ -21,8 +21,11 @@ public abstract class RandomAlphaNumericIDGenerator<T> extends AbstractNoDepende
 		this.alphabet=alphabet;
 		this.random = Objects.requireNonNull(random);
 	}
-	
-	
+
+	public boolean addCheckDigit() {
+		return check;
+	}
+
 	@Override
 	public synchronized String generateID() {
 		String s = generateRandomID();

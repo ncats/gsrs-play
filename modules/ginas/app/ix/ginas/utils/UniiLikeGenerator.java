@@ -40,6 +40,12 @@ public abstract class UniiLikeGenerator extends RandomAlphaNumericIDGenerator<Su
         super(random, alphabet,numRandomChars,addCheckDigit);
     }
 
+    public boolean allowID(String fullId){
+        if(addCheckDigit()){
+            return allowID(fullId.substring(0, fullId.length()-1), fullId);
+        }
+        return allowID(fullId, fullId);
+    }
 
     @Override
     public boolean allowID(String randomPart, String fullId) {
