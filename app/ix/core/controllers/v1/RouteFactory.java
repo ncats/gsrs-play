@@ -1101,22 +1101,22 @@ public class RouteFactory extends Controller {
 
 
     @Dynamic(value = IxDynamicResourceHandler.CAN_SEARCH, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
-    public static Result getExportFormats(String context) {
+    public static Result exportFormats(String context) {
         try {
             return _registry.get()
                     .getResource(context)
-                    .getExportFormats();
+                    .exportFormats();
         }catch (Exception ex) {
             Logger.trace("["+context+"]", ex);
             return _apiInternalServerError (ex);
         }
     }
     @Dynamic(value = IxDynamicResourceHandler.CAN_SEARCH, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
-    public static Result getExportOptions(String context, String etagId, boolean publicOnly) {
+    public static Result exportOptions(String context, String etagId, boolean publicOnly) {
         try {
             return _registry.get()
                     .getResource(context)
-                    .getExportOptions(etagId, publicOnly);
+                    .exportOptions(etagId, publicOnly);
         }catch (Exception ex) {
             Logger.trace("["+context+"]", ex);
             return _apiInternalServerError (ex);

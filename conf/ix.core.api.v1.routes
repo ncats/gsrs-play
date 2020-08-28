@@ -91,10 +91,10 @@ GET     /suggest/:field       ix.core.controllers.search.SearchFactory.suggestFi
 GET     /suggest       ix.core.controllers.search.SearchFactory.suggest(q: String, max: Int ?= 10)
 
 
-GET     /$context<[a-z0-9_]+>/export                     ix.core.controllers.v1.RouteFactory.getExportFormats(context: String)
-GET     /$context<[a-z0-9_]+>/export/                     ix.core.controllers.v1.RouteFactory.getExportFormats(context: String)
-GET     /$context<[a-z0-9_]+>/export/:etagId               ix.core.controllers.v1.RouteFactory.getExportOptions(context: String, etagId: String, publicOnly: Boolean ?=true)
-GET     /$context<[a-z0-9_]+>/export/:etagId/               ix.core.controllers.v1.RouteFactory.getExportOptions(context: String, etagId: String, publicOnly: Boolean ?=true)
+GET     /$context<[a-z0-9_]+>/export                     ix.core.controllers.v1.RouteFactory.exportFormats(context: String)
+GET     /$context<[a-z0-9_]+>/export/                     ix.core.controllers.v1.RouteFactory.exportFormats(context: String)
+GET     /$context<[a-z0-9_]+>/export/:etagId               ix.core.controllers.v1.RouteFactory.exportOptions(context: String, etagId: String, publicOnly: Boolean ?=true)
+GET     /$context<[a-z0-9_]+>/export/:etagId/               ix.core.controllers.v1.RouteFactory.exportOptions(context: String, etagId: String, publicOnly: Boolean ?=true)
 
 GET     /$context<[a-z0-9_]+>/export/:etagId/:format               ix.core.controllers.v1.RouteFactory.createExport(context: String, etagId: String, format: String, publicOnly: Boolean ?=true)
 

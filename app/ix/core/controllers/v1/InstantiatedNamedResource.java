@@ -96,8 +96,8 @@ public interface InstantiatedNamedResource<I,V> {
 		HIERARCHY_OPERATION(new Operation("hierarchy",
 				Argument.of(null, Id.class, "id"))),
 
-		EXPORT_FORMATS_OPERATION(new Operation("getExportFormats")),
-		EXPORT_OPTIONS_OPERATION(new Operation("getExportOptions",
+		EXPORT_FORMATS_OPERATION(new Operation("exportFormats")),
+		EXPORT_OPTIONS_OPERATION(new Operation("exportOptions",
 				Argument.of(null, String.class, "etagId"),
 				Argument.of(true, boolean.class, "publicOnly"))),
 		EXPORT_OPERATION(new Operation("createExport",
@@ -240,10 +240,10 @@ public interface InstantiatedNamedResource<I,V> {
 		return operate(Operations.UPDATE_ENTITY_OPERATION.with());
 	}
 	
-	default Result getExportFormats(){
+	default Result exportFormats(){
 		return operate(Operations.EXPORT_FORMATS_OPERATION.with());
 	}
-	default Result getExportOptions(String etagId, boolean publicOnly){
+	default Result exportOptions(String etagId, boolean publicOnly){
 		return operate(Operations.EXPORT_OPTIONS_OPERATION.with(etagId, publicOnly));
 	}
 	default Result createExport(String etagId, String format, boolean publicOnly){

@@ -546,7 +546,7 @@ public class SubstanceFactory extends EntityFactory {
 		return field(uuid, path, finder.get());
 	}
 
-	public static Result getExportFormats() {
+	public static Result exportFormats() {
 		List<OutputFormat> formats = GinasApp.getAllSubstanceExportFormats()
 				.stream()
 				.sorted(Comparator.comparing(OutputFormat::getDisplayName))
@@ -556,7 +556,7 @@ public class SubstanceFactory extends EntityFactory {
 				.as("application/json");
 	}
 
-	public static Result getExportOptions(String etagId, boolean publicOnly){
+	public static Result exportOptions(String etagId, boolean publicOnly){
 		List<OutputFormat> formats= GinasApp.getAllSubstanceExportFormats()
 				.stream()
 				.sorted(Comparator.comparing(OutputFormat::getDisplayName))
