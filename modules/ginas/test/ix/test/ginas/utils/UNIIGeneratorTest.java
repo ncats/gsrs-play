@@ -21,11 +21,11 @@ public class UNIIGeneratorTest extends AbstractGinasServerTest{
 
     @Test
     public void testUniiWith4ConsecutiveLetters(){
-        assertFalse(sut.allowID(addUniiCheckDigit("ABCD12A81"), ));
+        assertFalse(sut.allowID(addUniiCheckDigit("ABCD12A81") ));
 
-        assertFalse(sut.allowID(addUniiCheckDigit("7ABCD2A81"), ));
-        assertFalse(sut.allowID(addUniiCheckDigit("7LN2ABCD2"), ));
-        assertFalse(sut.allowID(addUniiCheckDigit("7LN2X7ABCD"), ));
+        assertFalse(sut.allowID(addUniiCheckDigit("7ABCD2A81") ));
+        assertFalse(sut.allowID(addUniiCheckDigit("7LN2ABCD2") ));
+        assertFalse(sut.allowID(addUniiCheckDigit("7LN2X7ABCD") ));
     }
 
     @Test
@@ -55,19 +55,19 @@ public class UNIIGeneratorTest extends AbstractGinasServerTest{
 
     @Test
     public void invalidUniiWithLeetDirtyWord(){
-        assertFalse(sut.allowID("75h1tA80V", ));
+        assertFalse(sut.allowID("75h1tA80V" ));
     }
 
     @Test
     public void invalidUniiWithtDirtyWord(){
-        assertFalse(sut.allowID("7SHITA80V", ));
+        assertFalse(sut.allowID("7SHITA80V" ));
     }
 
     @Test
     public void invalidUniiWithtMonth(){
         for(String m : Arrays.asList("JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC")){
             String unii = addUniiCheckDigit(m+"272222");
-            assertFalse(sut.allowID(unii, ));
+            assertFalse(sut.allowID(unii ));
         }
 
     }
@@ -79,7 +79,7 @@ public class UNIIGeneratorTest extends AbstractGinasServerTest{
         String unii = addUniiCheckDigit("2234567E2");
         assertTrue(Character.isDigit(unii.charAt(unii.length() -1)));
         assertTrue(GinasUtils.isUnii(unii));
-        assertFalse(sut.allowID(unii, ));
+        assertFalse(sut.allowID(unii ));
 
     }
 

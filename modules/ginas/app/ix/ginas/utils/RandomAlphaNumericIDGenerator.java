@@ -22,6 +22,9 @@ public abstract class RandomAlphaNumericIDGenerator<T> extends AbstractNoDepende
 		this.random = Objects.requireNonNull(random);
 	}
 	
+	public boolean addCheckDigit() {
+		return check;
+	}
 	
 	@Override
 	public synchronized String generateID() {
