@@ -1,6 +1,7 @@
 package ix.ginas.models.converters;
 
 import java.util.Arrays;
+import org.apache.commons.lang3.StringEscapeUtils;
 
 /**
  * Strings manipulation class
@@ -10,6 +11,18 @@ import java.util.Arrays;
  * @since 2.6
  */
 public class PlainStringConverter extends AbstractStringConverter {
+    /**
+     * Converts string from Plain text to HTML.
+     *
+     * @param str string in Plain text format;
+     *            will never be null.
+     * @return a HTML formated string.
+     */
+    @Override
+    public String toHTML(String str){
+        return StringEscapeUtils.escapeHtml4(str);
+    }
+
     /**
      * Truncate string.
      *
