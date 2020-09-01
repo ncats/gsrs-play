@@ -225,6 +225,8 @@ public class BuildInfo {
     cleanFiles += file("modules/ginas/ginas.ix"),
     //baseDirectory is the ginas module we want to go up a few dirs
     mappings in Universal ++=(baseDirectory.value / "../../cv" * "*" get) map
-        (x => x -> ("cv/" + x.getName))
+        (x => x -> ("cv/" + x.getName)),
+    //adds evolutions.sh file into the dist
+    mappings in Universal += file("evolutions.sh") -> "evolutions.sh"
   ).dependsOn(ginasEvo).aggregate(ginasEvo)
 }
