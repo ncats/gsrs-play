@@ -68,7 +68,7 @@ public class Evolution {
         String postSQL=null;
        
         
-        Config root = ConfigFactory.parseFile(new File (file));
+        Config root = ConfigFactory.parseFile(new File (file)).resolve();
         
         Config dbconf = root.getConfig("db");
         Config ebean = root.getConfig("ebean");
