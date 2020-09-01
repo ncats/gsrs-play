@@ -227,6 +227,6 @@ public class BuildInfo {
     mappings in Universal ++=(baseDirectory.value / "../../cv" * "*" get) map
         (x => x -> ("cv/" + x.getName)),
     //adds evolutions.sh file into the dist
-    mappings in Universal += file("evolutions.sh") -> "evolutions.sh"
+    mappings in Universal += file("evolutions.sh") -> "bin/evolutions.sh"
   ).dependsOn(ginasEvo).aggregate(ginasEvo)
 }
