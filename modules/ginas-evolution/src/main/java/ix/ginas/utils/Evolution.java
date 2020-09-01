@@ -182,12 +182,9 @@ public class Evolution {
         EbeanServer ebean = EbeanServerFactory.create(config);
         String sql = applyDdl (ebean, config,postSQL);
         if (sql != null) {
-        	System.out.println("There's real SQL");
             if (!write (sql, false)) {
-            	System.out.println("There's real SQL, but already in file:" + ddl);
                 // check to see if if it's the same; if not, 
                 if (!checkDdl (sql)){
-                	System.out.println("Fo real");	
                     write (sql, true);
                 }
             }
