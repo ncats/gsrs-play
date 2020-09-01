@@ -145,8 +145,7 @@ public class Evolution {
             //TODO: The class can be an Entity, Embedded type, ScalarType, BeanPersistListener, BeanFinder or BeanPersistController
             //Right now, only finds Entities
             if (load.endsWith(".*")) {
-                Reflections reflections = new Reflections
-                    (load.substring(0, load.length()-2));
+                Reflections reflections = new Reflections(new Object[]{load.substring(0, load.length()-2)});
                 Set<Class<?>> resources =
                     reflections.getTypesAnnotatedWith(Entity.class);
                 for (Class<?> c : resources) {
