@@ -94,7 +94,7 @@ public class StructureProcessorTask {
 		
 		public Builder mol(String mol) throws Exception{
 
-			this.mol = Chemical.parse(ChemCleaner.getCleanMolfile(mol));
+			this.mol = Chemical.parseMol(ChemCleaner.getCleanMolfile(mol));
 			
 			return this;
 		}

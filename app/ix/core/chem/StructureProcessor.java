@@ -21,6 +21,16 @@ public class StructureProcessor {
 
     private static StructureHasher hasher;
 
+    private static  StructureStandardizer standardizer = new LychiStandardizer();
+
+    public static StructureStandardizer getStandardizer() {
+        return standardizer;
+    }
+
+    public static void setStandardizer(StructureStandardizer standardizer) {
+        StructureProcessor.standardizer = standardizer;
+    }
+
     public static StructureHasher getHasher() {
         return hasher;
     }
@@ -68,7 +78,7 @@ public class StructureProcessor {
         Structure struc = new Structure ();
         struc.digest = digest (mol);
         try {
-            instrument (struc, components, Chemical.parse(mol), standardize);
+            instrument (struc, components, Chemical.parseMol(mol), standardize);
         }catch (Exception ex) {
             ex.printStackTrace();
             System.err.println("Trouble reading structure:");
@@ -124,7 +134,7 @@ public class StructureProcessor {
         boolean standardize = settings.isStandardize();
         boolean query = settings.isQuery();
 
-        LychiStandardizer standardizer = new LychiStandardizer();
+
 
         CachedSupplier<String> molSupplier = CachedSupplier.of(new Supplier<String>() {
             public String get(){
@@ -154,7 +164,7 @@ public class StructureProcessor {
         if(query){
             struc.molfile = molSupplier.get();
             try {
-                struc.smiles = mol.toSmarts();
+                struc.smiles = mol.toSmiles();
             } catch (IOException e) {
                 e.printStackTrace();
             }

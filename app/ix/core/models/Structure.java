@@ -64,6 +64,7 @@ public class Structure extends BaseModel implements ForceUpdatableModel{
     public static final String F_InChI = "InChI";
     public static final String F_MDL = "MDL";
     public static final String F_SMILES = "SMILES";
+
     public static final String F_MRV = "MRV";
     public static final String F_LyChI_SMILES = "LyChI_SMILES";
     public static final String H_LyChI_L1 = "LyChI_L1";
@@ -459,6 +460,7 @@ public class Structure extends BaseModel implements ForceUpdatableModel{
                     c = Chemical.createFromSmiles(smiles);
                 }
             }catch(Exception e){
+                e.printStackTrace();
                 messages.add(GinasProcessingMessage.ERROR_MESSAGE(e.getMessage()));
             }
         
@@ -466,6 +468,7 @@ public class Structure extends BaseModel implements ForceUpdatableModel{
             try {
                 c = Chemical.parseMol(molfile);
             }catch(Exception e){
+                e.printStackTrace();
                 messages.add(GinasProcessingMessage.ERROR_MESSAGE(e.getMessage()));
             }
         }
