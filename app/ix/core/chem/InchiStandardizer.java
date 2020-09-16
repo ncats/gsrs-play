@@ -33,7 +33,7 @@ public class InchiStandardizer implements StructureStandardizer{
             return smiles;
         }
         try {
-            return Chemical.parseMol(mol).toSmiles(CANONICAL_SMILES_SPEC);
+            return s.toChemical().toSmiles(CANONICAL_SMILES_SPEC);
         } catch (IOException e) {
             e.printStackTrace();
             return null;
@@ -51,8 +51,8 @@ public class InchiStandardizer implements StructureStandardizer{
             String inchi = orig.toInchi().getInchi();
             Chemical chem= Inchi.toChemical(inchi);
             valueConsumer.accept(
-                    (new Text(Structure.F_SMILES,
-                            chem.toSmiles(CANONICAL_SMILES_SPEC))));
+                    (new Text(Structure.F_SMILES,chem.toSmiles(CANONICAL_SMILES_SPEC)
+                           )));
             return chem;
         }catch(Exception e){
             e.printStackTrace();
