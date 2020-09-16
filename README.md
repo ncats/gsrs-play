@@ -18,7 +18,10 @@ The code can be checked out of this git repository.  There are several important
 Configuration is controlled by a Play ConfigFile.  
 The default G-SRS conf file is located in 
 `modules/ginas/conf/ginas.conf` 
-This file can be extended to provide custom configuration.
+This file can be extended to provide custom configuration. For development and testing,
+the simple extension of this file enabling evolutions is typically used:
+`modules/ginas/conf/ginas-dev.conf` 
+
 
 For more information on how Play ConfigFiles work see [The Playframework Documentation](https://www.playframework.com/documentation/2.5.x/ConfigFile)
 
@@ -28,7 +31,7 @@ To build a particular app, simply use ```sbt``` or the provided
 of the GInAS app:
 
 ```
-sbt -Dconfig.file=modules/ginas/conf/ginas.conf ginas/run
+sbt -Dconfig.file=modules/ginas/conf/ginas-dev.conf ginas/run
 ```
 
 (Instead of ```sbt```, you can also use ```./activator``` instead.)
@@ -84,7 +87,7 @@ The Play framework can run a single JUnit test class using `ginas/testOnly $full
 So for example to run all the tests in `ix.test.EditingWorkflowTest` class this would be the invocation
 
 ```
-./activator -Dconfig.file=modules/ginas/conf/ginas.conf ginas/clean "ginas/testOnly ix.test.EditingWorkflowTest"
+./activator -Dconfig.file=modules/ginas/conf/ginas-dev.conf ginas/clean "ginas/testOnly ix.test.EditingWorkflowTest"
 ```
 
 
@@ -103,9 +106,9 @@ will be replaced with the test to be run.  Keep the `{0}` in the variable. the T
 to replace it.
 
 ```
-export command="./activator -Dconfig.file=modules/ginas/conf/ginas.conf \"ginas/testOnly {0}\""
+export command="./activator -Dconfig.file=modules/ginas/conf/ginas-dev.conf \"ginas/testOnly {0}\""
 
-./activator -Dconfig.file=modules/ginas/conf/ginas.conf  "ginas/testOnly ix.test.RunAllGinasTests"
+./activator -Dconfig.file=modules/ginas/conf/ginas-dev.conf  "ginas/testOnly ix.test.RunAllGinasTests"
 
 ```
 
