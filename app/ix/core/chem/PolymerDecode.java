@@ -30,6 +30,8 @@ public class PolymerDecode {
 	private static final String END_GROUP = "END_GROUP";
 	private static final String SRU_BLOCK = "SRU-BLOCK";
 	private static final int RGROUP_PLACEHOLDER = 2;
+	
+	
 	static final String pseudoString = "A";
 
 
@@ -138,6 +140,25 @@ public class PolymerDecode {
 		int attachType = 1;
 		Map<Integer,Integer> assignedRgroup = new HashMap<>();
 		Iterator<Chemical> componentIter = c2.connectedComponents();
+		
+		
+		if(c2.getSGroups().size()>0){
+			boolean hasit=false;
+			
+			for(Chemical cfrag : c2.getConnectedComponents()){
+				hasit=cfrag.getSGroups().size()>0;
+				if(hasit)break;
+			}
+			
+			
+			if(hasit){
+				//TODO: REMOVE THIS LINE
+				componentIter = Arrays.asList(c2.copy()).iterator();
+			}
+		}
+		
+		
+		
 		while(componentIter.hasNext()){
 			Chemical c3 = componentIter.next();
 			// System.out.println(new
@@ -235,7 +256,7 @@ public class PolymerDecode {
 					newca.setMassNumber(ca.getMassNumber());
 					newca.setCharge(ca.getCharge());
 					newca.setAtomCoordinates(ca.getAtomCoordinates());
-					newca.setRadical(ca.getRadical());
+					//newca.setRadical(ca.getRadical());
 					newOldMap.put(ca, newca);
 				}
 				for (Atom ca : sg.getAtoms().collect(Collectors.toList())) {
@@ -290,7 +311,12 @@ public class PolymerDecode {
 							}
 							newca = newOldMap.get(oAtom);
 							if (newca != null) {
-								if (!sub.getBond(newca, nAtom1).isPresent()) {
+								boolean hasBond=false;
+								try{
+									hasBond=sub.getBond(newca, nAtom1).isPresent();
+								}catch(Exception e){}
+								
+								if (!hasBond) {
 									//GSRS-1132 : make sure the order of atom1 and atom2 in the bond
 									//match the stereo since the direction of the stereo matters on order of atom1 and 2.
 									Bond newBond;
@@ -309,10 +335,15 @@ public class PolymerDecode {
 				sub.setProperty("component", "SRU-BLOCK");
 				sub.setProperty("attach", (attachType- satt)+"");
 				if(sg.getType() == SGroup.SGroupType.SRU){
-
-					sg.getSruLabel().ifPresent(s -> sub.setProperty("subScript", s));
+					
+					if(sg.getSruLabel().isPresent()){
+						sg.getSruLabel().ifPresent(s -> sub.setProperty("subScript", s));
+					}else{
+						sg.getSubscript().ifPresent(s->sub.setProperty("subScript", s));
+					}
+					
 				}else {
-				sg.getSubscript().ifPresent(s->sub.setProperty("subScript", s));
+					sg.getSubscript().ifPresent(s->sub.setProperty("subScript", s));
 				}
 
 				sg.getSuperscript().ifPresent(s->sub.setProperty("superScript", s));
@@ -391,8 +422,9 @@ public class PolymerDecode {
 				m3.clearAtomMaps();
 
 				for (Atom ca : rgroupMap.keySet()) {
-					ca.setAtomToAtomMap(rgroupMap.get(ca));
-					ca.setRGroup(rgroupMap.get(ca));
+					Integer gg=rgroupMap.get(ca);
+					ca.setAtomToAtomMap(gg);
+					ca.setRGroup(gg);
 					ca.setAlias("_R" + ca.getRGroupIndex().getAsInt());
 					ca.setAtomicNumber(RGROUP_PLACEHOLDER); //helium by default
 					String rgroups = m3.getProperty("rgroups");
@@ -401,7 +433,7 @@ public class PolymerDecode {
 					}else{
 						rgroups=rgroups+",";
 					}
-					m3.setProperty("rgroups", rgroups + rgroupMap.get(ca));
+					m3.setProperty("rgroups", rgroups + gg);
 				}
 				if (connectcount > 0) {
 					debugPrint=true;
