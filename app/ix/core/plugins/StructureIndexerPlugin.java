@@ -130,7 +130,15 @@ public class StructureIndexerPlugin extends Plugin {
 //	    	for(MolBond mb2:anyBonds){
 //	    		mb2.setType(MolBond.ANY);
 //	    	}
+			
+			
 			m.aromatize();
+			
+			
+//			try{
+//			System.out.println(m.toMol());
+//			}catch(Exception e){}
+			
 			return standardizeCharges(m);
 			
 		}
