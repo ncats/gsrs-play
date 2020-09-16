@@ -32,7 +32,8 @@ public class PolymerDecode {
 	private static final int RGROUP_PLACEHOLDER = 2;
 	
 	
-	static final String pseudoString = "A";
+	static String pseudoString = "A";
+	
 
 
 	public static Chemical getDiagram(Chemical c,Collection<StructuralUnit> sunitsb){
@@ -151,7 +152,7 @@ public class PolymerDecode {
 			}
 			
 			
-			if(hasit){
+			if(!hasit){
 				//TODO: REMOVE THIS LINE
 				componentIter = Arrays.asList(c2.copy()).iterator();
 			}
