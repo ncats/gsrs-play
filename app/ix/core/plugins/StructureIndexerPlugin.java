@@ -148,7 +148,7 @@ public class StructureIndexerPlugin extends Plugin {
 				return Chemical.parse(str);
 			} catch (IOException e) {
 				e.printStackTrace();
-				System.out.println("CHEMICAL PARSE ERROR!!!");
+				System.out.println("CHEMICAL PARSE ERROR!!! for: "+ str);
 				return null;
 			}
 		}
