@@ -574,17 +574,23 @@ public class PolymerDecode {
 				nmap.put(locCanonicalGroup.get(rgroup), nlist);
 			}
 			su.attachmentMap=nmap;
-			//System.out.println("Converting:" + su.structure);
+			
 			Chemical frag = su.getChemical();
 			for(Atom ca:frag.getAtoms()){
-				if(ca.isRGroupAtom() || ca.getAtomicNumber()==RGROUP_PLACEHOLDER || ca.hasAtomToAtomMap()){
-
+				if(ca.isRGroupAtom() || ca.getAtomicNumber()==RGROUP_PLACEHOLDER || ca.hasAtomToAtomMap() || ca.getAlias().orElse("").startsWith("_R")){
 					OptionalInt rGroupIndexOpt = ca.getRGroupIndex();
 					int r;
 					if(rGroupIndexOpt.isPresent()){
 						r = rGroupIndexOpt.getAsInt();
 					}else{
-						r = ca.getAtomToAtomMap().orElse(0);
+						r = ca.getAtomToAtomMap()
+							  .orElse(0);
+						if(r==0){
+							String n=ca.getAlias().orElse("").replace("_R","");
+							if(n.length()>0){
+								r=Integer.parseInt(n);
+							}
+						}
 					}
 
 					//System.out.println("RGROUP:" + r);
@@ -594,7 +600,6 @@ public class PolymerDecode {
 					}else{
 						rnew = 0;
 					}
-
 
 					ca.setRGroup(rnew);
 					ca.setAlias("_R" + ca.getRGroupIndex().getAsInt());
