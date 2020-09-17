@@ -235,12 +235,14 @@ public class PolymerDecode {
 				for (Atom ca : sg.getAtoms().collect(Collectors.toList())) {
 					Atom newca = sub.addAtom(ca.getSymbol());
 					//These are attachments NOT formed from the brackets themselves:
-					if (ca.isQueryAtom() || ca.isRGroupAtom()) {
-
+					if (ca.isQueryAtom() || ca.isRGroupAtom() || ca.getSymbol().equals("R")) {
+						
+						newca.setAtomToAtomMap(attachType);
 						newca.setRGroup(attachType);
 						newca.setAlias("_R" + newca.getRGroupIndex().getAsInt());
 						newca.setAtomicNumber(RGROUP_PLACEHOLDER);
-						newca.setAtomToAtomMap(attachType++);
+						
+						attachType++;
 //								System.out.println("R group is:" + newca.getRGroupIndex());
 
 						String rgroups = sub.getProperty("rgroups");
@@ -293,6 +295,7 @@ public class PolymerDecode {
 								}else{
 									prev2=prev2+",";
 								}
+								sub.setProperty("madeAttach", prev2 + attachType);
 								String rgroups = sub.getProperty("rgroups");
 								if(rgroups==null || rgroups.equals("")){
 									rgroups="";
@@ -301,7 +304,6 @@ public class PolymerDecode {
 								}
 								sub.setProperty("rgroups", rgroups + attachType);
 
-								sub.setProperty("madeAttach", prev2 + attachType);
 								newOldMap.put(oAtom, newca);
 								assignedRgroup.put(oAtom.getAtomToAtomMap().orElse(0),attachType);
 								attachType=attemp;
@@ -353,14 +355,22 @@ public class PolymerDecode {
 					sub.setProperty("type", subType.getCode());
 				}
 
-				polyconst.add(sub.build());
+				Chemical s=sub.build();
+				polyconst.add(s);
+				
 				sg.getAtoms().forEach(mat::add);
-
+			}
+			
+			for (SGroup sg : c3.getSGroups()
+					.stream()
+					.collect(Collectors.toList())) {
+				c3.removeSGroup(sg);
 			}
 
 			for (Atom ma : mat) {
 				c3.removeAtom(ma);
 			}
+			
 
 			for (Chemical m3 : c3.getConnectedComponents()) {
 
@@ -569,17 +579,23 @@ public class PolymerDecode {
 				nmap.put(locCanonicalGroup.get(rgroup), nlist);
 			}
 			su.attachmentMap=nmap;
-			//System.out.println("Converting:" + su.structure);
+			
 			Chemical frag = su.getChemical();
 			for(Atom ca:frag.getAtoms()){
-				if(ca.isRGroupAtom() || ca.getAtomicNumber()==RGROUP_PLACEHOLDER || ca.hasAtomToAtomMap()){
-
+				if(ca.isRGroupAtom() || ca.getAtomicNumber()==RGROUP_PLACEHOLDER || ca.hasAtomToAtomMap() || ca.getAlias().orElse("").startsWith("_R")){
 					OptionalInt rGroupIndexOpt = ca.getRGroupIndex();
 					int r;
 					if(rGroupIndexOpt.isPresent()){
 						r = rGroupIndexOpt.getAsInt();
 					}else{
-						r = ca.getAtomToAtomMap().orElse(0);
+						r = ca.getAtomToAtomMap()
+							  .orElse(0);
+						if(r==0){
+							String n=ca.getAlias().orElse("").replace("_R","");
+							if(n.length()>0){
+								r=Integer.parseInt(n);
+							}
+						}
 					}
 
 					//System.out.println("RGROUP:" + r);
@@ -589,7 +605,6 @@ public class PolymerDecode {
 					}else{
 						rnew = 0;
 					}
-
 
 					ca.setRGroup(rnew);
 					ca.setAlias("_R" + ca.getRGroupIndex().getAsInt());
