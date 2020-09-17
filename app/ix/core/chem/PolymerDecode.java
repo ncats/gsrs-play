@@ -355,7 +355,12 @@ public class PolymerDecode {
 
 				polyconst.add(sub.build());
 				sg.getAtoms().forEach(mat::add);
-
+			}
+			
+			for (SGroup sg : c3.getSGroups()
+					.stream()
+					.collect(Collectors.toList())) {
+				c3.removeSGroup(sg);
 			}
 
 			for (Atom ma : mat) {
