@@ -175,7 +175,12 @@ public class StructureProcessor {
         mol.removeNonDescriptHydrogens();
 
         // make sure molecule is kekulized consistently
-        mol.kekulize();
+        try{
+        	mol.kekulize();
+        }catch(Exception e){
+        	//it's okay to fail to kekulize in rare cases, particularly
+        	//in some delocalized structures.
+        }
         molSupplier.resetCache();
         if(!query){
 
@@ -202,8 +207,19 @@ public class StructureProcessor {
 
         for(DoubleBondStereochemistry doubleBondStereochemistry : mol.getDoubleBondStereochemistry()) {
             Bond doubleBond = doubleBondStereochemistry.getDoubleBond();
-            if (!doubleBond.isInRing() && !doubleBondStereochemistry.getStereo().equals(DoubleBondStereochemistry.DoubleBondStereo.NONE)) {
-                ez++;
+           
+            // TODO: this is actually a mistake, as it's fine to have some EZ bonds in rings
+            // > 7 atoms. This needs to be more specific, asking based on ring size.
+            if (!doubleBondStereochemistry.getStereo().equals(DoubleBondStereochemistry.DoubleBondStereo.NONE)) {
+            	 boolean isRing=false;
+                 try{
+                 	isRing=doubleBond.isInRing();
+                 }catch(Exception e){
+                 	e.printStackTrace();
+                 }
+                 if(!isRing){
+                	 ez++;
+                 }
             }
         }
 
