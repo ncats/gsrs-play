@@ -138,7 +138,7 @@ public class StructureIndexerTest extends AbstractGinasServerTest{
 
 		String structure="CC=C";
 		structureIndexer.add("1", "CC=CC=CC");
-		assertEquals(0,StreamUtil.forEnumeration(structureIndexer.substructure(structure, 10)).count());
+		assertEquals(1,StreamUtil.forEnumeration(structureIndexer.substructure(structure, 10)).count());
 	}
 	
 	@Test
