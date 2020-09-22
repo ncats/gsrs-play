@@ -278,7 +278,7 @@ public class StructureProcessor {
                 Structure moiety = new Structure ();
                 //System.err.println("+++++++++++++ component "+i+"!");
 
-                instrument(moiety, null, fixMetals(frag), false);
+                instrument(moiety, null, Chem.fixMetals(frag), false);
 
                 for(Value v:moiety.properties){
                     if(v instanceof Keyword){
@@ -324,9 +324,14 @@ public class StructureProcessor {
         struc.ezCenters = ez;
         struc.charge = charge;
         //struc.formula = mol.getFormula();
-        Chem.setFormula(struc);
-        struc.mwt = mol.getMass();
 
+
+
+        if(!mol.hasQueryAtoms() && !mol.hasPseudoAtoms()) {
+            Chem.setFormula(struc);
+
+            struc.mwt = mol.getMass();
+        }
         if(!query){
             struc.smiles = standardizer.canonicalSmiles(struc, struc.molfile);
         }
@@ -335,16 +340,7 @@ public class StructureProcessor {
 
 
     }
-    public static Chemical fixMetals(Chemical chemical){
-        for(int i=0; i< chemical.getAtomCount(); i++){
-            Atom atom = chemical.getAtom(i);
-            if(lychi.ElementData.isMetal(atom.getAtomicNumber())){
-                atom.setImplicitHCount(0);
-            }
-        }
 
-        return chemical;
-    }
 
     public static Chemical polymerSimplify(Chemical chem){
         try{

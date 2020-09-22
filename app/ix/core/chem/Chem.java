@@ -9,6 +9,7 @@ import gov.nih.ncats.molwitch.Chemical;
 import ix.core.models.Structure;
 
 
+import ix.core.util.LogUtil;
 import play.Logger;
 /**
  * Chemistry utilities
@@ -21,7 +22,7 @@ public class Chem {
             struc.formula = formula (struc.toChemical(false));
         }
         catch (Exception ex) {
-            throw new IllegalArgumentException ("Invalid structure");
+            LogUtil.error(()->"error computing formula for structure", ex);
         }
     }
     
@@ -49,7 +50,7 @@ public class Chem {
 
     public static Chemical fixMetals(Chemical chemical){
         for(Atom atom : chemical.getAtoms()){
-            if(lychi.ElementData.isMetal(atom.getAtomicNumber())){
+            if(!atom.isQueryAtom() && !atom.isPseudoAtom() && lychi.ElementData.isMetal(atom.getAtomicNumber())){
                 atom.setImplicitHCount(0);
             }
     	}
@@ -91,6 +92,9 @@ public class Chem {
         final Map<String, AtomicInteger> formula = new HashMap<>();
         while(iter.hasNext()){
             Chemical m = iter.next();
+            if(m.hasPseudoAtoms() || m.hasQueryAtoms()){
+                continue;
+            }
         	fixMetals(m);
             String f = m.getFormula();
             formula.computeIfAbsent(f, new Function<String, AtomicInteger>() {

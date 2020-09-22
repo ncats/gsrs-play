@@ -34,9 +34,13 @@ public class InchiStandardizer implements StructureStandardizer{
         }
         try {
             return s.toChemical().toSmiles(CANONICAL_SMILES_SPEC);
-        } catch (IOException e) {
-            e.printStackTrace();
-            return null;
+        } catch (Exception e) {
+            //something happend when converting to chemical fallback to passed in mol?
+            try{
+               return Chemical.parseMol(mol).toSmiles(CANONICAL_SMILES_SPEC);
+            }catch (Exception e2) {
+                return null;
+            }
         }
     }
 
