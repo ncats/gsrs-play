@@ -398,7 +398,7 @@ public class PolymerDecode {
 
 					boolean isR=false;
 					//rgroup because it's a star atom or query
-					if((ca.getSymbol().equals("*") || ca.getSymbol().equals("A"))){
+					if((ca.getSymbol().equals("*") || ca.getSymbol().equals("A")  || ca.getSymbol().equals("R"))){
 						isR=true;
 						connectcount++;
 					}
