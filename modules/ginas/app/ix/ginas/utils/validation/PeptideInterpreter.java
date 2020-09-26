@@ -1,9 +1,21 @@
 package ix.ginas.utils.validation;
 
 
-
-import java.io.*;
-import java.util.*;
+import java.io.BufferedReader;
+import java.io.DataInputStream;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -11,6 +23,7 @@ import gov.nih.ncats.molwitch.Atom;
 import gov.nih.ncats.molwitch.Bond;
 import gov.nih.ncats.molwitch.Chemical;
 import gov.nih.ncats.molwitch.ChemicalBuilder;
+import gov.nih.ncats.molwitch.Chirality;
 import gov.nih.ncats.molwitch.io.ChemFormat;
 
 
@@ -67,6 +80,7 @@ public class PeptideInterpreter {
 					}
 				}
 			}
+//			System.out.println(s);
 
 			try {
 
@@ -78,7 +92,7 @@ public class PeptideInterpreter {
 			}
 			if(AA.equals("P")){
 				c.atoms()
-						.filter(a-> a.getAtomicNumber() ==10)
+						.filter(a-> a.getAtomicNumber()==10)
 						.forEach(a-> a.setMassNumber(55));
 
 				try {
@@ -110,11 +124,20 @@ public class PeptideInterpreter {
 		}
 		//katzelda Aug 2020 - add amidated component to be ignored
 		AAmap.put("QGZKDVFQNNGYKY","");
+		AAmap.put("PDCKRJPYJMCOFO","");
+		
+//		System.out.println("DONE");
 	}
-	public static String LOOKUP_HASH(Chemical f2) throws Exception{
+	public static String LOOKUP_HASH(Chemical f) throws Exception{
 		String smiles=null;
 		try{
+			Chemical f2= f.copy();
+			f2.atoms()
+			  .filter(a->a.getAtomicNumber()==10 || a.getAtomicNumber()==2)
+			  .forEach(a->a.setImplicitHCount(0));
+//			System.out.println(f2.toMol());
 			smiles = f2.toInchi().getKey();
+//			System.out.println("KEY:" + smiles);
 			return smiles.substring(0,14);
 		}catch(Exception e){
 			e.printStackTrace();
@@ -127,7 +150,7 @@ public class PeptideInterpreter {
 //					smiles = f2.export(Chemical.FORMAT_MOL).replace("\n","\\n");
 //				}
 //			}
-			smiles = f2.toMol(MOL_SPEC).replace("\n", "\\n");
+			smiles = f.toMol(MOL_SPEC).replace("\n", "\\n");
 		}
 		return smiles;
 	}
@@ -177,6 +200,7 @@ public class PeptideInterpreter {
 //							m2.removeAtom(ma.getBond(i).getOtherAtom(ma)); //Remove =O
 //						}
 						ma.setAtomicNumber(2);
+						ma.setImplicitHCount(0);
 						m2.removeAtom(otherAtom);
 					}
 				}
@@ -234,6 +258,7 @@ public class PeptideInterpreter {
 						}
 						m2.removeAtom(carbonyl);
 						ma.setAtomicNumber(10);
+						ma.setImplicitHCount(0);
 						if(mod){
 							ma.setMassNumber(PeptideInterpreter.MOD_AMINO_GROUP_ISOTOPE);
 						}
@@ -272,6 +297,11 @@ public class PeptideInterpreter {
 				c2.removeBond(mb);
 				blist.add(mb.getAtom1().getAtomToAtomMap().orElse(0)-1);
 				blist.add(mb.getAtom2().getAtomToAtomMap().orElse(0)-1);
+				//this part seems unnecessary to me
+				//but needed for CDK.
+				
+				mb.getAtom1().setImplicitHCount(1); 
+				mb.getAtom2().setImplicitHCount(1); 
 			}
 		}
 		int[] barr = new int[blist.size()];
@@ -616,10 +646,14 @@ public class PeptideInterpreter {
 			smi=smi.replaceAll("M  S..*", "");
 //			System.out.println("trying to import " + smi);
 			Chemical c = Chemical.parse(smi);
+			c.generateCoordinates();
+			c.aromatize();
+			c.kekulize();
 			String smi2 = c.toMol();
 //			System.out.println("parsed mol = " + smi2);
 			smi2=smi2.replaceAll("M  S..*", "");
-			c = Chemical.parseMol(smi2);
+			c = Chemical.parse(smi2);
+//			System.out.println(c.toMol());
 			return getAminoAcidSequence(c);
 
 		} catch (Exception e) {
@@ -685,11 +719,14 @@ public class PeptideInterpreter {
 		Chemical stdMol = impMol.copy();
 		stdMol.makeHydrogensImplicit();
 		stdMol.aromatize();
+//		stdMol.kekulize();
 		stdMol.setAtomMapToPosition();
 		//setAtomMap(stdMol);
 		int[] bridges = removeDisulfide(stdMol);
 		HashMap<Integer,String> atom_to_residue = new HashMap<Integer,String> ();
 
+				
+		
 		int subunit=-1;
 		for (Chemical c : stdMol.getConnectedComponents()) {
 			//Molecule m = cf.getMol();
@@ -725,6 +762,7 @@ public class PeptideInterpreter {
 					int amap= atom.getAtomToAtomMap().orElse(0)-1;
 					alphaAtomIndexToSeqIndex.put(amap,k++);
 
+//					System.out.println("Found:" + atom.getChirality());
 					chi.put(amap, atom.getChirality().getParity());
 				}
 				contractPeptide(c2,seq);
@@ -823,7 +861,7 @@ public class PeptideInterpreter {
 					String hashKey = LOOKUP_HASH(f2);
 //					System.out.println(hashKey);
 					String aalet = AAmap.get(hashKey);
-//					System.out.println(aalet);
+//					System.out.println("WAS:" + aalet);
 					if(aalet==null){
 //						System.out.println("was null!! current map is " + AAmap);
 						String smiles=f2.toSmiles();
@@ -887,6 +925,7 @@ public class PeptideInterpreter {
 									(chi1==gov.nih.ncats.molwitch.Chirality.R.getParity() ||
 											chi1==gov.nih.ncats.molwitch.Chirality.S.getParity())
 							){
+								
 								let=let.toLowerCase();
 							}
 						}
