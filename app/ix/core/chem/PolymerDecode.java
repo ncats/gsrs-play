@@ -111,7 +111,7 @@ public class PolymerDecode {
 		return sunits;
 	}
 	public static Collection<StructuralUnit>  DecomposePolymerSU(String mol, boolean canonicalize) throws IOException {
-		return DecomposePolymerSU(Chemical.parseMol(mol), canonicalize);
+		return DecomposePolymerSU(Chemical.parse(mol), canonicalize);
 	}
 	/**
 	 * This returns a set of chemicals with * atoms given a polymer with SRU

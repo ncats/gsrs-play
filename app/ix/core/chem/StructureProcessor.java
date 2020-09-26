@@ -78,7 +78,7 @@ public class StructureProcessor {
         Structure struc = new Structure ();
         struc.digest = digest (mol);
         try {
-            instrument (struc, components, Chemical.parseMol(mol), standardize);
+            instrument (struc, components, Chemical.parse(mol), standardize);
         }catch (Exception ex) {
             ex.printStackTrace();
             System.err.println("Trouble reading structure:");
