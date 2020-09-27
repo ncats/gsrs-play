@@ -34,6 +34,8 @@ public class PolymerDecodeTest {
                 "M  SDI   1  4   14.0920   -7.6382   14.0920   -4.7262\n" +
                 "M  SDI   1  4   14.8720   -4.7262   14.8720   -7.6382\n" +
                 "M  END";
+        
+        
 
         Set<PolymerDecode.StructuralUnit> srus = PolymerDecode.DecomposePolymerSU(Chemical.parse(mol));
         assertEquals(3, srus.size());

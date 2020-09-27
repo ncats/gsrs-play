@@ -40,6 +40,9 @@ public class ApprovalWorkflowTest  extends AbstractGinasServerTest {
 
         return ts;
     }
+    private static String createMolFor(String smiles) throws IOException{
+    	return ChemicalBuilder.createFromSmiles(smiles).computeCoordinates(true).build().toMol();
+    }
 
     @Test
 	public void testApprovalRoundTrip() throws Exception {
@@ -143,12 +146,15 @@ public class ApprovalWorkflowTest  extends AbstractGinasServerTest {
             SubstanceAPI api = new SubstanceAPI(session);
 
             ChemicalSubstanceBuilder builder = SubstanceBuilder.from(api.fetchSubstanceJsonByUuid(uuid));
-            ChemicalSubstance sub = builder.setStructure(createMolFor("c1ccccc1"))
+            ChemicalSubstance sub = builder.setStructure(createMolFor("C1=CC=CC=C1"))
                                                     .build();
 
             SubstanceAPI.ValidationResponse resp = api.validateSubstance(sub.toFullJsonNode());
 
-            assertTrue(resp.getMessages().toString(), resp.getMessages().stream().filter(m-> m.getMessage().contains("change") && m.getMessage().contains("definition")).findAny().isPresent());
+            assertTrue(resp.getMessages().toString(), resp.getMessages().stream()
+            		.filter(m-> m.getMessage().contains("change") && m.getMessage().contains("definition"))
+            		.findAny()
+            		.isPresent());
         }
 
     }
@@ -217,9 +223,6 @@ public class ApprovalWorkflowTest  extends AbstractGinasServerTest {
 
     }
 
-    private static String createMolFor(String smiles) throws IOException{
-        return ChemicalBuilder.createFromSmiles(smiles).computeCoordinates(true).build().toMol();
-    }
 
 	@Test
 	public void testNonAdminCantChangeApprovalID() throws Exception {
