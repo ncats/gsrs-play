@@ -24,6 +24,7 @@ import org.junit.Test;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
+import gov.nih.ncats.molwitch.Chemical;
 import ix.AbstractGinasServerTest;
 import ix.core.validator.ValidationMessage;
 import ix.core.controllers.EntityFactory;
@@ -354,8 +355,13 @@ public class ChemicalApiTest extends AbstractGinasServerTest {
             ensurePass( api.submitSubstance(entered));
             
             String fetchedLychi = api.fetchSubstanceLychiv4ByUuid(uuid.toString());
+
             
-            assertEquals("GSV5NCTZX3GG", fetchedLychi);
+            if(fetchedLychi.contains("_")){
+            	assertEquals("UUWYBLVKLIHDAU_UVKKECPRSA_K", fetchedLychi);
+            }else{
+            	assertEquals("GSV5NCTZX3GG", fetchedLychi);
+            }
         }
    	} 
     
@@ -793,32 +799,6 @@ public class ChemicalApiTest extends AbstractGinasServerTest {
         }
    	}
 
-	@Test
-	public void testQueryAtomCachingAndSpecificity() throws Exception {
-		// JsonNode entered = parseJsonFile(resource);
-		try (RestSession session = ts.newRestSession(ts.getFakeUser1())) {
-
-			SubstanceAPI api = new SubstanceAPI(session);
-
-			ensurePass(api.submitSubstance(makeChemicalSubstanceJSON("S(=O)(=O)(O)OCCC")));
-			ensurePass(api.submitSubstance(makeChemicalSubstanceJSON("S(=O)(=O)(O)OC1CC1")));
-			ensurePass(api.submitSubstance(makeChemicalSubstanceJSON("S(=O)(=O)(O)Oc1ccccc1")));
-			ensurePass(api.submitSubstance(makeChemicalSubstanceJSON("S(=O)(=O)(O)Oc1ccc(C)cc1")));
-			ensurePass(api.submitSubstance(makeChemicalSubstanceJSON("S(=O)(=O)(O)Oc1ccc(O)cc1")));
-
-			RestSubstanceSubstanceSearcher searcher = new RestSubstanceSubstanceSearcher(session);
-
-			SearchResult result = searcher.substructure(searcher.getStructureAsUUID("S(=O)(=O)(O)OC[#6]"));
-			assertEquals(2, result.getUuids().size());
-
-//			result = searcher.substructure("S(=O)(=O)(O)OC@:[#6]", .5);
-//			assertEquals(3, result.getUuids().size());
-
-			result = searcher.substructure("S(=O)(=O)(O)OC@-[#6]");
-			assertEquals(1, result.getUuids().size());
-		}
-
-	}
 
 	@Test
 	@Ignore("ignore for now structure indexer still fails GSRS-1095")
@@ -1145,6 +1125,48 @@ public class ChemicalApiTest extends AbstractGinasServerTest {
 			e.printStackTrace();
 			throw e;
 		}
+
+	}
+	
+	
+//
+	@Test
+	public void testQueryAtomCachingAndSpecificity() throws Exception {
+		// JsonNode entered = parseJsonFile(resource);
+		try (RestSession session = ts.newRestSession(ts.getFakeUser1())) {
+
+			SubstanceAPI api = new SubstanceAPI(session);
+
+			ensurePass(api.submitSubstance(makeChemicalSubstanceJSON("S(=O)(=O)(O)OCCC")));
+			ensurePass(api.submitSubstance(makeChemicalSubstanceJSON("S(=O)(=O)(O)OC1CC1")));
+			ensurePass(api.submitSubstance(makeChemicalSubstanceJSON("S(=O)(=O)(O)Oc1ccccc1")));
+			ensurePass(api.submitSubstance(makeChemicalSubstanceJSON("S(=O)(=O)(O)Oc1ccc(C)cc1")));
+			ensurePass(api.submitSubstance(makeChemicalSubstanceJSON("S(=O)(=O)(O)Oc1ccc(O)cc1")));
+
+			RestSubstanceSubstanceSearcher searcher = new RestSubstanceSubstanceSearcher(session);
+
+			SearchResult result = searcher.substructure(searcher.getStructureAsUUID("S(=O)(=O)(O)OC[#6]"));
+			assertEquals(2, result.getUuids().size());
+
+//			result = searcher.substructure("S(=O)(=O)(O)OC@:[#6]", .5);
+//			assertEquals(3, result.getUuids().size());
+
+			result = searcher.substructure("S(=O)(=O)(O)OC@-[#6]");
+			assertEquals(1, result.getUuids().size());
+		}
+
+	}
+	
+	
+	
+	@Test
+	public void testQueryAtomMolfileHasWriteAtoms() throws Exception {
+		Chemical c=Chemical.parse("S(=O)(=O)(O)OC[#6]");
+		Chemical c2= Chemical.parse(c.toMol());
+		boolean hasSulfur = c2.atoms().filter(ca->"S".equals(ca.getSymbol())).count()>0;
+		
+
+    	assertTrue("Simple SMARTS keeps its atom types", hasSulfur);
 
 	}
 	

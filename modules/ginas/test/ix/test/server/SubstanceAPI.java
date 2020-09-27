@@ -174,7 +174,7 @@ public class SubstanceAPI {
     }
 
     public String fetchSubstanceLychiv4ByUuid(String uuid){
-    	return session.extractJSON(session.createRequestHolder(API_URL_FETCH_BASIC.replace("$UUID$", uuid)+"/structure/properties(label:LyChI_L4)!(term)($0)").get().get(timeout)).asText();
+    	return session.extractJSON(session.createRequestHolder(API_URL_FETCH_BASIC.replace("$UUID$", uuid)+"/structure/properties(label:EXACT_HASH)!(term)($0)").get().get(timeout)).asText();
     }
     public JsonNode fetchSubstanceJsonByUuid(UUID uuid) {
         return fetchSubstanceJsonByUuid(uuid.toString());

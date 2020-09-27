@@ -77,7 +77,7 @@ public class StructureProcessor {
             (String mol, Collection<Structure> components, boolean standardize) {
         Structure struc = new Structure ();
         struc.digest = digest (mol);
-        try {
+        try {        	
             instrument (struc, components, Chemical.parse(mol), standardize);
         }catch (Exception ex) {
             ex.printStackTrace();
@@ -164,14 +164,19 @@ public class StructureProcessor {
         if(query){
             struc.molfile = molSupplier.get();
             try {
-                struc.smiles = mol.toSmiles();
-            } catch (IOException e) {
+            	try{
+            		struc.smiles = mol.toSmiles();
+            	}catch(Exception e2){
+            		struc.smiles = mol.toSmarts();
+            	}
+            } catch (Exception e) {
                 e.printStackTrace();
             }
         }
 
         // no explicit Hs
         //dkatzel aug 2019 - exceppt when the Hs are stereo and explicitly drawn that way...
+        
         mol.removeNonDescriptHydrogens();
 
         // make sure molecule is kekulized consistently
