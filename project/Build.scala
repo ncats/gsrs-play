@@ -8,7 +8,7 @@ import com.typesafe.sbt.SbtNativePackager._
 //import NativePackagerKeys._
 
 object ApplicationBuild extends Build {
-  val displayVersion = "2.6"
+  val displayVersion = "2.6.1"
   val now = new java.util.Date();
   val branch = "git rev-parse --abbrev-ref HEAD".!!.trim
   val commit = "git rev-parse --short HEAD".!!.trim
