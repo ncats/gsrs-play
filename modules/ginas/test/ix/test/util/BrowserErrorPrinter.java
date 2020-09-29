@@ -51,7 +51,14 @@ public class BrowserErrorPrinter extends TestWatcher{
        if(e instanceof FailingHttpStatusCodeException){
            FailingHttpStatusCodeException ex = (FailingHttpStatusCodeException) e;
            out.println(ex.getResponse().getContentAsString());
-           ex.getCause().printStackTrace();
+           getRootCause(ex).printStackTrace();
        }
+    }
+
+    private Throwable getRootCause(Throwable t){
+        if(t.getCause() !=null){
+            return getRootCause(t.getCause());
+        }
+        return t;
     }
 }
