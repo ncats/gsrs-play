@@ -1,6 +1,6 @@
 import play._
 import sbt.Keys._
-import sbt._
+import sbt.{file, _}
 //import play.PlayImport._
 import play.Play.autoImport._
 import scala.collection.JavaConversions.mapAsScalaMap
@@ -8,6 +8,7 @@ import com.typesafe.sbt.SbtNativePackager._
 //import NativePackagerKeys._
 
 object ApplicationBuild extends Build {
+  val molwitchImplementation = System.getProperty("molwitch", "cdk")
   val displayVersion = "2.6.1"
   val now = new java.util.Date();
   val branch = "git rev-parse --abbrev-ref HEAD".!!.trim
@@ -126,6 +127,8 @@ object ApplicationBuild extends Build {
     "-source", "1.8"
   ) 
 
+  val molwitchJchem = file("molwitch-implementations/jchem3");
+  val molwitchCDK = file("molwitch-implementations/cdk");
 
   val build = Project("build", file("modules/build"))
     .settings(commonSettings:_*).settings(
@@ -145,12 +148,24 @@ public class BuildInfo {
     }
   )
 
+
   val seqaln = Project("seqaln", file("modules/seqaln"))
     .settings(commonSettings:_*).settings(
     libraryDependencies ++= commonDependencies,
     javacOptions in (Compile, compile) ++= javaBuildOptions,
     javacOptions in (doc) ++= javaDocOptions,
-    mainClass in (Compile,run) := Some("ix.seqaln.SequenceIndexer")
+    mainClass in (Compile,run) := Some("ix.seqaln.SequenceIndexer"),
+
+
+    unmanagedJars in Compile ++= {
+      println("MOLWITCH IMPLEMENTATION = " + molwitchImplementation)
+      val baseDirectories = file( "lib") +++ file( "molwitch-implementations/" +molwitchImplementation +"/jars")
+      val customJars = (baseDirectories ** "*.jar")
+
+      customJars.classpath
+    },
+
+      unmanagedSourceDirectories in Compile +=file( baseDirectory.value / "../../molwitch-implementations/" +molwitchImplementation +"/src")
   )
 
   val ixdb = Project("ixdb", file("modules/ixdb"))
