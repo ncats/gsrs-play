@@ -21,7 +21,7 @@ public class StructureProcessor {
 
     private static StructureHasher hasher;
 
-    private static  StructureStandardizer standardizer = new LychiStandardizer();
+    private static  StructureStandardizer standardizer;
 
     public static StructureStandardizer getStandardizer() {
         return standardizer;

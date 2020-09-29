@@ -39,18 +39,11 @@ public class Chem {
         }
         return chemicalToUse;
     }
-//    public static Molecule fixMetals(Molecule m){
-//    	for(MolAtom atom:m.getAtomArray()){
-//    		if(lychi.ElementData.isMetal(atom.getAtno())){
-//            	atom.setImplicitHcount(0);
-//            }
-//    	}
-//    	return m;
-//    }
+
 
     public static Chemical fixMetals(Chemical chemical){
         for(Atom atom : chemical.getAtoms()){
-            if(!atom.isQueryAtom() && !atom.isPseudoAtom() && lychi.ElementData.isMetal(atom.getAtomicNumber())){
+            if(!atom.isQueryAtom() && !atom.isPseudoAtom() && atom.isMetal()){
                 atom.setImplicitHCount(0);
             }
     	}

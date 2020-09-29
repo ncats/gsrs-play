@@ -8,24 +8,24 @@ import ix.core.search.text.IndexableValue;
 import ix.ginas.models.v1.PolymerSubstance;
 import ix.ginas.models.v1.Substance;
 /**
- * Adds lychi index values to index for the polymer substances. Note that this is a pretty
+ * Adds structure hash index values to index for the polymer substances. Note that this is a pretty
  * hacky way to make these work.
  *
  * @author peryeata
  *
  */
-public class PolymerLychiIndexValueMaker implements IndexValueMaker<Substance>{
+public class PolymerStructureHashIndexValueMaker implements IndexValueMaker<Substance>{
 
     //This is the method which does the work
     @Override
     public void createIndexableValues(Substance s, Consumer<IndexableValue> consumer) {
         if(s instanceof PolymerSubstance){
-            createPolymerLychis((PolymerSubstance)s, consumer);
+            createPolymerStructureHashes((PolymerSubstance)s, consumer);
         }
     }
 
 
-    public void createPolymerLychis(PolymerSubstance s, Consumer<IndexableValue> consumer) {
+    public void createPolymerStructureHashes(PolymerSubstance s, Consumer<IndexableValue> consumer) {
         try{
 
             StructureProcessorTask sst=new StructureProcessorTask.Builder()

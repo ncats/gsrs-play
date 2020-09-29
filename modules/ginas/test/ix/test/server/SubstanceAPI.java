@@ -173,7 +173,7 @@ public class SubstanceAPI {
         return session.extractJSON(fetchCVById(id));
     }
 
-    public String fetchSubstanceLychiv4ByUuid(String uuid){
+    public String fetchSubstanceExactHashByUuid(String uuid){
     	return session.extractJSON(session.createRequestHolder(API_URL_FETCH_BASIC.replace("$UUID$", uuid)+"/structure/properties(label:EXACT_HASH)!(term)($0)").get().get(timeout)).asText();
     }
     public JsonNode fetchSubstanceJsonByUuid(UUID uuid) {

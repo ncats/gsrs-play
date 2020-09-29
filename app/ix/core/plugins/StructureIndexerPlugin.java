@@ -117,27 +117,10 @@ public class StructureIndexerPlugin extends Plugin {
 		
 		
 		public static Chemical getStandardized(Chemical m){
-			//katzelda - this is an implementation detail of jchem
 
-//			List<MolBond> anyBonds = new ArrayList<MolBond>();
-//	    	for(MolBond mb: m.getBondArray()){
-//	    		if(mb.getType()==MolBond.ANY){ //any
-//	    			anyBonds.add(mb);
-//	    			mb.setType(MolBond.SINGLE_OR_AROMATIC); //single or aromatic
-//	    		}
-//	    	}
-//	    	m.aromatize();
-//	    	for(MolBond mb2:anyBonds){
-//	    		mb2.setType(MolBond.ANY);
-//	    	}
-			
 			
 			m.aromatize();
-			
-			
-//			try{
-//			System.out.println(m.toMol());
-//			}catch(Exception e){}
+
 			
 			return standardizeCharges(m);
 			

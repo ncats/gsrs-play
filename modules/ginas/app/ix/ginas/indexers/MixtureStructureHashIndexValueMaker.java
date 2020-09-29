@@ -12,12 +12,12 @@ import ix.utils.UUIDUtil;
 
 
 /**
- * Adds lychi index values to index for the chemical components of a mixture
+ * Adds structure hash index values to index for the chemical components of a mixture
  * 
  * @author peryeata
  *
  */
-public class MixtureLychiIndexValueMaker implements IndexValueMaker<Substance>{
+public class MixtureStructureHashIndexValueMaker implements IndexValueMaker<Substance>{
 
 	//This is the method which does the work
 	@Override
@@ -37,14 +37,14 @@ public class MixtureLychiIndexValueMaker implements IndexValueMaker<Substance>{
 		        	 if(UUIDUtil.isUUID(refuuid)){
 		        		 Substance component = SubstanceFactory.getFullSubstance(mc.substance);
 		        		 if(component instanceof ChemicalSubstance){
-		        			 extractLychis((ChemicalSubstance)component, consumer);
+		        			 extractStructureHashes((ChemicalSubstance)component, consumer);
 		        		 }
 		        	 }
 		         });
 		         
 	}
 	
-	public void extractLychis(ChemicalSubstance s, Consumer<IndexableValue> consumer) {
+	public void extractStructureHashes(ChemicalSubstance s, Consumer<IndexableValue> consumer) {
 		
 		//consumer.accept(IndexableValue.simpleStringValue("root_structure_properties_term", lychi3));
 		if( s.structure.getStereoInsensitiveHash() != null && s.structure.getStereoInsensitiveHash().length() > 0)

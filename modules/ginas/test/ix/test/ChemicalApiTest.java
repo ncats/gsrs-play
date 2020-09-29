@@ -16,7 +16,6 @@ import java.util.UUID;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
-import ix.core.util.RunOnly;
 import ix.test.server.*;
 import org.junit.Assert;
 import org.junit.Ignore;
@@ -354,13 +353,13 @@ public class ChemicalApiTest extends AbstractGinasServerTest {
 									.buildJson();
             ensurePass( api.submitSubstance(entered));
             
-            String fetchedLychi = api.fetchSubstanceLychiv4ByUuid(uuid.toString());
+            String exactHash = api.fetchSubstanceExactHashByUuid(uuid.toString());
 
             
-            if(fetchedLychi.contains("_")){
-            	assertEquals("UUWYBLVKLIHDAU_UVKKECPRSA_K", fetchedLychi);
+            if(exactHash.contains("_")){
+            	assertEquals("UUWYBLVKLIHDAU_UVKKECPRSA_K", exactHash);
             }else{
-            	assertEquals("GSV5NCTZX3GG", fetchedLychi);
+            	assertEquals("GSV5NCTZX3GG", exactHash);
             }
         }
    	} 

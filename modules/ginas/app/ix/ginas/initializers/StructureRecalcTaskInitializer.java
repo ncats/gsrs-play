@@ -73,14 +73,6 @@ public class StructureRecalcTaskInitializer extends ScheduledTaskInitializer
 
 							s.save(); //save
 
-							String[] lychiSmiles= new String[1];
-							s.properties.stream().filter(k-> Structure.F_LyChI_SMILES.equals(k.label))
-									.findAny().ifPresent(v-> lychiSmiles[0] = (String) v.getValue());
-
-//							outputWriter.println(s.id +"\t" +  s.definedStereo+ "\t" + newStructure.stereoCenters + "\t" + s.ezCenters + "\t" + s.charge +"\t"
-//
-//									+ s.getInChIKey() + "\t" + s.getStereoInsensitiveHash() + "\t" + s.getExactHash() +
-//							"\t" +lychiSmiles[0]);
 
 							for( Value p : toDelete)
 							{

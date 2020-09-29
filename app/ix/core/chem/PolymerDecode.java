@@ -162,8 +162,6 @@ public class PolymerDecode {
 		
 		while(componentIter.hasNext()){
 			Chemical c3 = componentIter.next();
-			// System.out.println(new
-			// Jchemical(m2).export(Chemical.FORMAT_SMARTS));
 			Set<Atom> mat = new HashSet<>();
 			Map<Integer, Integer> needNewPseudo = new HashMap<>();
 			Map<Integer, AtomCoordinates> needNewPseudoCoords= new HashMap<>();

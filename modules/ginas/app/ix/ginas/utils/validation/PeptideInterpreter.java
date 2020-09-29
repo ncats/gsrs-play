@@ -719,9 +719,8 @@ public class PeptideInterpreter {
 		Chemical stdMol = impMol.copy();
 		stdMol.makeHydrogensImplicit();
 		stdMol.aromatize();
-//		stdMol.kekulize();
 		stdMol.setAtomMapToPosition();
-		//setAtomMap(stdMol);
+
 		int[] bridges = removeDisulfide(stdMol);
 		HashMap<Integer,String> atom_to_residue = new HashMap<Integer,String> ();
 
@@ -729,18 +728,9 @@ public class PeptideInterpreter {
 		
 		int subunit=-1;
 		for (Chemical c : stdMol.getConnectedComponents()) {
-			//Molecule m = cf.getMol();
-			//Jchemical c = new Jchemical(m);
-			//System.out.
-//			int[] stereo = c.getStereo();
+
 			String ret = "";		//Full Sequence, single letter, semi-colon between subunits
 			subunit++; //start to 0
-//			try {
-//				System.out.println("connected components " + subunit + " = " + c.toSmiles());
-//			}catch (IOException e){
-//				throw new UncheckedIOException(e);
-//			}
-//			System.out.println(c.atoms().map(a-> "[ " + a.getSymbol() + " " + a.getAtomToAtomMap().getAsInt() + "]").collect(Collectors.joining(",")));
 
 			try {
 				int[] seq = longestPeptideBackbone(c,4);
@@ -754,7 +744,6 @@ public class PeptideInterpreter {
 
 				Chemical c2 = c.copy();
 
-				//Molecule m2 = Jchemical.makeJchemical(c2).getMol();
 				int k=0;
 
 				for (int s : seq) {
@@ -846,7 +835,6 @@ public class PeptideInterpreter {
 
 					Chemical f2 = cf.copy();
 					int aamap = -1;
-					//Molecule f2 = ((Jchemical)cf).getMol().cloneMolecule();
 					for(Atom ma:f2.getAtoms()){
 						if(ma.isQueryAtom()){
 							//Change all previously psuedo atoms to argon.
