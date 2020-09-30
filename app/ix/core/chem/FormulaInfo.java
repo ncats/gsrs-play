@@ -246,10 +246,10 @@ public class FormulaInfo implements Comparable<FormulaInfo>{
 		public static String toCanonicalString(String s){
 			//Remove "[" forms on canonical form
 			if(s.contains("[")){
-				s=	s.replace("[", "")
-					 .replace("]", "")
-					 .replace("+", "")
-					 .replace("-", "");
+				s=	s.replaceAll("[0-9]*\\+[0-9]*", "")
+					 .replaceAll("[0-9]*\\-[0-9]*", "")
+					 .replace("[", "")
+					 .replace("]", "");
 			}
 			
 			return toCanonicalString(FormulaInfo.parseMultiple(s));
