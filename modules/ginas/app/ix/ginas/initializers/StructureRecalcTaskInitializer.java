@@ -70,6 +70,10 @@ public class StructureRecalcTaskInitializer extends ScheduledTaskInitializer
 							s.definedStereo = newStructure.definedStereo;
 							s.charge = newStructure.charge;
 							s.stereoCenters = newStructure.stereoCenters;
+							
+							s.mwt= newStructure.mwt;
+							s.formula= newStructure.formula;
+							
 
 							s.save(); //save
 

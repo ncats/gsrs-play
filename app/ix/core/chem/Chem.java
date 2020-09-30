@@ -65,7 +65,7 @@ public class Chem {
 //                continue;
 //            }
         	fixMetals(m);
-            String f = m.getFormula();
+            String f = FormulaInfo.toCanonicalString(m.getFormula());
             formula.computeIfAbsent(f, new Function<String, AtomicInteger>() {
                 @Override
                 public AtomicInteger apply(String s) {
