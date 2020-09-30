@@ -332,11 +332,10 @@ public class StructureProcessor {
 
 
 
-        if(!mol.hasQueryAtoms() && !mol.hasPseudoAtoms()) {
-            Chem.setFormula(struc);
-
-            struc.setMwt(mol.getMass());
-        }
+//        if(!mol.hasQueryAtoms() && !mol.hasPseudoAtoms()) {
+        Chem.setFormula(struc);
+        struc.setMwt(mol.getMass());
+//        }
         if(!query){
             struc.smiles = standardizer.canonicalSmiles(struc, struc.molfile);
         }

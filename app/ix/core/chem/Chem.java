@@ -51,30 +51,6 @@ public class Chem {
         return chemical;
     }
     
-    /**
-     * Generate chemical formula by treating disconnected components
-     * separately.
-     */
-//    public static String formula (Molecule g) {
-//        Molecule[] frags = g.cloneMolecule().convertToFrags();
-//        final Map<String, Integer> formula = new HashMap<String, Integer>();
-//        for (Molecule m : frags) {
-//        	fixMetals(m);
-//
-//            String f = m.getFormula();
-//            Integer c = formula.get(f);
-//            formula.put(f, c==null ? 1 : (c+1));
-//        }
-//        List<String> order = new ArrayList<String>(formula.keySet());
-//        StringBuilder sb = new StringBuilder ();
-//        for (String f : order) {
-//            Integer c = formula.get(f);
-//            if (sb.length() > 0) sb.append(".");
-//            if (c > 1) sb.append(c);
-//            sb.append(f);
-//        }
-//        return FormulaInfo.toCanonicalString(sb.toString());
-//    }
 
     /**
      * Generate chemical formula by treating disconnected components
@@ -85,9 +61,9 @@ public class Chem {
         final Map<String, AtomicInteger> formula = new HashMap<>();
         while(iter.hasNext()){
             Chemical m = iter.next();
-            if(m.hasPseudoAtoms() || m.hasQueryAtoms()){
-                continue;
-            }
+//            if(m.hasPseudoAtoms() || m.hasQueryAtoms()){
+//                continue;
+//            }
         	fixMetals(m);
             String f = m.getFormula();
             formula.computeIfAbsent(f, new Function<String, AtomicInteger>() {
@@ -108,7 +84,6 @@ public class Chem {
         }
             sb.append(entry.getKey());
         }
-
         return FormulaInfo.toCanonicalString(sb.toString());
     }
     

@@ -14,6 +14,7 @@ import com.typesafe.config.ConfigFactory;
 
 import ix.core.UserFetcher;
 import ix.core.validator.*;
+import ix.core.chem.Chem;
 import ix.core.chem.StructureProcessor;
 import ix.core.controllers.AdminFactory;
 import ix.core.controllers.search.SearchRequest;
@@ -1660,6 +1661,7 @@ public class ValidationUtils {
 				oldstr.definedStereo = struc2.definedStereo;
 				oldstr.stereoCenters = struc2.stereoCenters;
 				oldstr.digest = struc2.digest;
+				Chem.setFormula(oldstr);
 				mes.appliedChange = true;
 				break;
 			case FAIL:
