@@ -241,6 +241,9 @@ public class BuildInfo {
       val path = baseDirectory.value / "../../molwitch-implementations" / molwitchImplementation  / "src";
       println("PATH = " + path);
       val baseDirectories = file( "lib") +++ file( "molwitch-implementations/" +molwitchImplementation +"/jars")
+      if(!file( "molwitch-implementations/" +molwitchImplementation +"/jars").isDirectory){
+        throw new IllegalArgumentException("molwitch implementation jar directory does not exist! " + path)
+      }
       val customJars = (baseDirectories ** "*.jar")
 
       customJars.classpath
