@@ -227,6 +227,7 @@ public class BuildInfo {
                           .filter( prop=> !("config.file".equals(prop._1)) && !("user.dir".equals(prop._1)))
                           .map(prop => s"-D${prop._1}=${prop._2}").toSeq,
 
+    javaOptions in Test ++= Option("-Dmolwitch="+molwitchImplementation).toSeq,
 //    javaOptions in Test ++= Seq(Tests.Argument(TestFrameworks.JUnit, "-a"))
     cleanFiles += file("modules/ginas/ginas.ix"),
     //baseDirectory is the ginas module we want to go up a few dirs

@@ -14,21 +14,21 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 
 /**
- * This Initializer is just a way to force Chemkit to be loaded
+ * This Initializer is just a way to force molwitch to be loaded
  * by the Classloader early.  Otherwise sometimes when doing a ginas/run
- * a delayed call to Chemkit might get loaded by a plugin classloader
+ * a delayed call to Molwitch might get loaded by a plugin classloader
  * and will cause problems when other classes can't see it.
  *
  * Created by katzelda on 3/20/19.
  */
-public class ChemkitInitializer implements Initializer{
+public class MolwitchInitializer implements Initializer{
 
     @Override
     public void onStart(Application app) {
         try {
             Java8ForOldEbeanHelper.makeChemkitCall();
         }catch(Exception e){
-            throw new IllegalStateException("chemkit could not be found", e);
+            throw new IllegalStateException("molwitch implementation could not be found", e);
         }
 
         String sdf =
