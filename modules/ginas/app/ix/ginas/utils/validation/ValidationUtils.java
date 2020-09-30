@@ -1654,7 +1654,7 @@ public class ValidationUtils {
 				oldstr.properties = struc2.properties;
 				oldstr.charge = struc2.charge;
 				oldstr.formula = struc2.formula;
-				oldstr.mwt = struc2.mwt;
+				oldstr.setMwt(struc2.mwt);
 				oldstr.smiles = struc2.smiles;
 				oldstr.ezCenters = struc2.ezCenters;
 				oldstr.definedStereo = struc2.definedStereo;
