@@ -154,18 +154,9 @@ public class BuildInfo {
     libraryDependencies ++= commonDependencies,
     javacOptions in (Compile, compile) ++= javaBuildOptions,
     javacOptions in (doc) ++= javaDocOptions,
-    mainClass in (Compile,run) := Some("ix.seqaln.SequenceIndexer"),
+    mainClass in (Compile,run) := Some("ix.seqaln.SequenceIndexer")
 
 
-    unmanagedJars in Compile ++= {
-      println("MOLWITCH IMPLEMENTATION = " + molwitchImplementation)
-      val baseDirectories = file( "lib") +++ file( "molwitch-implementations/" +molwitchImplementation +"/jars")
-      val customJars = (baseDirectories ** "*.jar")
-
-      customJars.classpath
-    },
-
-      unmanagedSourceDirectories in Compile +=file( baseDirectory.value / "../../molwitch-implementations/" +molwitchImplementation +"/src")
   )
 
   val ixdb = Project("ixdb", file("modules/ixdb"))
@@ -242,6 +233,19 @@ public class BuildInfo {
     mappings in Universal ++=(baseDirectory.value / "../../cv" * "*" get) map
         (x => x -> ("cv/" + x.getName)),
     //adds evolutions.sh file into the dist
-    mappings in Universal += file("evolutions.sh") -> "bin/evolutions.sh"
+    mappings in Universal += file("evolutions.sh") -> "bin/evolutions.sh",
+
+    unmanagedJars in Compile ++= {
+      println("MOLWITCH IMPLEMENTATION = " + molwitchImplementation)
+      val path = baseDirectory.value / "../../molwitch-implementations" / molwitchImplementation  / "src";
+      println("PATH = " + path);
+      val baseDirectories = file( "lib") +++ file( "molwitch-implementations/" +molwitchImplementation +"/jars")
+      val customJars = (baseDirectories ** "*.jar")
+
+      customJars.classpath
+    },
+
+    //    println("MY PATH - " + ),
+    unmanagedSourceDirectories in Compile +=  baseDirectory.value / "../../molwitch-implementations" / molwitchImplementation  / "src"
   ).dependsOn(ginasEvo).aggregate(ginasEvo)
 }
