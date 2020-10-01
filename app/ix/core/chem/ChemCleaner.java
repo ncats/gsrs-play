@@ -164,9 +164,7 @@ public class ChemCleaner {
 			mfile+=add;
 		}
 		mfile+="M  END";
-		mfile=  cleanMolfileWithTypicalWhiteSpaceIssues(mfile);
-		mfile = removeLegacyTagLines(mfile);
-		return mfile;
+		return cleanMolfileWithTypicalWhiteSpaceIssues(mfile);
 	}
 
 	private static LineParser COUNTS_LINE_PARSER=new LineParser("aaabbblllfffcccsssxxxrrrpppiiimmmvvvvvv");
@@ -205,9 +203,11 @@ public class ChemCleaner {
 	}
 
 	public static String removeSGroups(String mol){
-		return StreamUtil.lines(mol)
+		String withoutSgroups =  StreamUtil.lines(mol)
   				.filter(l->!l.matches("^M  S.*$"))
   				.collect(Collectors.joining("\n"));
+
+		return removeLegacyTagLines(withoutSgroups);
 	}
 
 }
