@@ -199,6 +199,8 @@ public class ChemCleaner {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+		//remove last new line
+		builder.setLength(builder.length()-1);
 		return builder.toString();
 	}
 
