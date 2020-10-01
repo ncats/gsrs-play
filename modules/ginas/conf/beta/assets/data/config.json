@@ -1,6 +1,7 @@
 {
-  "version": "2.6",
+  "version": "2.6.1",
   "approvalString": "UNII",
+  "includeAbout": false,
   "substanceDetailsCards": [
     {
       "card": "substance-overview",
