@@ -353,7 +353,7 @@ public class MolfileFixTest {
 //                "  6 F    2   7   8\n" +
                 "M  END";
 
-        assertEquals(expected, ChemCleaner.removeSGroups(mol));
+        assertEquals(expected, ChemCleaner.removeSGroupsAndLegacyAtomLists(mol));
     }
 
     @Test
@@ -423,7 +423,7 @@ public class MolfileFixTest {
                 "M  END";
 
 
-        assertEquals(expected, ChemCleaner.removeSGroups(mol));
+        assertEquals(expected, ChemCleaner.removeSGroupsAndLegacyAtomLists(mol));
     }
 
     @Test
@@ -456,6 +456,6 @@ public class MolfileFixTest {
                 "M  ALS   5  2 F N   O   \n" +
                 "M  ALS   6  2 F N   O   \n" +
                 "M  END";
-        assertEquals(mol, ChemCleaner.removeSGroups(mol));
+        assertEquals(mol, ChemCleaner.removeSGroupsAndLegacyAtomLists(mol));
     }
 }

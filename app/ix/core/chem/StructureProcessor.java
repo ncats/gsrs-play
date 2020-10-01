@@ -84,7 +84,7 @@ public class StructureProcessor {
             System.err.println("Trouble reading structure:");
             System.err.println(mol);
             System.err.println("Attempting to eliminate SGROUPS");
-            String nmol = ChemCleaner.removeSGroups(mol);
+            String nmol = ChemCleaner.removeSGroupsAndLegacyAtomLists(mol);
             try{
                 instrument (struc, components, Chemical.parse(nmol), standardize);
             }catch(Exception e){

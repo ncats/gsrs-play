@@ -17,7 +17,6 @@ import ix.core.util.StreamUtil;
 import ix.utils.FortranLikeParserHelper;
 import ix.utils.FortranLikeParserHelper.LineParser;
 import ix.utils.FortranLikeParserHelper.LineParser.ParsedOperation;
-import ix.utils.Tuple;
 
 public class ChemCleaner {
 
@@ -167,8 +166,7 @@ public class ChemCleaner {
 		return cleanMolfileWithTypicalWhiteSpaceIssues(mfile);
 	}
 
-	private static LineParser COUNTS_LINE_PARSER=new LineParser("aaabbblllfffcccsssxxxrrrpppiiimmmvvvvvv");
-	private static String removeLegacyTagLines(String mfile) {
+	private static String removeLegacyAtomListLines(String mfile) {
 		StringBuilder builder = new StringBuilder(mfile.length());
 		try(BufferedReader reader = new BufferedReader(new StringReader(mfile))){
 			//assume valid mol file
@@ -177,7 +175,7 @@ public class ChemCleaner {
 			builder.append(reader.readLine()).append('\n');
 			String countsLine = reader.readLine();
 			//aaabbblllfffcccsssxxxrrrpppiiimmmvvvvvv
-			Map<String, FortranLikeParserHelper.ParsedSection> map =COUNTS_LINE_PARSER.parse(countsLine);
+			Map<String, FortranLikeParserHelper.ParsedSection> map =MOLFILE_COUNT_LINE_PARSER.parse(countsLine);
 			int numAtoms = Integer.parseInt(map.get("aaa").getValueTrimmed());
 			int numBonds = Integer.parseInt(map.get("bbb").getValueTrimmed());
 			int numAtomLists = Integer.parseInt(map.get("lll").getValueTrimmed());
@@ -202,12 +200,18 @@ public class ChemCleaner {
 		return builder.toString();
 	}
 
-	public static String removeSGroups(String mol){
+	/**
+	 * Takes an input mol formatted String and removes all
+	 * S Groups and legacy AtomList lines
+	 * @param mol
+	 * @return
+	 */
+	public static String removeSGroupsAndLegacyAtomLists(String mol){
 		String withoutSgroups =  StreamUtil.lines(mol)
   				.filter(l->!l.matches("^M  S.*$"))
   				.collect(Collectors.joining("\n"));
 
-		return removeLegacyTagLines(withoutSgroups);
+		return removeLegacyAtomListLines(withoutSgroups);
 	}
 
 }

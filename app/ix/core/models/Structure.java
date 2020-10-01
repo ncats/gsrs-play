@@ -3,8 +3,6 @@ package ix.core.models;
 import java.io.IOException;
 import java.util.*;
 
-import javax.persistence.*;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -488,7 +486,7 @@ public class Structure extends BaseModel implements ForceUpdatableModel{
         	messages.add(GinasProcessingMessage
                     .WARNING_MESSAGE("Structure format modified due to standardization"));
         	try {
-                c = Chemical.parseMol(ChemCleaner.removeSGroups(mfile));
+                c = Chemical.parseMol(ChemCleaner.removeSGroupsAndLegacyAtomLists(mfile));
 
         	c.setProperty("WARNING", "Structure format modified due to standardization: removed SGROUPs");
             }catch(Exception e){
