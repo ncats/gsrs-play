@@ -155,3 +155,11 @@ Warning running this program could take a few hours to run.  This is recommended
 
 ## Authors
 The software tools created by the this project are developed, maintained, and distributed to ginas and other interested parties by the National Center for Advancing Translational Sciences (NCATS) at the National Institutes of Health (NIH), in close collaboration with the Food and Drug Administration (FDA). 
+
+## License
+G-SRS software is open source under the [Apache 2.0](http://www.apache.org/licenses/LICENSE-2.0) license. 
+
+This software also incorporates JSDraw.  JSDraw is licensed from Scilligence and is free to use with the GSRS software.
+                                       
+To incorporate JSDraw in another distributable commercial software package please contact [Scilligence](https://www.scilligence.com/web/)
+                                       
