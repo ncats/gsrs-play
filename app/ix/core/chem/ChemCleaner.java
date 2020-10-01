@@ -1,4 +1,7 @@
 package ix.core.chem;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -11,6 +14,7 @@ import java.util.stream.IntStream;
 
 import ix.core.util.CachedSupplier;
 import ix.core.util.StreamUtil;
+import ix.utils.FortranLikeParserHelper;
 import ix.utils.FortranLikeParserHelper.LineParser;
 import ix.utils.FortranLikeParserHelper.LineParser.ParsedOperation;
 import ix.utils.Tuple;
@@ -160,9 +164,44 @@ public class ChemCleaner {
 			mfile+=add;
 		}
 		mfile+="M  END";
-		return cleanMolfileWithTypicalWhiteSpaceIssues(mfile);
+		mfile=  cleanMolfileWithTypicalWhiteSpaceIssues(mfile);
+		mfile = removeLegacyTagLines(mfile);
+		return mfile;
 	}
-	
+
+	private static LineParser COUNTS_LINE_PARSER=new LineParser("aaabbblllfffcccsssxxxrrrpppiiimmmvvvvvv");
+	private static String removeLegacyTagLines(String mfile) {
+		StringBuilder builder = new StringBuilder(mfile.length());
+		try(BufferedReader reader = new BufferedReader(new StringReader(mfile))){
+			//assume valid mol file
+			builder.append(reader.readLine()).append('\n');
+			builder.append(reader.readLine()).append('\n');
+			builder.append(reader.readLine()).append('\n');
+			String countsLine = reader.readLine();
+			//aaabbblllfffcccsssxxxrrrpppiiimmmvvvvvv
+			Map<String, FortranLikeParserHelper.ParsedSection> map =COUNTS_LINE_PARSER.parse(countsLine);
+			int numAtoms = Integer.parseInt(map.get("aaa").getValueTrimmed());
+			int numBonds = Integer.parseInt(map.get("bbb").getValueTrimmed());
+			int numAtomLists = Integer.parseInt(map.get("lll").getValueTrimmed());
+			//rewrite with atomList set to 0
+//			builder.append(countsLine.substring(0, 6)+"  0" + countsLine.substring(9)).append('\n');
+			builder.append(countsLine).append('\n');
+			int linesInAtomAndBondBlocks = numAtoms+numBonds;
+			for(int i=0; i<linesInAtomAndBondBlocks; i++){
+				builder.append(reader.readLine()).append('\n');
+			}
+			String line;
+			while( (line =reader.readLine()) !=null){
+				if(line.startsWith("M  ")){
+					builder.append(line).append('\n');
+				}
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return builder.toString();
+	}
+
 	public static String removeSGroups(String mol){
 		return StreamUtil.lines(mol)
   				.filter(l->!l.matches("^M  S.*$"))
