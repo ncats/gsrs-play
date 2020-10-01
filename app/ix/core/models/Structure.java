@@ -3,6 +3,8 @@ package ix.core.models;
 import java.io.IOException;
 import java.util.*;
 
+import javax.persistence.*;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
