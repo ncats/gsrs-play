@@ -156,7 +156,7 @@ public class StructureProcessor {
             try {
                 mol.generateCoordinates();
                 molSupplier.resetCache();
-            } catch (ChemkitException e) {
+            } catch (MolwitchException e) {
                 e.printStackTrace();
             }
         }
