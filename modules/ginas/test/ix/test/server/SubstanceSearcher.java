@@ -119,7 +119,7 @@ public interface SubstanceSearcher {
 
     /**
      * Get the UUIDs of all the loaded substances that have a defined moiety
-     * which matches the given structure by a lychi level 3 match.
+     * which matches the given structure by a structure stereo insensitive hash match.
      * This is also called "flex match"
      * 
      * @param smiles a kekulized SMILES string of structure search
@@ -132,7 +132,7 @@ public interface SubstanceSearcher {
     
     /**
      * Get the UUIDs of all the loaded substances that have a defined structure
-     * which matches the given structure by a lychi level 4 match.
+     * which matches the given structure by a structure exact hash match.
      * This is also called "exact match"
      * 
      * @param smiles a kekulized SMILES string of structure search

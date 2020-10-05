@@ -64,6 +64,7 @@ public class Structure extends BaseModel implements ForceUpdatableModel{
     public static final String F_InChI = "InChI";
     public static final String F_MDL = "MDL";
     public static final String F_SMILES = "SMILES";
+
     public static final String F_MRV = "MRV";
     public static final String F_LyChI_SMILES = "LyChI_SMILES";
     public static final String H_LyChI_L1 = "LyChI_L1";
@@ -232,6 +233,17 @@ public class Structure extends BaseModel implements ForceUpdatableModel{
     public Integer count = 1; // moiety count?
     public Structure() {}
     
+    
+    public void setMwt(Double d){
+    	this.mwt=Math.round(d* 10000.0)/10000.0;
+    }
+    
+
+    public Double getMwt(){
+    	if(this.mwt==null)return 0.0;
+    	
+    	return Math.round(mwt* 10000.0)/10000.0;
+    }
     
     
     @JsonView(BeanViews.Compact.class)
@@ -459,6 +471,7 @@ public class Structure extends BaseModel implements ForceUpdatableModel{
                     c = Chemical.createFromSmiles(smiles);
                 }
             }catch(Exception e){
+                e.printStackTrace();
                 messages.add(GinasProcessingMessage.ERROR_MESSAGE(e.getMessage()));
             }
         
@@ -466,6 +479,7 @@ public class Structure extends BaseModel implements ForceUpdatableModel{
             try {
                 c = Chemical.parseMol(molfile);
             }catch(Exception e){
+                e.printStackTrace();
                 messages.add(GinasProcessingMessage.ERROR_MESSAGE(e.getMessage()));
             }
         }
@@ -474,7 +488,7 @@ public class Structure extends BaseModel implements ForceUpdatableModel{
         	messages.add(GinasProcessingMessage
                     .WARNING_MESSAGE("Structure format modified due to standardization"));
         	try {
-                c = Chemical.parseMol(ChemCleaner.removeSGroups(mfile));
+                c = Chemical.parseMol(ChemCleaner.removeSGroupsAndLegacyAtomLists(mfile));
 
         	c.setProperty("WARNING", "Structure format modified due to standardization: removed SGROUPs");
             }catch(Exception e){

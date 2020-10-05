@@ -939,7 +939,7 @@ public class App extends Authentication {
 		if(!c.getSource().get().getType().includesCoordinates()){
 			try {
 				c.generateCoordinates();
-			} catch (ChemkitException e) {
+			} catch (MolwitchException e) {
 				throw new IOException("error generating coordinates",e);
 			}
 		}

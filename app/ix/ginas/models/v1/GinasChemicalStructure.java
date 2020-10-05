@@ -22,6 +22,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import ix.core.UserFetcher;
+import ix.core.chem.Chem;
 import ix.core.controllers.AdminFactory;
 import ix.core.controllers.EntityFactory;
 import ix.core.controllers.EntityFactory.EntityMapper;
@@ -96,6 +97,7 @@ public class GinasChemicalStructure extends Structure implements GinasAccessRefe
 		this.stereoComments=s.stereoComments;
 		this.stereoChemistry=s.stereoChemistry;
 		this.version=s.version;
+		Chem.setFormula(this);
 	}
 	
 	

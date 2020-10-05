@@ -244,6 +244,14 @@ public class FormulaInfo implements Comparable<FormulaInfo>{
 			return String.join(".", sforms);
 		}
 		public static String toCanonicalString(String s){
+			//Remove "[" forms on canonical form
+			if(s.contains("[")){
+				s=	s.replaceAll("[0-9]*\\+[0-9]*", "")
+					 .replaceAll("[0-9]*\\-[0-9]*", "")
+					 .replace("[", "")
+					 .replace("]", "");
+			}
+			
 			return toCanonicalString(FormulaInfo.parseMultiple(s));
 		}
 		

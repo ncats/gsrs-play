@@ -113,7 +113,7 @@ public class StructureFactory extends EntityFactory {
                 struc = taskBuilder.build().instrument();
             }catch(Exception e){
                 Logger.error("Structure Exception", e);
-                struc = taskBuilder.mol(ChemCleaner.removeSGroups(str))
+                struc = taskBuilder.mol(ChemCleaner.removeSGroupsAndLegacyAtomLists(str))
                                    .build()
                                    .instrument();
             }
@@ -123,6 +123,7 @@ public class StructureFactory extends EntityFactory {
             }
             return struc;
         } catch (Exception e) {
+            e.printStackTrace();
             throw new IllegalStateException("Can not parse structure from:" + str, e);
             //throw new IllegalStateException("Can not parse structure from:" + str);
         }

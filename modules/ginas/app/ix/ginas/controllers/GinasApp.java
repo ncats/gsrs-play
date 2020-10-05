@@ -630,9 +630,9 @@ public class GinasApp extends App {
                             double thres = Math.max(.3, Math.min(1., Double.parseDouble(cutoff)));
                             return similarity(qStructure.molfile, thres, rows, page);
                         case FLEX:
-                            return lychimatch(qStructure.molfile, rows, page, false);
+                            return structureHashMatch(qStructure.molfile, rows, page, false);
                         case EXACT:
-                            return lychimatch(qStructure.molfile, rows, page, true);
+                            return structureHashMatch(qStructure.molfile, rows, page, true);
                         default:
                             return substructure(qStructure.molfile, rows, page);
                     }
@@ -1636,7 +1636,7 @@ public class GinasApp extends App {
 
     }
 
-    public static F.Promise<Result> lychimatch(final String query, int rows, int page, boolean exact) {
+    public static F.Promise<Result> structureHashMatch(final String query, int rows, int page, boolean exact) {
         try {
             Structure struc2 = StructureProcessor.instrument(query, null, true); // don't
             // standardize

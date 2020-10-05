@@ -152,7 +152,7 @@ public class ChemicalSubstance extends Substance implements GinasSubstanceDefini
     @JsonIgnore
     @Indexable(name = "Molecular Weight", dranges = { 0, 200, 400, 600, 800, 1000 }, format = "%1$.0f", facet=true)
     public double getMolecularWeight(){
-    	return structure.mwt;
+    	return structure.getMwt();
     }
 
 
@@ -178,20 +178,6 @@ public class ChemicalSubstance extends Substance implements GinasSubstanceDefini
 
     @Override
     protected void additionalDefinitionalElements(Consumer<DefinitionalElement> consumer) {
-
-
-        /*
-        Key->Value
-structure.properties.lychi4->"<EXAMPLE_LYCHI>"
-structure.properties.stereoChemistry->"RACEMIC"
-structure.properties.opticalActivity->"(+/-)"
-
-For each Moiety:
-structure.moieties[<lychi4>].lychi4->"<EXAMPLE_LYCHI>"
-structure.moieties[<lychi4>].stereoChemistry->"RACEMIC"
-structure.moieties[<lychi4>].opticalActivity->"(+/-)"
-structure.moieties[<lychi4>].countAmount->"4 to 5 per mol"
-         */
 
         addStructureDefinitialElements(structure, consumer);
     }

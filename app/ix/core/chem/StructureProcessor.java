@@ -21,6 +21,16 @@ public class StructureProcessor {
 
     private static StructureHasher hasher;
 
+    private static  StructureStandardizer standardizer;
+
+    public static StructureStandardizer getStandardizer() {
+        return standardizer;
+    }
+
+    public static void setStandardizer(StructureStandardizer standardizer) {
+        StructureProcessor.standardizer = standardizer;
+    }
+
     public static StructureHasher getHasher() {
         return hasher;
     }
@@ -67,14 +77,14 @@ public class StructureProcessor {
             (String mol, Collection<Structure> components, boolean standardize) {
         Structure struc = new Structure ();
         struc.digest = digest (mol);
-        try {
+        try {        	
             instrument (struc, components, Chemical.parse(mol), standardize);
         }catch (Exception ex) {
             ex.printStackTrace();
             System.err.println("Trouble reading structure:");
             System.err.println(mol);
             System.err.println("Attempting to eliminate SGROUPS");
-            String nmol = ChemCleaner.removeSGroups(mol);
+            String nmol = ChemCleaner.removeSGroupsAndLegacyAtomLists(mol);
             try{
                 instrument (struc, components, Chemical.parse(nmol), standardize);
             }catch(Exception e){
@@ -124,7 +134,7 @@ public class StructureProcessor {
         boolean standardize = settings.isStandardize();
         boolean query = settings.isQuery();
 
-        LychiStandardizer standardizer = new LychiStandardizer();
+
 
         CachedSupplier<String> molSupplier = CachedSupplier.of(new Supplier<String>() {
             public String get(){
@@ -146,7 +156,7 @@ public class StructureProcessor {
             try {
                 mol.generateCoordinates();
                 molSupplier.resetCache();
-            } catch (ChemkitException e) {
+            } catch (MolwitchException e) {
                 e.printStackTrace();
             }
         }
@@ -154,18 +164,28 @@ public class StructureProcessor {
         if(query){
             struc.molfile = molSupplier.get();
             try {
-                struc.smiles = mol.toSmarts();
-            } catch (IOException e) {
+            	try{
+            		struc.smiles = mol.toSmiles();
+            	}catch(Exception e2){
+            		struc.smiles = mol.toSmarts();
+            	}
+            } catch (Exception e) {
                 e.printStackTrace();
             }
         }
 
         // no explicit Hs
         //dkatzel aug 2019 - exceppt when the Hs are stereo and explicitly drawn that way...
+        
         mol.removeNonDescriptHydrogens();
 
         // make sure molecule is kekulized consistently
-        mol.kekulize();
+        try{
+        	mol.kekulize();
+        }catch(Exception e){
+        	//it's okay to fail to kekulize in rare cases, particularly
+        	//in some delocalized structures.
+        }
         molSupplier.resetCache();
         if(!query){
 
@@ -192,8 +212,19 @@ public class StructureProcessor {
 
         for(DoubleBondStereochemistry doubleBondStereochemistry : mol.getDoubleBondStereochemistry()) {
             Bond doubleBond = doubleBondStereochemistry.getDoubleBond();
-            if (!doubleBond.isInRing() && !doubleBondStereochemistry.getStereo().equals(DoubleBondStereochemistry.DoubleBondStereo.NONE)) {
-                ez++;
+           
+            // TODO: this is actually a mistake, as it's fine to have some EZ bonds in rings
+            // > 7 atoms. This needs to be more specific, asking based on ring size.
+            if (!doubleBondStereochemistry.getStereo().equals(DoubleBondStereochemistry.DoubleBondStereo.NONE)) {
+            	 boolean isRing=false;
+                 try{
+                 	isRing=doubleBond.isInRing();
+                 }catch(Exception e){
+                 	e.printStackTrace();
+                 }
+                 if(!isRing){
+                	 ez++;
+                 }
             }
         }
 
@@ -252,7 +283,7 @@ public class StructureProcessor {
                 Structure moiety = new Structure ();
                 //System.err.println("+++++++++++++ component "+i+"!");
 
-                instrument(moiety, null, fixMetals(frag), false);
+                instrument(moiety, null, Chem.fixMetals(frag), false);
 
                 for(Value v:moiety.properties){
                     if(v instanceof Keyword){
@@ -298,9 +329,13 @@ public class StructureProcessor {
         struc.ezCenters = ez;
         struc.charge = charge;
         //struc.formula = mol.getFormula();
-        Chem.setFormula(struc);
-        struc.mwt = mol.getMass();
 
+
+
+//        if(!mol.hasQueryAtoms() && !mol.hasPseudoAtoms()) {
+        Chem.setFormula(struc);
+        struc.setMwt(mol.getMass());
+//        }
         if(!query){
             struc.smiles = standardizer.canonicalSmiles(struc, struc.molfile);
         }
@@ -309,16 +344,7 @@ public class StructureProcessor {
 
 
     }
-    public static Chemical fixMetals(Chemical chemical){
-        for(int i=0; i< chemical.getAtomCount(); i++){
-            Atom atom = chemical.getAtom(i);
-            if(lychi.ElementData.isMetal(atom.getAtomicNumber())){
-                atom.setImplicitHCount(0);
-            }
-        }
 
-        return chemical;
-    }
 
     public static Chemical polymerSimplify(Chemical chem){
         try{

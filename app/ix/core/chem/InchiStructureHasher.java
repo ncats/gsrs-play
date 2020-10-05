@@ -16,7 +16,7 @@ public class InchiStructureHasher implements StructureHasher{
     @Override
     public void hash(Chemical chem, String mol, BiConsumer<String, String> keyValueConsumer) {
         try{
-            InChiResult result = Inchi.asStdInchi(chem,true);
+            InChiResult result = chem.toInchi();
             String key = result.getKey();
 
             //replace all dashes with underscores for lucene searches

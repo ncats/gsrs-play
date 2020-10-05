@@ -9,6 +9,7 @@ import gov.nih.ncats.molwitch.Chemical;
 import ix.core.models.Structure;
 
 
+import ix.core.util.LogUtil;
 import play.Logger;
 /**
  * Chemistry utilities
@@ -21,7 +22,7 @@ public class Chem {
             struc.formula = formula (struc.toChemical(false));
         }
         catch (Exception ex) {
-            throw new IllegalArgumentException ("Invalid structure");
+            LogUtil.error(()->"error computing formula for structure", ex);
         }
     }
     
@@ -38,18 +39,11 @@ public class Chem {
         }
         return chemicalToUse;
     }
-//    public static Molecule fixMetals(Molecule m){
-//    	for(MolAtom atom:m.getAtomArray()){
-//    		if(lychi.ElementData.isMetal(atom.getAtno())){
-//            	atom.setImplicitHcount(0);
-//            }
-//    	}
-//    	return m;
-//    }
+
 
     public static Chemical fixMetals(Chemical chemical){
         for(Atom atom : chemical.getAtoms()){
-            if(lychi.ElementData.isMetal(atom.getAtomicNumber())){
+            if(!atom.isQueryAtom() && !atom.isPseudoAtom() && atom.isMetal()){
                 atom.setImplicitHCount(0);
             }
     	}
@@ -57,30 +51,6 @@ public class Chem {
         return chemical;
     }
     
-    /**
-     * Generate chemical formula by treating disconnected components
-     * separately.
-     */
-//    public static String formula (Molecule g) {
-//        Molecule[] frags = g.cloneMolecule().convertToFrags();
-//        final Map<String, Integer> formula = new HashMap<String, Integer>();
-//        for (Molecule m : frags) {
-//        	fixMetals(m);
-//
-//            String f = m.getFormula();
-//            Integer c = formula.get(f);
-//            formula.put(f, c==null ? 1 : (c+1));
-//        }
-//        List<String> order = new ArrayList<String>(formula.keySet());
-//        StringBuilder sb = new StringBuilder ();
-//        for (String f : order) {
-//            Integer c = formula.get(f);
-//            if (sb.length() > 0) sb.append(".");
-//            if (c > 1) sb.append(c);
-//            sb.append(f);
-//        }
-//        return FormulaInfo.toCanonicalString(sb.toString());
-//    }
 
     /**
      * Generate chemical formula by treating disconnected components
@@ -91,8 +61,11 @@ public class Chem {
         final Map<String, AtomicInteger> formula = new HashMap<>();
         while(iter.hasNext()){
             Chemical m = iter.next();
+//            if(m.hasPseudoAtoms() || m.hasQueryAtoms()){
+//                continue;
+//            }
         	fixMetals(m);
-            String f = m.getFormula();
+            String f = FormulaInfo.toCanonicalString(m.getFormula());
             formula.computeIfAbsent(f, new Function<String, AtomicInteger>() {
                 @Override
                 public AtomicInteger apply(String s) {
@@ -111,7 +84,6 @@ public class Chem {
         }
             sb.append(entry.getKey());
         }
-
         return FormulaInfo.toCanonicalString(sb.toString());
     }
     

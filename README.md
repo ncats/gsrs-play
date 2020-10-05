@@ -18,7 +18,10 @@ The code can be checked out of this git repository.  There are several important
 Configuration is controlled by a Play ConfigFile.  
 The default G-SRS conf file is located in 
 `modules/ginas/conf/ginas.conf` 
-This file can be extended to provide custom configuration.
+This file can be extended to provide custom configuration. For development and testing,
+the simple extension of this file enabling evolutions is typically used:
+`modules/ginas/conf/ginas-dev.conf` 
+
 
 For more information on how Play ConfigFiles work see [The Playframework Documentation](https://www.playframework.com/documentation/2.5.x/ConfigFile)
 
@@ -28,7 +31,7 @@ To build a particular app, simply use ```sbt``` or the provided
 of the GInAS app:
 
 ```
-sbt -Dconfig.file=modules/ginas/conf/ginas.conf ginas/run
+sbt -Dconfig.file=modules/ginas/conf/ginas-dev.conf ginas/run
 ```
 
 (Instead of ```sbt```, you can also use ```./activator``` instead.)
@@ -37,6 +40,43 @@ Once there, Click the 'Apply SQL script now' button under the header. You may
 have to apply several SQL scripts as part of the evolutions step, depending on
 how many datasources are used. After the page has loaded again, change the 
 address to [http://localhost:9000/ginas/app](http://localhost:9000/ginas/app).
+
+
+
+## How to Choose Cheminformatics Library Toolkit Dependency
+G-SRS uses [Molwitch](https://github.com/ncats/molwitch) to allow switching the underlying 
+cheminformatics library Toolkit being used for various computations.  By Default, G-SRS
+uses [CDK](https://cdk.github.io/) but a stripped down old version of [Chemaxon's JChem](https://chemaxon.com/) is also 
+included for evalutation purposes.  If you choose to use JChem as your Cheminformatics Library Toolkit, contact 
+Chemaxon about obtaining a license.
+
+To enable molwitch-jchem3 add the property `-Dmolwitch=jchem3` to your activator or sbt invocation:
+
+```
+sbt -Dconfig.file=modules/ginas/conf/ginas-dev.conf -Dmolwitch=jchem3 ginas/run
+```
+
+To explicitly, enable CDK add the property `-Dmolwitch=cdk` to your activator or sbt invocation:
+
+```
+sbt -Dconfig.file=modules/ginas/conf/ginas-dev.conf -Dmolwitch=cdk ginas/run
+```
+Not setting a molwitch property will use CDK as default.
+
+
+###Changing the Structure Standardizer and Structure Hasher
+G-SRS comes with more than one Structure Standardizer and Structure Hasher implementations that are used
+for fuzzy structure matching.  By default standardizers and hash implementations based on InChI are used
+but it is also possible to use  [LyChI](https://github.com/ncats/lychi) instead by setting
+the properties:   `ix.structure-standardizer="ix.core.chem.LychiStandardizer"` and  `ix.structure-hasher="ix.core.chem.LychiStructureHasher"`
+As of this writing LyChI requires jchem so you need to enable molwitch-jchem3 as well.
+
+this can be done by adding these properties to the command line invocation as seen below, or adding them to the conf file.
+                       ```
+
+```
+$ ./activator -Dconfig.file=modules/ginas/conf/ginas-dev.conf ginas/run -Dmolwitch=jchem3 -Dix.structure-standardizer="ix.core.chem.LychiStandardizer" -Dix.structure-hasher="ix.core.chem.LychiStructureHasher"
+```
 
 ### Build a Self-Contained Distribution
 To build a self-contained distribution for production use, simply run
@@ -84,7 +124,7 @@ The Play framework can run a single JUnit test class using `ginas/testOnly $full
 So for example to run all the tests in `ix.test.EditingWorkflowTest` class this would be the invocation
 
 ```
-./activator -Dconfig.file=modules/ginas/conf/ginas.conf ginas/clean "ginas/testOnly ix.test.EditingWorkflowTest"
+./activator -Dconfig.file=modules/ginas/conf/ginas-dev.conf ginas/clean "ginas/testOnly ix.test.EditingWorkflowTest"
 ```
 
 
@@ -103,9 +143,9 @@ will be replaced with the test to be run.  Keep the `{0}` in the variable. the T
 to replace it.
 
 ```
-export command="./activator -Dconfig.file=modules/ginas/conf/ginas.conf \"ginas/testOnly {0}\""
+export command="./activator -Dconfig.file=modules/ginas/conf/ginas-dev.conf \"ginas/testOnly {0}\""
 
-./activator -Dconfig.file=modules/ginas/conf/ginas.conf  "ginas/testOnly ix.test.RunAllGinasTests"
+./activator -Dconfig.file=modules/ginas/conf/ginas-dev.conf  "ginas/testOnly ix.test.RunAllGinasTests"
 
 ```
 
@@ -115,3 +155,11 @@ Warning running this program could take a few hours to run.  This is recommended
 
 ## Authors
 The software tools created by the this project are developed, maintained, and distributed to ginas and other interested parties by the National Center for Advancing Translational Sciences (NCATS) at the National Institutes of Health (NIH), in close collaboration with the Food and Drug Administration (FDA). 
+
+## License
+G-SRS software is open source under the [Apache 2.0](http://www.apache.org/licenses/LICENSE-2.0) license. 
+
+This software also incorporates JSDraw.  JSDraw is licensed from Scilligence and is free to use with the GSRS software.
+                                       
+To incorporate JSDraw in another distributable commercial software package please contact [Scilligence](https://www.scilligence.com/web/)
+                                       

@@ -1,6 +1,6 @@
 import play._
 import sbt.Keys._
-import sbt._
+import sbt.{file, _}
 //import play.PlayImport._
 import play.Play.autoImport._
 import scala.collection.JavaConversions.mapAsScalaMap
@@ -8,7 +8,8 @@ import com.typesafe.sbt.SbtNativePackager._
 //import NativePackagerKeys._
 
 object ApplicationBuild extends Build {
-  val displayVersion = "2.6"
+  val molwitchImplementation = System.getProperty("molwitch", "cdk")
+  val displayVersion = "2.6.1"
   val now = new java.util.Date();
   val branch = "git rev-parse --abbrev-ref HEAD".!!.trim
   val commit = "git rev-parse --short HEAD".!!.trim
@@ -126,6 +127,8 @@ object ApplicationBuild extends Build {
     "-source", "1.8"
   ) 
 
+  val molwitchJchem = file("molwitch-implementations/jchem3");
+  val molwitchCDK = file("molwitch-implementations/cdk");
 
   val build = Project("build", file("modules/build"))
     .settings(commonSettings:_*).settings(
@@ -145,12 +148,15 @@ public class BuildInfo {
     }
   )
 
+
   val seqaln = Project("seqaln", file("modules/seqaln"))
     .settings(commonSettings:_*).settings(
     libraryDependencies ++= commonDependencies,
     javacOptions in (Compile, compile) ++= javaBuildOptions,
     javacOptions in (doc) ++= javaDocOptions,
     mainClass in (Compile,run) := Some("ix.seqaln.SequenceIndexer")
+
+
   )
 
   val ixdb = Project("ixdb", file("modules/ixdb"))
@@ -221,12 +227,29 @@ public class BuildInfo {
                           .filter( prop=> !("config.file".equals(prop._1)) && !("user.dir".equals(prop._1)))
                           .map(prop => s"-D${prop._1}=${prop._2}").toSeq,
 
+    javaOptions in Test ++= Option("-Dmolwitch="+molwitchImplementation).toSeq,
 //    javaOptions in Test ++= Seq(Tests.Argument(TestFrameworks.JUnit, "-a"))
     cleanFiles += file("modules/ginas/ginas.ix"),
     //baseDirectory is the ginas module we want to go up a few dirs
     mappings in Universal ++=(baseDirectory.value / "../../cv" * "*" get) map
         (x => x -> ("cv/" + x.getName)),
     //adds evolutions.sh file into the dist
-    mappings in Universal += file("evolutions.sh") -> "bin/evolutions.sh"
+    mappings in Universal += file("evolutions.sh") -> "bin/evolutions.sh",
+
+    unmanagedJars in Compile ++= {
+      println("MOLWITCH IMPLEMENTATION = " + molwitchImplementation)
+      val path = baseDirectory.value / "../../molwitch-implementations" / molwitchImplementation  / "src";
+      println("PATH = " + path);
+      val baseDirectories = file( "lib") +++ file( "molwitch-implementations/" +molwitchImplementation +"/jars").getAbsoluteFile
+      if(!file( "molwitch-implementations/" +molwitchImplementation +"/jars").isDirectory){
+        throw new IllegalArgumentException("molwitch implementation jar directory does not exist! " + path)
+      }
+      val customJars = (baseDirectories ** "*.jar")
+
+      customJars.classpath
+    },
+
+    //    println("MY PATH - " + ),
+    unmanagedSourceDirectories in Compile +=  (baseDirectory.value / "../../molwitch-implementations" / molwitchImplementation  / "src").getAbsoluteFile
   ).dependsOn(ginasEvo).aggregate(ginasEvo)
 }

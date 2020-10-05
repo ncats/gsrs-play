@@ -11,7 +11,7 @@ import ix.ginas.models.v1.Substance;
 public class ChemicalDuplicateFinder implements DuplicateFinder<Substance> {
 
     /**
-     * Currently uses the lychi keys for the duplicate matching
+     * Currently uses the structure.properties.term keys for the duplicate matching
      */
     @Override
     public List<Substance> findPossibleDuplicatesFor(Substance sub) {

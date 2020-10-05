@@ -404,7 +404,8 @@ public class RouteFactory extends Controller {
                             su._structure = struc;
                         }
                         node.put("structuralUnits", mapper.valueToTree(o));
-                    } catch (Exception e) {
+                    } catch (Throwable e) {
+                    	e.printStackTrace();
                         Logger.error("Can't enumerate polymer", e);
                     }
                 }
