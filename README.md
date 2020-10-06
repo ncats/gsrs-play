@@ -64,7 +64,7 @@ sbt -Dconfig.file=modules/ginas/conf/ginas-dev.conf -Dmolwitch=cdk ginas/run
 Not setting a molwitch property will use CDK as default.
 
 
-###Changing the Structure Standardizer and Structure Hasher
+### Changing the Structure Standardizer and Structure Hasher
 G-SRS comes with more than one Structure Standardizer and Structure Hasher implementations that are used
 for fuzzy structure matching.  By default standardizers and hash implementations based on InChI are used
 but it is also possible to use  [LyChI](https://github.com/ncats/lychi) instead by setting
@@ -113,12 +113,12 @@ sbt ginas/clean
 ```
 
 
-##How to Run Automated Tests
+## How to Run Automated Tests
 This software contains over one thousand automated tests including unit and end to end tests
 that take a long time to run.
 
 
-###Running one Test Class Only
+### Running one Test Class Only
 The Play framework can run a single JUnit test class using `ginas/testOnly $fullyqualitiedTestClass`
 
 So for example to run all the tests in `ix.test.EditingWorkflowTest` class this would be the invocation
@@ -128,7 +128,7 @@ So for example to run all the tests in `ix.test.EditingWorkflowTest` class this 
 ```
 
 
-###Running all Tests
+### Running all Tests
 
 **Do Not Use `ginas/test`**
 
@@ -137,11 +137,33 @@ to run out of memory when running all the tests using `ginas/test` so a custom J
 in a separate JVM.  This special test runner can be invoked by running the `ix.test.RunAllGinasTests`
 class.
 
+GSRS comes with a helper test script `runTests.sh` that will run all the automated tests in multiple threads
+simultaneously and then report the test results to the console.  
+#### Configuration Options for runTests.sh 
+Any commandline parameters given added to the invocation of `runTests.sh` will be passed on to the each test to be run.
+
+The number of threads and which ports the test GSRS instances use is configurable. 
+ 
+By default the number of threads is set to 3 but this can be changed by setting the `numThreads` property.  
+This is how many concurent GSRS test instances are running (on different ports) at the same time. 
+
+Changing the port ranges.
+By default, the GSRS test servers use ports from `9001` to `9005` but this 
+can be modified by setting the `beginPort` and `endPort` properties.
+
+Of course the `molwitch` property is also respected to change which molwitch implementation to use
+
+```
+./runTests.sh -Dmolwitch=cdk -DnumThreads=4 -DbeginPort=9001 -DendPort=9006
+```
+
+#### How the runTests.sh script works
 To make it easier to run and avoid having to escape quotes or spaces on the commandline,
-this class reads an enviornment variable which contains the invocation.  the `{0}` part
+this class reads an environment variable which contains the invocation.  the `{0}` part
 will be replaced with the test to be run.  Keep the `{0}` in the variable. the TestRunner will know
 to replace it.
 
+Any additional parameters are tacked onto the end of these commands.
 ```
 export command="./activator -Dconfig.file=modules/ginas/conf/ginas-dev.conf \"ginas/testOnly {0}\""
 
@@ -149,7 +171,7 @@ export command="./activator -Dconfig.file=modules/ginas/conf/ginas-dev.conf \"gi
 
 ```
 
-Warning running this program could take a few hours to run.  This is recommended to only be invoked by a continuous integration system.
+Warning running this program could take a about an hour to run.  This is recommended to only be invoked by a continuous integration system.
 
 
 
