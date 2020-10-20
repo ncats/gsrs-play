@@ -1,0 +1,26 @@
+FROM centos:8 AS builder
+RUN curl -o /etc/yum.repos.d/bintray-sbt-rpm.repo https://bintray.com/sbt/rpm/rpm
+RUN dnf -y install git java-1.8.0-openjdk-devel sbt
+RUN mkdir /tmp/build
+COPY . /tmp/build
+WORKDIR /tmp/build
+RUN sbt -Dconfig.file=modules/ginas/conf/ginas.conf ginas/dist
+WORKDIR /opt
+RUN jar xf /tmp/build/modules/ginas/target/universal/ginas-*.zip
+RUN mv /opt/ginas-* /opt/g-srs
+WORKDIR /opt/g-srs
+RUN mv /tmp/build/modules/ginas/conf /opt/g-srs/conf
+RUN mkdir -p ginas.ix exports logs conf/sql conf/sql/init conf/sql/load conf/sql/post conf/sql/test conf/evolutions/default
+RUN sed -i "s/localhost/db/g" conf/ginas-mysql.conf
+RUN sed -i "s/localhost:5433/db:5432/g" conf/ginas-postgres.conf
+RUN sed -i "s/#evolutionplugin=disabled/evolutionplugin=disabled/g" conf/ginas-*.conf
+
+FROM centos:8
+RUN dnf -y install java-1.8.0-openjdk-headless
+COPY --from=builder /opt /opt
+COPY entrypoint.sh /entrypoint.sh
+VOLUME ["/opt/g-srs/ginas.ix", "/opt/g-srs/logs", "/opt/g-srs/exports"]
+EXPOSE 9000
+ENTRYPOINT ["/entrypoint.sh"]
+WORKDIR /opt/g-srs
+CMD ["./bin/ginas"]
