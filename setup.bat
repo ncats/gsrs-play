@@ -1,3 +1,3 @@
-setup/activator.bat clean
+setup\activator.bat clean
 
 

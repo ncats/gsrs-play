@@ -145,7 +145,7 @@ So for example to run all the tests in `ix.test.EditingWorkflowTest` class this 
 
 ### Running all Tests
 
-**Do Not Use the activator command`ginas/test`**
+**Do Not Use the activator command `ginas/test`**
 
 Earlier versions of the Play framework had memory leaks which caused running all the tests
 to run out of memory when running all the tests using `ginas/test` so a custom JUnit test runner was written to invoke each test class serially
