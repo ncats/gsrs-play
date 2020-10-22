@@ -1,0 +1,3 @@
+setup/activator.bat clean
+
+
