@@ -4,21 +4,30 @@ COPY . /tmp/build
 WORKDIR /tmp/build
 RUN ./activator clean
 RUN ./activator -Dconfig.file=modules/ginas/conf/ginas.conf ginas/dist
-WORKDIR /opt
-RUN jar xf /tmp/build/modules/ginas/target/universal/ginas-*.zip && mv /opt/ginas-* /opt/g-srs
+RUN cd /opt && \
+    jar xf /tmp/build/modules/ginas/target/universal/ginas-*.zip && \
+    mv /opt/ginas-* /opt/g-srs && \
+    chmod 755 /opt/g-srs/bin/ginas
 WORKDIR /opt/g-srs
 RUN mv /tmp/build/modules/ginas/conf /opt/g-srs/conf
-RUN mkdir -p ginas.ix exports logs conf/sql conf/sql/init conf/sql/load conf/sql/post conf/sql/test conf/evolutions/default
 RUN sed -i "s/localhost/db/g" conf/ginas-mysql.conf
 RUN sed -i "s/localhost:5433/db:5432/g" conf/ginas-postgres.conf
 RUN sed -i "s/#evolutionplugin=disabled/evolutionplugin=disabled/g" conf/ginas-*.conf
 
 FROM centos:8
-RUN dnf -y install dejavu-sans-fonts dejavu-serif-fonts fontconfig java-1.8.0-openjdk-headless && dnf clean all && fc-cache -f
+RUN dnf -y install dejavu-sans-fonts dejavu-serif-fonts fontconfig java-1.8.0-openjdk-headless && dnf clean all
 COPY --from=builder /opt /opt
 COPY entrypoint.sh /entrypoint.sh
-VOLUME ["/opt/g-srs/ginas.ix", "/opt/g-srs/logs", "/opt/g-srs/exports"]
+RUN fc-cache -f && \
+    mkdir /data && \
+    chmod -R g=u /data && \
+    ln -s /data/conf/evolutions /opt/g-srs/conf/evolutions && \
+    ln -s /data/conf/sql /opt/g-srs/conf/sql && \
+    ln -s /data/exports /opt/g-srs/exports && \
+    ln -s /data/ginas.ix /opt/g-srs/ginas.ix && \
+    ln -s /data/logs /opt/g-srs/logs
+VOLUME ["/data"]
 EXPOSE 9000
 ENTRYPOINT ["/entrypoint.sh"]
 WORKDIR /opt/g-srs
-CMD ["./bin/ginas"]
+CMD ["bin/ginas"]

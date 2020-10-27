@@ -13,11 +13,9 @@ services:
     links:
       - db
     volumes:
-      - ginasix:/opt/g-srs/ginas.ix
-      - ginasexports:/opt/g-srs/exports
+      - ginasdata:/data
     tmpfs:
       - /tmp
-      - /opt/g-srs/conf/evolutions/default
     environment:
       GSRS_CACHE_RESET: 'false'
       GSRS_DB_RESET: 'false'
@@ -58,5 +56,4 @@ services:
 #      POSTGRES_DB: ginas
 volumes:
   ginasdb:
-  ginasix:
-  ginasexports:
+  ginasdata:
