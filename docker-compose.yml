@@ -19,7 +19,8 @@ services:
     environment:
       GSRS_CACHE_RESET: 'false'
       GSRS_DB_RESET: 'false'
-      JAVA_OPTS: '-Xms4096m -Xmx4096m -XX:ReservedCodeCacheSize=512m -Dpidfile.path=/dev/null -Djnati.dir=/opt/g-srs/ginas.ix/cache/jnati -DapplyEvolutions.default=false -Dconfig.file=/opt/g-srs/conf/ginas-mysql.conf'
+      JAVA_OPTS: '-Xms4096m -Xmx4096m -XX:ReservedCodeCacheSize=512m -Dpidfile.path=/dev/null -DapplyEvolutions.default=false -Dconfig.file=/opt/g-srs/conf/ginas-mysql.conf'
+      HOME: '/root'
   db:
     image: mariadb
     restart: always
