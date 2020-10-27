@@ -1,5 +1,5 @@
 FROM centos:8 AS builder
-RUN dnf -y install git java-1.8.0-openjdk-devel
+RUN dnf -y install dejavu-sans-fonts dejavu-serif-fonts fontconfig git java-1.8.0-openjdk-devel && dnf clean all && fc-cache -f
 COPY . /tmp/build
 WORKDIR /tmp/build
 RUN ./activator clean
@@ -14,7 +14,7 @@ RUN sed -i "s/localhost:5433/db:5432/g" conf/ginas-postgres.conf
 RUN sed -i "s/#evolutionplugin=disabled/evolutionplugin=disabled/g" conf/ginas-*.conf
 
 FROM centos:8
-RUN dnf -y install java-1.8.0-openjdk-headless
+RUN dnf -y install dejavu-sans-fonts dejavu-serif-fonts fontconfig java-1.8.0-openjdk-headless && dnf clean all && fc-cache -f
 COPY --from=builder /opt /opt
 COPY entrypoint.sh /entrypoint.sh
 VOLUME ["/opt/g-srs/ginas.ix", "/opt/g-srs/logs", "/opt/g-srs/exports"]
