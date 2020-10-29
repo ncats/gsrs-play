@@ -2996,8 +2996,4 @@ public class GinasApp extends App {
     	}
 
     }
-
-    public static String toHTML(String str) {
-        return Util.getStringConverter().toHTML(str);
-    }
 }

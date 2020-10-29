@@ -27,7 +27,7 @@ public class SubstanceFieldNameDecorator implements FieldNameDecorator{
 			m.put("root_codes_url" , "Code URL"); 
 			m.put("root_names_name" , "Any Name"); 
 			m.put("root_names_stdName" , "Standardized Name");
-			m.put("root_names_stdName" , "Standardized Name");
+			m.put("root_names_normName" , "Normalized Name");
 			m.put("root_Display Name","Display Name"); 
 			m.put("root_names_languages_GInAS Language","Language Code"); 
 			m.put("root_mixture_components_substance_approvalID" , "Mixture Component ApprovalID"); 

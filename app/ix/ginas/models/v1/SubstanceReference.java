@@ -33,6 +33,7 @@ public class SubstanceReference extends GinasCommonSubData {
 
         return ref;
     }
+
     @JSONEntity(title = "Substance Name")
     @Column(length=1024)
     public String refPname;
@@ -75,9 +76,9 @@ public class SubstanceReference extends GinasCommonSubData {
         return ref;
     }
 
-    @JsonProperty("_refPname")
-    public String getHtmlRefPname(){
-        return Util.getStringConverter().toHTML(refPname);
+    @JsonProperty("_name")
+    public String getHtmlName(){
+        return Util.getStringConverter().toHTML(getName());
     }
 
     public String getName(){

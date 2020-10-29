@@ -7,7 +7,7 @@
     <div class = "row">
         <div class = "col-md-8">
             <div class = "title-name-container">
-                <h4 class="title-name"> <a href="@ix.ginas.controllers.routes.GinasApp.substance(GinasApp.getId(sub))" uib-tooltip="@sub.getName()" target="_self">@sub.getName()</a></h4>
+                <h4 class="title-name"> <a href="@ix.ginas.controllers.routes.GinasApp.substance(GinasApp.getId(sub))" uib-tooltip="@sub.getName()" target="_self">@Html(sub.getHtmlName())</a></h4>
             </div>
             @if(sub.getAccess().size() > 0){
                 <div class = "title-name-lock">

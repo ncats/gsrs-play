@@ -110,7 +110,6 @@ public class Name extends CommonDataElementOfCollection {
 	}
 
 
-
     private static final String SRS_LOCATOR = "SRS_LOCATOR";
     
 
@@ -178,7 +177,11 @@ public class Name extends CommonDataElementOfCollection {
 
     @JsonProperty("_name")
     public String getHtmlName() {
-        return Util.getStringConverter().toHTML(getName());
+        return stdName;
+    }
+
+    public String getNormName() {
+        return Util.getStringConverter().toPlain(getName());
     }
 
     public String getName () {
@@ -188,10 +191,10 @@ public class Name extends CommonDataElementOfCollection {
     @PrePersist
     @PreUpdate
     public void tidyName () {
+        stdName = Util.getStringConverter().toHTML(name);
         if (name.getBytes().length > 255) {
             fullName = name;
             name = Util.getStringConverter().truncate(name,254);
-            
         }
     }
     

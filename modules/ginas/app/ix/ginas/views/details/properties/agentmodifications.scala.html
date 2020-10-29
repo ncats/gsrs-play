@@ -36,7 +36,7 @@
                     }
                     </td> <td>
                     @if(m.agentSubstance != null) {
-                        @Html(GinasApp.toHTML(m.agentSubstance.refPname))
+                        @Html(m.agentSubstance.getHtmlName())
                     }
                         <td>
                         @if(m.agentSubstance != null) {

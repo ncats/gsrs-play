@@ -481,7 +481,6 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
     }
 
     @Indexable(suggest = true, name = "Display Name", sortable=true)
-    @JsonProperty("_name")
     public String getName() {
         Optional<Name> aName = getDisplayName();
         if(aName.isPresent()){
@@ -491,6 +490,25 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
             SubstanceReference subref=this.getPrimaryDefinitionReference();
             if(subref!=null){
                 String name1=subref.getName();
+                if(name1!=null){
+                    return Substance.DEFAULT_ALTERNATIVE_NAME + " for [" + name1 + "]";
+                }
+                return Substance.DEFAULT_ALTERNATIVE_NAME;
+            }
+        }
+        return Substance.DEFAULT_NO_NAME;
+    }
+
+    @JsonProperty("_name")
+    public String getHtmlName() {
+        Optional<Name> aName = getDisplayName();
+        if(aName.isPresent()){
+            return aName.get().getHtmlName();
+        }
+        if(this.isAlternativeDefinition()){
+            SubstanceReference subref=this.getPrimaryDefinitionReference();
+            if(subref!=null){
+                String name1=subref.getHtmlName();
                 if(name1!=null){
                     return Substance.DEFAULT_ALTERNATIVE_NAME + " for [" + name1 + "]";
                 }

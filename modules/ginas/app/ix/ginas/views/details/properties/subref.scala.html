@@ -54,11 +54,11 @@
 	                	This has not been very well standardized so far. 
 	                	*@
 	                	<div>
-	                    <a href="@ix.ginas.controllers.routes.GinasApp.substance(sub.getLinkingID())" target="_self">@sub.refPname</a>
+	                    <a href="@ix.ginas.controllers.routes.GinasApp.substance(sub.getLinkingID())" target="_self">@Html(sub.getHtmlName())</a>
 	                    </div>
                     } else {
 	                	<div>
-	                	<div>@sub.refPname</div>
+	                	<div>@Html(sub.getHtmlName())</div>
 	                	<div><em>(not present in database)</em></div>
 	                	</div>
 	                }

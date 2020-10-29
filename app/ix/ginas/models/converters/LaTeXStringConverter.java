@@ -1,29 +1,40 @@
 package ix.ginas.models.converters;
 
-import java.io.StringReader;
 import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Stack;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.w3c.tidy.Tidy;
 
 /**
  * Strings manipulation class
- * for strings stored in HTML format.
+ * for strings stored in LaTeX format.
  *
  * @author epuzanov
  * @since 2.6
  */
-public class HTMLStringConverter extends AbstractStringConverter {
+public class LaTeXStringConverter extends AbstractStringConverter {
 
-    private static String[] allowedHtmlTags = new String[] {"I", "SUB", "SUP", "SMALL"};
-    private static Pattern htmlTagPattern = Pattern.compile("<\\s*/?([^>]+)\\s*>");
-    private static char[] brackets = "()[]{}".toCharArray();
-    private static String[] htmlStrings = {"&amp;", "&larr;", "&rarr;", "&lt;", "&gt;", "&plusmn;", "-",
+    private static Pattern htmlTagPattern = Pattern.compile("<\\s*(i|/i|sup|sub)\\s*>");
+    private static char[] brackets = "()[]{}<>".toCharArray();
+    private static String[] LaTeXStrings = {"\\& ", "\\leftarrow ", "\\rightarrow ", "<", ">", "\\pm ",
+        "\\Alpha ", "\\alpha ", "\\Beta ", "\\beta ", "\\Gamma ", "\\gamma ",
+        "\\Delta ", "\\delta ", "\\Epsilon ", "\\epsilon ", "\\Zeta ", "\\zeta ", "\\Eta ", "\\eta ",
+        "\\Theta ", "\\theta ", "\\Iota ", "\\iota ", "\\Kappa ", "\\kappa ", "\\Lambda ", "\\lambda ",
+        "\\Mu ", "\\mu ", "\\Nu ", "\\nu ", "\\Xi ", "\\xi ", "\\Omicron ", "\\omicron ", "\\Pi ", "\\pi ",
+        "\\Rho ", "\\rho ", "\\Sigma ", "\\sigma ", "\\Tau ", "\\tau ", "\\Upsilon ", "\\upsilon ",
+        "\\Phi ", "\\phi ", "\\Chi ", "\\chi ", "\\Psi ", "\\psi ", "\\Omega ", "\\omega ", "\\ss ",
+        "\\\"A ", "\\\"a ", "\\\"O ", "\\\"o ", "\\\"U ", "\\\"u ", "\\S ", "\bar{}",
+        "\\text{XIII}", "\\text{XIV}", "\\text{XV}", "\\text{XVI}", "\\text{XVII}",
+        "\\text{XVIII}", "\\text{XIX}", "\\text{XX}", "\\text{I}", "\\text{II}",
+        "\\text{III}", "\\text{IV}", "\\text{V}", "\\text{VI}", "\\text{VII}", "\\text{VIII}", "\\text{IX}", "\\text{X}",
+        "\\text{XI}", "\\text{XII}", "\\textsc{d}", "\\textsc{l}",
+        "\\textsc{n}", "\\tilde{}", "\\textit{", "}", "",
+        "", "^{", "}", "_{", "}", "", "\""};
+    private static String[] htmlStrings = {"&amp;", "&larr;", "&rarr;", "&lt;", "&gt;", "&plusmn;",
         "&Alpha;", "&alpha;", "&Beta;", "&beta;", "&Gamma;", "&gamma;",
         "&Delta;", "&delta;", "&Epsilon;", "&epsilon;", "&Zeta;", "&zeta;", "&Eta;", "&eta;",
         "&Theta;", "&theta;", "&Iota;", "&iota;", "&Kappa;", "&kappa;", "&Lambda;", "&lambda;",
@@ -37,7 +48,7 @@ public class HTMLStringConverter extends AbstractStringConverter {
         "&#8554;", "&#8555;", "<small>D</small>", "<small>L</small>",
         "<small>N</small>", "~", "<i>", "</i>", "</sup><sup>",
         "</sub><sub>", "<sup>", "</sup>", "<sub>", "</sub>", "&zwnj;", "&quot;"};
-    private static String[] plainStrings = {"&", "<--", "-->", "<", ">", "+/-", "-",
+    private static String[] plainStrings = {"&", "<--", "-->", "<", ">", "+/-",
         "ALPHA", "alpha", "BETA", "beta", "GAMMA", "gamma",
         "DELTA", "delta", "EPSILON", "epsilon", "ZETA", "zeta", "ETA", "eta",
         "THETA", "theta", "IOTA", "iota", "KAPPA", "kappa", "LAMBDA", "lambda",
@@ -47,24 +58,58 @@ public class HTMLStringConverter extends AbstractStringConverter {
         "Ae", "ae", "Oe", "oe", "Ue", "ue", "Par.", "XFF", "XIII", "XIV",
         "XV", "XVI", "XVII", "XVIII", "XIX", "XX", "I", "II",
         "III", "IV", "V", "VI", "VII", "VIII", "IX", "X",
-        "XI", "XII", "D", "L", "N", "-", "", "", "", "", "(", ")", "<", ">", "", "\""};
-    private static Tidy tidy;
-    static{
-        tidy = new Tidy();
-        tidy.setInputEncoding("UTF-8");
-        tidy.setXHTML(true);
-    };
+        "XI", "XII", "D", "L", "N", "-", "", "", "", "", "", "", "", "", "", "\""};
+
+    private static String fixCloseTags(String str){
+        String tag;
+        Stack<Character> tagStack = new Stack<>();
+        StringBuilder out = new StringBuilder(str);
+        Matcher matcher = htmlTagPattern.matcher(str);
+        while (matcher.find()) {
+            tag = matcher.group();
+            if ("</i>".equals(tag)){
+                out.setCharAt(matcher.end() - 2, tagStack.pop());
+            }else{
+                tagStack.push(tag.charAt(tag.length() - 2));
+            }
+        }
+        return out.toString().replace("</p>", "</sup>").replace("</b>", "</sub>");
+    }
+
+    /**
+     * Converts string from LaTeX text to HTML.
+     *
+     * @param str string in LaTeX text format;
+     *            will never be null.
+     * @return a HTML formated string.
+     */
+    @Override
+    public String toHTML(String str){
+        return fixCloseTags(this.replaceFromLists(str, LaTeXStrings, htmlStrings));
+    }
+
+    /**
+     * Converts string from HTML to LaTeX text.
+     *
+     * @param str HTML formated string;
+     *            will never be null.
+     * @return a string as LaTeX text.
+     */
+    @Override
+    public String fromHTML(String str){
+        return this.replaceFromLists(str, htmlStrings, LaTeXStrings);
+    }
 
     /**
      * return Plain text.
      *
-     * @param str string in Plain text format;
+     * @param str string in LaTeX text format;
      *            will never be null.
      * @return a string as Plan text.
      */
     @Override
     public String toPlain(String str){
-        return this.replaceFromLists(str, htmlStrings, plainStrings);
+        return this.replaceFromLists(toHTML(str), htmlStrings, plainStrings);
     }
 
     /**
@@ -81,6 +126,7 @@ public class HTMLStringConverter extends AbstractStringConverter {
         if(maxBytes >= b.length){
             return str;
         }
+        str = toHTML(str);
         boolean lastComplete = false;
         int sTag = 0;
         for(int i = maxBytes; i >= 0; i--){
@@ -90,7 +136,7 @@ public class HTMLStringConverter extends AbstractStringConverter {
                 if(sTag == StringUtils.countMatches(str, ">")
                     && sTag / 2 == StringUtils.countMatches(str, "/")
                     && StringUtils.countMatches(str, "&") == StringUtils.countMatches(str, ";")) {
-                    return str;
+                    return fromHTML(str);
                 }else{
                     lastComplete = false;
                 }
@@ -113,18 +159,6 @@ public class HTMLStringConverter extends AbstractStringConverter {
     @Override
     public List<String> validationErrors(String str){
         List<String> errors = new ArrayList<String>();
-        tidy.parseDOM(new StringReader("<html><head><title>Test</title></head><body>" + str + "</body></html>"), null);
-        if (tidy.getParseErrors() > 0 || tidy.getParseWarnings() > 1) {
-            errors.add("contains bad HTML");
-        }
-
-        Matcher m = htmlTagPattern.matcher(str.toUpperCase());
-        while (m.find()) {
-            if (!ArrayUtils.contains(allowedHtmlTags, m.group(1))) {
-                errors.add("contains not allowed HTML tag " + m.group(1));
-            }
-        }
-
         long brackets_count = 0;
         for (int i = 0; i < brackets.length; i++) {
             if (i%2 != 0) {
