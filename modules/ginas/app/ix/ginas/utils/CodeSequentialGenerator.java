@@ -29,7 +29,7 @@ public class CodeSequentialGenerator extends SequentialNumericIDGenerator<Substa
 								   @JsonProperty("len") int len,
 								   @JsonProperty("suffix") String suffix,
 								   @JsonProperty("padding") boolean padding,
-								   @JsonProperty("last") Number last,
+								   @JsonProperty("last") Long last,
 								   @JsonProperty("codeSystem") String codeSystem) {
 		super(len, suffix, padding);
 		this.name = name;

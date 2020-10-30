@@ -23,7 +23,7 @@ public class UniqueCodeGenerator implements EntityProcessor<Substance> {
 		String name = 				(String)  m.get("name");
 		codeSystem = 				(String)  m.get("codesystem");
         String codeSystemSuffix = 	(String)  m.get("suffix");
-        Number last = 				(Number)  m.get("last");
+        Long last = 				(Long) m.computeIfPresent("last", (key,val)->((Number) val).longValue());
         int length = 				(Integer) m.get("length");
         boolean padding = 			(Boolean) m.get("padding");
         if(codeSystem!=null){

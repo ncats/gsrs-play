@@ -72,7 +72,7 @@ public class CodeFactory extends EntityFactory {
         return field (uuid, path, finder);
     }
     
-    public static Optional<Tuple<Long,Code>> getHighestValueCode(String codeSystem, String suffix, Number last){
+    public static Optional<Tuple<Long,Code>> getHighestValueCode(String codeSystem, String suffix, Long last){
     	try(Stream<Code> codes=StreamUtil.forIterator(
     				finder.where()
     				.and(com.avaje.ebean.Expr.like("code","%" + suffix), com.avaje.ebean.Expr.eq("codeSystem",codeSystem))
@@ -84,7 +84,7 @@ public class CodeFactory extends EntityFactory {
                         return Tuple.of(new Long(Long.parseLong(cd.code.replace(suffix, ""))),cd);
                     }
                 })
-                .filter(t -> last == null || t.k() <= last.longValue())
+                .filter(t -> last == null || t.k() <= last)
 	    		.max(new Comparator<Tuple<Long,Code>>(){
 
                     public int compare(Tuple<Long,Code> l1, Tuple<Long,Code> l2){
