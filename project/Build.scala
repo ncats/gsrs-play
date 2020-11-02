@@ -137,8 +137,6 @@ public class BuildInfo {
     javacOptions in (Compile, compile) ++= javaBuildOptions,
     javacOptions in (doc) ++= javaDocOptions,
     mainClass in (Compile,run) := Some("ix.seqaln.SequenceIndexer")
-
-
   )
 
 
@@ -168,6 +166,12 @@ public class BuildInfo {
 
 
   val ginasTestOptions = "-Dconfig.file=" + Option(System.getProperty("config.file")).getOrElse("application.conf")
+
+  def files(dir: File) = {
+    val fs = (dir ** "*").get.filter(d => d != dir)
+    fs.map(x => (x, x.relativeTo(dir).get.getPath))
+  }
+
   val ginas = Project("ginas", file("modules/ginas"))
     .enablePlugins(PlayJava).settings(commonSettings:_*).settings(
       libraryDependencies ++= commonDependencies,
@@ -204,6 +208,18 @@ public class BuildInfo {
 
     //adds evolutions.sh file into the dist
     mappings in Universal += file("evolutions.sh") -> "bin/evolutions.sh",
+    packageBin in Universal := {
+  val originalFileName = (packageBin in Universal).value
+  val (base, ext) = originalFileName.baseAndExt
+  val newFileName = file(originalFileName.getParent) / (base + "_dist." + ext)
+  val newFileNameD = file(originalFileName.getParent) / base
+  IO.unzip(originalFileName, newFileNameD)
+  IO.zip(files(newFileNameD),newFileName)
+  IO.delete(newFileNameD)
+  IO.delete(originalFileName)
+  newFileName
+},
+
 
     unmanagedJars in Compile ++= {
       println("MOLWITCH IMPLEMENTATION = " + molwitchImplementation)
