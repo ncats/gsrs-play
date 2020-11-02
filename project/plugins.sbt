@@ -10,19 +10,12 @@ addSbtPlugin("com.eed3si9n" % "sbt-assembly" % "0.11.2")
 
 addSbtPlugin("com.typesafe.sbt" % "sbt-native-packager" % "0.7.4")
 
-//addSbtPlugin("com.eed3si9n" % "sbt-buildinfo" % "0.3.2")
-
-//addSbtPlugin("com.typesafe.sbt" % "sbt-play-ebean" % "1.0.0")
-
-//addSbtPlugin("com.typesafe.sbt" % "sbt-play-enhancer" % "1.1.0")
 
 // web plugins
 
 addSbtPlugin("com.typesafe.sbt" % "sbt-coffeescript" % "1.0.0")
 
 addSbtPlugin("com.typesafe.sbt" % "sbt-less" % "1.0.0")
-
-//addSbtPlugin("com.typesafe.sbt" % "sbt-jshint" % "1.0.0")
 
 addSbtPlugin("com.typesafe.sbt" % "sbt-rjs" % "1.0.1")
 
@@ -38,8 +31,6 @@ libraryDependencies ++= Seq(
 )
 
 libraryDependencies += "org.javassist" % "javassist" % "3.20.0-GA"
-
-//addSbtPlugin("de.johoop" % "jacoco4sbt" % "2.1.6")
 
 addSbtPlugin("de.johoop" % "jacoco4sbt" % "2.1.6" % "test")
 
