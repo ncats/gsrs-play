@@ -514,7 +514,7 @@ public class GinasApp extends App {
      * @return
      */
     public static Collection<List<Code>> getOrderedGroupedCodes(Substance s, int max) {
-        return getGroupedCodes(s.getOrderedCodes(getCodeSystemOrder()), max);
+        return getGroupedCodes(s.getOrderedCodes(), max);
     }
 
     public static String getFirstOrElse(String[] s, String def) {
@@ -2571,23 +2571,6 @@ public class GinasApp extends App {
         void exportCompleted();
     }
 
-
-    private static CachedSupplier<Map<String, Integer>> codeSystemOrder = CachedSupplier.of(() -> {
-        // Add specific codes to ordered list
-        List<String> codeSystems = ConfigHelper.getOrDefault("ix.ginas.codes.order",
-                new ArrayList<String>());
-
-        int i = 0;
-        Map<String, Integer> order = new HashMap<String, Integer>();
-        for (String s : codeSystems) {
-            order.put(s, i++);
-        }
-        return order;
-    });
-
-    public static Map<String, Integer> getCodeSystemOrder() {
-        return codeSystemOrder.get();
-    }
 
     /**
      * Get the HTML for the list view of a given type.

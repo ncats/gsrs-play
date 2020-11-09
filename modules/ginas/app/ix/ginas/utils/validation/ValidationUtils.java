@@ -645,7 +645,7 @@ public class ValidationUtils {
 			strat.processMessage(mes);
 			if (mes.actionType == GinasProcessingMessage.ACTION_TYPE.APPLY_CHANGE) {
 				if (s.names.size() > 0) {
-					Name.sortNames(s.names);
+					s.sortLists();
 					s.names.get(0).displayName = true;
 					mes.appliedChange = true;
 				}

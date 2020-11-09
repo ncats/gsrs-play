@@ -176,7 +176,7 @@ public class NamesValidator extends AbstractValidatorPlugin<Substance> {
                                     + s.getName()).appliableChange(true);
             callback.addMessage(mes, () -> {
                 if (!s.names.isEmpty()) {
-                    Name.sortNames(s.names);
+                    s.sortLists();
                     s.names.get(0).displayName = true;
                     mes.appliedChange = true;
                 }

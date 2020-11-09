@@ -33,6 +33,7 @@ import ix.ginas.models.serialization.PrincipalDeserializer;
 import ix.ginas.models.serialization.PrincipalSerializer;
 import ix.ginas.models.utils.JSONEntity;
 import ix.utils.Global;
+import ix.utils.Util;
 import play.Logger;
 
 @Backup
@@ -323,34 +324,8 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
     }
 
     @JsonIgnore
-    public List<Code> getOrderedCodes(Map<String, Integer> codeSystemOrder){
-
-        List<Code> nlist = new ArrayList<Code>(this.codes);
-
-        nlist.sort(new Comparator<Code>(){
-            @Override
-            public int compare(Code c1, Code c2) {
-                if(c1.codeSystem==null){
-                    if(c2.codeSystem==null){
-                        return 0;
-                    }
-                    return 1;
-                }
-                if(c2.codeSystem==null)return -1;
-                Integer i1=codeSystemOrder.get(c1.codeSystem);
-                Integer i2=codeSystemOrder.get(c2.codeSystem);
-
-                if(i1!=null && i2!=null){
-                    return i1-i2;
-                }
-                if(i1!=null && i2==null)return -1;
-                if(i1==null && i2!=null)return 1;
-                return c1.codeSystem.compareTo(c2.codeSystem);
-            }
-        }
-                );
-
-        return nlist;
+    public List<Code> getOrderedCodes(){
+        return this.codes;
     }
 
     @JsonView(BeanViews.Compact.class)
@@ -469,15 +444,9 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
         return node;
     }
 
-
     @JsonIgnore
     public Optional<Name> getDisplayName(){
-        return getBestName(Name.Sorter.DISPlAY_NAME_FIRST_ENGLISH_FIRST);
-    }
-
-    @JsonIgnore
-    public Optional<Name> getBestName(Comparator<Name> comp){
-        return names.stream().max(comp);
+        return names.stream().min(Util.getComparatorFor(Name.class));
     }
 
     @Indexable(suggest = true, name = "Display Name", sortable=true)
@@ -558,7 +527,7 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
                 officialNames.add(n);
             }
         }
-        return Name.sortNames(officialNames);
+        return officialNames;
     }
 
     @JsonIgnore
@@ -569,15 +538,21 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
                 nonOfficialNames.add(n);
             }
         }
-        return Name.sortNames(nonOfficialNames);
+        return nonOfficialNames;
     }
 
     @JsonIgnore
     public List<Name> getAllNames() {
-        return names;
+        return this.names;
     }
 
-
+    @PostLoad
+    @PrePersist
+    @PreUpdate
+    public void sortLists(){
+        Collections.sort(this.names);
+        Collections.sort(this.codes);
+    }
 
     @PrePersist
     @PreUpdate
@@ -1286,22 +1261,7 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
     @JsonIgnore
     public List<Edit> getEdits(){
         List<Edit> elist = EntityWrapper.of(this).getEdits();
-        elist.sort(new Comparator<Edit>(){
-            public int compare(Edit e1, Edit e2) {
-                       try {
-                           int i1 = Integer.parseInt(e1.version) ;
-                           int i2 = Integer.parseInt(e2.version);
-
-                           return i2 -i1;
-                       }catch (Exception e){
-                            return e2.version.compareTo(e1.version);
-                       }
-            }
-        });
-
-        //this is not entirely necessary, and could be done
-        //more explicitly
-       // return EntityWrapper.of(this).getEdits();
+        elist.sort(Util.getComparatorFor(Edit.class));
         return elist;
     }
 

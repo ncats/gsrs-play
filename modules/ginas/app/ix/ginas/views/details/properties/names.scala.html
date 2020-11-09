@@ -143,24 +143,8 @@
 		</tr>
 	</thead>
 	<tbody>
-		@*Show Display and Preferred Names First*@
-
 		@for(n <- names) {
-
-	@if(n.isDisplayName()){
-	@renderName(n)
-	}
-	}
-	@for(n <- names) {
-
-	@if(n.preferred && !n.isDisplayName()){
-				@renderName(n)
-			}
-		}
-		@for(n <- names) {
-			@if(!n.isDisplayName() && !n.preferred){
-				@renderName(n)
-			}
+			@renderName(n)
 		}
 	</tbody>
 </table>
