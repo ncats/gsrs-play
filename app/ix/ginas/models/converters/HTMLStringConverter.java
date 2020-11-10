@@ -41,7 +41,7 @@ public class HTMLStringConverter extends AbstractStringConverter {
         "ALPHA", "alpha", "BETA", "beta", "GAMMA", "gamma",
         "DELTA", "delta", "EPSILON", "epsilon", "ZETA", "zeta", "ETA", "eta",
         "THETA", "theta", "IOTA", "iota", "KAPPA", "kappa", "LAMBDA", "lambda",
-        "MY", "my", "Ny", "ny", "XI", "xi", "OMIKRON", "omikron", "PI", "pi",
+        "MU", "mu", "NU", "nu", "XI", "xi", "OMIKRON", "omikron", "PI", "pi",
         "RHO", "rho", "SIGMA", "sigma", "TAU", "tau", "UPSILON", "upsilon",
         "PHI", "phi", "CHI", "chi", "PSI", "psi", "OMEGA", "omega", "ss",
         "Ae", "ae", "Oe", "oe", "Ue", "ue", "Par.", "XFF", "XIII", "XIV",
