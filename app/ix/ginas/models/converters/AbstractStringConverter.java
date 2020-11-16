@@ -44,38 +44,38 @@ public abstract class AbstractStringConverter implements StringConverter {
     }
 
     /**
-     * Converts string from Plain text to HTML.
+     * Converts string from internal DB storage format to HTML.
      *
-     * @param str string in Plain text format;
+     * @param str string in internal DB storage format
      *            will never be null.
      * @return a HTML formated string.
      */
     @Override
-    public String toHTML(String str){
+    public String toHtml(String str){
         return str;
     }
 
     /**
-     * Converts string from HTML to Plan text.
+     * Converts string from HTML to internal DB storage format.
      *
      * @param str HTML formated string;
      *            will never be null.
-     * @return a string as Plan text.
+     * @return a string in internal DB storage format.
      */
     @Override
-    public String fromHTML(String str){
+    public String fromHtml(String str){
         return str;
     }
 
     /**
-     * return Plain text.
+     * return Standard Name text.
      *
-     * @param str string in Plain text format;
+     * @param str string in internal DB storage format;
      *            will never be null.
-     * @return a string as Plan text.
+     * @return a string as Standard Name format.
      */
     @Override
-    public String toPlain(String str){
+    public String toStd(String str){
         return str;
     }
 
@@ -96,7 +96,7 @@ public abstract class AbstractStringConverter implements StringConverter {
     /**
      * Truncate string.
      *
-     * @param str string in Plain text format;
+     * @param str string in internal DB storage format
      *            will never be null.
      * @param maxBytes maximal stings length in Bytes
      * @return a truncated string.

@@ -78,7 +78,7 @@ public class SubstanceReference extends GinasCommonSubData {
 
     @JsonProperty("_name")
     public String getHtmlName(){
-        return Util.getStringConverter().toHTML(getName());
+        return Util.getStringConverter().toHtml(getName());
     }
 
     public String getName(){

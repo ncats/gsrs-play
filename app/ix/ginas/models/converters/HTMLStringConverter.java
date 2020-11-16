@@ -37,7 +37,7 @@ public class HTMLStringConverter extends AbstractStringConverter {
         "&#8554;", "&#8555;", "<small>D</small>", "<small>L</small>",
         "<small>N</small>", "~", "<i>", "</i>", "</sup><sup>",
         "</sub><sub>", "<sup>", "</sup>", "<sub>", "</sub>", "&zwnj;", "&quot;"};
-    private static String[] plainStrings = {"&", "<--", "-->", "<", ">", "+/-", "-",
+    private static String[] stdStrings = {"&", "<--", "-->", "<", ">", "+/-", "-",
         "ALPHA", "alpha", "BETA", "beta", "GAMMA", "gamma",
         "DELTA", "delta", "EPSILON", "epsilon", "ZETA", "zeta", "ETA", "eta",
         "THETA", "theta", "IOTA", "iota", "KAPPA", "kappa", "LAMBDA", "lambda",
@@ -56,15 +56,15 @@ public class HTMLStringConverter extends AbstractStringConverter {
     };
 
     /**
-     * return Plain text.
+     * return Standard Name text.
      *
      * @param str string in Plain text format;
      *            will never be null.
      * @return a string as Plan text.
      */
     @Override
-    public String toPlain(String str){
-        return this.replaceFromLists(str, htmlStrings, plainStrings);
+    public String toStd(String str){
+        return this.replaceFromLists(str, htmlStrings, stdStrings);
     }
 
     /**

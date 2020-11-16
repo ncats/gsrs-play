@@ -177,11 +177,7 @@ public class Name extends CommonDataElementOfCollection {
 
     @JsonProperty("_name")
     public String getHtmlName() {
-        return stdName;
-    }
-
-    public String getNormName() {
-        return Util.getStringConverter().toPlain(getName());
+        return Util.getStringConverter().toHtml(name);
     }
 
     public String getName () {
@@ -191,7 +187,7 @@ public class Name extends CommonDataElementOfCollection {
     @PrePersist
     @PreUpdate
     public void tidyName () {
-        stdName = Util.getStringConverter().toHTML(name);
+        stdName = Util.getStringConverter().toStd(name);
         if (name.getBytes().length > 255) {
             fullName = name;
             name = Util.getStringConverter().truncate(name,254);

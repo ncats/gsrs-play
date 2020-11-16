@@ -48,7 +48,7 @@ public class LaTeXStringConverter extends AbstractStringConverter {
         "&#8554;", "&#8555;", "<small>D</small>", "<small>L</small>",
         "<small>N</small>", "~", "<i>", "</i>", "</sup><sup>",
         "</sub><sub>", "<sup>", "</sup>", "<sub>", "</sub>", "&zwnj;", "&quot;"};
-    private static String[] plainStrings = {"&", "<--", "-->", "<", ">", "+/-",
+    private static String[] stdStrings = {"&", "<--", "-->", "<", ">", "+/-",
         "ALPHA", "alpha", "BETA", "beta", "GAMMA", "gamma",
         "DELTA", "delta", "EPSILON", "epsilon", "ZETA", "zeta", "ETA", "eta",
         "THETA", "theta", "IOTA", "iota", "KAPPA", "kappa", "LAMBDA", "lambda",
@@ -84,7 +84,7 @@ public class LaTeXStringConverter extends AbstractStringConverter {
      * @return a HTML formated string.
      */
     @Override
-    public String toHTML(String str){
+    public String toHtml(String str){
         return fixCloseTags(this.replaceFromLists(str, LaTeXStrings, htmlStrings));
     }
 
@@ -96,20 +96,20 @@ public class LaTeXStringConverter extends AbstractStringConverter {
      * @return a string as LaTeX text.
      */
     @Override
-    public String fromHTML(String str){
+    public String fromHtml(String str){
         return this.replaceFromLists(str, htmlStrings, LaTeXStrings);
     }
 
     /**
-     * return Plain text.
+     * return Standard Name text.
      *
      * @param str string in LaTeX text format;
      *            will never be null.
      * @return a string as Plan text.
      */
     @Override
-    public String toPlain(String str){
-        return this.replaceFromLists(toHTML(str), htmlStrings, plainStrings);
+    public String toStd(String str){
+        return this.replaceFromLists(toHtml(str), htmlStrings, stdStrings);
     }
 
     /**
@@ -126,7 +126,7 @@ public class LaTeXStringConverter extends AbstractStringConverter {
         if(maxBytes >= b.length){
             return str;
         }
-        str = toHTML(str);
+        str = toHtml(str);
         boolean lastComplete = false;
         int sTag = 0;
         for(int i = maxBytes; i >= 0; i--){
@@ -136,7 +136,7 @@ public class LaTeXStringConverter extends AbstractStringConverter {
                 if(sTag == StringUtils.countMatches(str, ">")
                     && sTag / 2 == StringUtils.countMatches(str, "/")
                     && StringUtils.countMatches(str, "&") == StringUtils.countMatches(str, ";")) {
-                    return fromHTML(str);
+                    return fromHtml(str);
                 }else{
                     lastComplete = false;
                 }

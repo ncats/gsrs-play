@@ -18,7 +18,7 @@ public interface StringConverter {
      *            will never be null.
      * @return a HTML formated string.
      */
-    String toHTML(String str);
+    String toHtml(String str);
 
     /**
      * Converts string from HTML to internal DB storage format.
@@ -27,16 +27,16 @@ public interface StringConverter {
      *            will never be null.
      * @return a string in internal DB storage format.
      */
-    String fromHTML(String str);
+    String fromHtml(String str);
 
     /**
-     * Converts string from internal DB storage format to Plain text.
+     * Converts string from internal DB storage format to Standard Name format.
      *
      * @param str string in internal DB storage format;
      *            will never be null.
-     * @return a Plain text string.
+     * @return a Standard Name string.
      */
-    String toPlain(String str);
+    String toStd(String str);
 
     /**
      * Converts string from internal DB storage format to Custom format.
@@ -68,7 +68,7 @@ public interface StringConverter {
      * @return {@code true} if this passed in id is valid; {@code false} otherwise.
      */
     boolean isValid(String str);
-   
+
     /**
      * Is the given string passes the formatting and
      * validation rules.
