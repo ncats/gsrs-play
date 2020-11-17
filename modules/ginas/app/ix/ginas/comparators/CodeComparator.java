@@ -33,21 +33,28 @@ public class CodeComparator implements Comparator<Code> {
     }
 
     public int compare(Code c1, Code c2) {
-        if(c1.codeSystem==null){
-            if(c2.codeSystem==null){
+        if(c1.codeSystem == null){
+            if(c2.codeSystem == null){
                 return 0;
             }
             return 1;
         }
-        if(c2.codeSystem==null)return -1;
+        if(c2.codeSystem == null)return -1;
         Integer i1=codeSystemOrder.get(c1.codeSystem);
         Integer i2=codeSystemOrder.get(c2.codeSystem);
 
-        if(i1!=null && i2!=null){
+        if(i1 != null && i2 != null){
             return i1-i2;
         }
-        if(i1!=null && i2==null)return -1;
-        if(i1==null && i2!=null)return 1;
-        return c1.codeSystem.compareTo(c2.codeSystem);
+        if(i1 != null && i2 == null)return -1;
+        if(i1 == null && i2 != null)return 1;
+        int c = c1.codeSystem.compareTo(c2.codeSystem);
+        if(c != 0)return c;
+        if(c1.code == null && c2.code == null)return 0;
+        if(c1.code != null && c2.code != null){
+            return c1.code.compareTo(c2.code);
+        }
+        if(c1.code == null)return 1;
+        return -1;
     }
 }
