@@ -15,6 +15,7 @@ import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
+import ix.core.exporters.Exporter;
 import ix.ginas.models.v1.Name;
 import ix.ginas.models.v1.Substance;
 import ix.utils.Tuple;

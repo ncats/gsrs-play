@@ -1,6 +1,9 @@
 package ix.ginas.exporters;
 
 import ix.core.exporters.OutputFormat;
+import ix.core.exporters.Spreadsheet;
+import ix.core.exporters.SubstanceExporterFactory;
+import ix.core.exporters.SubstanceExporterFactory.Parameters;
 
 import java.io.IOException;
 import java.io.OutputStream;

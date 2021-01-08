@@ -23,6 +23,7 @@ import ix.core.UserFetcher;
 import ix.core.adapters.EntityPersistAdapter;
 import ix.core.adapters.EntityPersistAdapter.ChangeOperation;
 import ix.core.chem.StructureProcessor;
+import ix.core.controllers.CoreSubstanceFactory;
 import ix.core.controllers.EntityFactory;
 import ix.core.controllers.search.SearchFactory;
 import ix.core.controllers.search.SearchRequest;
@@ -79,10 +80,8 @@ import play.mvc.Results;
 
 ,searchRequestBuilderClass = ix.ginas.controllers.v1.SubstanceFactory.SubstanceSearchRequestBuilder.class
 		)
-public class SubstanceFactory extends EntityFactory {
-	private static final String CODE_TYPE_PRIMARY = "PRIMARY";
+public class SubstanceFactory extends CoreSubstanceFactory {
 	public static final double SEQUENCE_IDENTITY_CUTOFF = 0.95;
-	static public CachedSupplier<Model.Finder<UUID, Substance>> finder = Util.finderFor(UUID.class, Substance.class);
 
 	// Do we still need this?
 	// Yes used in GinasApp
@@ -102,17 +101,6 @@ public class SubstanceFactory extends EntityFactory {
 			return sr;
 		}
 
-	}
-	/**
-	 * Get a Substance by it's UUID
-	 * @param uuid
-	 * @return
-	 */
-	public static Substance getSubstance(String uuid) {
-		if (uuid == null ||!UUIDUtil.isUUID(uuid)) {
-			return null;
-	}
-		return getSubstance(UUID.fromString(uuid));
 	}
 	/**
 	 * Get the highest version number of this Substance by it's UUID
@@ -355,13 +343,6 @@ public class SubstanceFactory extends EntityFactory {
 		return Optional.ofNullable(tuple);
 	}
 
-
-
-
-	public static Substance getSubstance(UUID uuid) {
-		return getEntity(uuid, finder.get());
-	}
-
 	public static Result get(UUID id, String select) {
 		return get(id, select, finder.get());
 	}
@@ -373,14 +354,7 @@ public class SubstanceFactory extends EntityFactory {
 		return Results.ok(EntityWrapper.of(SubstanceHierarchyFinder.makeJsonTreeForAPI(sub)).toFullJsonNode());
 	}
 	public static Substance getFullSubstance(SubstanceReference subRef) {
-		try {
-			if (subRef == null)
-				return null;
-			return getSubstanceByApprovalIDOrUUID(subRef.approvalID, subRef.refuuid);
-		}catch(Exception e){
-			e.printStackTrace();
-			throw e;
-		}
+		return CoreSubstanceFactory.getFullSubstance(subRef);
 	}
 	
 	public static Optional<UUID> resolveID(String s){
@@ -396,60 +370,6 @@ public class SubstanceFactory extends EntityFactory {
 		
 	}
 
-	public static List<Substance> getSubstanceWithAlternativeDefinition(Substance altSub) {
-		List<Substance> sublist = new ArrayList<Substance>();
-		sublist = finder.get().where()
-				.and(com.avaje.ebean.Expr.eq("relationships.relatedSubstance.refuuid",
-						altSub.getOrGenerateUUID().toString()),
-				com.avaje.ebean.Expr.eq("relationships.type", Substance.ALTERNATE_SUBSTANCE_REL)).findList();
-
-		List<Substance> realList = new ArrayList<Substance>();
-		for (Substance sub : sublist) {
-			for (SubstanceReference sref : sub.getAlternativeDefinitionReferences()) {
-				if (sref.refuuid.equals(altSub.getUuid().toString())) {
-					realList.add(sub);
-					break;
-				}
-			}
-		}
-		return realList;
-	}
-
-	/**
-	 * Returns the substance corresponding to the supplied uuid or approvalID.
-	 * 
-	 * If either is null, it will not be used in resolving. This method returns
-	 * first based on the UUID, and falls back to the approvalID if nothing is
-	 * found.
-	 * 
-	 * @param approvalID
-	 * @param uuid
-	 * @return
-	 */
-	private static Substance getSubstanceByApprovalIDOrUUID(String approvalID, String uuid) {
-		try {
-			if (approvalID == null && uuid == null)
-				return null;
-			Substance s = null;
-
-			if(uuid != null){
-				try{
-					s=getSubstance(uuid);
-				}catch(Exception e){
-					e.printStackTrace();
-				}
-			}
-
-			if (s == null && approvalID != null) {
-				s = getSubstanceByApprovalID(approvalID);
-			}
-			return s;
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		return null;
-		// return finder.where().eq("approvalID", approvalID).findUnique();
-	}
 	public static Result getSubstanceByApprovalIDForApi(String approvalID) {
 		Substance s = getSubstanceByApprovalID(approvalID);
 		if(s==null){
@@ -457,13 +377,6 @@ public class SubstanceFactory extends EntityFactory {
 		}
 		ObjectMapper mapper = getEntityMapper();
 		return ok((JsonNode)mapper.valueToTree(s));
-	}
-	public static Substance getSubstanceByApprovalID(String approvalID) {
-		List<Substance> list = finder.get().where().ieq("approvalID", approvalID).findList();
-		if (list != null && list.size() > 0) {
-			return list.get(0);
-		}
-		return null;
 	}
 
 	public static String getMostRecentCode(String codeSystem, String like) {
@@ -486,26 +399,6 @@ public class SubstanceFactory extends EntityFactory {
 			return null;
 		Collections.sort(retCodes);
 		return retCodes.get(0);
-	}
-
-	public static List<Substance> getSubstances(int top, int skip, String filter) {
-		List<Substance> substances = filter(new FetchOptions(top, skip, filter), finder.get());
-		return substances;
-	}
-
-	// TODO: Doesn't support top/skip
-	public static List<Substance> getSubstancesWithExactName(int top, int skip, String name) {
-		return finder.get().where().eq("names.name", name).findList();
-	}
-
-	// TODO: Doesn't support top/skip
-	public static List<Substance> getSubstancesWithExactCode(int top, int skip, String code, String codeSystem) {
-		return finder.get().where(Util.andAll(
-				 com.avaje.ebean.Expr.eq("codes.code", code),
-				 com.avaje.ebean.Expr.eq("codes.codeSystem", codeSystem),
-				 com.avaje.ebean.Expr.eq("codes.type", CODE_TYPE_PRIMARY)
-				))
-				.findList();
 	}
 
 	public static Integer getCount() {

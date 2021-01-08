@@ -5,6 +5,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.TreeSet;
 
+import ix.core.exporters.*;
 import ix.ginas.models.v1.Relationship;
 import ix.ginas.models.v1.Substance;
 

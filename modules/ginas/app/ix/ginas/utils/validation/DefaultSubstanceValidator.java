@@ -8,7 +8,7 @@ import ix.core.*;
 import ix.core.models.Role;
 import ix.core.models.UserProfile;
 import ix.core.validator.*;
-import ix.ginas.initializers.LoadValidatorInitializer;
+import ix.core.initializers.LoadValidatorInitializer;
 import ix.ginas.models.v1.Substance;
 import ix.ginas.utils.GinasProcessingStrategy;
 import ix.ginas.utils.GinasUtils;

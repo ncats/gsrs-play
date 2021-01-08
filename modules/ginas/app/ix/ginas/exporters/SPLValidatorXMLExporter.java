@@ -10,6 +10,7 @@ import java.io.OutputStreamWriter;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import ix.core.exporters.Exporter;
 import ix.ginas.models.v1.Substance;
 
 public class SPLValidatorXMLExporter implements Exporter<Substance> {
