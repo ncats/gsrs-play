@@ -6,6 +6,8 @@ import java.util.stream.Collectors;
 
 import javax.persistence.*;
 
+import java.util.function.Predicate;
+
 import com.fasterxml.jackson.annotation.*;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -786,6 +788,7 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
     @JsonIgnore
     public boolean addAlternativeSubstanceDefinitionRelationship(Substance sub) {
         for(Relationship sref:getAlternativeDefinitionRelationships()){
+            //GSRS-1668 generate UUID if does not exist yet
             if(sref.relatedSubstance.refuuid.equals(sub.getOrGenerateUUID().toString())){
                 return true;
             }
@@ -1122,7 +1125,16 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
     @JsonIgnore
     @Indexable(facet = true, name = "Reference Count", sortable=true)
     public int getReferenceCount(){
-        return references.size();
+	return (int) references.stream()
+		         .filter(new Predicate<Reference>(){
+				public boolean test(Reference r){
+					if(r.docType.equals("SYSTEM") || r.docType.equals("VALIDATION_MESSAGE")){
+						return false;
+					}
+					return true;
+				}
+			 })
+		.count();
     }
 
     @JsonIgnore

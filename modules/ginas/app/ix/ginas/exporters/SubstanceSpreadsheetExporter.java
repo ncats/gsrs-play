@@ -10,6 +10,7 @@ import gov.nih.ncats.molwitch.inchi.Inchi;
 import ix.core.models.Group;
 import ix.core.models.Structure;
 import ix.core.util.CachedSupplier;
+import ix.core.util.ConfigHelper;
 import ix.ginas.controllers.v1.SubstanceFactory;
 import ix.ginas.models.v1.ChemicalSubstance;
 import ix.ginas.models.v1.Code;
@@ -87,10 +88,12 @@ public class SubstanceSpreadsheetExporter implements Exporter<Substance> {
 
         //DEFAULT_RECIPE_MAP.put(DefaultColumns.STD_INCHIKEY, new  ChemicalExportRecipe(Chemical.FORMAT_STDINCHIKEY));
 
+				boolean includeInChiKeysAnyway = ConfigHelper.getBoolean("ix.gsrs.delimitedreports.inchikeysforambiguousstereo", false);
+				play.Logger.debug("includeInChiKeysAnyway: " + includeInChiKeysAnyway);
         DEFAULT_RECIPE_MAP.put(DefaultColumns.STD_INCHIKEY_FORMATTED, SingleColumnValueRecipe.create(DefaultColumns.STD_INCHIKEY_FORMATTED  ,(s, cell) ->{
             if(s instanceof ChemicalSubstance){
                 Structure.Stereo ster=((ChemicalSubstance)s).getStereochemistry();
-                if(!ster.equals(Structure.Stereo.ABSOLUTE) && !ster.equals(Structure.Stereo.ACHIRAL)){
+                if(!ster.equals(Structure.Stereo.ABSOLUTE) && !ster.equals(Structure.Stereo.ACHIRAL) && !includeInChiKeysAnyway){
                     return;
                 }
 

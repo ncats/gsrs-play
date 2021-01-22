@@ -4,6 +4,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
@@ -114,7 +115,7 @@ public class GinasGlobal extends Global {
 				}
 			}
 
-			String username = (p ==null) ? "GUEST" : p.user.username;
+			String username = (p ==null) ? "GUEST" : Optional.ofNullable(p.user).map(u->u.username).orElse("GUEST");
 			StringBuilder messageBuilder = new StringBuilder(200);
 
 			messageBuilder.append(username).append(' ')

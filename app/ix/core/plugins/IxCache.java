@@ -217,6 +217,13 @@ public class IxCache extends Plugin {
         return _instance.gateKeeper.getOrElseRaw(key, _instance.lastNotifiedChange.get(), generator,0);
 	}
 	
+	@SuppressWarnings("unchecked")
+	public static <T> T updateTemp(String key, T t) throws Exception{
+		checkInitialized();
+        _instance.gateKeeper.putRaw(key, t);
+        return t;
+	}
+
 	public static Object getOrFetchTempRecord(Key k) throws Exception {
 		return getOrElseTemp(k.toString(), ()->{
             Optional<EntityUtils.EntityWrapper<?>> ret = k.fetch();

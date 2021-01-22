@@ -185,6 +185,9 @@ public class EntityFactory extends Controller {
 
 
     static public class EntityMapper extends ObjectMapper {
+
+    	private boolean keyOnly=false;
+
         /**
 		 * Default value
 		 */
@@ -205,13 +208,19 @@ public class EntityFactory extends Controller {
 		public static EntityMapper COMPACT_ENTITY_MAPPER() {
 			return new EntityMapper(BeanViews.Compact.class);
 		}
-		
+		public static EntityMapper KEY_ENTITY_MAPPER() {
+			return new EntityMapper(BeanViews.Key.class);
+		}
+
         public EntityMapper (Class<?>... views) {
             configure (MapperFeature.DEFAULT_VIEW_INCLUSION, true);
             configure (SerializationFeature.WRITE_NULL_MAP_VALUES, false);
             this.setSerializationInclusion(Include.NON_NULL);
             _serializationConfig = getSerializationConfig();
             for (Class<?> v : views) {
+            	if(v.equals(BeanViews.Key.class)){
+            		keyOnly=true;
+            	}
                 _serializationConfig = _serializationConfig.withView(v);
 
             }
@@ -267,6 +276,20 @@ public class EntityFactory extends Controller {
         }
         
         public String toJson (Object obj, boolean pretty) {
+        	if(this.keyOnly){
+        		Key k= EntityWrapper.of(obj).getKey();
+        		try {
+                    return pretty
+                        ? writerWithDefaultPrettyPrinter().writeValueAsString(k)
+                        : writeValueAsString (k);
+                }
+                catch (Exception ex) {
+                	ex.printStackTrace();
+                    Logger.trace("Can't write Json", ex);
+                }
+        	}
+
+
             try {
                 return pretty
                     ? writerWithDefaultPrettyPrinter().writeValueAsString(obj)

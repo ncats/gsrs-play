@@ -319,6 +319,7 @@ public class Structure extends BaseModel implements ForceUpdatableModel{
     public String getExactHash(){
         String newhash=null;
         for (Value val : this.properties) {
+            if(val==null)continue;
             if (Structure.H_EXACT_HASH.equals(val.label)) {
                 try{
                     newhash=Objects.toString(val.getValue());
@@ -334,6 +335,7 @@ public class Structure extends BaseModel implements ForceUpdatableModel{
     public String getStereoInsensitiveHash(){
         String newhash=null;
         for (Value val : this.properties) {
+            if(val==null)continue;
             if (Structure.H_STEREO_INSENSITIVE_HASH.equals(val.label)) {
                 try{
                     newhash=Objects.toString(val.getValue());

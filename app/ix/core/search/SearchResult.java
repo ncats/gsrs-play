@@ -231,6 +231,45 @@ public class SearchResult {
 
 	}
 	
+	public int copyKeysTo(List<Key> list, int start, int count) {
+
+		if(this.count ==0 || count ==0){
+			return 0;
+		}
+		// It may be that the page that is being fetched is not yet
+		// complete. There are 2 options here then. The first is to
+		// return whatever is ready now immediately, and report the
+		// number of results (that is what had been done before).
+
+		// The second way is to wait for the fetching to be completed
+		// which is what is demonstrated below.
+		LazyList<Key,Object> matches;
+
+
+			try {
+				this.getMatchesFuture(start + count).get();
+			} catch (InterruptedException | ExecutionException e) {
+				e.printStackTrace();
+
+			}
+
+		matches = (LazyList<Key,Object>)getMatches();
+		if (start >= matches.size()) {
+			return 0;
+		}
+
+
+
+		Iterator<NamedCallable<Key,Object>> it = matches.getInternalList().listIterator(start);
+
+		int i = 0;
+		for (; i < count && it.hasNext(); ++i) {
+			list.add(it.next().getName());
+		}
+		return i;
+
+	}
+
 	/**
      * Copies from the search results {@link Key}s to the specified list
      * with specified offset (for the master results), and
@@ -511,10 +550,14 @@ public class SearchResult {
 	}
 
 	public void addSponsoredNamedCallable(NamedCallable<Key,Object> c) {
-		//System.out.println("Sponsored record: " + c.getName());
-		sponsored.put(c.getName(), c);
-		matches.addCallable(c);
-		processAddition(c);
+		// TP: In the past, this would actually
+		// add without checking. Now it checks if it's already added
+		// that "sponsored" record before. This avoids duplicates.
+		if(!sponsored.containsKey(c.getName())){
+			sponsored.put(c.getName(), c);
+			matches.addCallable(c);
+			processAddition(c);
+		}
 	}
 
 	/**

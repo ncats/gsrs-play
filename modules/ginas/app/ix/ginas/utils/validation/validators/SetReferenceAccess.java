@@ -2,7 +2,6 @@ package ix.ginas.utils.validation.validators;
 
 import ix.core.controllers.AdminFactory;
 import ix.core.models.Group;
-import ix.core.models.Keyword;
 import ix.core.validator.GinasProcessingMessage;
 import ix.core.validator.ValidatorCallback;
 import ix.ginas.models.EmbeddedKeywordList;
@@ -51,6 +50,16 @@ public class SetReferenceAccess extends AbstractValidatorPlugin<Substance>
                         .appliableChange(true);
                 callback.addMessage(mes, () -> makeReferenceProtected(r));
             }
+            else if (referenceCitationPatterns.stream().anyMatch(p -> p.matcher((" " + r.citation).toUpperCase()).find()) ) {
+							if (r.isPublic() || r.isPublicDomain() || r.isPublicReleaseReference()) {
+                GinasProcessingMessage mes = GinasProcessingMessage
+                        .WARNING_MESSAGE(
+                                "reference:\""
+                                        + r.docType + ":" + r.citation + "\" appears to be non-public. Setting to protected.")
+                        .appliableChange(true);
+                callback.addMessage(mes, () -> makeReferenceProtected(r));
+							}
+            }
             else if (alwaysPublic.contains(r.docType)
                     && (!r.isPublic() || !r.isPublicDomain())) {
                 GinasProcessingMessage mes = GinasProcessingMessage
@@ -59,14 +68,6 @@ public class SetReferenceAccess extends AbstractValidatorPlugin<Substance>
                                         + r.docType + ":" + r.citation + "\" cannot be private. Setting to public.")
                         .appliableChange(true);
                 callback.addMessage(mes, () -> makeReferencePublic(r));
-            }
-            else if (referenceCitationPatterns.stream().anyMatch(p -> p.matcher((" " + r.citation).toUpperCase()).find())) {
-                GinasProcessingMessage mes = GinasProcessingMessage
-                        .WARNING_MESSAGE(
-                                "reference:\""
-                                        + r.docType + ":" + r.citation + "\" appears to be non-public. Setting to protected.")
-                        .appliableChange(true);
-                callback.addMessage(mes, () -> makeReferenceProtected(r));
             }
         });
     }

@@ -23,7 +23,7 @@ public class Java8FactoryHelper {
 	public static play.mvc.Result substanceFactoryDetailedSearch(SearchResultContext context) throws InterruptedException, ExecutionException{
         context.setAdapter((srequest, ctx) -> {
             try {
-                SearchResult sr = App.getResultFor(ctx, srequest);
+                SearchResult sr = App.getResultFor(ctx, srequest,true);
                 
                 List<Substance> rlist = new ArrayList<Substance>();
                 

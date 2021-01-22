@@ -145,4 +145,22 @@ public class ChemUtils {
 			gpm.add(GinasProcessingMessage.WARNING_MESSAGE("Note: Stereo 'Absolute' with Optical Activity 'NONE' does not make sense!"));
 		}
 	}
+
+	public static void checkRacemicStereo(Structure oldstr, ValidatorCallback callback) {
+		String debugMessage = String.format("in checkRacemicStereo,  stereochemistry: %s, optical: %s, comments: %s",
+						oldstr.stereoChemistry.toString(), oldstr.opticalActivity.toString(), oldstr.stereoComments);
+		StringBuilder messageText = new StringBuilder();
+		play.Logger.trace(debugMessage);
+		if (oldstr.stereoChemistry.equals(Stereo.RACEMIC) && !oldstr.opticalActivity.equals(Optical.PLUS_MINUS)) {
+			play.Logger.trace(" detected racemic/optical activity mismatch");
+			if (oldstr.stereoComments == null || oldstr.stereoComments.length() == 0) {
+				play.Logger.trace("no stereo comments");
+				oldstr.opticalActivity = Optical.PLUS_MINUS;
+				messageText.append("Note: when stereo is 'Racemic,' Optical Activity '+/-' is required unless there is a stereo comment! Optical activity will be reset when the substance is saved.");
+			} else {
+				messageText.append("Note: when stereo is 'Racemic,' Optical Activity '+/-' is strongly recommended.");
+			}
+			callback.addMessage(GinasProcessingMessage.WARNING_MESSAGE(messageText.toString()));
+		}
+	}
 }

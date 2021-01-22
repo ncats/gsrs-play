@@ -13,9 +13,9 @@ public class MolecularWeightPropertyIndexValueMaker implements IndexValueMaker<S
 
     @Override
     public void createIndexableValues(Substance substance, Consumer<IndexableValue> consumer) {
-    	if (substance.properties != null) {
-            substance.properties.stream()
-                    .filter(a -> a.getName().toUpperCase().contains("MOL_WEIGHT"))
+        if (substance.properties != null) {
+        	substance.properties.stream()
+                    .filter(a ->a.getName().toUpperCase().contains("MOL_WEIGHT"))
                     .forEach(p -> {
                         Double avg = p.getValue().average;
                         if (avg != null) {

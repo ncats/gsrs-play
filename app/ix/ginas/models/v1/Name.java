@@ -124,7 +124,7 @@ public class Name extends CommonDataElementOfCollection {
     
     @Lob
     @Basic(fetch=FetchType.EAGER)
-    @JsonView(BeanViews.Internal.class)
+    @JsonView(BeanViews.JsonDiff.class)
     public String stdName;
     
     

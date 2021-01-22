@@ -232,7 +232,7 @@ public class NamesValidator extends AbstractValidatorPlugin<Substance> {
                     Substance s2 = sr.iterator().next();
                     if (!s2.getOrGenerateUUID().toString().equals(s.getOrGenerateUUID().toString())) {
                         GinasProcessingMessage mes = GinasProcessingMessage
-                                .ERROR_MESSAGE(
+                                .WARNING_MESSAGE(
                                         "Name '"
                                                 + n.name
                                                 + "' collides (possible duplicate) with existing name for substance:")

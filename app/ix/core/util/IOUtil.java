@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.type.TypeFactory;
 
 import java.io.*;
+import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -150,7 +151,13 @@ public final class IOUtil {
     public static BufferedOutputStream newBufferedOutputStream(File outputFile) throws IOException {
         File parent = outputFile.getParentFile();
         if(parent !=null){
+        	if(!parent.exists()){
+        		try{
             Files.createDirectories(parent.toPath());
+        		}catch(FileAlreadyExistsException faee){
+        			faee.printStackTrace();
+        		}
+        	}
         }
         return new BufferedOutputStream(new FileOutputStream(outputFile));
     }

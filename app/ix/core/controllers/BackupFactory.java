@@ -53,6 +53,8 @@ public class BackupFactory extends EntityFactory {
 			//because the UUIDs considered unique
 			//globally, but other IDs are not 
 			//considered globally unique
+    	}else if(k.getIdNative() instanceof Long || k.getIdNative() instanceof Integer ){
+    		return getByRefId(k.getKind() + ":" + k.getIdString()).orElse(null);
     	}
     	
     	return null;

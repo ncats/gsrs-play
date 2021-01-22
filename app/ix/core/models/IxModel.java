@@ -13,7 +13,7 @@ import com.fasterxml.jackson.annotation.JsonView;
 import ix.utils.Global;
 
 @MappedSuperclass
-public class IxModel extends BaseModel {
+public class IxModel extends BaseModel implements ForceUpdatableModel {
     @Id public Long id;
     @Version public Long version;
 
@@ -43,5 +43,20 @@ public class IxModel extends BaseModel {
 	public String fetchGlobalId() {
 		if(id!=null)return this.getClass().getName() + ":" + id.toString();
 		return null;
+	}
+
+	@Override
+	public void forceUpdate() {
+		this.modified();
+		super.update();
+	}
+	public boolean tryUpdate(){
+		String ohash=this.modified.toString();
+		super.update();
+		String nhash=this.modified.toString();
+		if(ohash.equals(nhash)){
+			return false;
+		}
+		return true;
 	}
 }

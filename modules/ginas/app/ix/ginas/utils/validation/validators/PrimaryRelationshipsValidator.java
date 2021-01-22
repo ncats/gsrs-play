@@ -26,7 +26,12 @@ public class PrimaryRelationshipsValidator extends AbstractValidatorPlugin<Subst
                 callback.addMessage(mes, () -> iter.remove());
 
             }
-            if (ValidationUtils.isEffectivelyNull(n.relatedSubstance)) {
+            if (ValidationUtils.isEffectivelyNull(n.relatedSubstance)
+               || (
+		      ValidationUtils.isEffectivelyNull(n.relatedSubstance.refuuid) &&
+		           (ValidationUtils.isEffectivelyNull(n.relatedSubstance.refPname) || n.relatedSubstance.refPname.equals("NO_NAME"))
+		  )
+               ) {
                 GinasProcessingMessage mes = GinasProcessingMessage
                         .ERROR_MESSAGE(
                                 "Relationships must specify a related substance");

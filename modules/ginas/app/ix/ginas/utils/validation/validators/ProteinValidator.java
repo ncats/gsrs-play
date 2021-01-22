@@ -23,6 +23,7 @@ import ix.ginas.models.v1.ProteinSubstance;
 import ix.ginas.models.v1.Site;
 import ix.ginas.models.v1.Substance;
 import ix.ginas.models.v1.Subunit;
+import ix.ginas.utils.MolecularWeightAndFormulaContribution;
 import ix.ginas.utils.ProteinUtils;
 import ix.ginas.utils.validation.ValidationUtils;
 import ix.seqaln.SequenceIndexer.CutoffType;
@@ -115,7 +116,9 @@ public class ProteinValidator extends AbstractValidatorPlugin<Substance> {
             }
 
             Set<String> unknownRes = new HashSet<String>();
-            double tot = ProteinUtils.generateProteinWeight(cs, unknownRes);
+        if(cs.protein.subunits.size() >0 && cs.protein.subunits.stream().allMatch(su->su !=null && su.sequence != null && su.sequence.length()>0)) {
+          MolecularWeightAndFormulaContribution mwFormulaContribution= ProteinUtils.generateProteinWeightAndFormula(cs, unknownRes);
+          double tot = mwFormulaContribution.getMw();
             if (unknownRes.size() > 0) {
                 GinasProcessingMessage mes = GinasProcessingMessage
                         .WARNING_MESSAGE("Protein has unknown amino acid residues: "
@@ -149,11 +152,11 @@ public class ProteinValidator extends AbstractValidatorPlugin<Substance> {
                         double delta = tot - avg;
                         double pdiff = delta / (avg);
 
-                        int len = 0;
+                    /*int len = 0;
                         for (Subunit su : cs.protein.subunits) {
                             len += su.sequence.length();
                         }
-                        double avgoff = delta / len;
+                    double avgoff = delta / len;  commented out per discussion with Tyler 29 June 2020 */
                         if (Math.abs(pdiff) > .05) {
                             callback.addMessage(GinasProcessingMessage
                                     .WARNING_MESSAGE(
@@ -170,10 +173,30 @@ public class ProteinValidator extends AbstractValidatorPlugin<Substance> {
                 }
             }
 
-        boolean sequenceHasChanged = sequenceHasChanged(cs, objold);
+  				List<Property> formulaProperties = ProteinUtils.getMolFormulaProperties(cs);
+          if (formulaProperties.size() <= 0) {
 
-        if(sequenceHasChanged) {
-            validateSequenceDuplicates(cs, callback);
+            GinasProcessingMessage mes = GinasProcessingMessage
+                    .WARNING_MESSAGE(
+                            "Protein has no molecular formula property, defaulting to calculated value of: "
+                                    + mwFormulaContribution.getFormula()).appliableChange(true);
+            callback.addMessage(mes, () -> {
+
+                cs.properties.add(ProteinUtils.makeMolFormulaProperty(mwFormulaContribution.getFormula()));
+                if (!unknownRes.isEmpty()) {
+                    GinasProcessingMessage mes2 = GinasProcessingMessage
+                            .WARNING_MESSAGE("Calculated protein formula questionable due to unknown amino acid residues: "
+                                    + unknownRes.toString());
+                    callback.addMessage(mes2);
+                }
+            });
+          }
+
+            boolean sequenceHasChanged = sequenceHasChanged(cs, objold);
+
+            if(sequenceHasChanged) {
+                validateSequenceDuplicates(cs, callback);
+            }
         }
         if (!cs.protein.getSubunits().isEmpty()) {
             ValidationUtils.validateReference(cs, cs.protein, callback, ValidationUtils.ReferenceAction.FAIL);

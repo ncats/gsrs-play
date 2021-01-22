@@ -45,6 +45,26 @@ public class SearchRequest {
 		this.options = options;
 	}
 
+	public boolean setIncludeFacets(boolean includeThem) {
+		this.getOptions().setIncludeFacets(includeThem);
+		return includeThem;
+	}
+
+	public boolean setIncludeBreakdown(boolean includeBreakdown) {
+		this.getOptions().setIncludeBreakdown(includeBreakdown);
+		return includeBreakdown;
+	}
+
+	public boolean setPromoteSpecialMatches(boolean promoteSpecialMatches) {
+		this.getOptions().setPromoteSpecialMatches( promoteSpecialMatches);
+		return promoteSpecialMatches;
+	}
+
+	public boolean simpleSearchOnly(boolean simpleSearch) {
+		this.getOptions().setSimpleSearchOnly(simpleSearch);
+		return simpleSearch;
+	}
+
 	public Collection<?> getSubset() {
 		return subset;
 	}
@@ -153,6 +173,27 @@ public class SearchRequest {
 
 		public Builder query(String query) {
 			this.query = query;
+			return this;
+		}
+
+
+		public Builder setIncludeFacets(boolean includeThem) {
+			this.opBuilder.includeFacets(includeThem);
+			return this;
+		}
+
+		public Builder setIncludeBreakdown(boolean includeBreakdown) {
+			this.opBuilder.includeBreakdown(includeBreakdown);
+			return this;
+		}
+
+		public Builder setPromoteSpecialMatches(boolean promoteSpecialMatches) {
+			this.opBuilder.promoteSpecialMatches(promoteSpecialMatches);
+			return this;
+		}
+
+		public Builder simpleSearchOnly(boolean simpleSearch) {
+			this.opBuilder.simpleSearchOnly( simpleSearch);
 			return this;
 		}
 

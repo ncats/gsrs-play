@@ -38,8 +38,18 @@ public class GinasUtils {
 	private static CachedSupplier<Boolean> validation=
 			ConfigHelper.supplierOf("ix.ginas.batch.validation", true);
 	
-	public static GinasProcessingStrategy DEFAULT_BATCH_STRATEGY = GinasProcessingStrategy
-			.ACCEPT_APPLY_ALL_MARK_FAILED();
+	public static CachedSupplier<GinasProcessingStrategy> DEFAULT_BATCH_STRATEGY = CachedSupplier.of(()->{
+		String defaultStrat="ACCEPT_APPLY_ALL_MARK_FAILED";
+		String strat=ConfigHelper.supplierOf("ix.ginas.batch.validationStrategy", defaultStrat).get();
+
+		try{
+			return GinasProcessingStrategy.fromValue(strat);
+		}catch(Exception e){
+			Logger.error("Unknown strategy name, defaulting to batch strategy of \"" + defaultStrat + "\"", e);
+			return GinasProcessingStrategy.fromValue(defaultStrat);
+		}
+	});
+
 
 
 	private static NamedIdGenerator<Substance,String> APPROVAL_ID_GEN;
@@ -364,7 +374,7 @@ public class GinasUtils {
 		public RecordTransformer getTransformer() {
 			
 			if(validation.get()){
-				return new GinasSubstanceTransformer(DefaultSubstanceValidator.BATCH_SUBSTANCE_VALIDATOR(DEFAULT_BATCH_STRATEGY));
+				return new GinasSubstanceTransformer(DefaultSubstanceValidator.BATCH_SUBSTANCE_VALIDATOR(DEFAULT_BATCH_STRATEGY.get()));
 			}else{
 				return new GinasSubstanceTransformer(DefaultSubstanceValidator.IGNORE_SUBSTANCE_VALIDATOR());
 			}
@@ -390,7 +400,7 @@ public class GinasUtils {
 		}
 		
 		public void useDefaultValidator(){
-			setValidator(DefaultSubstanceValidator.BATCH_SUBSTANCE_VALIDATOR(DEFAULT_BATCH_STRATEGY));
+			setValidator(DefaultSubstanceValidator.BATCH_SUBSTANCE_VALIDATOR(DEFAULT_BATCH_STRATEGY.get()));
 		}
 
 		@Override
