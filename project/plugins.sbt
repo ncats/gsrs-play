@@ -1,7 +1,7 @@
-resolvers += "Typesafe repository" at "https://repo.typesafe.com/typesafe/releases/"
 
-resolvers += Resolver.url("artifactory", url("https://scalasbt.artifactoryonline.com/scalasbt/sbt-plugin-releases"))(Resolver.ivyStylePatterns)
+resolvers += Resolver.bintrayRepo("typesafe", "maven-releases")
 
+resolvers += Resolver.bintrayRepo("sbt", "sbt-plugin-releases")
 
 // The Play plugin
 addSbtPlugin("com.typesafe.play" % "sbt-plugin" % "2.3.10")
