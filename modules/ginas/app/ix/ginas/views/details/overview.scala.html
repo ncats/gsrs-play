@@ -25,7 +25,11 @@ basically supplies a few <tr> tags with 'record details'
 <tr>
 	<td>Record Status</td>
 	<td>
-	  <code class="monospace-code">@sub.getDisplayStatus()</code>
+	@if(sub.isDeprecated()) {
+		<code class="alert-important text-uppercase">Record is Deprecated</code>
+	}else{
+		<code class="monospace-code">@sub.getDisplayStatus()</code>
+	}
 	</td>
 </tr>
 <tr>
@@ -56,14 +60,5 @@ basically supplies a few <tr> tags with 'record details'
 			}
 		}
 
-
-@if(sub.isDeprecated()) {
-<tr>
-	<td>Record Status</td>
-	<td>
-		<code class="alert-important text-uppercase">Record is Deprecated</code>
-	</td>
-</tr>
-}
 
 @substancedetailsoverview(sub)
