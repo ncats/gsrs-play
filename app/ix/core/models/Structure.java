@@ -184,7 +184,7 @@ public class Structure extends BaseModel implements ForceUpdatableModel{
     @Indexable(name = "Molecular Formula", facet = true)
     public String formula;
 
-    @JsonProperty("_html_formula")
+    @JsonProperty("_formula-html")
     public String htmlFormula() {
         if (formula == null) {
             return "";
