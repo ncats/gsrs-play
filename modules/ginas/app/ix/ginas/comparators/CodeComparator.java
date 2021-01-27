@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import ix.core.util.CachedSupplier;
 import ix.core.util.ConfigHelper;
 import ix.ginas.models.v1.Code;
 
@@ -13,24 +14,28 @@ import play.Logger;
 
 public class CodeComparator implements Comparator<Code> {
 
-    private static Map<String, Integer> codeSystemOrder = new HashMap<String, Integer>();
+    private static CachedSupplier<Map<String, Integer>> DEFAULT_ORDER = CachedSupplier.of(()->populateCodeOrderMap(ConfigHelper.getOrDefault("ix.ginas.codes.order", new ArrayList<>())));
 
-    public CodeComparator(Map m) {
-        List<String> codeSystems = (List<String>) m.get("codesystem_order");
-        int i = 0;
-        for (String s : codeSystems) {
-            codeSystemOrder.put(s, i++);
-        }
+    private Map<String, Integer> codeSystemOrder = DEFAULT_ORDER.get();
+
+
+    public Map<String, Integer> getCodeSystemOrder() {
+        return codeSystemOrder;
     }
 
-    public CodeComparator() {
-        List<String> codeSystems = (List<String>) ConfigHelper.getOrDefault("ix.ginas.codes.order",
-                new ArrayList<String>());
-        int i = 0;
-        for (String s : codeSystems) {
-            codeSystemOrder.put(s, i++);
-        }
+    public void setCodeSystemOrder(List<String> codeSystemOrder) {
+        this.codeSystemOrder = populateCodeOrderMap(codeSystemOrder);
     }
+
+    private static Map<String, Integer> populateCodeOrderMap(List<String> list){
+        Map<String,Integer> map = new HashMap<>();
+        int i = 0;
+        for (String s : list) {
+            map.put(s, i++);
+        }
+        return map;
+    }
+
 
     public int compare(Code c1, Code c2) {
         if(c1.codeSystem == null){

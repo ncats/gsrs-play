@@ -1,9 +1,6 @@
 package ix.ginas.comparators;
 
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import org.apache.commons.lang3.ObjectUtils;
 
@@ -13,10 +10,14 @@ import play.Logger;
 
 public class NameComparator implements Comparator<Name> {
 
-    private static List<String> languages;
+    private List<String> languageOrder = new ArrayList<>();
 
-    public NameComparator(Map m) {
-        languages = (List<String>) m.get("language_order");
+    public List<String> getLanguageOrder() {
+        return languageOrder;
+    }
+
+    public void setLanguageOrder(List<String> languageOrder) {
+        this.languageOrder = languageOrder;
     }
 
     /**
@@ -52,7 +53,7 @@ public class NameComparator implements Comparator<Name> {
             if(o1.isOfficial())return -1;
             return 1;
         }
-        for (String lang : languages) {
+        for (String lang : languageOrder) {
             if(o1.isLanguage(lang) != o2.isLanguage(lang)){
                 if(o1.isLanguage(lang))return -1;
                 return 1;

@@ -1,11 +1,9 @@
 package ix.core.factories;
 
-import java.lang.reflect.Constructor;
-import java.util.Comparator;
-import java.util.Date;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.type.TypeFactory;
 import ix.core.util.EntityUtils.EntityInfo;
 import ix.core.util.IOUtil;
 import ix.ginas.models.GinasCommonData;
@@ -31,21 +29,25 @@ public class ComparatorFactory extends AccumlatingInternalMapEntityResourceFacto
 	private static class ComparatorConfig{
 		String entityClassName;
 		String comparatorClassName;
-		Map with=null;
+		Map parameters=null;
+
+		private static ThreadLocal<ObjectMapper> mapper = new ThreadLocal<ObjectMapper>(){
+			@Override
+			protected ObjectMapper initialValue() {
+				ObjectMapper mapper= new ObjectMapper();
+				TypeFactory tf = TypeFactory.defaultInstance()
+						.withClassLoader(IOUtil.getGinasClassLoader());
+				mapper.setTypeFactory(tf);
+
+				return mapper;
+
+			}
+		};
 		
-		private ComparatorConfig(String className, String comparatorName){
+		private ComparatorConfig(String className, String comparatorName, Map parameters){
 			this.entityClassName=className;
 			this.comparatorClassName=comparatorName;
-		}
-		
-		private ComparatorConfig(String className, String comparatorName, Map with){
-			this.entityClassName=className;
-			this.comparatorClassName=comparatorName;
-			this.with=with;
-		}
-		private ComparatorConfig with(Map with){
-			this.with=with;
-			return this;
+			this.parameters=parameters;
 		}
 		
 		private Comparator getComparator() throws Exception{
@@ -55,18 +57,18 @@ public class ComparatorFactory extends AccumlatingInternalMapEntityResourceFacto
 			}catch(Exception e){
 				throw new Exception("error loading comparator class " + comparatorClassName, e);
 			}
-			if(with!=null){
-				Constructor c=comparatorCls.getConstructor(Map.class);
-				return (Comparator) c.newInstance(with);
-			}else{
-				return (Comparator) comparatorCls.newInstance();
+			if(parameters ==null){
+				return  (Comparator)mapper.get().convertValue(Collections.emptyMap(), comparatorCls);
+
 			}
+			return  (Comparator) mapper.get().convertValue(parameters, comparatorCls);
+
 		}
 		public String toString() {
 			return "ComparatorConfig{" +
 					"entityClassName='" + entityClassName + '\'' +
 					", comparatorClassName='" + comparatorClassName + '\'' +
-					", with=" + with +
+					", parameters=" + parameters +
 					'}';
 		}
 	}
@@ -74,7 +76,7 @@ public class ComparatorFactory extends AccumlatingInternalMapEntityResourceFacto
 	@Override
 	public void initialize(Application app) {
 		getStandardResourceStream(app,"ix.core.comparators")
-		.map(m->new ComparatorConfig((String)m.get("class"), (String)m.get("comparator")).with((Map)m.get("with")))
+		.map(m->new ComparatorConfig((String)m.get("class"), (String)m.get("comparator"), (Map)m.get("parameters")))
 		.map(cc->{
 			try{
 				Comparator c = cc.getComparator();
