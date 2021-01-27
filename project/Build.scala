@@ -1,5 +1,5 @@
 import play._
-import sbt.Keys._
+import sbt.Keys.{resolvers, _}
 import sbt.{file, _}
 //import play.PlayImport._
 import play.Play.autoImport._
@@ -31,7 +31,10 @@ object ApplicationBuild extends Build {
     resolvers += Resolver.sonatypeRepo("snapshots"),
     resolvers += Resolver.sonatypeRepo("releases"),
     resolvers += Resolver.url("Edulify Repository",
-        url("https://edulify.github.io/modules/releases/"))(Resolver.ivyStylePatterns)
+        url("https://edulify.github.io/modules/releases/"))(Resolver.ivyStylePatterns),
+
+    resolvers += Resolver.bintrayRepo("typesafe", "maven-releases"),
+    resolvers += Resolver.bintrayRepo("sbt", "sbt-plugin-releases")
   )
   
   val commonDependencies = Seq(
