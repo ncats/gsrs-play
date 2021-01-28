@@ -184,7 +184,7 @@
 		<h4>Systematic Names:</h4>
 		<ul>
 			<li ng-show="sysNames.length == 0"><i>None recorded</i></li>
-			<li ng-repeat = "name in sysNames">{{name}}</li>
+			<li ng-repeat = "name in sysNames" ng-bind-html="name"></li>
 		</ul>
 
 	</div>

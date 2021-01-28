@@ -1283,10 +1283,20 @@ amino-acid.selected-acid a {
 	min-width: 165px;
 }
 h4.title-name{
-overflow: hidden;
-white-space: nowrap;
-text-overflow: ellipsis;
+    overflow: hidden;
+    color: inherit;
+    font-size: 20px;
+    white-space: nowrap;
+    text-overflow: ellipsis;
     margin-top: 20px;
+}
+
+h4 small{
+    color: inherit;
+}
+
+h3 small{
+    color: inherit;
 }
 
 .help-info{

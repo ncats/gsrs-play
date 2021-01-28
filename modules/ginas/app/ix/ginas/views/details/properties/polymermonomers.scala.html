@@ -35,9 +35,9 @@
                     @if(sub != null && sub.getLinkingID() != null) {
                     	@defining(SubstanceFactory.getFullSubstance(sub)) { ref =>
 	                    	@if(ref!=null){
-	                        	<a href="@ix.ginas.controllers.routes.GinasApp.substance(sub.getLinkingID())" target="_self">@sub.refPname</a>
+	                        	<a href="@ix.ginas.controllers.routes.GinasApp.substance(sub.getLinkingID())" target="_self">@Html(sub.getHtmlName())</a>
 	                        }else{
-		                        <div>@sub.refPname</div>
+		                        <div>@Html(sub.getHtmlName())</div>
 		                        <div><em><small>(not in database)</small></em></div>
 	                        }
                         }

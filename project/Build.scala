@@ -70,6 +70,7 @@ object ApplicationBuild extends Build {
       ,"com.hazelcast" % "hazelcast" % "3.5.2" 
       ,"org.julienrf" %% "play-jsonp-filter" % "1.2"
       ,"commons-codec" % "commons-codec" % "1.9"
+      ,"net.sf.jtidy" % "jtidy" % "r938"
       ,"org.apache.lucene" % "lucene-core" % "4.10.0"
       ,"org.apache.lucene" % "lucene-analyzers-common" % "4.10.0"
       ,"org.apache.lucene" % "lucene-misc" % "4.10.0"
