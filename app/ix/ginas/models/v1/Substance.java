@@ -33,6 +33,7 @@ import ix.ginas.models.serialization.PrincipalDeserializer;
 import ix.ginas.models.serialization.PrincipalSerializer;
 import ix.ginas.models.utils.JSONEntity;
 import ix.utils.Global;
+import ix.utils.Util;
 import play.Logger;
 
 @Backup
@@ -480,6 +481,13 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
         return names.stream().max(comp);
     }
 
+    @JsonProperty("_name")
+    public String getFormattedName(){
+        if(Util.useHtmlNames()){
+            return getHtmlName();
+        }
+        return getName();
+    }
     @Indexable(suggest = true, name = "Display Name", sortable=true)
     public String getName() {
         Optional<Name> aName = getDisplayName();
@@ -499,7 +507,6 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
         return Substance.DEFAULT_NO_NAME;
     }
 
-    @JsonProperty("_name")
     public String getHtmlName() {
         Optional<Name> aName = getDisplayName();
         if(aName.isPresent()){
