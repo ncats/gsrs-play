@@ -481,13 +481,9 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
         return names.stream().max(comp);
     }
 
+
+
     @JsonProperty("_name")
-    public String getFormattedName(){
-        if(Util.useHtmlNames()){
-            return getHtmlName();
-        }
-        return getName();
-    }
     @Indexable(suggest = true, name = "Display Name", sortable=true)
     public String getName() {
         Optional<Name> aName = getDisplayName();
@@ -506,7 +502,7 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
         }
         return Substance.DEFAULT_NO_NAME;
     }
-
+    @JsonProperty("_name-html")
     public String getHtmlName() {
         Optional<Name> aName = getDisplayName();
         if(aName.isPresent()){

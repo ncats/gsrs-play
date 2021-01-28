@@ -67,8 +67,6 @@ public class Util {
     public static CachedSupplier<Long> TIME_RESOLUTION_MS=
     		ConfigHelper.supplierOf("ix.tokenexpiretime",(long)(3600*1000*24));
 
-    public static CachedSupplier<Boolean> USE_HTML_NAMES=
-            ConfigHelper.supplierOf("ix.useHtmlNames",false);
     private static int BUFFER_SIZE = 8192; //8K
 
     private static StringConverter STRING_CONVERTER = new PlainStringConverter();
@@ -81,9 +79,6 @@ public class Util {
         STRING_CONVERTER = stringConverter;
     }
 
-    public static boolean useHtmlNames(){
-        return USE_HTML_NAMES.get();
-    }
     static Random rand = new Random ();
     public static String randomUserAgent () {
         return UserAgents[rand.nextInt(UserAgents.length)];
