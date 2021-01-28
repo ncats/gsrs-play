@@ -48,12 +48,7 @@ public class HTMLStringConverter extends AbstractStringConverter {
         "XV", "XVI", "XVII", "XVIII", "XIX", "XX", "I", "II",
         "III", "IV", "V", "VI", "VII", "VIII", "IX", "X",
         "XI", "XII", "D", "L", "N", "-", "", "", "", "", "(", ")", "<", ">", "", "\""};
-    private static Tidy tidy;
-    static{
-        tidy = new Tidy();
-        tidy.setInputEncoding("UTF-8");
-        tidy.setXHTML(true);
-    };
+
 
     /**
      * return Standard Name text.
@@ -113,6 +108,9 @@ public class HTMLStringConverter extends AbstractStringConverter {
     @Override
     public List<String> validationErrors(String str){
         List<String> errors = new ArrayList<String>();
+        Tidy tidy = new Tidy();
+        tidy.setInputEncoding("UTF-8");
+        tidy.setXHTML(true);
         tidy.parseDOM(new StringReader("<html><head><title>Test</title></head><body>" + str + "</body></html>"), null);
         if (tidy.getParseErrors() > 0 || tidy.getParseWarnings() > 1) {
             errors.add("contains bad HTML");
