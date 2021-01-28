@@ -31,6 +31,7 @@ public class StringConverterInitializer implements Initializer {
             Logger.debug("setting string converter to " + stringConverter);
             Util.setStringConverter(stringConverter);
         } catch (Throwable e) {
+            e.printStackTrace();
             throw new IllegalStateException("could not instantiate string converter", e);
         }
     }

@@ -2,6 +2,7 @@ package ix.ginas.models.v1;
 
 import java.util.*;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import javax.persistence.*;
@@ -486,27 +487,41 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
     @JsonProperty("_name")
     @Indexable(suggest = true, name = "Display Name", sortable=true)
     public String getName() {
-        Optional<Name> aName = getDisplayName();
-        if(aName.isPresent()){
-            return aName.get().name;
-        }
-        if(this.isAlternativeDefinition()){
-            SubstanceReference subref=this.getPrimaryDefinitionReference();
-            if(subref!=null){
-                String name1=subref.getName();
-                if(name1!=null){
-                    return Substance.DEFAULT_ALTERNATIVE_NAME + " for [" + name1 + "]";
-                }
-                return Substance.DEFAULT_ALTERNATIVE_NAME;
-            }
-        }
-        return Substance.DEFAULT_NO_NAME;
+        return getFormattedName(STDNAME_FUNCTION);
     }
     @JsonProperty("_name-html")
     public String getHtmlName() {
+        return getFormattedName(HTMLNAME_FUNCTION);
+
+    }
+    private static Function<Name, String > HTMLNAME_FUNCTION = new Function<Name, String>(){
+
+        @Override
+        public String apply(Name name) {
+            return name.getHtmlName();
+        }
+    };
+
+    private static Function<Name, String > NAME_FUNCTION = new Function<Name, String>(){
+
+        @Override
+        public String apply(Name name) {
+            return name.name;
+        }
+    };
+    private static Function<Name, String > STDNAME_FUNCTION = new Function<Name, String>(){
+
+        @Override
+        public String apply(Name name) {
+            return Util.getStringConverter().toStd(name.name);
+        }
+    };
+
+    private String getFormattedName(Function<Name, String> nameFunction) {
+        Objects.requireNonNull(nameFunction, "name Function can not be null");
         Optional<Name> aName = getDisplayName();
         if(aName.isPresent()){
-            return aName.get().getHtmlName();
+            return nameFunction.apply(aName.get());
         }
         if(this.isAlternativeDefinition()){
             SubstanceReference subref=this.getPrimaryDefinitionReference();

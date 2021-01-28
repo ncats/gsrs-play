@@ -4,6 +4,7 @@ import java.io.StringReader;
 import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -19,6 +20,21 @@ import org.w3c.tidy.Tidy;
  * @since 2.6
  */
 public class HTMLStringConverter extends AbstractStringConverter {
+    /**
+     * JTidy is not thead safe and we need to use this a lot so make a thread-local
+     * version.
+     */
+    private static final ThreadLocal<Tidy> TIDY_POOL = ThreadLocal.withInitial(new Supplier<Tidy>(){
+        //need to use anonymous class since Play can't "enhance" lambdas
+        @Override
+        public Tidy get() {
+            Tidy tidy = new Tidy();
+            tidy.setInputEncoding("UTF-8");
+            tidy.setXHTML(true);
+            return tidy;
+        }
+    });
+
 
     private static String[] allowedHtmlTags = new String[] {"I", "SUB", "SUP", "SMALL"};
     private static Pattern htmlTagPattern = Pattern.compile("<\\s*/?([^>]+)\\s*>");
@@ -108,9 +124,7 @@ public class HTMLStringConverter extends AbstractStringConverter {
     @Override
     public List<String> validationErrors(String str){
         List<String> errors = new ArrayList<String>();
-        Tidy tidy = new Tidy();
-        tidy.setInputEncoding("UTF-8");
-        tidy.setXHTML(true);
+        Tidy tidy = TIDY_POOL.get();
         tidy.parseDOM(new StringReader("<html><head><title>Test</title></head><body>" + str + "</body></html>"), null);
         if (tidy.getParseErrors() > 0 || tidy.getParseWarnings() > 1) {
             errors.add("contains bad HTML");

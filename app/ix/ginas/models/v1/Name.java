@@ -175,10 +175,14 @@ public class Name extends CommonDataElementOfCollection {
     }
 
 
-    @JsonProperty("_name")
+    @JsonProperty("_name-html")
     public String getHtmlName() {
         return Util.getStringConverter().toHtml(name);
     }
+	@JsonProperty("_name")
+	public String getStandardName() {
+		return Util.getStringConverter().toStd(name);
+	}
 
     public String getName () {
         return fullName != null ? fullName : name;
