@@ -29,12 +29,13 @@ public class CodeSequentialGenerator extends SequentialNumericIDGenerator<Substa
 								   @JsonProperty("len") int len,
 								   @JsonProperty("suffix") String suffix,
 								   @JsonProperty("padding") boolean padding,
+								   @JsonProperty("last") Long last,
 								   @JsonProperty("codeSystem") String codeSystem) {
 		super(len, suffix, padding);
 		this.name = name;
 		this.codeSystem=codeSystem;
 		this.lastNum = CachedSupplier.runOnce(()->{
-			Optional<Tuple<Long,Code>> code=CodeFactory.getHighestValueCode(codeSystem, suffix);
+			Optional<Tuple<Long,Code>> code=CodeFactory.getHighestValueCode(codeSystem, suffix, last);
 
 			if(code.isPresent()){
 				return new AtomicLong(code.get().k());

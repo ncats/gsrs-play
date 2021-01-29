@@ -20,7 +20,7 @@
                  }
             } else {
                 <i>Substance not yet imported</i> <br />
-                @c.substance.refPname
+                @Html(c.substance.getHtmlName())
             }
             </tr>
         }

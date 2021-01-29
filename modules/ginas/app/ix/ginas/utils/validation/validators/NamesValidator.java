@@ -9,6 +9,7 @@ import ix.ginas.models.v1.Name;
 import ix.ginas.models.v1.Substance;
 import ix.ginas.utils.GinasUtils;
 import ix.ginas.utils.validation.ValidationUtils;
+import ix.utils.Util;
 
 import java.util.*;
 import java.util.regex.Matcher;
@@ -206,6 +207,13 @@ public class NamesValidator extends AbstractValidatorPlugin<Substance> {
 //                        .ERROR_MESSAGE("Name's name can not be null"));
                 continue;
             }
+
+            for (String errMsg : Util.getStringConverter().validationErrors(name)) {
+                GinasProcessingMessage mes = GinasProcessingMessage
+                            .ERROR_MESSAGE("Name '" + name + "' " + errMsg + ".");
+                    callback.addMessage(mes);
+            }
+
             Iterator<Keyword> iter = n.languages.iterator();
             String uppercasedName = name.toUpperCase();
 
