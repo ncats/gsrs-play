@@ -88,8 +88,8 @@ public class SubstanceSpreadsheetExporter implements Exporter<Substance> {
 
         //DEFAULT_RECIPE_MAP.put(DefaultColumns.STD_INCHIKEY, new  ChemicalExportRecipe(Chemical.FORMAT_STDINCHIKEY));
 
-				boolean includeInChiKeysAnyway = ConfigHelper.getBoolean("ix.gsrs.delimitedreports.inchikeysforambiguousstereo", false);
-				play.Logger.debug("includeInChiKeysAnyway: " + includeInChiKeysAnyway);
+        boolean includeInChiKeysAnyway = ConfigHelper.getBoolean("ix.gsrs.delimitedreports.inchikeysforambiguousstereo", false);
+        play.Logger.debug("includeInChiKeysAnyway: " + includeInChiKeysAnyway);
         DEFAULT_RECIPE_MAP.put(DefaultColumns.STD_INCHIKEY_FORMATTED, SingleColumnValueRecipe.create(DefaultColumns.STD_INCHIKEY_FORMATTED  ,(s, cell) ->{
             if(s instanceof ChemicalSubstance){
                 Structure.Stereo ster=((ChemicalSubstance)s).getStereochemistry();
