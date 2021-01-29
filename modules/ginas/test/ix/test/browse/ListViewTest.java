@@ -147,7 +147,7 @@ public class ListViewTest  extends AbstractGinasServerTest {
 			}
 			Substance s= sb.build();
 			
-			List<String> codesystems=s.getOrderedCodes(GinasApp.getCodeSystemOrder()).stream().map(c->c.codeSystem).collect(Collectors.toList());
+			List<String> codesystems=s.getOrderedCodes().stream().map(c->c.codeSystem).collect(Collectors.toList());
 			
 			assertEquals(codeOrder,codesystems);
 	}

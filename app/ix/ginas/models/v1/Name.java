@@ -1,10 +1,6 @@
 package ix.ginas.models.v1;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.TreeSet;
 
@@ -38,77 +34,12 @@ import ix.ginas.models.serialization.KeywordListSerializer;
 import ix.ginas.models.utils.JSONConstants;
 import ix.ginas.models.utils.JSONEntity;
 import ix.utils.Util;
-import org.apache.commons.lang3.ObjectUtils;
 
 @JSONEntity(title = "Name", isFinal = true)
 @Entity
 @Table(name="ix_ginas_name")
 @SingleParent
 public class Name extends CommonDataElementOfCollection {
-
-	public static enum Sorter implements  Comparator<Name> {
-
-		/**
-		 * Utility function to sort names in nice display order.
-		 * <p>
-		 * Sort criteria: </p>
-		 * <ol>
-		 * <li> Display Name </li>
-		 * <li> Preferred status</li>
-		 * <li> Official status</li>
-		 * <li> English first</li>
-		 * <li> Alphabetical</li>
-		 * <li> Name Type</li>
-		 * <li> Number of References</li>
-		 *
-		 *
-		 * </ol>
-		 *
-		 * Note that this sort order was changed in September 2018
-		 * for v2.3.1 so sorting with older versions might
-		 * be slightly different.
-		 */
-		DISPlAY_NAME_FIRST_ENGLISH_FIRST{
-			public int compare(Name o1, Name o2) {
-				if(o1.isDisplayName()!= o2.isDisplayName()){
-					if(o1.isDisplayName())return 1;
-					return -1;
-				}
-				if(o1.preferred!=o2.preferred){
-					if(o2.preferred)return 1;
-					return -1;
-				}
-				if(o1.isOfficial()!=o2.isOfficial()){
-					if(o2.isOfficial())return 1;
-					return -1;
-				}
-				if(o1.isLanguage("en")!=o2.isLanguage("en")){
-					if(o2.isLanguage("en"))return 1;
-					return -1;
-				}
-				//katzelda GSRS-623 : changed sort order
-				//from #refs, type, alpha -> alpha, type, #refs
-				int nameCompare = ObjectUtils.compare(o1.name, o2.name);
-				if(nameCompare !=0){
-					return nameCompare;
-				}
-
-				int nameType = ObjectUtils.compare(o1.type, o2.type);
-				if(nameType !=0){
-					return nameType;
-				}
-				return o2.getReferences().size()-o1.getReferences().size();
-
-			}
-		},
-		BY_CREATION_DATE{
-            @Override
-            public int compare(Name o1, Name o2) {
-                return o1.getCreated().compareTo(o2.getCreated());
-            }
-        }
-	}
-
 
     private static final String SRS_LOCATOR = "SRS_LOCATOR";
     
@@ -246,8 +177,8 @@ public class Name extends CommonDataElementOfCollection {
     
     
     public static List<Name> sortNames(List<Name> nameList){
-    	Collections.sort(nameList, Sorter.DISPlAY_NAME_FIRST_ENGLISH_FIRST);
-    	return nameList;
+        nameList.sort(Util.getComparatorFor(Name.class));
+        return nameList;
     }
     
     

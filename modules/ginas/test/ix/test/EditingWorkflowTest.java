@@ -1037,7 +1037,11 @@ public class EditingWorkflowTest extends AbstractGinasServerTest {
 
 		//ugh this work around is because the names don't come back in order!!
 		SubstanceBuilder.from(api.fetchSubstanceJsonByUuid(uuid))
-						.modifyNames( names -> names.sort(Name.Sorter.BY_CREATION_DATE))
+						.modifyNames( names -> names.sort(new Comparator<Name>{
+							@Override
+							public int compare(Name o1, Name o2) {
+								return o1.getCreated().compareTo(o2.getCreated());
+							}}))
 						.buildJson();
 
 //		System.out.println("updated fetched json =\n"+new ObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(updateFetched));
