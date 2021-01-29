@@ -962,6 +962,7 @@ public class EditingWorkflowTest extends AbstractGinasServerTest {
 		Changes expectedChanges = new ChangesBuilder(updated, updateFetched)
 
 				.replace("/version").replace("/_name").replace("/lastEdited").replace("/names/0/lastEdited")
+				.replace("/_name_html").replace("/names/0/_name").replace("/names/0/_name_html")
 
 				.build();
 
