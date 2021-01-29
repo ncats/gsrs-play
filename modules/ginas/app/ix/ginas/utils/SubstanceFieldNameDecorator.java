@@ -88,6 +88,8 @@ public class SubstanceFieldNameDecorator implements FieldNameDecorator{
 			m.put("root_references_citation" , "Reference Text / Citation"); 
 			m.put("root_references_docType" , "Reference Type"); 
 			m.put("root_references_url" , "Reference URL"); 
+			m.put("root_relationships_baseSubstance_approvalID" , "Substance Part Approval ID"); 
+			m.put("root_relationships_baseSubstance_refPname" , "Substance Part Name"); 
 			m.put("root_relationships_relatedSubstance_approvalID" , "Related Substance Approval ID"); 
 			m.put("root_relationships_relatedSubstance_refPname" , "Related Substance Name"); 
 			m.put("root_relationships_comments" , "Relationship Comments"); 
