@@ -175,7 +175,7 @@ public class Name extends CommonDataElementOfCollection {
     }
 
 
-    @JsonProperty("_name-html")
+    @JsonProperty("_name_html")
     public String getHtmlName() {
         return Util.getStringConverter().toHtml(name);
     }

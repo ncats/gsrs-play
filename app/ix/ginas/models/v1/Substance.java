@@ -491,7 +491,7 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
     public String getName() {
         return getFormattedName(STDNAME_FUNCTION);
     }
-    @JsonProperty("_name-html")
+    @JsonProperty("_name_html")
     public String getHtmlName() {
         return getFormattedName(HTMLNAME_FUNCTION);
 
