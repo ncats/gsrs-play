@@ -343,11 +343,14 @@ public class GinasCommonData extends BaseModel implements GinasAccessControlled,
 		}
 		GinasCommonData g=(GinasCommonData)o;
 		
-		if(!(this.uuid+"").equals(g.uuid+"")){
+		if(!(this.getOrGenerateUUID()).equals(g.getOrGenerateUUID())){
 			return false;
 		}
-		return true;
-		
+		if(g.getClass().equals(this.getClass())){
+			return true;
+		}
+		return false;
+
 	}
 	
 	@Override

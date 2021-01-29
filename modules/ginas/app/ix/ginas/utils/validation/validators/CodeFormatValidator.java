@@ -25,8 +25,9 @@ public class CodeFormatValidator extends AbstractValidatorPlugin<Substance>
     public void validate(Substance s, Substance oldSubstance, ValidatorCallback callback)
     {
         Map<String, List<Code>> codesBySystem = s.getCodes().stream()
-                .collect(Collectors.groupingBy(c-> c.codeSystem,
-                        Collectors.toList()));
+								.filter(c-> c.codeSystem != null)
+                                .collect(Collectors.groupingBy(c-> c.codeSystem,
+                                                Collectors.toList()));
 
         ControlledVocabulary cvv = ControlledVocabularyFactory.getControlledVocabulary("CODE_SYSTEM");
         for(VocabularyTerm vt1 : cvv.terms){

@@ -181,8 +181,11 @@ public class Administration extends App {
         DynamicForm requestData = Form.form().bindFromRequest();
 
         Principal user = AdminFactory.palFinder.get().byId(id);
-        UserProfile profile = user.getUserProfile();
+        updateUser(user.getUserProfile(), requestData);
 
+    }
+    public static void updateUser(UserProfile profile, DynamicForm requestData) {
+        Principal user = profile.user;
         String userName = requestData.get("username");
         String password = requestData.get("password");
 
@@ -218,8 +221,8 @@ public class Administration extends App {
             }
         }
 
-        user.username = (!userName.isEmpty() && userName != null) ? userName : user.username;
-        user.email = (!email.isEmpty() && email != null) ? email : user.email;
+        user.username = (userName != null && !userName.isEmpty()) ? userName : user.username;
+        user.email = (email != null && !email.isEmpty()) ? email : user.email;
         user.save();
         profile.user = user;
 

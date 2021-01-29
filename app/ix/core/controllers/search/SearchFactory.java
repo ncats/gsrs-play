@@ -34,6 +34,7 @@ import ix.core.util.Java8Util;
 import ix.core.util.pojopointer.PojoPointer;
 import ix.utils.CallableUtil.TypedCallable;
 import ix.utils.Global;
+import ix.utils.RequestHelper;
 import ix.utils.Util;
 import play.Logger;
 import play.Play;
@@ -173,6 +174,7 @@ public class SearchFactory extends EntityFactory {
                          +(kind != null ? kind.getName():"")+" q="
                          +q+" top="+top+" skip="+skip+" fdim="+fdim);
         }
+        String viewType=RequestHelper.request().getQueryString("view");
         return Workers.WorkerPool.DB_EXPENSIVE_READ_ONLY.newJob(new F.Function0<SearchResultPair>() {
             @Override
             public SearchResultPair apply() {
@@ -183,9 +185,21 @@ public class SearchFactory extends EntityFactory {
                    return new SearchResultPair(SearchResult.createErrorResult(e), Collections.emptyList() );
                 }
 
-                List<Object> results = new ArrayList<Object>();
+                List results = new ArrayList();
 
-                result.copyTo(results, 0, top, true); //this looks wrong, because we're not skipping
+
+//
+
+
+                if("key".equals(viewType)){
+                	List<Key> klist=new ArrayList<Key>();
+                	result.copyKeysTo(klist, 0, top, true);
+                	results=klist;
+                }else{
+                    result.copyTo(results, 0, top, true); //this looks wrong, because we're not skipping
+                }
+
+
                 //anything, but it's actually right,
                 //because the original request did the skipping.
                 //This mechanism should probably be worked out
@@ -200,7 +214,7 @@ public class SearchFactory extends EntityFactory {
                     return (Result) badRequest(result.getThrowable().get().getMessage());
                 }
                 //the etag only saves the subset result?
-                    String key = GinasPortalGun.getBestKeyForCurrentRequest() + "REST";
+                    String key = GinasPortalGun.getBestKeyForCurrentRequest() + "REST" + viewType;
                     result.getMatches();
                     IxCache.getOrElse(getTextIndexer().lastModified(), key, ()->result);
 
@@ -418,7 +432,7 @@ public class SearchFactory extends EntityFactory {
 				    				.skip(skip)
 				    				.fdim(fdim)
 				    				.withParameters(Util.reduceParams(request().queryString(), 
-				    				        "facet", "sideway"))
+				    				        "facet", "sideway", "order"))
 				    				.query(request().getQueryString("q")) //TODO: Refactor this
 				    				.build();
     		
@@ -428,12 +442,20 @@ public class SearchFactory extends EntityFactory {
     		
     		PojoPointer pp = PojoPointer.fromURIPath(field);
     		
-    		List<Object> resultSet = new ArrayList<Object>();
+    		List resultSet = new ArrayList();
     		
     		SearchOptions so = searchRequest.getOptions();
     		
-    		results.copyTo(resultSet, so.getSkip(), so.getTop(), true);
-    		
+                String viewType=RequestHelper.request().getQueryString("view");
+
+                if("key".equals(viewType)){
+                	List<Key> klist=new ArrayList<Key>();
+                	results.copyKeysTo(klist, so.getSkip(), so.getTop(), true);
+                	resultSet=klist;
+                }else{
+    		        results.copyTo(resultSet, so.getSkip(), so.getTop(), true);
+                }
+
     		
 
     		int count = resultSet.size();

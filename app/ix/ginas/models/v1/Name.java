@@ -56,7 +56,7 @@ public class Name extends CommonDataElementOfCollection {
     
     @Lob
     @Basic(fetch=FetchType.EAGER)
-    @JsonView(BeanViews.Internal.class)
+    @JsonView(BeanViews.JsonDiff.class)
     public String stdName;
     
     
@@ -106,7 +106,7 @@ public class Name extends CommonDataElementOfCollection {
     }
 
 
-    @JsonProperty("_name-html")
+    @JsonProperty("_name_html")
     public String getHtmlName() {
         return Util.getStringConverter().toHtml(name);
     }

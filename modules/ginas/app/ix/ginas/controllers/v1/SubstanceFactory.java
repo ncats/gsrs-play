@@ -30,6 +30,7 @@ import ix.core.controllers.v1.DownloadController;
 import ix.core.controllers.v1.GsrsApiUtil;
 import ix.core.controllers.v1.RouteFactory;
 import ix.core.controllers.v1.routes;
+import ix.core.exporters.EtagExportService;
 import ix.core.exporters.OutputFormat;
 import ix.core.models.*;
 import ix.core.plugins.TextIndexerPlugin;
@@ -44,7 +45,6 @@ import ix.core.util.TimeUtil;
 import ix.core.util.pojopointer.PojoPointer;
 import ix.ginas.controllers.GinasApp;
 import ix.ginas.controllers.GinasApp.StructureSearchResultProcessor;
-import ix.ginas.exporters.SubstanceFromEtagExportService;
 import ix.ginas.models.v1.ChemicalSubstance;
 import ix.ginas.models.v1.Code;
 import ix.ginas.models.v1.MixtureSubstance;
@@ -590,7 +590,7 @@ public class SubstanceFactory extends EntityFactory {
 		}
 
 		return GinasApp.exportDirect(etagId, format, publicOnly ? 1 : 0,
-                new SubstanceFromEtagExportService(request()).generateExportFrom("substances", etagObj),
+                new EtagExportService<UUID, Substance>(request()).generateExportFrom("substances", etagObj),
 				fname, etagObj.uri);
 
 	}
@@ -899,13 +899,9 @@ public class SubstanceFactory extends EntityFactory {
 		SearchResultContext context;
 		
 		if(type.toLowerCase().startsWith("sub")){
-			SearchResultContext unfocusedContext = App.substructure(q,
+			context = App.substructure(q,
 					/*min=*/ 1,
-					new StructureSearchResultProcessor());
-			if(unfocusedContext ==null){
-				System.out.println("unfocused context == null!!!!");
-			}
-			context = unfocusedContext
+					new StructureSearchResultProcessor())
 					.getFocused(top, skip, fdim, field);
 		}else if(type.toLowerCase().startsWith("sim")){
 			context = App.similarity(q, 

@@ -948,7 +948,7 @@ public class TextIndexer implements Closeable, ProcessListener {
 			long start = System.currentTimeMillis();
 			((AnalyzingInfixSuggester)emd.getDelegate()).refresh();
 			lastRefresh = System.currentTimeMillis();
-			Logger.debug(emd.getClass().getName() + " refreshs " + emd.getCount() + " entries in "
+			Logger.debug(emd.getClass().getName() + " refreshes " + emd.getCount() + " entries in "
 					+ String.format("%1$.2fs", 1e-3 * (lastRefresh - start)));
 			dirty.set(false);
 			flush();
@@ -1780,18 +1780,25 @@ public class TextIndexer implements Closeable, ProcessListener {
 		private Sort sorter;
 		private Filter filter;
 		private int max;
-		
+		private boolean includeFacets = true;
+
 		public BasicLuceneSearchProvider(Sort sorter,Filter filter, int max){
 			this.sorter=sorter;
 			this.filter=filter;
 			this.max=max;
 		}
 
+        public BasicLuceneSearchProvider(Sort sorter,Filter filter, int max, boolean includeFacets){
+            this.sorter=sorter;
+            this.filter=filter;
+            this.max=max;
+            this.includeFacets=includeFacets;
+        }
+
 		@Override
 		public DefaultLuceneSearchProviderResult search(IndexSearcher searcher, TaxonomyReader taxon, Query query, FacetsCollector facetCollector) throws IOException {
 			TopDocs hits=null;
 			Facets facets=null;
-			//FacetsCollector.
 			//with sorter
 			if (sorter != null) { 
 				hits = (FacetsCollector.search(searcher, query, filter, max, sorter, facetCollector));
@@ -1799,7 +1806,9 @@ public class TextIndexer implements Closeable, ProcessListener {
 			}else { 
 				hits = (FacetsCollector.search(searcher, query, filter, max, facetCollector));
 			}
-			facets = new FastTaxonomyFacetCounts(taxon, facetsConfig, facetCollector);
+			if(includeFacets) {
+			    facets = new FastTaxonomyFacetCounts(taxon, facetsConfig, facetCollector);
+            }
 			return new DefaultLuceneSearchProviderResult(hits,facets);
 		}
 		
@@ -1877,8 +1886,11 @@ public class TextIndexer implements Closeable, ProcessListener {
 		try {
 			LuceneSearchResultPopulator payload = new LuceneSearchResultPopulator(searchResult, hits, searcher);
 			//get everything, forever
-			if (options.getFetch() <= 0) {
+                        //hard-coded for now
+            //katzelda Jan 2021 : fetching is now very fast so we can get everything always
+			if (true || options.getFetch() <= 0) {
 				payload.fetch();
+				searchResult.done();
 			} else {
 				// we first block until we have enough result to show
 				// should be fetch plus a little extra padding (2 here)
@@ -1994,7 +2006,7 @@ public class TextIndexer implements Closeable, ProcessListener {
 		
 		//no specified facets (normal search)
 		if (options.getFacets().isEmpty()) { 
-			lsp = new BasicLuceneSearchProvider(sorter, filter, options.max());
+			lsp = new BasicLuceneSearchProvider(sorter, filter, options.max(), options.getIncludeFacets());
 		} else {
 			DrillDownQuery ddq = new DrillDownQuery(facetsConfig, query);
 			List<Filter> nonStandardFacets = new ArrayList<Filter>();
@@ -2043,7 +2055,7 @@ public class TextIndexer implements Closeable, ProcessListener {
 
 		
 		//Promote special matches
-		if(searchResult.getOptions().getKindInfo() !=null){
+		if(options.getPromoteSpecialMatches() && searchResult.getOptions().getKindInfo() !=null){
 		    //Special "promoted" match types
 			Set<String> sponsoredFields = searchResult.getOptions()
 			                                           .getKindInfo()
@@ -2097,11 +2109,13 @@ public class TextIndexer implements Closeable, ProcessListener {
 		LuceneSearchProviderResult lspResult=lsp.search(searcher, taxon,qactual,facetCollector);
 		hits=lspResult.getTopDocs();
 		
-		collectBasicFacets(lspResult.getFacets(), searchResult);
-		
+        if(options.getIncludeFacets()) {
+		    collectBasicFacets(lspResult.getFacets(), searchResult);
+        }
+
 		collectLongRangeFacets(facetCollector, searchResult);
 		
-		if(USE_ANALYSIS && options.getKind()!=null){
+		if(options.getIncludeBreakdown() && USE_ANALYSIS && options.getKind()!=null){
 			EntityInfo<?> entityMeta= EntityUtils.getEntityInfoFor(options.getKind());
 			
 			FieldNameDecorator fnd=FieldNameDecoratorFactory
@@ -2122,7 +2136,8 @@ public class TextIndexer implements Closeable, ProcessListener {
 						
 						f = new FieldCacheTermsFilter(FIELD_KIND, analyzers.toArray(new String[0]));
 					}
-					LuceneSearchProvider lsp2 = new BasicLuceneSearchProvider(null, f, options.max());
+					LuceneSearchProvider lsp2 = new BasicLuceneSearchProvider(null, f, options.max(),
+                            options.getIncludeFacets());
 					LuceneSearchProviderResult res=lsp2.search(searcher, taxon,oq.k(),facetCollector2);
 					res.getFacets().getAllDims(options.getFdim()).forEach(fr->{
 						if(fr.dim.equals(TextIndexer.ANALYZER_FIELD)){
@@ -2167,7 +2182,8 @@ public class TextIndexer implements Closeable, ProcessListener {
 	}
 
     private void turnOnSuffixSearchIfNeeded(String q, QueryParser parser) {
-
+			parser.setAllowLeadingWildcard(true);
+			/*Legacy process below
         if(q ==null || q.isEmpty()){
             return;
         }
@@ -2176,6 +2192,7 @@ public class TextIndexer implements Closeable, ProcessListener {
             //suffix search
             parser.setAllowLeadingWildcard(true);
         }
+			*/
     }
 
     /**

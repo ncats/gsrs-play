@@ -1409,11 +1409,21 @@ public class App extends Authentication {
 	    return "fetchResult/"+context.getId() + "/" + request.getDefiningSetSha1();
 	}
 	
-	
+	static String getOrderedKey (SearchResultContext context, SearchRequest request) {
+		return "fetchResult/"+context.getId() + "/" + request.getOrderedSetSha1();
+	}
+
 	public static SearchResult getResultFor(SearchResultContext ctx, SearchRequest req) 
 	                                                            throws IOException, Exception{
 	    
-	    final String key = getKey (ctx, req);
+		return getResultFor(ctx,req,false);
+	}
+
+
+	public static SearchResult getResultFor(SearchResultContext ctx, SearchRequest req, boolean preserveOrder)
+			throws IOException, Exception{
+
+		final String key = (preserveOrder)? getOrderedKey(ctx,req):getKey (ctx, req);
 
 		TypedCallable<SearchResult> tc =  TypedCallable.of(() -> {
 					Collection results = ctx.getResults();

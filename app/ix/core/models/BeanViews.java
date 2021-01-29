@@ -5,6 +5,9 @@ public class BeanViews {
     public static class Full{}
     public static class Public {}
 
+
+    public static class Key {}
+
     /**
      * View of the Json that considers more fields
      * than public but less than {@link Internal}

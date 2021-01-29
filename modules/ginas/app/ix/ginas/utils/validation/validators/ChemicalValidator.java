@@ -26,6 +26,9 @@ import java.util.function.Supplier;
  * Created by katzelda on 5/14/18.
  */
 public class ChemicalValidator extends AbstractValidatorPlugin<Substance> {
+
+	private boolean allow0AtomStructures = false;
+
     @Override
     public void validate(Substance s, Substance objold, ValidatorCallback callback) {
 
@@ -35,6 +38,12 @@ public class ChemicalValidator extends AbstractValidatorPlugin<Substance> {
             callback.addMessage(GinasProcessingMessage.ERROR_MESSAGE("Chemical substance must have a chemical structure"));
             return;
         }
+
+				if( !allow0AtomStructures && cs.structure.toChemical().getAtomCount()==0
+								&& !substanceIs0AtomChemical(objold)){
+            callback.addMessage(GinasProcessingMessage.ERROR_MESSAGE("Chemical substance must have a chemical structure with one or more atoms"));
+            return;
+				}
         String payload = cs.structure.molfile;
         if (payload != null) {
 
@@ -122,6 +131,9 @@ public class ChemicalValidator extends AbstractValidatorPlugin<Substance> {
             validateChemicalStructure(cs.structure, struc, deduplicateCallback);
 
             ChemUtils.fixChiralFlag(cs.structure, callback);
+            //check on Racemic stereochemistry October 2020 MAM
+            ChemUtils.checkRacemicStereo(cs.structure, callback);
+
 //            ChemUtils.checkChargeBalance(cs.structure, gpm);
             if (cs.structure.charge != 0) {
                 GinasProcessingMessage mes = GinasProcessingMessage
@@ -308,4 +320,21 @@ public class ChemicalValidator extends AbstractValidatorPlugin<Substance> {
             delegate.setValid();
         }
     }
+
+		private boolean substanceIs0AtomChemical(Substance s) {
+			if( s==null) {
+				return false;
+			}
+			ChemicalSubstance chem = (ChemicalSubstance) s;
+			return chem.toChemical().getAtomCount() == 0;
+		}
+
+	public boolean isAllow0AtomStructures() {
+		return allow0AtomStructures;
+	}
+
+	public void setAllow0AtomStructures(boolean allow0AtomStructures) {
+		this.allow0AtomStructures = allow0AtomStructures;
+	}
+
 }

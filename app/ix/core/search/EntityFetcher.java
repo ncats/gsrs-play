@@ -5,6 +5,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 import ix.core.controllers.BackupFactory;
+import ix.core.models.BackupEntity;
 import ix.core.plugins.IxCache;
 import ix.core.search.LazyList.NamedCallable;
 import ix.core.util.ConfigHelper;
@@ -101,7 +102,19 @@ public class EntityFetcher<K> implements NamedCallable<Key,K>{
 			@Override
 			<K> K get(EntityFetcher<K> fetcher) throws Exception {				
 				if(fetcher.theKey.getEntityInfo().hasBackup()){
-					return IxCache.getOrElseTemp(fetcher.theKey.toString(), ()->(K) BackupFactory.getByKey(fetcher.theKey).getInstantiated());
+					try{
+						return IxCache.getOrElseTemp(fetcher.theKey.toString() +"_JSON", ()->{
+							BackupEntity be = BackupFactory.getByKey(fetcher.theKey);
+							if(be==null){
+								return GLOBAL_CACHE.get(fetcher);
+							}else{
+								return (K)be.getInstantiated();
+							}
+						});
+					}catch(Exception e){
+						e.printStackTrace();
+						return GLOBAL_CACHE.get(fetcher);
+					}
 				}
 				return GLOBAL_CACHE.get(fetcher);
 			}
@@ -122,7 +135,10 @@ public class EntityFetcher<K> implements NamedCallable<Key,K>{
 	long lastFetched=0l;
 	
 	public EntityFetcher(Key theKey) throws Exception{
-		this(theKey, CacheType.GLOBAL_CACHE); //This is probably the best option
+		//this(theKey, CacheType.GLOBAL_CACHE); //This is probably the best option
+		this(theKey, CacheType.BACKUP_JSON_EAGER); // This option caches based on
+		                                           // raw JSON. This turns out to
+		                                           // work pretty well, if not perfectly.
 	}
 	
 	public EntityFetcher(Key theKey, CacheType ct) throws Exception{

@@ -119,6 +119,6 @@ public class DefaultSdfLoader extends RecordExtractor<JsonNode>{
 
     @Override
     public RecordTransformer getTransformer() {
-        return new GinasUtils.GinasSubstanceTransformer(DefaultSubstanceValidator.BATCH_SUBSTANCE_VALIDATOR(GinasUtils.DEFAULT_BATCH_STRATEGY));
+        return new GinasUtils.GinasSubstanceTransformer(DefaultSubstanceValidator.BATCH_SUBSTANCE_VALIDATOR(GinasUtils.DEFAULT_BATCH_STRATEGY.get()));
     }
 }

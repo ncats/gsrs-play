@@ -36,6 +36,13 @@ public class CodesValidator extends AbstractValidatorPlugin<Substance> {
                             .appliableChange(true);
                     callback.addMessage(mes, ()-> cd.code="<no code>");
 
+                }else if (!(cd.code+"").trim().equals(cd.code+"")) {
+                    GinasProcessingMessage mes = GinasProcessingMessage
+                            .WARNING_MESSAGE(
+                                    "'Code' '" + cd.code + "' should not have trailing or leading whitespace. Code will be trimmed to '" + cd.code.trim() + "'")
+                            .appliableChange(true);
+                    callback.addMessage(mes, ()-> cd.code=(cd.code+"").trim());
+
                 }
 
                 if (ValidationUtils.isEffectivelyNull(cd.codeSystem)) {

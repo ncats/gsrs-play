@@ -2906,7 +2906,7 @@ public class GinasApp extends App {
                 Key key=EntityWrapper.of(nuc).getKey();
                 Map<String,Object> added = IxCache.getMatchingContext(this.getContext(), key);
                 if(added==null){
-                    added=new HashMap<String,Object>();
+                    added=new HashMap<>();
                 }
                 List<SequenceIndexer.Result> alignments = (List<SequenceIndexer.Result>)
                         added.computeIfAbsent("alignments", f->new ArrayList<SequenceIndexer.Result>());
