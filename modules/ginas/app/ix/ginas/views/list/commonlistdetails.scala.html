@@ -1,3 +1,4 @@
+@import ix.ginas.controllers.GinasApp
 @import ix.ginas.controllers.v1.SubstanceFactory
 @import ix.ginas.models.v1.{Substance}
 @(sub: Substance)
@@ -8,7 +9,7 @@
                         <strong>Primary Definition: </strong>
                     </div>
                     <div class = "col-md-6">
-                    	<a href="@ix.ginas.controllers.routes.GinasApp.substance(ref.getLinkingID())" target="_blank">@ref.refPname</a>
+                    	<a href="@ix.ginas.controllers.routes.GinasApp.substance(ref.getLinkingID())" target="_blank">@Html(ref.getHtmlName())</a>
                     </div>
                 </div>
                 
@@ -31,8 +32,8 @@
                     </div>
                     <div class = "col-lg-10 break-text col-md-9">
                     	@for(n <- ix.ginas.controllers.GinasApp.limitList(sub.names,5)){
-                            <span title="@n.getName()" class="nowrap-list">@n.getName()
-                           @if(n.getName() == sub.getName()){
+                            <span title="@n.getName()" class="nowrap-list">@Html(n.getHtmlName())
+                           @if(n.preferred || n.displayName){
                                 <i class="fa fa-check success" uib-tooltip = "preferred term"></i></span>
                             }else{
                                 </span>

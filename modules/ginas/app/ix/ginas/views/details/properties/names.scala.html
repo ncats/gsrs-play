@@ -10,7 +10,7 @@
 			<table class="info-wrapper">
 				<tr>
 					<td style="width:100%;">
-						<span>@n.name</span>
+						<span>@Html(n.getHtmlName())</span>
 					@* display name checkmark*@
 					@if(n.isDisplayName()){
 						<span title="Display Name" class="pref-check">

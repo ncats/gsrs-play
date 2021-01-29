@@ -11,11 +11,13 @@ import javax.persistence.PostLoad;
 import javax.persistence.Table;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import ix.core.util.GinasPortalGun;
 import ix.ginas.models.GinasAccessReferenceControlled;
 import ix.ginas.models.GinasCommonSubData;
 import ix.ginas.models.utils.JSONEntity;
+import ix.utils.Util;
 
 @Entity
 @Table(name="ix_ginas_substanceref")
@@ -31,6 +33,7 @@ public class SubstanceReference extends GinasCommonSubData {
 
         return ref;
     }
+
     @JSONEntity(title = "Substance Name")
     @Column(length=1024)
     public String refPname;
@@ -71,6 +74,11 @@ public class SubstanceReference extends GinasCommonSubData {
         //this should be null anyway but make it explicit.
         ref.uuid = null;
         return ref;
+    }
+
+    @JsonProperty("_name-html")
+    public String getHtmlName(){
+        return Util.getStringConverter().toHtml(getName());
     }
 
     public String getName(){

@@ -76,7 +76,7 @@
 				
 				<tr>
 					<td><span>Molecular Formula</span></td>
-					<td class="monospace">@sub.structure.formula</td>
+					<td class="monospace">@Html(sub.structure.htmlFormula())</td>
 				</tr>
 				
 				<tr>
@@ -184,7 +184,7 @@
 		<h4>Systematic Names:</h4>
 		<ul>
 			<li ng-show="sysNames.length == 0"><i>None recorded</i></li>
-			<li ng-repeat = "name in sysNames">{{name}}</li>
+			<li ng-repeat = "name in sysNames" ng-bind-html="name"></li>
 		</ul>
 
 	</div>

@@ -581,7 +581,7 @@
             return ret;
         };
     });
-    ginasApp.controller("GinasController", function ($rootScope, $scope, $document, $location, $compile, $uibModal, $http, $window, $anchorScroll, $timeout, polymerUtils,
+    ginasApp.controller("GinasController", function ($rootScope, $scope, $document, $location, $compile, $uibModal, $http, $window, $anchorScroll, $timeout, $sce, polymerUtils,
         localStorageService, Substance, UUID, substanceSearch, substanceIDRetriever, CVFields, molChanger, toggler, resolver,
         substanceFactory,
         spinnerService, typeaheadService, subunitParser) {
@@ -1021,7 +1021,7 @@
                 var namelist = [];
                 for (var i = 0; i < response.data.length; i++) {
                     if (response.data[i].type == 'sys') {
-                        namelist.push(response.data[i].name);
+                        namelist.push($sce.trustAsHtml(response.data[i]._name));
                     }
                 }
                 $scope.sysNames = namelist;

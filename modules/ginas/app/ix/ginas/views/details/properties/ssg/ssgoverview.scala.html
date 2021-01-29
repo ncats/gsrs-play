@@ -16,7 +16,11 @@
 <tr>
     <td>Record Status</td>
     <td>
+    @if(sub.isDeprecated()) {
+        <code class="alert-important text-uppercase">Record is Deprecated</code>
+    }else{
         <code class="monospace-code">@sub.getDisplayStatus()</code>
+    }
     </td>
 </tr>
 <tr>
@@ -27,12 +31,3 @@
         </code>
     </td>
 </tr>
-@if(sub.isDeprecated()) {
-    <tr>
-        <td>Record Status</td>
-        <td>
-            <code class="alert-important text-uppercase">Record is Deprecated</code>
-        </td>
-    </tr>
-}
-

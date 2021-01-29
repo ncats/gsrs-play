@@ -1,4 +1,3 @@
-
 resolvers += Resolver.bintrayRepo("typesafe", "maven-releases")
 
 resolvers += Resolver.bintrayRepo("sbt", "sbt-plugin-releases")

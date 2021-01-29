@@ -30,7 +30,7 @@
 
         <div class = "panel-footer nameDiv" data-toggle="tooltip" title="@sub.getName()">
             <a href="@ix.ginas.controllers.routes.GinasApp.substance(GinasApp.getId(sub))" target="_self">
-            @sub.getName()
+            @Html(sub.getHtmlName())
             </a>
             @dynamic(name = IxDynamicResourceHandler.CAN_UPDATE, handler = new ix.ncats.controllers.security.IxDeadboltHandler()) {
                 <div class = "row">

@@ -20,6 +20,7 @@ import javax.persistence.PreUpdate;
 import javax.persistence.Table;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
@@ -36,6 +37,7 @@ import ix.ginas.models.serialization.KeywordDeserializer;
 import ix.ginas.models.serialization.KeywordListSerializer;
 import ix.ginas.models.utils.JSONConstants;
 import ix.ginas.models.utils.JSONEntity;
+import ix.utils.Util;
 import org.apache.commons.lang3.ObjectUtils;
 
 @JSONEntity(title = "Name", isFinal = true)
@@ -108,7 +110,6 @@ public class Name extends CommonDataElementOfCollection {
 	}
 
 
-
     private static final String SRS_LOCATOR = "SRS_LOCATOR";
     
 
@@ -173,6 +174,16 @@ public class Name extends CommonDataElementOfCollection {
     	this.name=name;
     }
 
+
+    @JsonProperty("_name-html")
+    public String getHtmlName() {
+        return Util.getStringConverter().toHtml(name);
+    }
+	@JsonProperty("_name")
+	public String getStandardName() {
+		return Util.getStringConverter().toStd(name);
+	}
+
     public String getName () {
         return fullName != null ? fullName : name;
     }
@@ -180,31 +191,11 @@ public class Name extends CommonDataElementOfCollection {
     @PrePersist
     @PreUpdate
     public void tidyName () {
+        stdName = Util.getStringConverter().toStd(name);
         if (name.getBytes().length > 255) {
             fullName = name;
-            name = truncateString(name,254);
-            
+            name = Util.getStringConverter().truncate(name,254);
         }
-    }
-    
-    private static String truncateString(String s, int maxBytes){
-    	byte[] b = (s+"   ").getBytes();
-    	if(maxBytes>=b.length){
-    		return s;
-    	}
-    	boolean lastComplete=false;
-    	for(int i=maxBytes;i>=0;i--){
-    		if(lastComplete)
-    			return new String(Arrays.copyOf(b, i));
-    		if((b[i] & 0x80) ==0){
-    			return new String(Arrays.copyOf(b, i));
-    		}
-    		if(b[i]==-79){
-    			lastComplete=true;
-    		}
-    	}
-    	
-    	return "";
     }
     
     public void addLocator(Substance sub, String loc){
