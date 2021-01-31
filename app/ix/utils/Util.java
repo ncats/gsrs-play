@@ -67,10 +67,10 @@ public class Util {
         "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/36.0.1944.0 Safari/537.36"
     };
 
-    private static ComparatorFactory COMPARATOR_FACTORY = ComparatorFactory.getInstance(Play.application());
+    private static CachedSupplier<ComparatorFactory> COMPARATOR_FACTORY = CachedSupplier.of(() ->ComparatorFactory.getInstance(Play.application()));
 
     public static Comparator getComparatorFor(Class<?> cls){
-        return COMPARATOR_FACTORY.getSingleResourceFor(EntityUtils.getEntityInfoFor(cls));
+        return COMPARATOR_FACTORY.get().getSingleResourceFor(EntityUtils.getEntityInfoFor(cls));
     }
 
     public static CachedSupplier<Long> TIME_RESOLUTION_MS=
