@@ -296,6 +296,11 @@ public class PojoDiffTest{
 
     }
 
+    private Property createNewInstanceWithSameId(Property orig){
+		Property update = new Property();
+		update.setUuid(orig.getOrGenerateUUID());
+		return update;
+	}
 
     @Test
     public void addToList() throws Exception {
@@ -311,7 +316,7 @@ public class PojoDiffTest{
         p1.setName( "foo");
         updatedParams.add(p1);
 
-        Property update = new Property();
+        Property update = createNewInstanceWithSameId(prop);
 
         update.setParameters(updatedParams);
 
@@ -345,7 +350,7 @@ public class PojoDiffTest{
         
         updatedParams.stream().forEach(p->p.getOrGenerateUUID());
 
-        Property update = new Property();
+		Property update = createNewInstanceWithSameId(prop);
 
         update.setParameters(updatedParams);
 
@@ -701,7 +706,7 @@ public class PojoDiffTest{
         prop.setParameters(originalParams);
 
 
-        Property update = new Property();
+		Property update = createNewInstanceWithSameId(prop);
 
         List<Parameter> newParams=new ArrayList<Parameter>();
         Parameter p3 = new Parameter();
