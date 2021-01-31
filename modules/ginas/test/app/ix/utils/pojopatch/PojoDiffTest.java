@@ -17,6 +17,7 @@ import java.util.Objects;
 import java.util.UUID;
 import java.util.function.Supplier;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -650,6 +651,7 @@ public class PojoDiffTest{
 	        update.setParameters(newParams);
 	        prop=getChanged(prop, update);
 	        assertTrue(prop.getParameters().size()==3);
+	        prop.getParameters().get(2).setUuid(update.getParameters().get(2).getOrGenerateUUID());
 	        assertEquals(update,prop);
 	        
     }
