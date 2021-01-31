@@ -626,13 +626,15 @@ public class PojoDiffTest{
 	        originalParams.add(p2);
 	
 	        Property prop = new Property();
-	
+
 	        prop.setParameters(originalParams);
 	
 	
 	        Property update = new Property();
-	
-	        List<Parameter> newParams=new ArrayList<Parameter>();
+
+			update.setUuid(prop.getOrGenerateUUID());
+
+	        List<Parameter> newParams=new ArrayList<>();
 	        Parameter p3 = new Parameter();
 	        p3.setName("foobar");
 	        newParams.add(p1);
