@@ -520,7 +520,8 @@ public class PojoDiffTest{
 	
 	
 	        Property update = new Property();
-	
+			update.setUuid(prop.getOrGenerateUUID());
+
 	        List<Parameter> newParams=new ArrayList<Parameter>();
 	        newParams.add(p2);
 	        newParams.add(p1);
