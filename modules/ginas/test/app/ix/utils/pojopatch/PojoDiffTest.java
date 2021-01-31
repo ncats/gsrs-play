@@ -316,6 +316,8 @@ public class PojoDiffTest{
         p1.setName( "foo");
         updatedParams.add(p1);
 
+        p1.getOrGenerateUUID();
+
         Property update = createNewInstanceWithSameId(prop);
 
         update.setParameters(updatedParams);
@@ -636,9 +638,8 @@ public class PojoDiffTest{
 	        prop.setParameters(originalParams);
 	
 	
-	        Property update = new Property();
+	        Property update = createNewInstanceWithSameId(prop);
 
-			update.setUuid(prop.getOrGenerateUUID());
 
 	        List<Parameter> newParams=new ArrayList<>();
 	        Parameter p3 = new Parameter();
