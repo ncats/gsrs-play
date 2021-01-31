@@ -1,6 +1,7 @@
 package ix.ginas.models.v1;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -283,6 +284,10 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
     @JoinTable(name = "ix_ginas_substance_tags")
     public List<Keyword> tags = new ArrayList<Keyword>();
 
+
+
+    private transient Object inSortLock = new Object();
+    private transient boolean inSort = false;
     public void addTag(Keyword tag){
         for(Keyword k:tags){
             if(k.getValue().equals(tag.getValue()))return;
@@ -587,8 +592,16 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
     @PrePersist
     @PreUpdate
     public void sortLists(){
-        Collections.sort(this.names);
-        Collections.sort(this.codes);
+        //because this is a postLoad it's possible
+        //calling sort causes ebean to fetch the elements which re-triggers postLoad
+        synchronized(inSortLock) {
+            if (!inSort) {
+                inSort=true;
+                Collections.sort(this.names);
+                Collections.sort(this.codes);
+                inSort = false;
+            }
+        }
     }
 
     @PrePersist
