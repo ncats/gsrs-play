@@ -14,15 +14,17 @@ public abstract class AbstractStringConverter implements StringConverter {
     /**
      * Replace values from searchList with values from replaceList
      *
-     * @param str source string;
-     *            will never be null.
+     * @param str source string; may be null.
      * @param searchList Array with search patterns;
      *            will never be null.
      * @param replaceList Array with new values;
      *            will never be null.
-     * @return a string.
+     * @return a string; if the input string was null then null is returned.
      */
     protected static String replaceFromLists(String str, String[] searchList, String[] replaceList) {
+        if(str ==null){
+            return null;
+        }
         StringBuilder sb = new StringBuilder(str);
         for (int i = 0; i < searchList.length; i++)
         {
