@@ -9,6 +9,7 @@
             <tr>
                 <th>Substance</th>
                 <th>Amount</th>
+                <th>Access</th>
             </tr>
         </thead>
         @for(c <- components) {
@@ -18,6 +19,15 @@
                  @if(c.amount != null) {
                  <td><amount value="@GinasApp.getAsJson(c.amount)"></amount></td>
                  }
+              <td>
+                <div style="text-align:center">
+                @if(c.isPublic()){
+                  <i uib-tooltip = "Public name" class="fa fa-unlock fa-2x fa-1_1x success"></i>
+                }else{
+                  <i uib-tooltip = "Not a public name" class="fa fa-lock fa-2x fa-1_1x warning"></i>
+                }
+                </div>
+              </td>
             } else {
                 <i>Substance not yet imported</i> <br />
                 @Html(c.substance.getHtmlName())
