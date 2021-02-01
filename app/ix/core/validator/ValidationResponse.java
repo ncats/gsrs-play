@@ -53,7 +53,11 @@ public class ValidationResponse<T> {
 	public boolean isValid(){
 		return valid;
 	}
-	
+
+	//this is for Jackson to find using JavaBean patterns
+	public boolean isProblem(){
+		return hasProblem();
+	}
 	public boolean hasProblem(){
 	    return this.getValidationMessages()
 	                .stream()
