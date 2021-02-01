@@ -131,7 +131,7 @@
 @fillTable(s: GinasChemicalStructure, stype: String) = {
 	@if(stype == "structure") {
 	    <tr>
-	        <td>@Html(s.htmlFormula())</td>
+	        <td>@Html(s.getHtmlFormula())</td>
 	        <td>@s.mwt</td>
 	        <td><span class="badge">@s.definedStereo / @s.stereoCenters</span></td>
 	        <td><span class="badge">@s.ezCenters</span></td>

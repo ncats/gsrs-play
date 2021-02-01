@@ -186,7 +186,7 @@ public class Structure extends BaseModel implements ForceUpdatableModel{
     public String formula;
 
     @JsonProperty("_formula-html")
-    public String htmlFormula() {
+    public String getHtmlFormula() {
         if (formula == null) {
             return "";
         }
