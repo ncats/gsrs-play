@@ -226,7 +226,7 @@ public class UpdateAuditInfoTest extends AbstractGinasServerTest{
             api.submitSubstance(substance);
 
             Substance fetched = api.fetchSubstanceObjectByUuid(substance.getUuid().toString());
-            System.out.println("fetched ="+fetched);
+            System.out.println("fetched =\n"+fetched.toFullJsonNode());
             SubstanceBuilder edit = new SubstanceBuilder(fetched);
 
             edit.modifyNames( names ->{
@@ -240,7 +240,7 @@ public class UpdateAuditInfoTest extends AbstractGinasServerTest{
             api.updateSubstanceJson(edit.buildJson());
 
             Substance fetched2 = api.fetchSubstanceObjectByUuid(substance.getUuid().toString());
-            System.out.println("fetched2 ="+fetched2);
+            System.out.println("fetched2 =\n"+fetched2.toFullJsonNode());
             assertEquals(admin.getUserName(), fetched2.createdBy.username);
             assertEquals(date, fetched2.created);
 
