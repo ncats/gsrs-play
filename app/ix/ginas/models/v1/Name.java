@@ -233,6 +233,8 @@ public class Name extends CommonDataElementOfCollection {
 	public void setName(String name) {
 		this.fullName=null;
 		this.name=name;
+		//recompute stdname etc
+		//this is also so creating instances from JSON compute the stdname during pojodiff
 		tidyName();
 	}
 	
