@@ -112,7 +112,7 @@ public class Name extends CommonDataElementOfCollection {
 
     @PostLoad
 	public void computeStdNameIfNeededOnLoad(){
-    	if(stdName !=null && name !=null) {
+    	if(stdName ==null && name !=null) {
 			stdName = Util.getStringConverter().toStd(name);
 		}
 	}
