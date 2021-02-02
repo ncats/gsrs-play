@@ -509,6 +509,9 @@ public class PojoDiff {
         	if(jsonpatch==null){
         		System.out.println("There are no changes?");
         	}
+        	else{
+        		System.out.println("json patch = " + jsonpatch);
+			}
         	List<JsonNode> patchChanges = new ArrayList<JsonNode>();
         	
         	Map<String, JsonNode> adding = new HashMap<String,JsonNode>();
