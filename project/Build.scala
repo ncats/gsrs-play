@@ -63,7 +63,7 @@ object ApplicationBuild extends Build {
     "org.apache.httpcomponents" % "httpcore" %"4.4.4",
     "org.apache.httpcomponents" % "httpclient" %"4.3.1", //required for Ivy bug?
     "commons-io" % "commons-io" % "2.4",
-    "com.flipkart.zjsonpatch" % "zjsonpatch" % "0.4.6",
+    "com.flipkart.zjsonpatch" % "zjsonpatch" % "0.4.11",
     "javax.xml.bind" % "jaxb-api" % "2.3.0",    //required for JAVA > 9
     "net.sourceforge.htmlunit" % "htmlunit" % "2.35.0" % Test,
     "com.zaxxer" % "HikariCP" % "2.4.6"
