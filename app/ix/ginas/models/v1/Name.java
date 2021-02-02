@@ -4,16 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.TreeSet;
 
-import javax.persistence.Basic;
-import javax.persistence.CascadeType;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.Lob;
-import javax.persistence.OneToMany;
-import javax.persistence.PrePersist;
-import javax.persistence.PreUpdate;
-import javax.persistence.Table;
+import javax.persistence.*;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -119,6 +110,10 @@ public class Name extends CommonDataElementOfCollection {
         return fullName != null ? fullName : name;
     }
 
+    @PostLoad
+	public void computeStdNameIfNeededOnLoad(){
+		stdName = Util.getStringConverter().toStd(name);
+	}
     @PrePersist
     @PreUpdate
     public void tidyName () {
