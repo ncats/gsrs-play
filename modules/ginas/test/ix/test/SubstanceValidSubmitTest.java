@@ -163,6 +163,7 @@ public class SubstanceValidSubmitTest extends AbstractGinasServerTest {
 			if (jn.get("op").asText().equals("remove")) {
 				if (jn.get("path").asText().equals("/protein/modifications")
 						|| jn.get("path").asText().equals("/nucleicAcid/modifications")
+						|| jn.get("path").asText().startsWith("/codes/")
 						|| jn.get("path").asText().contains("nameOrgs") || // silly
 																			// hacks
 																			// to
@@ -171,6 +172,7 @@ public class SubstanceValidSubmitTest extends AbstractGinasServerTest {
 																			// for
 																			// above
 						jn.get("path").asText().contains("domains") || (jn.get("path").asText().startsWith("/names/")
+
 								&& jn.get("path").asText().contains("references"))) {
 					// acceptable removals, do nothing
 
