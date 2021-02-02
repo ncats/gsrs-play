@@ -119,11 +119,13 @@ public class Name extends CommonDataElementOfCollection {
     @PrePersist
     @PreUpdate
     public void tidyName () {
-        stdName = Util.getStringConverter().toStd(name);
-        if (name.getBytes().length > 255) {
-            fullName = name;
-            name = Util.getStringConverter().truncate(name,254);
-        }
+    	if(name !=null) {
+			stdName = Util.getStringConverter().toStd(name);
+			if (name.getBytes().length > 255) {
+				fullName = name;
+				name = Util.getStringConverter().truncate(name, 254);
+			}
+		}
     }
     
     public void addLocator(Substance sub, String loc){
@@ -231,6 +233,7 @@ public class Name extends CommonDataElementOfCollection {
 	public void setName(String name) {
 		this.fullName=null;
 		this.name=name;
+		tidyName();
 	}
 	
 	@Override
