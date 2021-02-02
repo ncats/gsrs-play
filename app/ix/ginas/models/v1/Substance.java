@@ -1,5 +1,6 @@
 package ix.ginas.models.v1;
 
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -34,6 +35,7 @@ import ix.ginas.models.serialization.PrincipalSerializer;
 import ix.ginas.models.utils.JSONEntity;
 import ix.utils.Global;
 import play.Logger;
+import java.nio.charset.StandardCharsets;
 
 @Backup
 @JSONEntity(name = "substance", title = "Substance")
@@ -1483,5 +1485,48 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
         }
 
         return hexString.toString();
+    }
+
+    @JsonView(BeanViews.Compact.class)
+    @JsonProperty("DefHashKey")
+    public JsonNode getDefHashKey() {
+        Logger.trace("Starting in getDefHashKey()");
+        JsonNode node = null;
+        String defHash=this.getDefinitionalHash();
+        Logger.trace("  got defhash: " + defHash);
+        if ( defHash != null && defHash.length()>0) {
+            try {
+                ObjectNode n = mapper.createObjectNode();
+                n.put("count", names.size());
+                //n.put("href", Global.getRef(getClass(), getUuid()) + "/names");
+                String hash = getDefinitionalHash();// getDefHashKeyString();
+                Logger.trace(String.format("about to put hash %s for ID %s into node", hash,
+                        getOrGenerateUUID()));
+                n.put("hash", hash);
+                node = n;
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                // this means that the class doesn't have the NamedResource
+                // annotation, so we can't resolve the context
+                node = mapper.valueToTree(names);
+            }
+        }
+        return node;
+    }
+
+    @JsonIgnore
+    public String getDefHashString() {
+        //Logger.trace("going to call getDefinitionalHash");
+        String defHash=this.getDefinitionalHash();
+        Logger.trace("defHash: " + defHash);
+        return defHash;
+    }
+
+    @JsonIgnore
+    public String getDefHashKeyString() {
+        //Logger.trace("going to call getDefinitionalHash");
+        String defHash=this.getDefinitionalHash();
+        Logger.trace("defHash: " + defHash);
+        return UUID.nameUUIDFromBytes(defHash.getBytes(StandardCharsets.UTF_8)).toString();
     }
 }
