@@ -263,8 +263,9 @@ public final class SubstanceJsonUtil {
 
 	public static JsonNode ensureFailure(WSResponse response){
 		int status = response.getStatus();
-//		System.out.println("Response is:");
-		assertTrue("Expected failure code, got:" + status +"\n"+response.asJson(), status != 200 && status != 201);
+		String body = response.getBody();
+		System.out.println("Response is:" + body);
+		assertTrue("Expected failure code, got:" + status +"\n"+body, status != 200 && status != 201);
 		try{
 			return response.asJson();
 		}catch(Exception e){
