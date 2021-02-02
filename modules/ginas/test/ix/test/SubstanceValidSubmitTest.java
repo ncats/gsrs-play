@@ -181,10 +181,10 @@ public class SubstanceValidSubmitTest extends AbstractGinasServerTest {
 					if (jsbefore.toString().equals("[\"\"]")) {
 
 					} else {
-						// System.out.println("OLD:");
-						// System.out.println(before);
-						// System.out.println("NEW:");
-						// System.out.println(after);
+						 System.out.println("OLD:");
+						 System.out.println(before);
+						 System.out.println("NEW:");
+						 System.out.println(after);
 						throw new AssertionError(
 								"removed property at '" + jn.get("path") + "' , was '" + jsbefore + "'");
 					}
