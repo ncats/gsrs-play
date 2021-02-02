@@ -210,7 +210,6 @@ public class UpdateAuditInfoTest extends AbstractGinasServerTest{
     }
 
     @Test
-    @RunOnly
     public void update1NameNameDoesNotUpdateOtherName(){
         LocalDate localDate = LocalDate.of(1955, 11, 12);
         Date date =TimeUtil.toDate(localDate);
