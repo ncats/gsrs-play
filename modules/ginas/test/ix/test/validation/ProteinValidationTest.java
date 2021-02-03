@@ -302,7 +302,8 @@ public class ProteinValidationTest extends AbstractGinasServerTest{
         			.setProtein(new Protein())
         			.addName("Just a test")
         			.buildJsonAnd(js->{
-        				ValidationResponse vr=api.validateSubstance(js);
+        				JsonNode publicJson = SubstanceJsonUtil.prepareUnapprovedPublic(js);
+        				ValidationResponse vr=api.validateSubstance(publicJson);
 						assertTrue(vr.getMessages().toString(), vr.isValid());
         				
         				Optional<ValidationMessage> ovm=vr.getMessages().stream()
@@ -311,7 +312,7 @@ public class ProteinValidationTest extends AbstractGinasServerTest{
         					.findAny();
         				assertTrue("Should have validation message rejecting 0 subunits",ovm.isPresent());
         				
-        				SubstanceJsonUtil.ensurePass( api.submitSubstance(js));
+        				SubstanceJsonUtil.ensurePass( api.submitSubstance(publicJson));
         			});
         }
    	}
