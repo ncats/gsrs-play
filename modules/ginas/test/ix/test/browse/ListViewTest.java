@@ -36,7 +36,7 @@ public class ListViewTest  extends AbstractGinasServerTest {
 		GinasTestServer ts= new GinasTestServer("ix.ginas.codes.order = "+ codeOrder +
 				"\nix.core.comparators =[{\n" +
 				"\t\t\"class\":\"ix.ginas.models.v1.Code\",\n" +
-				"\t\t\"comparator\":\"ix.ginas.comparators.CodeComparator\"]");
+				"\t\t\"comparator\":\"ix.ginas.comparators.CodeComparator\"}]");
 		return ts;
 	}
 
