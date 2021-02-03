@@ -33,8 +33,10 @@ public class ListViewTest  extends AbstractGinasServerTest {
 	@Override
 	public GinasTestServer createGinasTestServer(){
 
-		GinasTestServer ts= new GinasTestServer("ix.ginas.codes.order = "+ codeOrder);
-ts.modifyConfig("ix.core.comparators =[]", GinasTestServer.ConfigOptions.ALL_TESTS);
+		GinasTestServer ts= new GinasTestServer("ix.ginas.codes.order = "+ codeOrder +
+				"\nix.core.comparators =[{\n" +
+				"\t\t\"class\":\"ix.ginas.models.v1.Code\",\n" +
+				"\t\t\"comparator\":\"ix.ginas.comparators.CodeComparator\"]");
 		return ts;
 	}
 
