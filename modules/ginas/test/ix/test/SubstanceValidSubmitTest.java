@@ -101,7 +101,6 @@ public class SubstanceValidSubmitTest extends AbstractGinasServerTest {
 	}
 
 	@Test
-	@RunOnly
 	public void validateFetchedSubmittedSubstance() throws Exception {
 
 		JsonNode js = SubstanceJsonUtil.prepareUnapprovedPublic(JsonUtil.parseJsonFile(resource));
@@ -109,7 +108,6 @@ public class SubstanceValidSubmitTest extends AbstractGinasServerTest {
 		String uuid = js.get("uuid").asText();
 
 		SubstanceAPI.ValidationResponse response = api.validateSubstance(js);
-		System.out.println(js);
 		assertTrue(response.getMessages().toString(), response.isValid());
 
 		ensurePass(api.submitSubstance(js));
