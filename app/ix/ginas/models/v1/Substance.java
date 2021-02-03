@@ -1492,23 +1492,20 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
     public JsonNode getDefHashKey() {
         Logger.trace("Starting in getDefHashKey()");
         JsonNode node = null;
-        String defHash=this.getDefinitionalHash();
+        String defHash=computeDefHashString();
         Logger.trace("  got defhash: " + defHash);
         if ( defHash != null && defHash.length()>0) {
             try {
                 ObjectNode n = mapper.createObjectNode();
-                n.put("count", names.size());
-                //n.put("href", Global.getRef(getClass(), getUuid()) + "/names");
-                String hash = getDefHashKeyString();// getDefHashKeyString();
-                Logger.trace(String.format("about to put hash %s for ID %s into node", hash,
+                Logger.trace(String.format("about to put hash %s for ID %s into node", defHash,
                         getOrGenerateUUID()));
-                n.put("hash", hash);
+                n.put("hash", defHash);
                 node = n;
             } catch (Exception ex) {
                 ex.printStackTrace();
                 // this means that the class doesn't have the NamedResource
                 // annotation, so we can't resolve the context
-                node = mapper.valueToTree(names);
+                //node = mapper.valueToTree(names);
             }
         }
         return node;
@@ -1517,15 +1514,7 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
     @JsonIgnore
     public String getDefHashString() {
         Logger.trace("getDefHashString total layers: " + this.getDefinitionalElements().getDefinitionalHashLayers().size());
-        String defHash=Base64.getEncoder().encodeToString( this.getDefinitionalElements().getDefinitionalHash());
-        StringBuilder defHashBuilder = new StringBuilder();
-        defHashBuilder.append(this.getDefinitionalElements().getDefinitionalHashLayers().get(0));
-        defHashBuilder.append("|");
-        defHashBuilder.append(this.getDefinitionalElements().getDefinitionalHashLayers().get(1));
-        String layers12 = defHashBuilder.toString();
-        Logger.trace("defHash: " + defHash);
-        Logger.trace("layers12: " + layers12);
-        return layers12;
+        return computeDefHashString();
     }
 
     @JsonIgnore
@@ -1539,5 +1528,18 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
         String defHash=defHashHashBuilder.toString();
         Logger.trace("defHashHash: " + defHash);
         return defHash;// UUID.nameUUIDFromBytes(defHash.getBytes(StandardCharsets.UTF_8)).toString();
+    }
+
+    @JsonIgnore
+    private String computeDefHashString() {
+        String defHash=Base64.getEncoder().encodeToString( this.getDefinitionalElements().getDefinitionalHash());
+        StringBuilder defHashBuilder = new StringBuilder();
+        defHashBuilder.append(this.getDefinitionalElements().getDefinitionalHashLayers().get(0));
+        defHashBuilder.append("|");
+        defHashBuilder.append(this.getDefinitionalElements().getDefinitionalHashLayers().get(1));
+        String layers12 = defHashBuilder.toString();
+        Logger.trace("defHash: " + defHash);
+        Logger.trace("layers12: " + layers12);
+        return layers12;
     }
 }
