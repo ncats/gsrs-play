@@ -224,17 +224,20 @@ public final class SubstanceJsonUtil {
 
 	private static void removeUnusedReferencesAndAddPublicIfNeeded(Substance s, GinasAccessReferenceControlled definingElement) {
 		Set<Keyword> kept = new HashSet<>();
+		boolean hasPublicDomainRef=false;
 		for(Keyword k : definingElement.getReferences()){
 
                 String value = k.getValue();
                 Reference referenceByUUID = s.getReferenceByUUID(value);
                 if(null != referenceByUUID){
-
+					if(referenceByUUID.isPublic() && referenceByUUID.publicDomain){
+						hasPublicDomainRef = true;
+					}
                     kept.add(k);
                 }
             }
 		definingElement.setReferences(kept);
-		if(definingElement.getReferences().isEmpty()){
+		if(!hasPublicDomainRef || definingElement.getReferences().isEmpty()){
             Reference r = createNewPublicDomainRef();
             definingElement.addReference(r, s);
         }
