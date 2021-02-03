@@ -20,9 +20,10 @@ public class DefHashCsvExporter implements Exporter<Substance> {
     public DefHashCsvExporter(OutputStream outInput) throws IOException{
         Logger.trace("DefHashCsvExporter constructor. out: "+ outInput);
         Objects.requireNonNull(outInput);
-        Logger.trace("passed require");
         this.out = new BufferedWriter(new OutputStreamWriter(outInput));
         Logger.trace("set out");
+        out.write("Substance UUID\ttype\tDef Hash\tKey");
+        out.newLine();
     }
 
     @Override
@@ -34,7 +35,7 @@ public class DefHashCsvExporter implements Exporter<Substance> {
             String line = String.format("%s\t%s\t%s\t%s", substance.getOrGenerateUUID().toString(),
                     substance.substanceClass.toString(),
                     substance.getDefHashString(), substance.getDefHashKeyString());
-            Logger.trace(line);
+            //Logger.trace(line);
             out.write(line);
             out.newLine();
         }

@@ -1499,7 +1499,7 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
                 ObjectNode n = mapper.createObjectNode();
                 n.put("count", names.size());
                 //n.put("href", Global.getRef(getClass(), getUuid()) + "/names");
-                String hash = getDefinitionalHash();// getDefHashKeyString();
+                String hash = getDefHashKeyString();// getDefHashKeyString();
                 Logger.trace(String.format("about to put hash %s for ID %s into node", hash,
                         getOrGenerateUUID()));
                 n.put("hash", hash);
@@ -1516,17 +1516,28 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
 
     @JsonIgnore
     public String getDefHashString() {
-        //Logger.trace("going to call getDefinitionalHash");
-        String defHash=this.getDefinitionalHash();
+        Logger.trace("getDefHashString total layers: " + this.getDefinitionalElements().getDefinitionalHashLayers().size());
+        String defHash=Base64.getEncoder().encodeToString( this.getDefinitionalElements().getDefinitionalHash());
+        StringBuilder defHashBuilder = new StringBuilder();
+        defHashBuilder.append(this.getDefinitionalElements().getDefinitionalHashLayers().get(0));
+        defHashBuilder.append("|");
+        defHashBuilder.append(this.getDefinitionalElements().getDefinitionalHashLayers().get(1));
+        String layers12 = defHashBuilder.toString();
         Logger.trace("defHash: " + defHash);
-        return defHash;
+        Logger.trace("layers12: " + layers12);
+        return layers12;
     }
 
     @JsonIgnore
     public String getDefHashKeyString() {
         //Logger.trace("going to call getDefinitionalHash");
-        String defHash=this.getDefinitionalHash();
-        Logger.trace("defHash: " + defHash);
-        return UUID.nameUUIDFromBytes(defHash.getBytes(StandardCharsets.UTF_8)).toString();
+        StringBuilder defHashHashBuilder = new StringBuilder();
+        defHashHashBuilder.append(Integer.toHexString(this.getDefinitionalElements().getDefinitionalHashLayers().get(0).hashCode()));
+        defHashHashBuilder.append("|");
+        defHashHashBuilder.append(Integer.toHexString(this.getDefinitionalElements().getDefinitionalHashLayers().get(1).hashCode()));
+
+        String defHash=defHashHashBuilder.toString();
+        Logger.trace("defHashHash: " + defHash);
+        return defHash;// UUID.nameUUIDFromBytes(defHash.getBytes(StandardCharsets.UTF_8)).toString();
     }
 }
