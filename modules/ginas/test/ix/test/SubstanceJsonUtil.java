@@ -222,9 +222,9 @@ public final class SubstanceJsonUtil {
 
 	}
 
-	private static void removeUnusedReferencesAndAddPublicIfNeeded(Substance s, GinasAccessReferenceControlled protein) {
+	private static void removeUnusedReferencesAndAddPublicIfNeeded(Substance s, GinasAccessReferenceControlled definingElement) {
 		Set<Keyword> kept = new HashSet<>();
-		for(Keyword k : protein.getReferences()){
+		for(Keyword k : definingElement.getReferences()){
 
                 String value = k.getValue();
                 Reference referenceByUUID = s.getReferenceByUUID(value);
@@ -233,10 +233,10 @@ public final class SubstanceJsonUtil {
                     kept.add(k);
                 }
             }
-		protein.setReferences(kept);
-		if(protein.getReferences().isEmpty()){
+		definingElement.setReferences(kept);
+		if(definingElement.getReferences().isEmpty()){
             Reference r = createNewPublicDomainRef();
-            protein.addReference(r, s);
+            definingElement.addReference(r, s);
         }
 	}
 
@@ -245,7 +245,7 @@ public final class SubstanceJsonUtil {
 		r.publicDomain = true;
 		r.setAccess(Collections.emptySet());
 		r.addTag(Reference.PUBLIC_DOMAIN_REF);
-
+		r.getOrGenerateUUID();
 		return r;
 	}
 	public static JsonNode prepareUnapproved(JsonNode substance){
