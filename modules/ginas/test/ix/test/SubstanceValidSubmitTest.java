@@ -158,6 +158,7 @@ public class SubstanceValidSubmitTest extends AbstractGinasServerTest {
 	public static void assertThatNonDestructive(JsonNode before, JsonNode after) throws AssertionError {
 
 		JsonNode jp = JsonDiff.asJson(before, after);
+
 		for (JsonNode jn : jp) {
 
 			if (jn.get("op").asText().equals("remove")) {
@@ -187,6 +188,8 @@ public class SubstanceValidSubmitTest extends AbstractGinasServerTest {
 						 System.out.println(before);
 						 System.out.println("NEW:");
 						 System.out.println(after);
+
+						System.out.println("json diff = " + jp);
 						throw new AssertionError(
 								"removed property at '" + jn.get("path") + "' , was '" + jsbefore + "'");
 					}
