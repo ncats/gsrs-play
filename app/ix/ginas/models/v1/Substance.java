@@ -3,6 +3,7 @@ package ix.ginas.models.v1;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.function.Consumer;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import javax.persistence.*;
@@ -1532,14 +1533,22 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
 
     @JsonIgnore
     private String computeDefHashString() {
-        String defHash=Base64.getEncoder().encodeToString( this.getDefinitionalElements().getDefinitionalHash());
-        StringBuilder defHashBuilder = new StringBuilder();
-        defHashBuilder.append(this.getDefinitionalElements().getDefinitionalHashLayers().get(0));
-        defHashBuilder.append("|");
-        defHashBuilder.append(this.getDefinitionalElements().getDefinitionalHashLayers().get(1));
-        String layers12 = defHashBuilder.toString();
-        Logger.trace("defHash: " + defHash);
-        Logger.trace("layers12: " + layers12);
-        return layers12;
+        try
+        {
+            String defHash=Base64.getEncoder().encodeToString( this.getDefinitionalElements().getDefinitionalHash());
+            StringBuilder defHashBuilder = new StringBuilder();
+            defHashBuilder.append(this.getDefinitionalElements().getDefinitionalHashLayers().get(0));
+            defHashBuilder.append("|");
+            defHashBuilder.append(this.getDefinitionalElements().getDefinitionalHashLayers().get(1));
+            String layers12 = defHashBuilder.toString();
+            Logger.trace("defHash: " + defHash);
+            Logger.trace("layers12: " + layers12);
+            return layers12;
+        }
+        catch (Exception ex) {
+            Logger.error("error during def hash comp: " + ex.getMessage());
+            ex.printStackTrace();
+            return "";
+        }
     }
 }
