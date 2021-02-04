@@ -359,7 +359,7 @@ public class ChemicalApiTest extends AbstractGinasServerTest {
             if(exactHash.contains("_")){
             	assertEquals("UUWYBLVKLIHDAU_UVKKECPRSA_K", exactHash);
             }else{
-            	assertEquals("GSVW3T1Q", exactHash);
+            	assertEquals("GSVW3T1QC5XT", exactHash);
             }
         }
    	} 
