@@ -28,6 +28,8 @@ import ix.core.adapters.EntityPersistAdapter;
 import ix.core.factories.EntityProcessorFactory;
 import ix.core.models.*;
 import ix.core.util.ConfigHelper;
+import ix.ginas.initializers.LoadValidatorInitializer;
+import ix.ginas.utils.validation.ValidationUtils;
 import org.apache.commons.io.FileUtils;
 import org.junit.rules.ExternalResource;
 import org.junit.rules.TemporaryFolder;
@@ -251,6 +253,8 @@ public class GinasTestServer extends ExternalResource{
 
 
     private Predicate<EntityProcessorConfig> entityProcessorFilter =  null;
+    private Predicate<LoadValidatorInitializer.ValidatorConfig> validatorFilter = null;
+
     public URL getHomeUrl() throws IOException{
         return new URL(defaultBrowserSession.constructUrlFor("ginas/app"));
     }
@@ -744,7 +748,7 @@ public class GinasTestServer extends ExternalResource{
      * @param predicate if the predicate returns true, remove that processor before starting;
      *                  can not be null.
      */
-    public void removeEntityProcessors(java.util.function.Predicate<EntityProcessorConfig> predicate){
+    public void removeEntityProcessors(Predicate<EntityProcessorConfig> predicate){
 
         Objects.requireNonNull(predicate);
 
@@ -754,6 +758,16 @@ public class GinasTestServer extends ExternalResource{
             entityProcessorFilter= entityProcessorFilter.or(predicate);
         }
 
+    }
+
+    public void removeValidator(Predicate<LoadValidatorInitializer.ValidatorConfig> predicate){
+        Objects.requireNonNull(predicate);
+
+        if(validatorFilter == null){
+            validatorFilter = predicate;
+        }else{
+            validatorFilter= validatorFilter.or(predicate);
+        }
     }
 
     public void addEntityProcessor(Class<?> substanceClass, Class<?> myProcessorClass) {
@@ -959,6 +973,24 @@ public class GinasTestServer extends ExternalResource{
 
             try {
                 String json = "ix.core.entityprocessors = " + new ObjectMapper().writer().writeValueAsString(filteredEntities);
+
+                config = ConfigFactory.parseString(json)
+                        .withFallback(config);
+            } catch (JsonProcessingException e) {
+                e.printStackTrace();
+            }
+        }
+
+        if(validatorFilter !=null){
+            ObjectMapper mapper = new ObjectMapper();
+            List<LoadValidatorInitializer.ValidatorConfig> validators = config.getList("substance.validators").unwrapped().stream()
+                    .map(m-> mapper.convertValue(m, LoadValidatorInitializer.ValidatorConfig.class))
+                    .filter(validatorFilter.negate())
+                    .collect(Collectors.toList());
+
+
+            try {
+                String json = "substance.validators = " + new ObjectMapper().writer().writeValueAsString(validators);
 
                 config = ConfigFactory.parseString(json)
                         .withFallback(config);
