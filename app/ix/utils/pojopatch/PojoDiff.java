@@ -29,6 +29,7 @@ import ix.core.controllers.EntityFactory;
 import ix.core.models.Keyword;
 import ix.core.util.EntityUtils.EntityWrapper;
 import ix.utils.Util;
+import play.Logger;
 
 
 /**
@@ -507,7 +508,7 @@ public class PojoDiff {
 			}
         	
         	if(jsonpatch==null){
-        		System.out.println("There are no changes?");
+        		Logger.debug("There are no changes?");
         	}
         	List<JsonNode> patchChanges = new ArrayList<JsonNode>();
         	
@@ -645,10 +646,10 @@ public class PojoDiff {
             	
         	}
         	}catch(Exception e){
-        		System.out.println("PojoDiff Error");
-        		System.out.println("=================================");
+        		System.err.println("PojoDiff Error");
+        		System.err.println("=================================");
         		e.printStackTrace();
-        		System.out.println(patchChanges);        		
+        		System.err.println(patchChanges);
         		throw e;
         		
         	}
@@ -1383,7 +1384,7 @@ public class PojoDiff {
 				setObjectAt(src,subPath,fetched,visited);
 				
 			}else{
-				System.out.println("not able to remove:" + fetched.getClass() + " at [" + objPointer + "]");
+				Logger.debug("not able to remove:" + fetched.getClass() + " at [" + objPointer + "]");
 			}
 			changeChain.addAll(visited);
 			return oldValue;
@@ -1408,7 +1409,7 @@ public class PojoDiff {
 				setObjectAt(src,subPath,fetched,visited);
 				
 			}else{
-				System.out.println("not able to add:" + fetched.getClass());
+				Logger.debug("not able to add:" + fetched.getClass());
 			}
 			changeChain.addAll(visited);
 		}
