@@ -4,16 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.TreeSet;
 
-import javax.persistence.Basic;
-import javax.persistence.CascadeType;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.Lob;
-import javax.persistence.OneToMany;
-import javax.persistence.PrePersist;
-import javax.persistence.PreUpdate;
-import javax.persistence.Table;
+import javax.persistence.*;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -119,14 +110,22 @@ public class Name extends CommonDataElementOfCollection {
         return fullName != null ? fullName : name;
     }
 
+    @PostLoad
+	public void computeStdNameIfNeededOnLoad(){
+    	if(stdName ==null && name !=null) {
+			stdName = Util.getStringConverter().toStd(name);
+		}
+	}
     @PrePersist
     @PreUpdate
     public void tidyName () {
-        stdName = Util.getStringConverter().toStd(name);
-        if (name.getBytes().length > 255) {
-            fullName = name;
-            name = Util.getStringConverter().truncate(name,254);
-        }
+    	if(name !=null) {
+			stdName = Util.getStringConverter().toStd(name);
+			if (name.getBytes().length > 255) {
+				fullName = name;
+				name = Util.getStringConverter().truncate(name, 254);
+			}
+		}
     }
     
     public void addLocator(Substance sub, String loc){
@@ -234,6 +233,9 @@ public class Name extends CommonDataElementOfCollection {
 	public void setName(String name) {
 		this.fullName=null;
 		this.name=name;
+		//recompute stdname etc
+		//this is also so creating instances from JSON compute the stdname during pojodiff
+		tidyName();
 	}
 	
 	@Override

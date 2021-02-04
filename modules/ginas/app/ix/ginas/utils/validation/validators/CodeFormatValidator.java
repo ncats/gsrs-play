@@ -38,6 +38,13 @@ public class CodeFormatValidator extends AbstractValidatorPlugin<Substance>
             if(codeSystemRegex != null && !codeSystemRegex.isEmpty() && codes !=null){
                 Pattern codePattern = Pattern.compile(codeSystemRegex);
                 for(Code c : codes){
+                    if(c ==null){
+                        continue;
+                    }
+                    String codeToCheck = c.getCode();
+                    if(codeToCheck ==null){
+                        continue;
+                    }
                     Matcher matcher = codePattern.matcher(c.getCode());
                     //find ? or matches?
                     if(!matcher.find()){
