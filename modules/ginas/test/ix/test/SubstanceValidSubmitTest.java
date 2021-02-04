@@ -10,7 +10,6 @@ import java.util.Collection;
 import java.util.List;
 
 import com.flipkart.zjsonpatch.JsonDiff;
-import ix.core.util.RunOnly;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -185,12 +184,10 @@ public class SubstanceValidSubmitTest extends AbstractGinasServerTest {
 					if (jsbefore.toString().equals("[\"\"]")) {
 
 					} else {
-						 System.out.println("OLD:");
-						 System.out.println(before);
-						 System.out.println("NEW:");
-						 System.out.println(after);
-
-						System.out.println("json diff = " + jp);
+						// System.out.println("OLD:");
+						// System.out.println(before);
+						// System.out.println("NEW:");
+						// System.out.println(after);
 						throw new AssertionError(
 								"removed property at '" + jn.get("path") + "' , was '" + jsbefore + "'");
 					}

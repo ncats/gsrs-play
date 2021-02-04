@@ -11,7 +11,6 @@ import ix.ginas.models.v1.Substance;
 import ix.test.server.GinasTestServer;
 import ix.test.server.RestSession;
 import ix.test.server.SubstanceAPI;
-import ix.utils.pojopatch.PojoDiff;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -227,7 +226,7 @@ public class UpdateAuditInfoTest extends AbstractGinasServerTest{
             api.submitSubstance(substance);
 
             Substance fetched = api.fetchSubstanceObjectByUuid(substance.getUuid().toString());
-            System.out.println("fetched =\n"+fetched.toFullJsonNode());
+
             SubstanceBuilder edit = new SubstanceBuilder(fetched);
 
             edit.modifyNames( names ->{
@@ -241,9 +240,7 @@ public class UpdateAuditInfoTest extends AbstractGinasServerTest{
             api.updateSubstanceJson(edit.buildJson());
 
             Substance fetched2 = api.fetchSubstanceObjectByUuid(substance.getUuid().toString());
-            System.out.println("fetched2 =\n"+fetched2.toFullJsonNode());
 
-            System.out.println("changes = " + PojoDiff.getDiff(fetched, fetched2).getChanges());
             assertEquals(admin.getUserName(), fetched2.createdBy.username);
             assertEquals(date, fetched2.created);
 
