@@ -1,6 +1,7 @@
 package ix.ginas.controllers.v1;
 
 import java.util.*;
+import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
@@ -84,7 +85,12 @@ public class CodeFactory extends EntityFactory {
                         return Tuple.of(new Long(Long.parseLong(cd.code.replace(suffix, ""))),cd);
                     }
                 })
-                .filter(t -> last == null || t.k() <= last)
+                .filter(new Predicate<Tuple<Long, Code>>() {
+                    @Override
+                    public boolean test(Tuple<Long, Code> t) {
+                        return last == null || t.k() <= last;
+                    }
+                })
 	    		.max(new Comparator<Tuple<Long,Code>>(){
 
                     public int compare(Tuple<Long,Code> l1, Tuple<Long,Code> l2){
