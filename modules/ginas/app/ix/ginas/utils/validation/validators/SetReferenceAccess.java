@@ -7,6 +7,8 @@ import ix.core.validator.ValidatorCallback;
 import ix.ginas.models.EmbeddedKeywordList;
 import ix.ginas.models.v1.Reference;
 import ix.ginas.models.v1.Substance;
+
+import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -21,11 +23,11 @@ public class SetReferenceAccess extends AbstractValidatorPlugin<Substance>
 {
 
     //temporarily instantiate from hard-coded strings
-    private List<String> alwaysPublic;
-    private List<String> alwaysPrivate;
-    private List<String> suggestedPublic;
+    private List<String> alwaysPublic = new ArrayList<>();
+    private List<String> alwaysPrivate  = new ArrayList<>();
+    private List<String> suggestedPublic = new ArrayList<>();
 
-    List<Pattern> referenceCitationPatterns = null;
+    private List<Pattern> referenceCitationPatterns  = new ArrayList<>();
 
     public SetReferenceAccess() {
         Logger.debug("in SetReferenceAccess ctor" );
