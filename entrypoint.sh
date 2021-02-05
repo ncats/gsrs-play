@@ -1,5 +1,7 @@
 #!/bin/sh
 
+cd /opt/g-srs
+
 for dir_name in conf/evolutions/default conf/sql/init conf/sql/load conf/sql/post conf/sql/test exports ginas.ix logs
 do
     if [ ! -d /data/$dir_name ]; then
@@ -24,6 +26,10 @@ if [ "x$GSRS_DB_RESET" = "xtrue" ]; then
         CONFIG_FILE_OPT="-Dconfig.file=conf/ginas.conf"
     fi
     java -cp "lib/*" $CONFIG_FILE_OPT ix.ginas.utils.Evolution
+fi
+
+if [ -f "bin/build_extensions.sh" ]; then
+    bin/build_extensions.sh /extensions /opt/g-srs
 fi
 
 exec "$@"
