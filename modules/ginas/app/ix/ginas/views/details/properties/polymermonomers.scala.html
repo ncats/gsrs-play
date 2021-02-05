@@ -24,6 +24,7 @@
                 <th>Material Name</th>
                 <th>Amount</th>
                 <th>Type</th>
+                <th>Access</th>
             </tr>
         </thead>       
         
@@ -46,6 +47,15 @@
                 </td>
                 <td><amount value="@GinasApp.getAsJson(m.amount)"></amount></td>
                 <td><span class="badge">@{m.`type`}</span></td>
+                <td>
+                    <div style="text-align:center">
+                    @if(m.isPublic()){
+                        <i uib-tooltip = "Public name" class="fa fa-unlock fa-2x fa-1_1x success"></i>
+                    }else{
+                        <i uib-tooltip = "Not a public name" class="fa fa-lock fa-2x fa-1_1x warning"></i>
+                    }
+                    </div>
+                </td>
             </tr>
         }    
     </table>

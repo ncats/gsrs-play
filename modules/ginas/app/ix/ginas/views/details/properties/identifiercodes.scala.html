@@ -12,6 +12,7 @@
 			<th>Code</th>
 			<th>Type</th>
 			<th>Description</th>
+			<th>Access</th>
 			<th class = "no-sort">References</th>
 		</tr>
 	</thead>
@@ -67,6 +68,15 @@
 
 				<td>
 				@c.comments
+				</td>
+				<td>
+					<div class="table-responsive" style="text-align:center">
+					@if(c.isPublic()){
+						<i uib-tooltip = "Public name" class="fa fa-unlock fa-2x fa-1_1x success"></i>
+					}else{
+						<i uib-tooltip = "Not a public name" class="fa fa-lock fa-2x fa-1_1x warning"></i>
+					}
+					</div>
 				</td>
 				<td >
 					<button onclick = "addRef('@c.uuid',this,'identifiers');" class = "btn btn-primary  reference-button" >view</button>
