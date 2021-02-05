@@ -23,6 +23,7 @@ public class SetReferenceAccess extends AbstractValidatorPlugin<Substance>
     //temporarily instantiate from hard-coded strings
     private List<String> alwaysPublic;
     private List<String> alwaysPrivate;
+    private List<String> suggestedPublic;
 
     List<Pattern> referenceCitationPatterns = null;
 
@@ -32,9 +33,10 @@ public class SetReferenceAccess extends AbstractValidatorPlugin<Substance>
 
     @Override
     public void validate(Substance substance, Substance oldSubstance, ValidatorCallback callback) {
-        Logger.debug("Starting in SetReferenceAccess.validate");
-        Logger.debug("alwaysPublic: " + alwaysPublic);
-        Logger.debug("alwaysPrivate: " + alwaysPrivate);
+        Logger.trace("Starting in SetReferenceAccess.validate");
+        Logger.trace("alwaysPublic: " + alwaysPublic);
+        Logger.trace("alwaysPrivate: " + alwaysPrivate);
+        Logger.trace("suggestedPublic: " + suggestedPublic);
 
         substance.references.forEach(r -> {
             String msg = String.format("doc type: %s; isPublic: %b; isPublicDomain: %b; isPublicReleaseReference: %b",
@@ -45,7 +47,7 @@ public class SetReferenceAccess extends AbstractValidatorPlugin<Substance>
                     && (r.isPublic() || r.isPublicDomain() || r.isPublicReleaseReference())) {
                 GinasProcessingMessage mes = GinasProcessingMessage
                         .WARNING_MESSAGE(
-                                "protected reference:\""
+                                "Protected reference:\""
                                         + r.docType + ":" + r.citation + "\" cannot be public. Setting to protected.")
                         .appliableChange(true);
                 callback.addMessage(mes, () -> makeReferenceProtected(r));
@@ -54,7 +56,7 @@ public class SetReferenceAccess extends AbstractValidatorPlugin<Substance>
 							if (r.isPublic() || r.isPublicDomain() || r.isPublicReleaseReference()) {
                 GinasProcessingMessage mes = GinasProcessingMessage
                         .WARNING_MESSAGE(
-                                "reference:\""
+                                "Reference:\""
                                         + r.docType + ":" + r.citation + "\" appears to be non-public. Setting to protected.")
                         .appliableChange(true);
                 callback.addMessage(mes, () -> makeReferenceProtected(r));
@@ -64,10 +66,20 @@ public class SetReferenceAccess extends AbstractValidatorPlugin<Substance>
                     && (!r.isPublic() || !r.isPublicDomain())) {
                 GinasProcessingMessage mes = GinasProcessingMessage
                         .WARNING_MESSAGE(
-                                "public reference:\""
+                                "Public reference:\""
                                         + r.docType + ":" + r.citation + "\" cannot be private. Setting to public.")
                         .appliableChange(true);
                 callback.addMessage(mes, () -> makeReferencePublic(r));
+            }else if(suggestedPublic.contains(r.docType) && (!r.isPublic() || !r.isPublicDomain())) {
+                String messageText =String.format("References of type %s, such as \"%s:%s,\" are typically public. Consider modifying the access and public domain flag, unless there is an explicit reason to keep it restricted.",
+                        r.docType, r.docType, r.citation);
+                if(!substanceNotesContainWarning(substance, messageText)){
+                    GinasProcessingMessage mes = GinasProcessingMessage
+                        .WARNING_MESSAGE(messageText);
+                    callback.addMessage(mes);
+                }else {
+                    Logger.debug("warning already noted: " + messageText);
+                }
             }
         });
     }
@@ -120,5 +132,25 @@ public class SetReferenceAccess extends AbstractValidatorPlugin<Substance>
 
     public void setReferenceCitationPatterns(List<Pattern> referenceCitationPatterns) {
         this.referenceCitationPatterns = referenceCitationPatterns;
+    }
+
+    public List<String> getSuggestedPublic() {
+        return suggestedPublic;
+    }
+
+    public void setSuggestedPublic(List<String> suggestedPublic) {
+        this.suggestedPublic = suggestedPublic;
+    }
+
+    private boolean substanceNotesContainWarning(Substance s, String warningText) {
+
+        Logger.trace("substanceNotesContainWarning looking for warning " + warningText);
+        String textToSearch = "[Validation]WARNING:" + warningText;
+        if( s.notes.stream().anyMatch(n->n.note.equals(textToSearch))) {
+            Logger.trace("  going to return true");
+            return true;
+        }
+        Logger.trace("  going to return false");
+        return false;
     }
 }
