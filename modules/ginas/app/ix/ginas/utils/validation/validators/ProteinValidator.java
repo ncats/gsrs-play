@@ -12,10 +12,12 @@ import ix.core.models.Payload;
 import ix.core.plugins.PayloadPlugin;
 import ix.core.plugins.SequenceIndexerPlugin;
 import ix.core.util.CachedSupplier;
+import ix.core.util.ConfigHelper;
 import ix.core.util.StreamUtil;
 import ix.core.validator.GinasProcessingMessage;
 import ix.core.validator.ValidatorCallback;
 import ix.ginas.controllers.v1.SubstanceFactory;
+import ix.ginas.models.v1.Amount;
 import ix.ginas.models.v1.DisulfideLink;
 import ix.ginas.models.v1.Property;
 import ix.ginas.models.v1.Protein;
@@ -116,15 +118,28 @@ public class ProteinValidator extends AbstractValidatorPlugin<Substance> {
             }
 
             Set<String> unknownRes = new HashSet<String>();
-        if(cs.protein.subunits.size() >0 && cs.protein.subunits.stream().allMatch(su->su !=null && su.sequence != null && su.sequence.length()>0)) {
+        //double tot = ProteinUtils.generateProteinWeight(cs, unknownRes);
           MolecularWeightAndFormulaContribution mwFormulaContribution= ProteinUtils.generateProteinWeightAndFormula(cs, unknownRes);
           double tot = mwFormulaContribution.getMw();
+        double low = mwFormulaContribution.getMwLow();
+        double high = mwFormulaContribution.getMwHigh();
+        double lowLimit =mwFormulaContribution.getMwLowLimit();
+        double highLimit =mwFormulaContribution.getMwHighLimit();
+        Logger.debug(String.format("in validate, low: %.2f; high: %.2f; lowLimit: %.2f, highLimit: %.2f",
+                low, high, lowLimit, highLimit));
+
+        double readInValueTolerance = ConfigHelper.getOrDefault("ix.gsrs.protein.mw.percent.tolerance", 1.0d);
+        double valueTolerance= readInValueTolerance/100.0d;//convert from percentage to decimal
+        String msg = String.format("valueTolerance: %.4f", valueTolerance);
+        Logger.debug(msg);
+
             if (unknownRes.size() > 0) {
                 GinasProcessingMessage mes = GinasProcessingMessage
                         .WARNING_MESSAGE("Protein has unknown amino acid residues: "
                                 + unknownRes.toString());
                 callback.addMessage(mes);
             }
+        mwFormulaContribution.getMessages().forEach(m-> callback.addMessage(m));
 
             List<Property> molprops = ProteinUtils.getMolWeightProperties(cs);
             if (molprops.size() <= 0) {
@@ -132,10 +147,10 @@ public class ProteinValidator extends AbstractValidatorPlugin<Substance> {
                 GinasProcessingMessage mes = GinasProcessingMessage
                         .WARNING_MESSAGE(
                                 "Protein has no molecular weight, defaulting to calculated value of: "
-                                        + String.format("%.2f", tot)).appliableChange(true);
+                                    + ProteinUtils.getAmountString(tot, low, high, lowLimit, highLimit) ).appliableChange(true);
                 callback.addMessage(mes, ()-> {
 
-                    cs.properties.add(ProteinUtils.makeMolWeightProperty(tot));
+                cs.properties.add(ProteinUtils.makeMolWeightProperty(tot, low, high, lowLimit, highLimit));
                     if (!unknownRes.isEmpty()) {
                         GinasProcessingMessage mes2 = GinasProcessingMessage
                                 .WARNING_MESSAGE("Calculated protein weight questionable, due to unknown amino acid residues: "
@@ -145,31 +160,39 @@ public class ProteinValidator extends AbstractValidatorPlugin<Substance> {
                 });
 
             } else {
+          Logger.trace(String.format("protein has existing %d mw property", molprops.size()));
                 for(Property p :molprops){
                     if (p.getValue() != null) {
+                    Logger.trace("has value " + p.getValue());
                         Double avg=p.getValue().average;
-                        if(avg==null)continue;
+                    if (avg == null){
+                      continue;
+                    }
                         double delta = tot - avg;
                         double pdiff = delta / (avg);
 
+                    msg = String.format("evaluating existing avg: %.2f vs. %.2f. pdiff: %.2f", avg, tot, pdiff);
+                    Logger.trace(msg);
                     /*int len = 0;
                         for (Subunit su : cs.protein.subunits) {
                             len += su.sequence.length();
                         }
                     double avgoff = delta / len;  commented out per discussion with Tyler 29 June 2020 */
-                        if (Math.abs(pdiff) > .05) {
+                    if (Math.abs(pdiff) > valueTolerance) {
                             callback.addMessage(GinasProcessingMessage
                                     .WARNING_MESSAGE(
-                                            "Calculated weight ["
-                                                    + String.format("%.2f", tot)
-                                                    + "] is greater than 5% off of given weight ["
-                                                    + String.format("%.2f", p.getValue().average) + "]"));
+                                                String.format("Calculated weight [%.2f] is greater than %.2f%s off of given weight [%.2f]",
+                                                        tot, readInValueTolerance, "%",
+                                                        p.getValue().average)));
                             //katzelda May 2018 - turn off appliable change since there isn't anything to change it to.
 //                                    .appliableChange(true));
                         }
                         //if it gets this far, break out of the properties
                         break;
                     }
+                else {
+                  Logger.trace("no value");
+                }
                 }
             }
 
@@ -197,7 +220,7 @@ public class ProteinValidator extends AbstractValidatorPlugin<Substance> {
             if(sequenceHasChanged) {
                 validateSequenceDuplicates(cs, callback);
             }
-        }
+
         if (!cs.protein.getSubunits().isEmpty()) {
             ValidationUtils.validateReference(cs, cs.protein, callback, ValidationUtils.ReferenceAction.FAIL);
         }
