@@ -50,7 +50,7 @@ echo "Implementation-Vendor: extensions" >> $TMP_DIR/extensions/META-INF/MANIFES
 echo "Main-Class: play.core.server.NettyServer" >> $TMP_DIR/extensions/META-INF/MANIFEST.MF
 
 for fn in $(find $EXT_DIR/app -type f -name \*.java); do
-   javac -g -cp $SRS_DIR/lib/*:$EXT_DIR/lib/*:. -sourcepath $EXT_DIR/app -d $TMP_DIR/extensions $fn
+   javac -g -cp $SRS_DIR/lib/*:$EXT_DIR/lib/*:. -sourcepath $EXT_DIR/app -d $TMP_DIR/extensions -Xlint:all -source 1.8 -target 1.8 -encoding UTF-8 $fn
 done
 
 if [ -d $EXT_DIR/conf ]; then
