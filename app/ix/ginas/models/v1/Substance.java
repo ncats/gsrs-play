@@ -488,7 +488,7 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
 
         @Override
         public String apply(Name name) {
-            return Util.getStringConverter().toStd(name.name);
+            return name.getStandardName();
         }
     };
 
