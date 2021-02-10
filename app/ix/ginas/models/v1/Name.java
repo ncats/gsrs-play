@@ -99,11 +99,11 @@ public class Name extends CommonDataElementOfCollection {
 
     @JsonProperty("_name_html")
     public String getHtmlName() {
-        return Util.getStringConverter().toHtml(name);
+        return Util.getStringConverter().toHtml(getName());
     }
 	@JsonProperty("_name")
 	public String getStandardName() {
-		return Util.getStringConverter().toStd(name);
+		return Util.getStringConverter().toStd(getName());
 	}
 
     public String getName () {
@@ -113,7 +113,7 @@ public class Name extends CommonDataElementOfCollection {
     @PostLoad
 	public void computeStdNameIfNeededOnLoad(){
     	if(stdName ==null && name !=null) {
-			stdName = Util.getStringConverter().toStd(name);
+			stdName = Util.getStringConverter().toStd(getName());
 		}
 	}
     @PrePersist
@@ -124,6 +124,8 @@ public class Name extends CommonDataElementOfCollection {
 			if (name.getBytes().length > 255) {
 				fullName = name;
 				name = Util.getStringConverter().truncate(name, 254);
+			}else{
+				fullName = null;
 			}
 		}
     }

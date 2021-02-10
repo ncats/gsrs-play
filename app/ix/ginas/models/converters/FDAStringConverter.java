@@ -45,6 +45,9 @@ public class FDAStringConverter extends AbstractStringConverter {
      */
     @Override
     public String toHtml(String str){
+        if (str.getBytes().length > 255) {
+            str = truncate(str, 254);
+        }
         return this.replaceFromLists(str, plainStrings, htmlStrings);
     }
 
@@ -69,6 +72,9 @@ public class FDAStringConverter extends AbstractStringConverter {
      */
     @Override
     public String toStd(String str){
+        if (str.getBytes().length > 255) {
+            str = truncate(str, 254);
+        }
         return this.replaceFromLists(str, plainStrings, stdStrings);
     }
 
