@@ -36,7 +36,7 @@ public class HTMLStringConverter extends AbstractStringConverter {
     });
 
 
-    private static String[] allowedHtmlTags = new String[] {"I", "SUB", "SUP", "SMALL"};
+    private static String[] allowedHtmlTags = new String[] {"I", "B", "SUB", "SUP", "SMALL"};
     private static Pattern htmlTagPattern = Pattern.compile("<\\s*/?([^>]+)\\s*>");
     private static char[] brackets = "()[]{}".toCharArray();
     private static String[] htmlStrings = {"&amp;", "&larr;", "&rarr;", "&lt;", "&gt;", "&plusmn;", "-",
