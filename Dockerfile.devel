@@ -1,8 +1,10 @@
 FROM centos:8 AS builder
-RUN dnf -y install dejavu-sans-fonts dejavu-serif-fonts fontconfig git java-1.8.0-openjdk-devel && dnf clean all && fc-cache -f
+RUN dnf -y install dejavu-sans-fonts dejavu-serif-fonts fontconfig git java-1.8.0-openjdk-devel patch && dnf clean all && fc-cache -f
 COPY . /tmp/build
 WORKDIR /tmp/build
 RUN ./activator clean
+RUN mkdir -p modules/extensions/lib modules/extensions/patches
+RUN find modules/extensions/patches -type f -name '*.patch' -print0 | sort -z | xargs -t -0 -n 1 patch -p1 -i
 RUN ./activator -Dconfig.file=modules/ginas/conf/ginas.conf ginas/dist
 RUN cd /opt && \
     jar xf /tmp/build/modules/ginas/target/universal/ginas-*.zip && \
@@ -24,7 +26,7 @@ RUN sed -i "s/#evolutionplugin=disabled/evolutionplugin=disabled/g" conf/ginas-*
 RUN sed -i "s/app_classpath=\"/app_classpath=\"\/extensions\/lib\/*:/g" /opt/g-srs/bin/ginas
 
 FROM centos:8
-RUN dnf -y install dejavu-sans-fonts dejavu-serif-fonts fontconfig git java-1.8.0-openjdk-devel && dnf clean all && fc-cache -f
+RUN dnf -y install dejavu-sans-fonts dejavu-serif-fonts fontconfig git java-1.8.0-openjdk-devel patch && dnf clean all && fc-cache -f
 COPY --from=builder /opt /opt
 COPY --from=builder /root /root
 COPY entrypoint.sh /entrypoint.sh
