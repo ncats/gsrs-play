@@ -105,6 +105,10 @@ public class SpecifiedSubstanceGroup1Substance extends Substance implements Gina
 				}
 			}
 		}
+		if( definitionalElements.isEmpty()) {
+			Logger.trace("SSG1 had no def elements; created one based on name");
+			definitionalElements.add(createPrimaryNameDefElement());
+		}
 		return definitionalElements;
 	}
 }

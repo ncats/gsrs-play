@@ -1,12 +1,14 @@
 package ix.ginas.models.v1;
 
-import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
-import java.util.logging.Logger;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import javax.persistence.*;
+
+import java.util.function.Predicate;
 
 import com.fasterxml.jackson.annotation.*;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -35,8 +37,8 @@ import ix.ginas.models.serialization.PrincipalDeserializer;
 import ix.ginas.models.serialization.PrincipalSerializer;
 import ix.ginas.models.utils.JSONEntity;
 import ix.utils.Global;
+import ix.utils.Util;
 import play.Logger;
-import java.nio.charset.StandardCharsets;
 
 @Backup
 @JSONEntity(name = "substance", title = "Substance")
@@ -282,6 +284,10 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
     @JoinTable(name = "ix_ginas_substance_tags")
     public List<Keyword> tags = new ArrayList<Keyword>();
 
+
+
+    private transient Object inSortLock = new Object();
+    private transient boolean inSort = false;
     public void addTag(Keyword tag){
         for(Keyword k:tags){
             if(k.getValue().equals(tag.getValue()))return;
@@ -326,34 +332,8 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
     }
 
     @JsonIgnore
-    public List<Code> getOrderedCodes(Map<String, Integer> codeSystemOrder){
-
-        List<Code> nlist = new ArrayList<Code>(this.codes);
-
-        nlist.sort(new Comparator<Code>(){
-            @Override
-            public int compare(Code c1, Code c2) {
-                if(c1.codeSystem==null){
-                    if(c2.codeSystem==null){
-                        return 0;
-                    }
-                    return 1;
-                }
-                if(c2.codeSystem==null)return -1;
-                Integer i1=codeSystemOrder.get(c1.codeSystem);
-                Integer i2=codeSystemOrder.get(c2.codeSystem);
-
-                if(i1!=null && i2!=null){
-                    return i1-i2;
-                }
-                if(i1!=null && i2==null)return -1;
-                if(i1==null && i2!=null)return 1;
-                return c1.codeSystem.compareTo(c2.codeSystem);
-            }
-        }
-                );
-
-        return nlist;
+    public List<Code> getOrderedCodes(){
+        return this.codes;
     }
 
     @JsonView(BeanViews.Compact.class)
@@ -472,28 +452,56 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
         return node;
     }
 
-
     @JsonIgnore
     public Optional<Name> getDisplayName(){
-        return getBestName(Name.Sorter.DISPlAY_NAME_FIRST_ENGLISH_FIRST);
+        return names.stream().min(Util.getComparatorFor(Name.class));
     }
 
-    @JsonIgnore
-    public Optional<Name> getBestName(Comparator<Name> comp){
-        return names.stream().max(comp);
-    }
 
-    @Indexable(suggest = true, name = "Display Name", sortable=true)
+
     @JsonProperty("_name")
+    @Indexable(suggest = true, name = "Display Name", sortable=true)
     public String getName() {
+        return getFormattedName(STDNAME_FUNCTION);
+    }
+    @JsonProperty("_name_html")
+    public String getHtmlName() {
+        return getFormattedName(HTMLNAME_FUNCTION);
+
+    }
+    private static Function<Name, String > HTMLNAME_FUNCTION = new Function<Name, String>(){
+
+        @Override
+        public String apply(Name name) {
+            return name.getHtmlName();
+        }
+    };
+
+    private static Function<Name, String > NAME_FUNCTION = new Function<Name, String>(){
+
+        @Override
+        public String apply(Name name) {
+            return name.name;
+        }
+    };
+    private static Function<Name, String > STDNAME_FUNCTION = new Function<Name, String>(){
+
+        @Override
+        public String apply(Name name) {
+            return name.getStandardName();
+        }
+    };
+
+    private String getFormattedName(Function<Name, String> nameFunction) {
+        Objects.requireNonNull(nameFunction, "name Function can not be null");
         Optional<Name> aName = getDisplayName();
         if(aName.isPresent()){
-            return aName.get().name;
+            return nameFunction.apply(aName.get());
         }
         if(this.isAlternativeDefinition()){
             SubstanceReference subref=this.getPrimaryDefinitionReference();
             if(subref!=null){
-                String name1=subref.getName();
+                String name1=subref.getHtmlName();
                 if(name1!=null){
                     return Substance.DEFAULT_ALTERNATIVE_NAME + " for [" + name1 + "]";
                 }
@@ -561,7 +569,7 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
                 officialNames.add(n);
             }
         }
-        return Name.sortNames(officialNames);
+        return officialNames;
     }
 
     @JsonIgnore
@@ -572,15 +580,29 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
                 nonOfficialNames.add(n);
             }
         }
-        return Name.sortNames(nonOfficialNames);
+        return nonOfficialNames;
     }
 
     @JsonIgnore
     public List<Name> getAllNames() {
-        return names;
+        return this.names;
     }
 
-
+    @PostLoad
+    @PrePersist
+    @PreUpdate
+    public void sortLists(){
+        //because this is a postLoad it's possible
+        //calling sort causes ebean to fetch the elements which re-triggers postLoad
+        synchronized(inSortLock) {
+            if (!inSort) {
+                inSort=true;
+                Collections.sort(this.names);
+                Collections.sort(this.codes);
+                inSort = false;
+            }
+        }
+    }
 
     @PrePersist
     @PreUpdate
@@ -789,6 +811,7 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
     @JsonIgnore
     public boolean addAlternativeSubstanceDefinitionRelationship(Substance sub) {
         for(Relationship sref:getAlternativeDefinitionRelationships()){
+            //GSRS-1668 generate UUID if does not exist yet
             if(sref.relatedSubstance.refuuid.equals(sub.getOrGenerateUUID().toString())){
                 return true;
             }
@@ -1125,7 +1148,16 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
     @JsonIgnore
     @Indexable(facet = true, name = "Reference Count", sortable=true)
     public int getReferenceCount(){
-        return references.size();
+	return (int) references.stream()
+		         .filter(new Predicate<Reference>(){
+				public boolean test(Reference r){
+					if(r.docType.equals("SYSTEM") || r.docType.equals("VALIDATION_MESSAGE")){
+						return false;
+					}
+					return true;
+				}
+			 })
+		.count();
     }
 
     @JsonIgnore
@@ -1289,22 +1321,7 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
     @JsonIgnore
     public List<Edit> getEdits(){
         List<Edit> elist = EntityWrapper.of(this).getEdits();
-        elist.sort(new Comparator<Edit>(){
-            public int compare(Edit e1, Edit e2) {
-                       try {
-                           int i1 = Integer.parseInt(e1.version) ;
-                           int i2 = Integer.parseInt(e2.version);
-
-                           return i2 -i1;
-                       }catch (Exception e){
-                            return e2.version.compareTo(e1.version);
-                       }
-            }
-        });
-
-        //this is not entirely necessary, and could be done
-        //more explicitly
-       // return EntityWrapper.of(this).getEdits();
+        elist.sort(Util.getComparatorFor(Edit.class));
         return elist;
     }
 
@@ -1420,7 +1437,17 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
     @JsonIgnore
     @Transient
     public DefinitionalElements getDefinitionalElements(){
-        EntityWrapper.of(this).toFullJsonNode();
+        try {
+            EntityWrapper.of(this).toFullJsonNode();
+        }
+        catch(RuntimeException rex) {
+            if(rex.getMessage().contains("There is no HTTP Context available from here")) {
+                Logger.trace("old http context message");
+            }
+            else {
+                rex.printStackTrace();
+            }
+        }
         List<DefinitionalElement> elements = new ArrayList<>();
 
         //Commenting out for now, but some thought should be given to whether
@@ -1455,16 +1482,22 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
      */
     protected void additionalDefinitionalElements(Consumer<DefinitionalElement> consumer){
 
-			if( isNonSubstanceConcept()) {
-					String primaryName = "";
-					for(Name name : this.names) {
-						if( name.displayName ){
-							primaryName =name.name;
-						}
-					}
-					Logger.debug("going to create DE based on primary name " + primaryName);
-					consumer.accept(DefinitionalElement.of("Name", primaryName, 1));
-				}
+        if( this.substanceClass.toString().equals("concept")) {
+            consumer.accept(createPrimaryNameDefElement());
+        }
+    }
+
+    @JsonIgnore
+    public DefinitionalElement createPrimaryNameDefElement() {
+        String primaryName = "";
+        for(Name name : this.names) {
+            if( name.displayName ){
+                primaryName =name.name;
+            }
+        }
+        if( primaryName.length()==0) primaryName=this.names.get(0).name;
+        Logger.trace("going to create DE based on primary name " + primaryName);
+        return DefinitionalElement.of("Name", primaryName, 1);
     }
 
 //    @PostLoad
@@ -1521,10 +1554,12 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
     @JsonIgnore
     public String getDefHashKeyString() {
         //Logger.trace("going to call getDefinitionalHash");
+        DefinitionalElements currentElements= this.getDefinitionalElements();
+        List<String> layers = currentElements.getDefinitionalHashLayers();
         StringBuilder defHashHashBuilder = new StringBuilder();
-        defHashHashBuilder.append(Integer.toHexString(this.getDefinitionalElements().getDefinitionalHashLayers().get(0).hashCode()));
+        defHashHashBuilder.append(Integer.toHexString(layers.get(0).hashCode()));
         defHashHashBuilder.append("|");
-        defHashHashBuilder.append(Integer.toHexString(this.getDefinitionalElements().getDefinitionalHashLayers().get(1).hashCode()));
+        defHashHashBuilder.append(Integer.toHexString(layers.get(1).hashCode()));
 
         String defHash=defHashHashBuilder.toString();
         Logger.trace("defHashHash: " + defHash);
@@ -1535,13 +1570,13 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
     private String computeDefHashString() {
         try
         {
-            String defHash=Base64.getEncoder().encodeToString( this.getDefinitionalElements().getDefinitionalHash());
+            DefinitionalElements currentElements= this.getDefinitionalElements();
+            List<String> layers = currentElements.getDefinitionalHashLayers();
             StringBuilder defHashBuilder = new StringBuilder();
-            defHashBuilder.append(this.getDefinitionalElements().getDefinitionalHashLayers().get(0));
+            defHashBuilder.append(layers.get(0));
             defHashBuilder.append("|");
-            defHashBuilder.append(this.getDefinitionalElements().getDefinitionalHashLayers().get(1));
+            defHashBuilder.append(layers.get(1));
             String layers12 = defHashBuilder.toString();
-            Logger.trace("defHash: " + defHash);
             Logger.trace("layers12: " + layers12);
             return layers12;
         }

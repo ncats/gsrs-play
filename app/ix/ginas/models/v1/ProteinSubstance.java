@@ -137,6 +137,7 @@ public class ProteinSubstance extends Substance implements GinasSubstanceDefinit
 
 	private void addDefinitionalElements(Consumer<DefinitionalElement> consumer) {
 		play.Logger.trace("starting in ProteinSubstance.addDefinitionalElements");
+		boolean addedElement =false;
 		for(Subunit s : this.protein.subunits){
 			if(s !=null && s.sequence !=null){
 				ProteinSequence seq = ProteinSequence.of(AminoAcid.cleanSequence(s.sequence));
@@ -144,7 +145,7 @@ public class ProteinSubstance extends Substance implements GinasSubstanceDefinit
 				consumer.accept(DefinitionalElement.of("subunitIndex.", s.subunitIndex==null? null: Integer.toString(s.subunitIndex), 1));
 				consumer.accept(DefinitionalElement.of("subunitSeq.", seq.toString(), 1));
 				consumer.accept(DefinitionalElement.of("subunitSeqLength.", Long.toString(seq.getLength()), 1));
-
+				addedElement =true;
 			}
 		}
 
@@ -155,6 +156,7 @@ public class ProteinSubstance extends Substance implements GinasSubstanceDefinit
 			handleGlycosylationSites(glycosylation.getCGlycosylationSites(), "C", consumer);
 			if(glycosylation.glycosylationType !=null){
 				consumer.accept(DefinitionalElement.of("protein.glycosylation.type", glycosylation.glycosylationType, 2));
+				addedElement =true;
 			}
 		}
 		List<DisulfideLink> disulfideLinks = this.protein.getDisulfideLinks();
@@ -162,6 +164,7 @@ public class ProteinSubstance extends Substance implements GinasSubstanceDefinit
 			for(DisulfideLink disulfideLink : disulfideLinks){
 				if(disulfideLink !=null) {
 					consumer.accept(DefinitionalElement.of("protein.disulfide", disulfideLink.getSitesShorthand(), 2));
+					addedElement =true;
 				}
 			}
 		}
@@ -176,6 +179,7 @@ public class ProteinSubstance extends Substance implements GinasSubstanceDefinit
 				if(sites !=null) {
 					String shortHand = SiteContainer.generateShorthand(sites);
 					consumer.accept(DefinitionalElement.of("protein."+shortHand, shortHand, 2));
+					addedElement =true;
 					String type = otherLink.linkageType;
 					if(type !=null){
 						consumer.accept(DefinitionalElement.of("protein."+shortHand +".linkageType", type, 2));
@@ -186,8 +190,13 @@ public class ProteinSubstance extends Substance implements GinasSubstanceDefinit
 
 		if (this.modifications != null) {
 			for(DefinitionalElement element : this.modifications.getDefinitionalElements().getElements()) {
+				addedElement =true;
 				consumer.accept(element);
 			}
+		}
+		if( !addedElement) {
+			play.Logger.trace("protein had no def elements; created one based on name");
+			consumer.accept(createPrimaryNameDefElement());
 		}
 	}
 

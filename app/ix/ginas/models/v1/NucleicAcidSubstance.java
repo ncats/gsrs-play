@@ -227,6 +227,10 @@ public class NucleicAcidSubstance extends Substance implements GinasSubstanceDef
 			definitionalElements.addAll(this.modifications.getDefinitionalElements().getElements());
 		}
 
+		if( definitionalElements.isEmpty()) {
+			Logger.trace("nucleic acid had no def elements; created one based on name");
+			definitionalElements.add(createPrimaryNameDefElement());
+		}
 		return definitionalElements;
 	}
 }

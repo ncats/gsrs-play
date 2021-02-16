@@ -62,7 +62,7 @@ public class DefinitionalHashKeyReportTask extends ScheduledTaskInitializer {
                         //LogUtil.trace(()->" in consumer " +count.incrementAndGet() + " class " + s.substanceClass);
                         String line =String.format("%s\t%s\t%s\t%s\t%s\t%s", s.getUuid().toString(),
                                 s.substanceClass,
-                                s.getName(), s.getApprovalID(),
+                                s.getName(), (s.getApprovalID() ==  null? "[no approval id]" :s.getApprovalID()),
                                 s.getDefHashString(),
                                 s.getDefHashKeyString());
                         LogUtil.trace(()->line);
