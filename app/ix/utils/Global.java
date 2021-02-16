@@ -244,7 +244,7 @@ public class Global extends GlobalSettings {
 			return h;
 		} catch (Exception ex) {
 			// no available http context..
-			Logger.trace("No available HTTP context!", ex);
+			Logger.trace("No available HTTP context!");
 		}
 		return "";
 	}

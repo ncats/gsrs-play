@@ -1437,7 +1437,7 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
     @JsonIgnore
     @Transient
     public DefinitionalElements getDefinitionalElements(){
-        try {
+        /*try {
             EntityWrapper.of(this).toFullJsonNode();
         }
         catch(RuntimeException rex) {
@@ -1447,7 +1447,7 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
             else {
                 rex.printStackTrace();
             }
-        }
+        }*/
         List<DefinitionalElement> elements = new ArrayList<>();
 
         //Commenting out for now, but some thought should be given to whether
@@ -1495,7 +1495,9 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
                 primaryName =name.name;
             }
         }
-        if( primaryName.length()==0) primaryName=this.names.get(0).name;
+        if( primaryName.length()==0){
+            primaryName=this.names.size()>0 ? this.names.get(0).name : this.getOrGenerateUUID().toString();
+        }
         Logger.trace("going to create DE based on primary name " + primaryName);
         return DefinitionalElement.of("Name", primaryName, 1);
     }
