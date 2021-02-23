@@ -1,0 +1,60 @@
+version: '2.1'
+services:
+  ginas:
+    build: .
+    image: ginas
+    restart: always
+    read_only: true
+    ports:
+      - 9000:9000
+    depends_on:
+      db:
+        condition: service_healthy
+    links:
+      - db
+    volumes:
+      - ginasdata:/data
+    tmpfs:
+      - /tmp
+    environment:
+      GSRS_CACHE_RESET: 'false'
+      GSRS_DB_RESET: 'false'
+      JAVA_OPTS: '-Xms4096m -Xmx4096m -XX:ReservedCodeCacheSize=512m -Dpidfile.path=/dev/null -DapplyEvolutions.default=false -Dconfig.file=/opt/g-srs/conf/ginas-mysql.conf'
+      HOME: '/root'
+  db:
+    image: mariadb
+    restart: always
+    read_only: true
+    volumes:
+      - ginasdb:/var/lib/mysql
+    tmpfs:
+      - /tmp
+      - /run/mysqld
+    healthcheck:
+      test: mysqladmin -u root -ppassword ping
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: ixginasdev
+#  db:
+#    image: postgres
+#    restart: always
+#    read_only: true
+#    volumes:
+#      - ginasdb:/var/lib/postgresql/data
+#    tmpfs:
+#      - /tmp
+#      - /run/postgresql
+#    healthcheck:
+#      test: pg_isready -U postgres
+#      interval: 10s
+#      timeout: 5s
+#      retries: 5
+#    environment:
+#      POSTGRES_PASSWORD: password
+#      POSTGRES_DB: ginas
+volumes:
+  ginasdb:
+  ginasdata:

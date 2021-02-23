@@ -33,7 +33,7 @@
         </div>
         <div class = "panel-footer nameDiv" data-toggle="tooltip" title="@chem.getName()">
             <a href="@ix.ginas.controllers.routes.GinasApp.substance(GinasApp.getId(chem))" target="_self">
-                @chem.getName()
+                @Html(chem.getHtmlName())
             </a>
             <div class = "row">
                 <div class = "col-md-12 text-center">

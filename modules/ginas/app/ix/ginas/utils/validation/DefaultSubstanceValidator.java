@@ -150,7 +150,16 @@ public class DefaultSubstanceValidator extends AbstractValidator<Substance> {
 	@Override
 	public ValidationResponse<Substance> validate(Substance objnew, Substance objold) {
 		
-		
+		//setting validation to false causes NPE problems, this fixes them
+
+		if(_strategy==null){
+			ValidationResponseBuilder callback = new ValidationUtils.GinasValidationResponseBuilder(objnew);
+			ValidationResponse<Substance> resp =  callback.buildResponse();
+			resp.setValid();
+			resp.addValidationMessage(GinasProcessingMessage.SUCCESS_MESSAGE("Substance is valid"));
+			return resp;
+		}
+
 		ValidationResponseBuilder callback = new ValidationUtils.GinasValidationResponseBuilder(objnew, _strategy);
 
 		//turn off duplicate checking in batch mode

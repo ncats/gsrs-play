@@ -15,6 +15,7 @@
                 <th>Code System</th>
                 <th>Type</th>
                 <th>Description</th>
+                <th>Access</th>
                 <th>References</th>
             </tr>
         </thead>
@@ -30,7 +31,15 @@
                 <td>
                     <tree-view text = "'@c.comments'"></tree-view>
                 </td>
-
+                <td>
+                    <div class="table-responsive" style="text-align:center">
+                    @if(c.isPublic()){
+                        <i uib-tooltip = "Public name" class="fa fa-unlock fa-2x fa-1_1x success"></i>
+                    }else{
+                        <i uib-tooltip = "Not a public name" class="fa fa-lock fa-2x fa-1_1x warning"></i>
+                    }
+                    </div>
+                </td>
 
                 @if(c.getReferences.size > 0){
                     <td>

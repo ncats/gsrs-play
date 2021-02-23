@@ -29,7 +29,7 @@ import ix.ginas.models.utils.JSONEntity;
 @Entity
 @Table(name = "ix_ginas_moiety")
 //@JsonIgnoreProperties({ "id" })
-public class Moiety extends CommonDataElementOfCollection implements Comparable<Moiety>{
+public class Moiety extends CommonDataElementOfCollection{
 	public static String JSON_NULL="JSON_NULL";
 	
     @OneToOne(cascade=CascadeType.ALL)
@@ -141,19 +141,5 @@ public class Moiety extends CommonDataElementOfCollection implements Comparable<
 			temp.addAll(count.getAllChildrenAndSelfCapableOfHavingReferences());
 		}
 		return temp;
-	}
-
-	@Override
-	public int compareTo(Moiety o) {
-		if(innerUuid ==null){
-			if(o.innerUuid ==null) {
-				return 0;
-			}
-			return 1;
-		}
-		if(o.innerUuid ==null){
-			return -1;
-		}
-		return innerUuid.compareTo(o.innerUuid);
 	}
 }

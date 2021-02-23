@@ -514,7 +514,7 @@ public class GinasApp extends App {
      * @return
      */
     public static Collection<List<Code>> getOrderedGroupedCodes(Substance s, int max) {
-        return getGroupedCodes(s.getOrderedCodes(getCodeSystemOrder()), max);
+        return getGroupedCodes(s.getOrderedCodes(), max);
     }
 
     public static String getFirstOrElse(String[] s, String def) {
@@ -2572,23 +2572,6 @@ public class GinasApp extends App {
     }
 
 
-    private static CachedSupplier<Map<String, Integer>> codeSystemOrder = CachedSupplier.of(() -> {
-        // Add specific codes to ordered list
-        List<String> codeSystems = ConfigHelper.getOrDefault("ix.ginas.codes.order",
-                new ArrayList<String>());
-
-        int i = 0;
-        Map<String, Integer> order = new HashMap<String, Integer>();
-        for (String s : codeSystems) {
-            order.put(s, i++);
-        }
-        return order;
-    });
-
-    public static Map<String, Integer> getCodeSystemOrder() {
-        return codeSystemOrder.get();
-    }
-
     /**
      * Get the HTML for the list view of a given type.
      *
@@ -2923,7 +2906,7 @@ public class GinasApp extends App {
                 Key key=EntityWrapper.of(nuc).getKey();
                 Map<String,Object> added = IxCache.getMatchingContext(this.getContext(), key);
                 if(added==null){
-                    added=new HashMap<String,Object>();
+                    added=new HashMap<>();
                 }
                 List<SequenceIndexer.Result> alignments = (List<SequenceIndexer.Result>)
                         added.computeIfAbsent("alignments", f->new ArrayList<SequenceIndexer.Result>());

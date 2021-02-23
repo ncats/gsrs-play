@@ -12,6 +12,7 @@
                     <th>Modification Role</th>
                     <th>Parameter Name</th>
                     <th>Amount</th>
+                    <th>Access</th>
                 </tr>
             </thead>
             @for(m <- mods) {
@@ -27,9 +28,20 @@
                             @pm.parameterName
                         }
                         </td>
+                        <td>
                         @if(pm.amount != null) {
                             <amount value="@GinasApp.getAsJson(pm.amount)"></amount>
                         }
+                        </td>
+                        <td>
+                            <div style="text-align:center">
+                            @if(m.isPublic()){
+                                <i uib-tooltip = "Public name" class="fa fa-unlock fa-2x fa-1_1x success"></i>
+                            }else{
+                                <i uib-tooltip = "Not a public name" class="fa fa-lock fa-2x fa-1_1x warning"></i>
+                            }
+                            </div>
+                        </td>
                     </tr>
                 }
             }

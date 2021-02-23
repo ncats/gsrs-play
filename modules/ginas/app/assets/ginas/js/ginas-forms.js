@@ -1,6 +1,10 @@
 (function () {
     var ginasForms = angular.module('ginasForms', ['bootstrap.fileField']);
 
+    ginasForms.filter('trustAsHtml', function($sce) {
+        return $sce.trustAsHtml;
+    });
+
     ginasForms.service('toggler', function ($compile, $templateRequest, spinnerService) {
 
         var childScope;

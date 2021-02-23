@@ -158,11 +158,13 @@ public class SubstanceValidSubmitTest extends AbstractGinasServerTest {
 	public static void assertThatNonDestructive(JsonNode before, JsonNode after) throws AssertionError {
 
 		JsonNode jp = JsonDiff.asJson(before, after);
+
 		for (JsonNode jn : jp) {
 
 			if (jn.get("op").asText().equals("remove")) {
 				if (jn.get("path").asText().equals("/protein/modifications")
 						|| jn.get("path").asText().equals("/nucleicAcid/modifications")
+						|| jn.get("path").asText().startsWith("/codes/")
 						|| jn.get("path").asText().contains("nameOrgs") || // silly
 																			// hacks
 																			// to
@@ -171,6 +173,7 @@ public class SubstanceValidSubmitTest extends AbstractGinasServerTest {
 																			// for
 																			// above
 						jn.get("path").asText().contains("domains") || (jn.get("path").asText().startsWith("/names/")
+
 								&& jn.get("path").asText().contains("references"))) {
 					// acceptable removals, do nothing
 

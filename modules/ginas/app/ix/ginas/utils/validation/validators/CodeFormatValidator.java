@@ -25,8 +25,9 @@ public class CodeFormatValidator extends AbstractValidatorPlugin<Substance>
     public void validate(Substance s, Substance oldSubstance, ValidatorCallback callback)
     {
         Map<String, List<Code>> codesBySystem = s.getCodes().stream()
-                .collect(Collectors.groupingBy(c-> c.codeSystem,
-                        Collectors.toList()));
+								.filter(c-> c.codeSystem != null)
+                                .collect(Collectors.groupingBy(c-> c.codeSystem,
+                                                Collectors.toList()));
 
         ControlledVocabulary cvv = ControlledVocabularyFactory.getControlledVocabulary("CODE_SYSTEM");
         for(VocabularyTerm vt1 : cvv.terms){
@@ -37,6 +38,13 @@ public class CodeFormatValidator extends AbstractValidatorPlugin<Substance>
             if(codeSystemRegex != null && !codeSystemRegex.isEmpty() && codes !=null){
                 Pattern codePattern = Pattern.compile(codeSystemRegex);
                 for(Code c : codes){
+                    if(c ==null){
+                        continue;
+                    }
+                    String codeToCheck = c.getCode();
+                    if(codeToCheck ==null){
+                        continue;
+                    }
                     Matcher matcher = codePattern.matcher(c.getCode());
                     //find ? or matches?
                     if(!matcher.find()){

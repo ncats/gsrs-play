@@ -12,9 +12,11 @@
             <!-- <h5>The following mixtures contain this record:</h5>-->
         <div class = "row">
         @for(c <- parents) {
-            <div class="col-md-3">
-            @subref(c.asSubstanceReference())
-            </div>
+            @if(c.isPublic()) {
+                <div class="col-md-3">
+                @subref(c.asSubstanceReference())
+                </div>
+            }
         }
         </div>
     </div>

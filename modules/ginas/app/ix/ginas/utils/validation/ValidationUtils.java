@@ -13,6 +13,7 @@ import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 
 import ix.core.UserFetcher;
+import ix.core.search.SearchOptions;
 import ix.core.validator.*;
 import ix.core.chem.Chem;
 import ix.core.chem.StructureProcessor;
@@ -645,7 +646,7 @@ public class ValidationUtils {
 			strat.processMessage(mes);
 			if (mes.actionType == GinasProcessingMessage.ACTION_TYPE.APPLY_CHANGE) {
 				if (s.names.size() > 0) {
-					Name.sortNames(s.names);
+					s.sortLists();
 					s.names.get(0).displayName = true;
 					mes.appliedChange = true;
 				}
@@ -1773,13 +1774,14 @@ public class ValidationUtils {
 	}
 
 	public static List<Substance> findDefinitionaLayer1lDuplicateCandidates(Substance substance){
-		Logger.debug("starting in findDefinitionaLayer1lDuplicateCandidates. ");
+		Logger.trace("starting in findDefinitionaLayer1lDuplicateCandidates. ");
 		List<Substance> candidates = new ArrayList<>();
 		try	{
 			String layer1Search = "root_definitional_hash_layer_1:"
 											+ substance.getDefinitionalElements().getDefinitionalHashLayers().get(0);
-			Logger.debug("	layer1Search: " + layer1Search);
+			Logger.trace("	layer1Search: " + layer1Search);
 			SearchResult sres = new SearchRequest.Builder()
+							.simpleSearchOnly(true)
 							.query(layer1Search)
 							.kind(Substance.class)
 							.fdim(0)
@@ -1787,13 +1789,13 @@ public class ValidationUtils {
 							.execute();
 			sres.waitForFinish();
 			List<Substance> submatches = (List<Substance>) sres.getMatches();
-			Logger.debug("size of intial match list in findDefinitionaLayer1lDuplicateCandidates: "
+			Logger.trace("size of initial match list in findDefinitionaLayer1lDuplicateCandidates: "
 							+ submatches.size());
 
 			//return submatches.stream().filter(s -> !s.getUuid().equals(substance.getUuid())).collect(Collectors.toList());
 			for (int i = 0; i < submatches.size(); i++)	{
 				Substance s = submatches.get(i);
-				if (!s.getUuid().equals(substance.getUuid()))	{
+				if (s !=null && !s.getUuid().equals(substance.getUuid()))	{
 					candidates.add(s);
 				}
 			}
@@ -1804,26 +1806,25 @@ public class ValidationUtils {
 	}
 
 	public static List<Substance> findFullDefinitionalDuplicateCandidates(Substance substance){
-		Logger.debug("starting in findFullDefinitionalDuplicateCandidates. def has: "
-						+ substance.getDefinitionalElements().getDefinitionalHashLayers().get(0));
 		List<Substance> candidates = new ArrayList<>();
 		try	{
 			Builder searchBuilder= new SearchRequest.Builder();
 			List<String> hashes= substance.getDefinitionalElements().getDefinitionalHashLayers();
-			for(int layer = 0; layer < hashes.size(); layer++) {
-				Logger.debug("handling layer: " + (layer+1));
+			int layer = hashes.size()-1;
+			Logger.trace("handling layer: " + (layer+1));
 				String searchItem = "root_definitional_hash_layer_" + (layer+1) + ":"
-								+ substance.getDefinitionalElements().getDefinitionalHashLayers().get(layer);
+                                                                + hashes.get(layer);
 				searchBuilder = searchBuilder.query(searchItem);
-			}
+
 			SearchResult sres = searchBuilder
 							.kind(Substance.class)
+							.simpleSearchOnly(true)
 							.fdim(0)
 							.build()
 							.execute();
 			sres.waitForFinish();
 			List<Substance> submatches = (List<Substance>) sres.getMatches();
-			Logger.debug("total submatches: " + submatches.size());
+			Logger.trace("total submatches: " + submatches.size());
 
 			for (int i = 0; i < submatches.size(); i++)	{
 				Substance s = submatches.get(i);

@@ -39,8 +39,10 @@ import java.util.zip.ZipInputStream;
 import com.avaje.ebean.Expression;
 import com.fasterxml.jackson.databind.JsonNode;
 
+import ix.core.factories.ComparatorFactory;
 import ix.core.util.CachedSupplier;
 import ix.core.util.ConfigHelper;
+import ix.core.util.EntityUtils;
 import ix.core.util.StreamUtil;
 import ix.core.util.TimeUtil;
 import play.Logger;
@@ -51,6 +53,8 @@ import play.mvc.Http;
 
 import java.io.*;
 
+import ix.ginas.models.converters.PlainStringConverter;
+import ix.ginas.models.converters.StringConverter;
 import ix.ginas.models.v1.GinasChemicalStructure;
 import ix.ginas.models.GinasCommonData;
 
@@ -62,10 +66,27 @@ public class Util {
         "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2227.1 Safari/537.36",
         "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/36.0.1944.0 Safari/537.36"
     };
+
+    private static CachedSupplier<ComparatorFactory> COMPARATOR_FACTORY = CachedSupplier.of(() ->ComparatorFactory.getInstance(Play.application()));
+
+    public static Comparator getComparatorFor(Class<?> cls){
+        return COMPARATOR_FACTORY.get().getSingleResourceFor(EntityUtils.getEntityInfoFor(cls));
+    }
+
     public static CachedSupplier<Long> TIME_RESOLUTION_MS=
     		ConfigHelper.supplierOf("ix.tokenexpiretime",(long)(3600*1000*24));
 
     private static int BUFFER_SIZE = 8192; //8K
+
+    private static StringConverter STRING_CONVERTER = new PlainStringConverter();
+
+    public static StringConverter getStringConverter() {
+        return STRING_CONVERTER;
+    }
+
+    public static void setStringConverter(StringConverter stringConverter) {
+        STRING_CONVERTER = stringConverter;
+    }
 
     static Random rand = new Random ();
     public static String randomUserAgent () {

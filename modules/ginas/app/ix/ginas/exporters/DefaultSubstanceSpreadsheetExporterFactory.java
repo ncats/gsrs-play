@@ -4,7 +4,6 @@ import ix.core.exporters.OutputFormat;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.io.UncheckedIOException;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Set;

@@ -86,6 +86,7 @@ public class StructurallyDiverseSubstance extends Substance implements GinasSubs
     7) Source material type layer 1
 		8) Modifications (3 types) layer 2
 		9) Properties (values and parameter values) layer 2
+		10) adding developmentalStage to layer 2 on 28 December 2020
 		*/
 		Logger.debug("in StructurallyDiverse additionalElementsFor");
 		List<DefinitionalElement> definitionalElements = new ArrayList<>();
@@ -93,33 +94,33 @@ public class StructurallyDiverseSubstance extends Substance implements GinasSubs
 			DefinitionalElement parentElement = DefinitionalElement.of("structurallyDiverse.parentSubstance.refuuid",
 							structurallyDiverse.parentSubstance.refuuid, 1);
 			definitionalElements.add(parentElement);
-			Logger.debug("adding parent to the def hash: " + this.structurallyDiverse.parentSubstance.refuuid);
+			Logger.trace("adding parent to the def hash: " + this.structurallyDiverse.parentSubstance.refuuid);
 		}
 
 		if( this.structurallyDiverse.organismFamily != null && this.structurallyDiverse.organismFamily.length() > 0) {
 			DefinitionalElement familyElement = DefinitionalElement.of("structurallyDiverse.organismFamily",
                                                                 this.structurallyDiverse.organismFamily.toUpperCase(), 1);
 			definitionalElements.add(familyElement);
-			Logger.debug("adding family to the def hash: " + this.structurallyDiverse.organismFamily.toUpperCase());
+			Logger.trace("adding family to the def hash: " + this.structurallyDiverse.organismFamily.toUpperCase());
 		}
 
 		if( this.structurallyDiverse.organismGenus != null && this.structurallyDiverse.organismGenus.length() > 0) {
 			DefinitionalElement genusElement = DefinitionalElement.of("structurallyDiverse.organismGenus",
                                                                 this.structurallyDiverse.organismGenus.toUpperCase(), 1);
 			definitionalElements.add(genusElement);
-			Logger.debug("adding genus to the def hash: " + this.structurallyDiverse.organismGenus.toUpperCase());
+			Logger.trace("adding genus to the def hash: " + this.structurallyDiverse.organismGenus.toUpperCase());
 		}
 		if( this.structurallyDiverse.organismSpecies != null && this.structurallyDiverse.organismSpecies.length() > 0) {
 			DefinitionalElement speciesElement = DefinitionalElement.of("structurallyDiverse.organismSpecies",
                                                                 this.structurallyDiverse.organismSpecies.toUpperCase(), 1);
 			definitionalElements.add(speciesElement);
-			Logger.debug("adding species to the def hash: " + this.structurallyDiverse.organismSpecies);
+			Logger.trace("adding species to the def hash: " + this.structurallyDiverse.organismSpecies);
 		}
 		if( this.structurallyDiverse.organismAuthor != null &&  this.structurallyDiverse.organismAuthor.length() > 0) {
 			DefinitionalElement authorElement = DefinitionalElement.of("structurallyDiverse.organismAuthor",
 							structurallyDiverse.organismAuthor.toUpperCase(), 2);
 			definitionalElements.add(authorElement);
-			Logger.debug("adding author to the def hash: " + authorElement);
+			Logger.trace("adding author to the def hash: " + authorElement);
 		}
 
 		if( this.structurallyDiverse.part != null && this.structurallyDiverse.part.size() >0) {
@@ -128,7 +129,7 @@ public class StructurallyDiverseSubstance extends Substance implements GinasSubs
 				DefinitionalElement partElement = DefinitionalElement.of("structurallyDiverse.part",
 							(p.term !=null && p.term.length() >0) ? p.term.toUpperCase() : p.term, 1);
 				definitionalElements.add(partElement);
-				Logger.debug("adding part to the def hash: " + partElement);
+				Logger.trace("adding part to the def hash: " + partElement);
 			}
 		}
 
@@ -142,43 +143,49 @@ public class StructurallyDiverseSubstance extends Substance implements GinasSubs
 		DefinitionalElement sourceMaterialClassElement = DefinitionalElement.of("structurallyDiverse.sourceMaterialClass",
 						this.structurallyDiverse.sourceMaterialClass.toUpperCase(), 1);
 		definitionalElements.add(sourceMaterialClassElement);
-			Logger.debug("adding sourceMaterialClass to the def hash: " + this.structurallyDiverse.sourceMaterialClass.toUpperCase());
+			Logger.trace("adding sourceMaterialClass to the def hash: " + this.structurallyDiverse.sourceMaterialClass.toUpperCase());
 		}
 		if( this.structurallyDiverse.sourceMaterialType != null && this.structurallyDiverse.sourceMaterialType.length() > 0)
 		{
 		DefinitionalElement sourceMaterialTypeElement = DefinitionalElement.of("structurallyDiverse.",
 						this.structurallyDiverse.sourceMaterialType.toUpperCase(), 1);
 		definitionalElements.add(sourceMaterialTypeElement);
-		Logger.debug("adding sourceMaterialType to the def hash: " + this.structurallyDiverse.sourceMaterialType);
+			Logger.trace("adding sourceMaterialType to the def hash: " + this.structurallyDiverse.sourceMaterialType);
 		}
 		if( this.structurallyDiverse.fractionName != null && this.structurallyDiverse.fractionName.length() >0) {
 			DefinitionalElement fractionNameElement = DefinitionalElement.of("structurallyDiverse.fractionName",
 							structurallyDiverse.fractionName.toUpperCase().trim(), 1);
 			definitionalElements.add(fractionNameElement);
-			Logger.debug("adding fractionName to the def hash: " + this.structurallyDiverse.fractionName.toUpperCase().trim());
+			Logger.trace("adding fractionName to the def hash: " + this.structurallyDiverse.fractionName.toUpperCase().trim());
 		}
 
 		if( this.structurallyDiverse.fractionMaterialType != null && this.structurallyDiverse.fractionMaterialType.length() >0) {
 			DefinitionalElement fractionTypeElement = DefinitionalElement.of("structurallyDiverse.fractionMaterialType",
 							structurallyDiverse.fractionMaterialType.toUpperCase().trim(), 1);
 			definitionalElements.add(fractionTypeElement);
-			Logger.debug("adding fractionMaterialType to the def hash: " + this.structurallyDiverse.fractionMaterialType.toUpperCase().trim());
+			Logger.trace("adding fractionMaterialType to the def hash: " + this.structurallyDiverse.fractionMaterialType.toUpperCase().trim());
 		}
 
 		if( this.structurallyDiverse.infraSpecificType != null && structurallyDiverse.infraSpecificType.length() >0 ) {
 			DefinitionalElement infraSpecTypeElement = DefinitionalElement.of("structurallyDiverse.infraSpecificType",
 							this.structurallyDiverse.infraSpecificType.toUpperCase(), 2);
 			definitionalElements.add(infraSpecTypeElement);
-			Logger.debug("adding infraSpecificType to the def hash: " + this.structurallyDiverse.infraSpecificType.toUpperCase());
+			Logger.trace("adding infraSpecificType to the def hash: " + this.structurallyDiverse.infraSpecificType.toUpperCase());
 		}
 
 		if( this.structurallyDiverse.infraSpecificName != null && structurallyDiverse.infraSpecificName.length() >0 ) {
 			DefinitionalElement infraSpecNameElement = DefinitionalElement.of("structurallyDiverse.infraSpecificName",
 							this.structurallyDiverse.infraSpecificName.toUpperCase(), 2);
 			definitionalElements.add(infraSpecNameElement);
-			Logger.debug("adding infraSpecificName to the def hash: " + this.structurallyDiverse.infraSpecificName.toUpperCase());
+			Logger.trace("adding infraSpecificName to the def hash: " + this.structurallyDiverse.infraSpecificName.toUpperCase());
 		}
 
+		if (structurallyDiverse.developmentalStage != null && structurallyDiverse.developmentalStage.length() > 0) {
+			DefinitionalElement devStageElement = DefinitionalElement.of("structurallyDiverse.developmentalStage",
+					this.structurallyDiverse.developmentalStage.toUpperCase(), 2);
+			Logger.trace("adding developmentalStage to the def hash: " + this.structurallyDiverse.developmentalStage.toUpperCase());
+			definitionalElements.add(devStageElement);
+		}
 		if( this.modifications != null ){
 			definitionalElements.addAll(this.modifications.getDefinitionalElements().getElements());
 		}
@@ -191,7 +198,7 @@ public class StructurallyDiverseSubstance extends Substance implements GinasSubs
 					DefinitionalElement propertyValueDefElement =
 									DefinitionalElement.of(defElementName, property.getValue().toString(), 2);
 					definitionalElements.add(propertyValueDefElement);
-					Logger.debug("added def element for property " + defElementName);
+					Logger.trace("added def element for property " + defElementName);
 					for(Parameter parameter : property.getParameters()) {
 						defElementName = String.format("properties.%s.parameters.%s.value",
 									property.getName(), parameter.getName());
@@ -200,7 +207,7 @@ public class StructurallyDiverseSubstance extends Substance implements GinasSubs
 											DefinitionalElement.of(defElementName,
 															parameter.getValue().toString(), 2);
 							definitionalElements.add(propertyParamValueDefElement);
-							Logger.debug("added def element for property parameter " + defElementName);
+							Logger.trace("added def element for property parameter " + defElementName);
 						}
 					}
 				}

@@ -296,6 +296,11 @@ public class PojoDiffTest{
 
     }
 
+    private Property createNewInstanceWithSameId(Property orig){
+		Property update = new Property();
+		update.setUuid(orig.getOrGenerateUUID());
+		return update;
+	}
 
     @Test
     public void addToList() throws Exception {
@@ -311,7 +316,9 @@ public class PojoDiffTest{
         p1.setName( "foo");
         updatedParams.add(p1);
 
-        Property update = new Property();
+        p1.getOrGenerateUUID();
+
+        Property update = createNewInstanceWithSameId(prop);
 
         update.setParameters(updatedParams);
 
@@ -345,7 +352,7 @@ public class PojoDiffTest{
         
         updatedParams.stream().forEach(p->p.getOrGenerateUUID());
 
-        Property update = new Property();
+		Property update = createNewInstanceWithSameId(prop);
 
         update.setParameters(updatedParams);
 
@@ -520,7 +527,8 @@ public class PojoDiffTest{
 	
 	
 	        Property update = new Property();
-	
+			update.setUuid(prop.getOrGenerateUUID());
+
 	        List<Parameter> newParams=new ArrayList<Parameter>();
 	        newParams.add(p2);
 	        newParams.add(p1);
@@ -626,13 +634,14 @@ public class PojoDiffTest{
 	        originalParams.add(p2);
 	
 	        Property prop = new Property();
-	
+
 	        prop.setParameters(originalParams);
 	
 	
-	        Property update = new Property();
-	
-	        List<Parameter> newParams=new ArrayList<Parameter>();
+	        Property update = createNewInstanceWithSameId(prop);
+
+
+	        List<Parameter> newParams=new ArrayList<>();
 	        Parameter p3 = new Parameter();
 	        p3.setName("foobar");
 	        newParams.add(p1);
@@ -641,10 +650,29 @@ public class PojoDiffTest{
 	        update.setParameters(newParams);
 	        prop=getChanged(prop, update);
 	        assertTrue(prop.getParameters().size()==3);
-	        assertEquals(update,prop);
+		fixIdsForEqualsWorkaround(prop, update, 2);
+		assertEquals(update,prop);
 	        
     }
-    @Test
+
+	/**
+	 * In GSRS 2.7 we made a bug fix to GinascommonData equals methods if the uuid was null,
+	 * this breaks these tests since we serialize the json with null uuids so reading back the actual
+	 * vs expected become different instances which will get different UUIDs assigned.  This method
+	 * sets the UUIDs after we check the old JSON diff part but before we check
+	 * for object equality by forcing the UUIDs we added in the expected and actual objects
+	 * under test so the equals check has a chance to pass assuming the other fields are properly set.
+	 * @param prop
+	 * @param update
+	 * @param ids
+	 */
+	protected void fixIdsForEqualsWorkaround(Property prop, Property update, Integer... ids) {
+    	for(int id : ids) {
+			prop.getParameters().get(id).setUuid(update.getParameters().get(id).getOrGenerateUUID());
+		}
+	}
+
+	@Test
     public void addNewToFrontOfListWithoutIDSimple() throws Exception {
         List<Parameter> originalParams = new ArrayList<>();
         Parameter p1 = new Parameter();
@@ -663,7 +691,7 @@ public class PojoDiffTest{
         prop.setParameters(originalParams);
 
 
-        Property update = new Property();
+        Property update = createNewInstanceWithSameId(prop);
 
         List<Parameter> newParams=new ArrayList<Parameter>();
         Parameter p3 = new Parameter();
@@ -675,6 +703,7 @@ public class PojoDiffTest{
         update.setParameters(newParams);
         prop=getChanged(prop, update);
         assertTrue(prop.getParameters().size()==3);
+		fixIdsForEqualsWorkaround(prop, update, 0);
         assertEquals(update,prop);
 
     }
@@ -698,7 +727,7 @@ public class PojoDiffTest{
         prop.setParameters(originalParams);
 
 
-        Property update = new Property();
+		Property update = createNewInstanceWithSameId(prop);
 
         List<Parameter> newParams=new ArrayList<Parameter>();
         Parameter p3 = new Parameter();
@@ -720,6 +749,7 @@ public class PojoDiffTest{
         update.setParameters(newParams);
         prop=getChanged(prop, update);
         assertEquals(5, prop.getParameters().size());
+		fixIdsForEqualsWorkaround(prop, update, 0,1,2);
         assertEquals(update,prop);
 
     }

@@ -33,6 +33,8 @@ public class WebCrawlerTest  extends AbstractGinasClassServerTest {
 
     @BeforeClass
     public static void createAdminAndLoadData() throws Exception{
+        ts.modifyConfig( "substance.validators=[]", GinasTestServer.ConfigOptions.ALL_TESTS);
+        ts.restart();
         admin = ts.createAdmin("admin2", "adminPass");
         loadRep90();
     }

@@ -17,6 +17,7 @@
                 <th>Type</th>
                 @if(full){
                 <th>Details</th>
+                <th>Access</th>
                 <th>References</th>
                 }
             </tr>
@@ -54,6 +55,15 @@
 
 
 
+                    </td>
+                    <td>
+                        <div style="text-align:center">
+                        @if(r.isPublic()){
+                            <i uib-tooltip = "Public name" class="fa fa-unlock fa-2x fa-1_1x success"></i>
+                        }else{
+                            <i uib-tooltip = "Not a public name" class="fa fa-lock fa-2x fa-1_1x warning"></i>
+                        }
+                        </div>
                     </td>
 
                     <td>

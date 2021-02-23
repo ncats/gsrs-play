@@ -1,6 +1,10 @@
 (function () {
     var ginasFormElements = angular.module('ginasFormElements', []);
 
+    ginasFormElements.filter('trustAsHtml', function($sce) {
+        return $sce.trustAsHtml;
+    });
+
     ginasFormElements.factory('CVFields', function ($rootScope,$http, $q) {
         var vocabulariesUrl = baseurl + "api/v1/vocabularies";
         var CV = {
@@ -1027,7 +1031,7 @@
                 size: '='
             },
             link: function (scope, element) {
-                var template = angular.element('<div><rendered id = {{subref.refuuid}} size = {{size}}></rendered><br/><code>{{subref.refPname}}</code></div>');
+                var template = angular.element('<div><rendered id = {{subref.refuuid}} size = {{size}}></rendered><br/><code ng-bind-html="subref.refPname | trustAsHtml"></code></div>');
                 element.append(template);
                 $compile(template)(scope);
             }

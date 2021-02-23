@@ -1,6 +1,7 @@
 package ix.ginas.controllers.v1;
 
 import java.util.*;
+import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
@@ -72,7 +73,7 @@ public class CodeFactory extends EntityFactory {
         return field (uuid, path, finder);
     }
     
-    public static Optional<Tuple<Long,Code>> getHighestValueCode(String codeSystem, String suffix){
+    public static Optional<Tuple<Long,Code>> getHighestValueCode(String codeSystem, String suffix, Long last){
     	try(Stream<Code> codes=StreamUtil.forIterator(
     				finder.where()
     				.and(com.avaje.ebean.Expr.like("code","%" + suffix), com.avaje.ebean.Expr.eq("codeSystem",codeSystem))
@@ -82,6 +83,12 @@ public class CodeFactory extends EntityFactory {
 	    		.map(new Function<Code,Tuple<Long,Code>>(){
                     public Tuple<Long,Code> apply(Code cd){
                         return Tuple.of(new Long(Long.parseLong(cd.code.replace(suffix, ""))),cd);
+                    }
+                })
+                .filter(new Predicate<Tuple<Long, Code>>() {
+                    @Override
+                    public boolean test(Tuple<Long, Code> t) {
+                        return last == null || t.k() <= last;
                     }
                 })
 	    		.max(new Comparator<Tuple<Long,Code>>(){

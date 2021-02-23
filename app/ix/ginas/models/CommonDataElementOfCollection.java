@@ -6,17 +6,18 @@ import javax.persistence.MappedSuperclass;
 
 import ix.core.SingleParent;
 import ix.ginas.models.v1.Substance;
+import ix.utils.Util;
 
 /**
- * This abstract class is meant as a convenience tool to allow ownership for 
+ * This abstract class is meant as a convenience tool to allow ownership for
  * simple @OneToMany annotations.
- * 
+ *
  * @author Tyler Peryea
  *
  */
 @MappedSuperclass
 @SingleParent
-public abstract class CommonDataElementOfCollection extends GinasCommonSubData{
+public abstract class CommonDataElementOfCollection<E extends CommonDataElementOfCollection> extends GinasCommonSubData implements Comparable<E>{
 	@ManyToOne(cascade = CascadeType.PERSIST)
 	private Substance owner;
 	
@@ -26,5 +27,9 @@ public abstract class CommonDataElementOfCollection extends GinasCommonSubData{
 
 	public void assignOwner(Substance own){
 		this.owner=own;
+	}
+
+	public int compareTo(E o) {
+		return Util.getComparatorFor(this.getClass()).compare(this, o);
 	}
 }

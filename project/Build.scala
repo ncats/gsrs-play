@@ -1,5 +1,5 @@
 import play._
-import sbt.Keys._
+import sbt.Keys.{resolvers, _}
 import sbt.{file, _}
 import play.Play.autoImport._
 import scala.collection.JavaConversions.mapAsScalaMap
@@ -7,7 +7,7 @@ import com.typesafe.sbt.SbtNativePackager._
 
 object ApplicationBuild extends Build {
   val molwitchImplementation = System.getProperty("molwitch", "cdk")
-  val displayVersion = "2.6.1"
+  val displayVersion = "2.7"
   val now = new java.util.Date();
   val branch = "git rev-parse --abbrev-ref HEAD".!!.trim
   val commit = "git rev-parse --short HEAD".!!.trim
@@ -26,7 +26,10 @@ object ApplicationBuild extends Build {
     resolvers += Resolver.sonatypeRepo("snapshots"),
     resolvers += Resolver.sonatypeRepo("releases"),
     resolvers += Resolver.url("Edulify Repository",
-        url("https://edulify.github.io/modules/releases/"))(Resolver.ivyStylePatterns)
+        url("https://edulify.github.io/modules/releases/"))(Resolver.ivyStylePatterns),
+
+    resolvers += Resolver.bintrayRepo("typesafe", "maven-releases"),
+    resolvers += Resolver.bintrayRepo("sbt", "sbt-plugin-releases")
   )
   
   val commonDependencies = Seq(
@@ -44,7 +47,7 @@ object ApplicationBuild extends Build {
     "org.apache.httpcomponents" % "httpcore" %"4.4.4",
     "org.apache.httpcomponents" % "httpclient" %"4.3.1", //required for Ivy bug?
     "commons-io" % "commons-io" % "2.4",
-    "com.flipkart.zjsonpatch" % "zjsonpatch" % "0.4.6",
+    "com.flipkart.zjsonpatch" % "zjsonpatch" % "0.4.11",
     "javax.xml.bind" % "jaxb-api" % "2.3.0",    //required for JAVA > 9
     "net.sourceforge.htmlunit" % "htmlunit" % "2.35.0" % Test,
     "com.zaxxer" % "HikariCP" % "2.4.6"
@@ -54,6 +57,7 @@ object ApplicationBuild extends Build {
       ,"com.hazelcast" % "hazelcast" % "3.5.2" 
       ,"org.julienrf" %% "play-jsonp-filter" % "1.2"
       ,"commons-codec" % "commons-codec" % "1.9"
+      ,"net.sf.jtidy" % "jtidy" % "r938"
       ,"org.apache.lucene" % "lucene-core" % "4.10.0"
       ,"org.apache.lucene" % "lucene-analyzers-common" % "4.10.0"
       ,"org.apache.lucene" % "lucene-misc" % "4.10.0"

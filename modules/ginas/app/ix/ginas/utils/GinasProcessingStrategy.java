@@ -30,7 +30,7 @@ public abstract class GinasProcessingStrategy implements Predicate<GinasProcessi
 	}
 
 	public static enum HANDLING_TYPE {
-		MARK, FAIL, FORCE_IGNORE
+		MARK, FAIL, FORCE_IGNORE, NOTE
 	};
 
 	public HANDLING_TYPE failType = HANDLING_TYPE.MARK;
@@ -66,6 +66,24 @@ public abstract class GinasProcessingStrategy implements Predicate<GinasProcessi
 			}
 		};
 
+	public static GinasProcessingStrategy fromValue(String value){
+		switch(value.toUpperCase()){
+			case "ACCEPT_APPLY_ALL":
+				return ACCEPT_APPLY_ALL();
+			case "ACCEPT_APPLY_ALL_WARNINGS":
+				return ACCEPT_APPLY_ALL_WARNINGS();
+			case "ACCEPT_APPLY_ALL_WARNINGS_MARK_FAILED":
+				return ACCEPT_APPLY_ALL_WARNINGS_MARK_FAILED();
+			case "ACCEPT_APPLY_ALL_MARK_FAILED":
+				return ACCEPT_APPLY_ALL_MARK_FAILED();
+			case "ACCEPT_APPLY_ALL_NOTE_FAILED":
+				return ACCEPT_APPLY_ALL_NOTE_FAILED();
+			default:
+				throw new IllegalArgumentException("No strategy known with name:\"" + value + "\"");
+		}
+
+	}
+
 
 	public static GinasProcessingStrategy ACCEPT_APPLY_ALL() {
 		return _ACCEPT_APPLY_ALL;
@@ -80,12 +98,25 @@ public abstract class GinasProcessingStrategy implements Predicate<GinasProcessi
 		return ACCEPT_APPLY_ALL_WARNINGS().markFailed();
 	}
 	
+	public static GinasProcessingStrategy ACCEPT_APPLY_ALL_WARNINGS_NOTE_FAILED() {
+		return ACCEPT_APPLY_ALL_WARNINGS().markFailed();
+	}
+
 	public static GinasProcessingStrategy ACCEPT_APPLY_ALL_MARK_FAILED() {
 		return ACCEPT_APPLY_ALL().markFailed();
 	}
-	
+	public static GinasProcessingStrategy ACCEPT_APPLY_ALL_NOTE_FAILED() {
+		return ACCEPT_APPLY_ALL().noteFailed();
+	}
+
+
 	public GinasProcessingStrategy markFailed() {
 		this.failType = HANDLING_TYPE.MARK;
+		return this;
+	}
+
+	public GinasProcessingStrategy noteFailed() {
+		this.failType = HANDLING_TYPE.NOTE;
 		return this;
 	}
 
@@ -102,6 +133,7 @@ public abstract class GinasProcessingStrategy implements Predicate<GinasProcessi
 	
 	public boolean handleMessages(Substance cs, List<GinasProcessingMessage> list) {
 		boolean allow=true;
+		final String noteFailed="Imported record has some validation issues and should not be considered authoratiative at this time";
 		for (GinasProcessingMessage gpm : list) {
 			
 			if(gpm.isError() && gpm.appliedChange){
@@ -115,6 +147,16 @@ public abstract class GinasProcessingStrategy implements Predicate<GinasProcessi
 				} else if (failType == HANDLING_TYPE.MARK) {
 					cs.status = GinasProcessingStrategy.FAILED;
 					cs.addRestrictGroup(Substance.GROUP_ADMIN);
+				} else if (failType == HANDLING_TYPE.NOTE) {
+
+
+					boolean hasNoteYet=cs.getNotes().stream()
+													.filter(n->n.note.equals(noteFailed))
+													.findAny()
+													.isPresent();
+					if(!hasNoteYet){
+						cs.addNote(noteFailed);
+					}
 				}
 			}
 		}

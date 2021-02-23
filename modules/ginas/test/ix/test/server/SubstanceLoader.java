@@ -87,19 +87,7 @@ public class SubstanceLoader {
         }
 
         F.Promise<WSResponse> generateParametersFor(File fullInputJsonFile, Supplier<WSRequestHolder> wsSupplier) throws IOException{
-//            List<NameValuePair> params = new ArrayList<>();
-//            params.add(new NameValuePair("file-type", "JSON"));
-//            File json;
-//            if(numRecordsToLoad !=null || numRecordsToSkip !=null){
-//                json = createParitalTempFile(fullInputJsonFile);
-//            }else{
-//                json = fullInputJsonFile;
-//            }
-//            params.add(new KeyDataPair("file-name", json, json.getName(), "application/json", "utf-8"));
-//            //preserve-audit // looks like value just has to be non-null
-//            if(preserveAuditInfo){
-//                params.add(new NameValuePair("preserve-audit", "preserve-audit"));
-//            }
+
             List<com.ning.http.multipart.Part> parts = new ArrayList<>();
             try {
                 File json;
@@ -229,50 +217,6 @@ public class SubstanceLoader {
 
     protected JobStatus parseJob(JsonNode json) {
         try {
-//            System.out.println(json);
-            /*
-            "JSON ="{
-   "id":1,
-   "keys":[
-      {
-         "id":70,
-         "label":"ix.core.plugins.GinasRecordProcessorPlugin",
-         "term":"bff401efbdb7dfa7e401"
-      },
-      {
-         "id":71,
-         "label":"EXTRACTOR",
-         "term":"ix.ginas.utils.GinasUtils$GinasDumpExtractor"
-      },
-      {
-         "id":72,
-         "label":"PERSISTER",
-         "term":"ix.ginas.utils.GinasUtils$GinasSubstancePersister"
-      }
-   ],
-   "status":"PENDING",
-   "start":1597890680785,
-   "message":"Preparing payload for processing",
-   "statistics":{
-      "recordsExtractedSuccess":0,
-      "recordsProcessedSuccess":0,
-      "recordsPersistedSuccess":0,
-      "recordsExtractedFailed":0,
-      "recordsProcessedFailed":0,
-      "recordsPersistedFailed":0,
-      "estimatedTimeLeft":51,
-      "averageTimeToPersist":51.0
-   },
-   "version":1,
-   "name":"Import batch file \"rep90.ginas\"",
-   "_self":{
-      "url":"http://localhost:9005/ginas/app/api/v1/admin/load/bff401efbdb7dfa7e401",
-      "type":"GET"
-   },
-   "_payload":"http://localhost:9005/ginas/app/api/v1/jobs(1)/payload",
-   "_owner":"http://localhost:9005/ginas/app/api/v1/jobs(1)/owner"
-}
-             */
 
             return MAPPER.convertValue(json, JobStatus.class);
         } catch (Exception e) {

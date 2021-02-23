@@ -1,25 +1,13 @@
 package ix.ginas.models.v1;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.TreeSet;
 
-import javax.persistence.Basic;
-import javax.persistence.CascadeType;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.Lob;
-import javax.persistence.OneToMany;
-import javax.persistence.PrePersist;
-import javax.persistence.PreUpdate;
-import javax.persistence.Table;
+import javax.persistence.*;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
@@ -36,78 +24,13 @@ import ix.ginas.models.serialization.KeywordDeserializer;
 import ix.ginas.models.serialization.KeywordListSerializer;
 import ix.ginas.models.utils.JSONConstants;
 import ix.ginas.models.utils.JSONEntity;
-import org.apache.commons.lang3.ObjectUtils;
+import ix.utils.Util;
 
 @JSONEntity(title = "Name", isFinal = true)
 @Entity
 @Table(name="ix_ginas_name")
 @SingleParent
 public class Name extends CommonDataElementOfCollection {
-
-	public static enum Sorter implements  Comparator<Name> {
-
-		/**
-		 * Utility function to sort names in nice display order.
-		 * <p>
-		 * Sort criteria: </p>
-		 * <ol>
-		 * <li> Display Name </li>
-		 * <li> Preferred status</li>
-		 * <li> Official status</li>
-		 * <li> English first</li>
-		 * <li> Alphabetical</li>
-		 * <li> Name Type</li>
-		 * <li> Number of References</li>
-		 *
-		 *
-		 * </ol>
-		 *
-		 * Note that this sort order was changed in September 2018
-		 * for v2.3.1 so sorting with older versions might
-		 * be slightly different.
-		 */
-		DISPlAY_NAME_FIRST_ENGLISH_FIRST{
-			public int compare(Name o1, Name o2) {
-				if(o1.isDisplayName()!= o2.isDisplayName()){
-					if(o1.isDisplayName())return 1;
-					return -1;
-				}
-				if(o1.preferred!=o2.preferred){
-					if(o2.preferred)return 1;
-					return -1;
-				}
-				if(o1.isOfficial()!=o2.isOfficial()){
-					if(o2.isOfficial())return 1;
-					return -1;
-				}
-				if(o1.isLanguage("en")!=o2.isLanguage("en")){
-					if(o2.isLanguage("en"))return 1;
-					return -1;
-				}
-				//katzelda GSRS-623 : changed sort order
-				//from #refs, type, alpha -> alpha, type, #refs
-				int nameCompare = ObjectUtils.compare(o1.name, o2.name);
-				if(nameCompare !=0){
-					return nameCompare;
-				}
-
-				int nameType = ObjectUtils.compare(o1.type, o2.type);
-				if(nameType !=0){
-					return nameType;
-				}
-				return o2.getReferences().size()-o1.getReferences().size();
-
-			}
-		},
-		BY_CREATION_DATE{
-            @Override
-            public int compare(Name o1, Name o2) {
-                return o1.getCreated().compareTo(o2.getCreated());
-            }
-        }
-	}
-
-
 
     private static final String SRS_LOCATOR = "SRS_LOCATOR";
     
@@ -124,7 +47,7 @@ public class Name extends CommonDataElementOfCollection {
     
     @Lob
     @Basic(fetch=FetchType.EAGER)
-    @JsonView(BeanViews.Internal.class)
+    @JsonView(BeanViews.JsonDiff.class)
     public String stdName;
     
     
@@ -173,6 +96,20 @@ public class Name extends CommonDataElementOfCollection {
     	this.name=name;
     }
 
+
+    @JsonProperty("_name_html")
+    public String getHtmlName() {
+        return Util.getStringConverter().toHtml(getName());
+    }
+
+    @JsonProperty("_name")
+    public String getStandardName() {
+        if(stdName != null) {
+            return stdName;
+        }
+        return Util.getStringConverter().toStd(getName());
+    }
+
     public String getName () {
         return fullName != null ? fullName : name;
     }
@@ -180,33 +117,14 @@ public class Name extends CommonDataElementOfCollection {
     @PrePersist
     @PreUpdate
     public void tidyName () {
-        if (name.getBytes().length > 255) {
-            fullName = name;
-            name = truncateString(name,254);
-            
+        if(name != null) {
+            if (name.getBytes().length > 255) {
+                fullName = name;
+                name = Util.getStringConverter().truncate(name, 254);
+            }
         }
     }
-    
-    private static String truncateString(String s, int maxBytes){
-    	byte[] b = (s+"   ").getBytes();
-    	if(maxBytes>=b.length){
-    		return s;
-    	}
-    	boolean lastComplete=false;
-    	for(int i=maxBytes;i>=0;i--){
-    		if(lastComplete)
-    			return new String(Arrays.copyOf(b, i));
-    		if((b[i] & 0x80) ==0){
-    			return new String(Arrays.copyOf(b, i));
-    		}
-    		if(b[i]==-79){
-    			lastComplete=true;
-    		}
-    	}
-    	
-    	return "";
-    }
-    
+
     public void addLocator(Substance sub, String loc){
     	Reference r = new Reference();
     	r.docType=Name.SRS_LOCATOR;
@@ -255,8 +173,8 @@ public class Name extends CommonDataElementOfCollection {
     
     
     public static List<Name> sortNames(List<Name> nameList){
-    	Collections.sort(nameList, Sorter.DISPlAY_NAME_FIRST_ENGLISH_FIRST);
-    	return nameList;
+        nameList.sort(Util.getComparatorFor(Name.class));
+        return nameList;
     }
     
     
@@ -312,6 +230,9 @@ public class Name extends CommonDataElementOfCollection {
 	public void setName(String name) {
 		this.fullName=null;
 		this.name=name;
+		//recompute stdname etc
+		//this is also so creating instances from JSON compute the stdname during pojodiff
+		tidyName();
 	}
 	
 	@Override

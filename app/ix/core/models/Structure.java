@@ -185,6 +185,27 @@ public class Structure extends BaseModel implements ForceUpdatableModel{
     @Indexable(name = "Molecular Formula", facet = true)
     public String formula;
 
+    @JsonProperty("_formula-html")
+    public String getHtmlFormula() {
+        if (formula == null) {
+            return "";
+        }
+        String HTMLFormula = formula.replaceAll("([a-zA-Z])([0-9]+)", "$1<sub>$2</sub>");
+        if (charge != null && charge != 0 && !HTMLFormula.contains(".")) {
+            String sCharge = Integer.toString(charge);
+            String sSign = "+";
+            if (charge < 0) {
+                sCharge = sCharge.substring(1);
+                sSign = "-";
+            }
+            if ("1".equals(sCharge)) {
+                sCharge = "";
+            }
+            HTMLFormula = HTMLFormula + "<sup>" + sCharge + sSign + "</sup>";
+        }
+        return HTMLFormula;
+    }
+
     @JsonProperty("stereochemistry")
     public void setStereoChemistry(Stereo stereoChemistry) {
         this.stereoChemistry = stereoChemistry;
@@ -319,6 +340,7 @@ public class Structure extends BaseModel implements ForceUpdatableModel{
     public String getExactHash(){
         String newhash=null;
         for (Value val : this.properties) {
+            if(val==null)continue;
             if (Structure.H_EXACT_HASH.equals(val.label)) {
                 try{
                     newhash=Objects.toString(val.getValue());
@@ -334,6 +356,7 @@ public class Structure extends BaseModel implements ForceUpdatableModel{
     public String getStereoInsensitiveHash(){
         String newhash=null;
         for (Value val : this.properties) {
+            if(val==null)continue;
             if (Structure.H_STEREO_INSENSITIVE_HASH.equals(val.label)) {
                 try{
                     newhash=Objects.toString(val.getValue());

@@ -17,6 +17,7 @@
                 <th>Referenced Substance</th>
                 <th>Defining</th>
                 <th>Parameters</th>
+                <th>Access</th>
                 <th>References</th>
             </tr>
         </thead>
@@ -49,6 +50,15 @@
                 } else {
                 <td></td>
                 }
+                <td>
+                    <div style="text-align:center">
+                    @if(n.isPublic()){
+                        <i uib-tooltip = "Public name" class="fa fa-unlock fa-2x fa-1_1x success"></i>
+                    }else{
+                        <i uib-tooltip = "Not a public name" class="fa fa-lock fa-2x fa-1_1x warning"></i>
+                    }
+                    </div>
+                </td>
                 @if(n.getReferences.size > 0) {
                     <td>
                         <referencesmanager ref-count substance ="'@id'" divid ="'@n.getUuid'" references = "@GinasApp.getAsJson(n.getReferences())"></referencesmanager>
