@@ -1,4 +1,4 @@
-package ix.ginas.utils;
+package ix.core.utils;
 
 public interface NamedIdGenerator<T, K> extends IdGeneratorForType<T,K> {
     /**

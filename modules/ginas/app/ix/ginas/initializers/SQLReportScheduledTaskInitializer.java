@@ -16,6 +16,7 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 import ix.core.initializers.Initializer;
+import ix.core.initializers.ScheduledTaskInitializer;
 import ix.core.plugins.SchedulerPlugin.TaskListener;
 import ix.core.util.TimeUtil;
 import play.Logger;

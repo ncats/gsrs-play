@@ -1,13 +1,12 @@
-package ix.ginas.initializers;
+package ix.core.initializers;
 
 import com.fasterxml.jackson.annotation.JsonValue;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.type.TypeFactory;
-import ix.core.initializers.Initializer;
 import ix.core.util.IOUtil;
+import ix.core.validator.ValidatorFactory;
+import ix.core.validator.ValidatorPlugin;
 import ix.ginas.models.v1.Substance;
-import ix.ginas.utils.validation.ValidatorFactory;
-import ix.ginas.utils.validation.ValidatorPlugin;
 import play.Application;
 
 import java.util.Collections;

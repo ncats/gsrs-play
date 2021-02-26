@@ -30,6 +30,7 @@ import ix.core.processing.RecordTransformer;
 import ix.core.util.CachedSupplier;
 import ix.core.util.ConfigHelper;
 import ix.core.util.IOUtil;
+import ix.core.utils.NamedIdGenerator;
 import ix.ginas.models.v1.Substance;
 import ix.ginas.utils.validation.DefaultSubstanceValidator;
 import play.Logger;

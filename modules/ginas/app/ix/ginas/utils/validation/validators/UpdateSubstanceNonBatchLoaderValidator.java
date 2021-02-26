@@ -4,7 +4,7 @@ import ix.core.validator.GinasProcessingMessage;
 import ix.core.models.Role;
 import ix.core.models.UserProfile;
 import ix.core.validator.ValidatorCallback;
-import ix.ginas.initializers.LoadValidatorInitializer;
+import ix.core.initializers.LoadValidatorInitializer;
 import ix.ginas.models.v1.Substance;
 import ix.ginas.utils.GinasUtils;
 

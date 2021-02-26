@@ -1,5 +1,7 @@
 package ix.ginas.utils;
 
+import ix.core.utils.NamedIdGenerator;
+import ix.core.utils.RandomAlphaNumericIDGenerator;
 import ix.ginas.controllers.v1.SubstanceFactory;
 import ix.ginas.models.v1.Substance;
 

@@ -1,7 +1,6 @@
-package ix.ginas.utils.validation;
+package ix.core.validator;
 
-import ix.core.validator.Validator;
-import ix.ginas.initializers.LoadValidatorInitializer;
+import ix.core.initializers.LoadValidatorInitializer;
 
 /**
  * Created by katzelda on 5/7/18.

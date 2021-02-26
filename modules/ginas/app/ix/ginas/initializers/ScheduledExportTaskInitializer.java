@@ -11,6 +11,7 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 import ix.core.initializers.Initializer;
+import ix.core.initializers.ScheduledTaskInitializer;
 import ix.core.models.Principal;
 import ix.core.plugins.SchedulerPlugin.TaskListener;
 import ix.core.util.TimeUtil;

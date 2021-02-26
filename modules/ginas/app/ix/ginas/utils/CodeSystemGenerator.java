@@ -2,6 +2,7 @@ package ix.ginas.utils;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import ix.core.utils.NamedIdGenerator;
 import ix.core.util.ConfigHelper;
 import ix.ginas.models.v1.Substance;
 

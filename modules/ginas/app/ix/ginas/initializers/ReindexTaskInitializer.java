@@ -4,6 +4,7 @@ import java.util.function.Consumer;
 
 import ix.core.adapters.EntityPersistAdapter;
 import ix.core.initializers.Initializer;
+import ix.core.initializers.ScheduledTaskInitializer;
 import ix.core.models.UserProfile;
 import ix.core.plugins.CronExpressionBuilder;
 import ix.core.plugins.SchedulerPlugin.ScheduledTask;

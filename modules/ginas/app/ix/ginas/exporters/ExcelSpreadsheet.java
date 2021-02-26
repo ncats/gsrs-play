@@ -1,5 +1,8 @@
 package ix.ginas.exporters;
 
+import ix.core.exporters.Spreadsheet;
+import ix.core.exporters.Spreadsheet.SpreadsheetRow;
+import ix.core.exporters.SpreadsheetCell;
 import ix.core.util.IOUtil;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;

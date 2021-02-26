@@ -1,4 +1,4 @@
-package ix.ginas.utils;
+package ix.core.utils;
 
 import java.util.HashSet;
 import java.util.Objects;

@@ -4,6 +4,9 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.util.LinkedList;
 
+import ix.core.exporters.Spreadsheet;
+import ix.core.exporters.Spreadsheet.SpreadsheetRow;
+
 /**
  * Created by katzelda on 8/22/16.
  */
