@@ -158,7 +158,7 @@ public class BuildInfo {
           libraryDependencies += "org.webjars" % "swagger-ui" % "2.1.8-M1",
       javacOptions in (Compile, compile) ++= javaBuildOptions,
       javacOptions in (doc) ++= javaDocOptions
-  ).dependsOn(build,ixdb.seqaln).aggregate(build,seqaln)
+  ).dependsOn(build,ixdb,seqaln).aggregate(build,seqaln)
 
   val ncats = Project("ncats", file("modules/ncats"))
     .enablePlugins(PlayJava).settings(commonSettings:_*).settings(
