@@ -235,7 +235,7 @@ public class BuildInfo {
       println("MOLWITCH IMPLEMENTATION = " + molwitchImplementation)
       val path = baseDirectory.value / "../../molwitch-implementations" / molwitchImplementation  / "src";
       println("PATH = " + path);
-      val baseDirectories = file( "molwitch-implementations/" +molwitchImplementation +"/jars").getAbsoluteFile
+      val baseDirectories = file( "lib") +++ file( "molwitch-implementations/" +molwitchImplementation +"/jars").getAbsoluteFile
       if(!file( "molwitch-implementations/" +molwitchImplementation +"/jars").isDirectory){
         throw new IllegalArgumentException("molwitch implementation jar directory does not exist! " + path)
       }
