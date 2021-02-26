@@ -333,7 +333,7 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
 
     @JsonIgnore
     public List<Code> getOrderedCodes(){
-        return this.codes;
+        return this.codes.stream().sorted().collect(Collectors.toList());
     }
 
     @JsonView(BeanViews.Compact.class)
