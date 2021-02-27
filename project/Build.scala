@@ -1,15 +1,13 @@
 import play._
 import sbt.Keys.{resolvers, _}
 import sbt.{file, _}
-//import play.PlayImport._
 import play.Play.autoImport._
 import scala.collection.JavaConversions.mapAsScalaMap
 import com.typesafe.sbt.SbtNativePackager._
-//import NativePackagerKeys._
 
 object ApplicationBuild extends Build {
   val molwitchImplementation = System.getProperty("molwitch", "cdk")
-  val displayVersion = "2.7"
+  val displayVersion = "2.7.1"
   val now = new java.util.Date();
   val branch = "git rev-parse --abbrev-ref HEAD".!!.trim
   val commit = "git rev-parse --short HEAD".!!.trim
@@ -22,9 +20,6 @@ object ApplicationBuild extends Build {
   val commonSettings = Seq(
     version := appVersion,    
     scalaVersion := "2.11.7",
-//    crossScalaVersions := Seq("2.10.2", "2.10.3", "2.10.4", "2.10.5",
-//      "2.11.0", "2.11.1", "2.11.2", "2.11.3", "2.11.4",
-//      "2.11.5", "2.11.6", "2.11.7"),
     resolvers +=
       "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots",
     resolvers += Resolver.typesafeRepo("releases"),
@@ -46,19 +41,8 @@ object ApplicationBuild extends Build {
 
     "org.jcvi.jillion" % "jillion" % "5.3.2",
     "com.fasterxml.jackson.core" % "jackson-core" % "2.9.7",
-        "com.fasterxml.jackson.core" % "jackson-databind" % "2.9.7",
-        "com.fasterxml.jackson.core" % "jackson-annotations" % "2.9.7",
-//    "com.ning" % "async-http-client" % "1.7.13" % Test,
-//    "gov.nih.ncats" % "molwitch" % "0.5",
-//    "gov.nih.ncats" % "molwitch-renderer" % "1.0",
-
-
-
-//    "gov.nih.ncats" % "molvec" % "0.9.3",
-//    "com.twelvemonkeys.imageio" % "imageio-core" % "3.4.1",
-//    "com.twelvemonkeys.imageio" % "imageio" % "3.4.1",
-//    "com.twelvemonkeys.imageio" % "imageio-tiff" % "3.4.1",
-//    "com.twelvemonkeys.imageio" % "imageio-jpeg"% "3.4.1",
+    "com.fasterxml.jackson.core" % "jackson-databind" % "2.9.7",
+    "com.fasterxml.jackson.core" % "jackson-annotations" % "2.9.7",
     "org.apache.httpcomponents" % "httpclient" %"4.5.2",
     "org.apache.httpcomponents" % "httpcore" %"4.4.4",
     "org.apache.httpcomponents" % "httpclient" %"4.3.1", //required for Ivy bug?
@@ -95,17 +79,15 @@ object ApplicationBuild extends Build {
       ,"org.webjars" % "html2canvas" % "0.4.1"
       ,"org.reflections" % "reflections" % "0.9.8" notTransitive ()
       ,"colt" % "colt" % "1.2.0"
-      //,"net.sf.jni-inchi" % "jni-inchi" % "0.8"
       ,"org.freehep" % "freehep-graphicsbase" % "2.4"
       ,"org.freehep" % "freehep-vectorgraphics" % "2.4"
       ,"org.freehep" % "freehep-graphicsio" % "2.4"
       ,"org.freehep" % "freehep-graphicsio-svg" % "2.4"
       ,"org.freehep" % "freehep-graphics2d" % "2.4"
-      //,"ws.securesocial" %% "securesocial" % "master-SNAPSHOT"
       ,"org.webjars.bower" % "spin.js" % "2.0.2"
       ,"be.objectify" %% "deadbolt-java" % "2.3.3"
       ,"com.sleepycat" % "je" % "5.0.73"
-    ,"uk.ac.cam.ch.opsin" % "opsin-core" % "2.3.1"
+      ,"uk.ac.cam.ch.opsin" % "opsin-core" % "2.3.1"
   )
 
   val scalaBuildOptions = Seq(
@@ -159,8 +141,6 @@ public class BuildInfo {
     javacOptions in (Compile, compile) ++= javaBuildOptions,
     javacOptions in (doc) ++= javaDocOptions,
     mainClass in (Compile,run) := Some("ix.seqaln.SequenceIndexer")
-
-
   )
 
   val ixdb = Project("ixdb", file("modules/ixdb"))
@@ -168,24 +148,23 @@ public class BuildInfo {
     libraryDependencies ++= commonDependencies
   )
 
+
+
   val core = Project("core", file("."))
     .enablePlugins(PlayJava).settings(commonSettings:_*).settings(
       libraryDependencies ++= commonDependencies,
-      //libraryDependencies += "com.wordnik" %% "swagger-play2" % "1.3.12",
           libraryDependencies += "com.wordnik" %% "swagger-play2" % "1.3.12" exclude("org.reflections", "reflections"),
           libraryDependencies += "org.reflections" % "reflections" % "0.9.8" notTransitive () ,
-          //libraryDependencies += "io.swagger" %% "swagger-play2" % "1.5.1",
           libraryDependencies += "org.webjars" % "swagger-ui" % "2.1.8-M1",
       javacOptions in (Compile, compile) ++= javaBuildOptions,
       javacOptions in (doc) ++= javaDocOptions
-  ).dependsOn(build,ixdb,seqaln).aggregate(build,ixdb,seqaln)
+  ).dependsOn(build,ixdb,seqaln).aggregate(build,seqaln)
 
   val ncats = Project("ncats", file("modules/ncats"))
     .enablePlugins(PlayJava).settings(commonSettings:_*).settings(
       libraryDependencies ++= commonDependencies,
       javacOptions in (Compile, compile) ++= javaBuildOptions,
       javacOptions in (doc) ++= javaDocOptions
-        //javaOptions in Runtime += "-Dconfig.resource=ncats.conf"
   ).dependsOn(core).aggregate(core)
 
   val ginasEvo = Project("ginas-evolution", file("modules/ginas-evolution"))
@@ -197,6 +176,12 @@ public class BuildInfo {
 
 
   val ginasTestOptions = "-Dconfig.file=" + Option(System.getProperty("config.file")).getOrElse("application.conf")
+
+  def files(dir: File) = {
+    val fs = (dir ** "*").get.filter(d => d != dir)
+    fs.map(x => (x, x.relativeTo(dir).get.getPath))
+  }
+
   val ginas = Project("ginas", file("modules/ginas"))
     .enablePlugins(PlayJava).settings(commonSettings:_*).settings(
       libraryDependencies ++= commonDependencies,
@@ -209,19 +194,12 @@ public class BuildInfo {
       libraryDependencies += "org.webjars.bower" % "humanize-duration" % "3.0.0",
       libraryDependencies += "org.webjars" % "lodash" % "4.0.0",
       libraryDependencies += "org.scalatest" %% "scalatest" % "2.2.2" % Test,
-      libraryDependencies  += "junit" % "junit" % "4.12" % Test,
-    libraryDependencies += "com.novocode" % "junit-interface" % "0.11" % Test,
-    libraryDependencies += "org.apache.poi" % "poi" % "3.17",
-    libraryDependencies += "org.apache.poi" % "poi-ooxml" % "3.17",
-    libraryDependencies += "org.apache.poi" % "poi-ooxml-schemas" % "3.17",
-
-    libraryDependencies +="pl.joegreen" % "lambda-from-string" % "1.6",
-   /* //libraryDependencies += "com.wordnik" %% "swagger-play2" % "1.3.12",
-    libraryDependencies += "com.wordnik" %% "swagger-play2" % "1.3.12" exclude("org.reflections", "reflections"),
-   // libraryDependencies += "org.reflections" % "reflections" % "0.9.8" notTransitive () ,
-    libraryDependencies += "io.swagger" %% "swagger-play2" % "1.5.1",
-    libraryDependencies += "org.webjars" % "swagger-ui" % "2.1.8-M1",*/
-
+      libraryDependencies += "junit" % "junit" % "4.12" % Test,
+      libraryDependencies += "com.novocode" % "junit-interface" % "0.11" % Test,
+      libraryDependencies += "org.apache.poi" % "poi" % "3.17",
+      libraryDependencies += "org.apache.poi" % "poi-ooxml" % "3.17",
+      libraryDependencies += "org.apache.poi" % "poi-ooxml-schemas" % "3.17",
+      libraryDependencies +="pl.joegreen" % "lambda-from-string" % "1.6",
 	  javaOptions ++= Seq("-Xmx4096M", "-Xms512M", "-XX:MaxPermSize=2048M"),
       javacOptions in (Compile, compile) ++= javaBuildOptions,
       javacOptions in (doc) ++= javaDocOptions,
@@ -232,13 +210,26 @@ public class BuildInfo {
                           .map(prop => s"-D${prop._1}=${prop._2}").toSeq,
 
     javaOptions in Test ++= Option("-Dmolwitch="+molwitchImplementation).toSeq,
-//    javaOptions in Test ++= Seq(Tests.Argument(TestFrameworks.JUnit, "-a"))
     cleanFiles += file("modules/ginas/ginas.ix"),
+
     //baseDirectory is the ginas module we want to go up a few dirs
     mappings in Universal ++=(baseDirectory.value / "../../cv" * "*" get) map
         (x => x -> ("cv/" + x.getName)),
+
     //adds evolutions.sh file into the dist
     mappings in Universal += file("evolutions.sh") -> "bin/evolutions.sh",
+    packageBin in Universal := {
+  val originalFileName = (packageBin in Universal).value
+  val (base, ext) = originalFileName.baseAndExt
+  val newFileName = file(originalFileName.getParent) / (base + "_dist." + ext)
+  val newFileNameD = file(originalFileName.getParent) / base
+  IO.unzip(originalFileName, newFileNameD)
+  IO.zip(files(newFileNameD),newFileName)
+  IO.delete(newFileNameD)
+  IO.delete(originalFileName)
+  newFileName
+},
+
 
     unmanagedJars in Compile ++= {
       println("MOLWITCH IMPLEMENTATION = " + molwitchImplementation)
@@ -253,7 +244,6 @@ public class BuildInfo {
       customJars.classpath
     },
 
-    //    println("MY PATH - " + ),
     unmanagedSourceDirectories in Compile +=  (baseDirectory.value / "../../molwitch-implementations" / molwitchImplementation  / "src").getAbsoluteFile
   ).dependsOn(ginasEvo).aggregate(ginasEvo)
 }
