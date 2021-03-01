@@ -22,7 +22,8 @@ public class JsonExporter implements Exporter<Substance> {
 
     public JsonExporter(OutputStream out) throws IOException{
         Objects.requireNonNull(out);
-      this.out = new BufferedWriter(new OutputStreamWriter(out));
+        //JSON must be in UTF-XX format
+      this.out = new BufferedWriter(new OutputStreamWriter(out, "UTF-8"));
     }
     @Override
     public void export(Substance obj) throws IOException {
