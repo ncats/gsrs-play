@@ -10,6 +10,7 @@ import com.fasterxml.jackson.databind.ObjectWriter;
 
 import ix.core.controllers.EntityFactory;
 import ix.ginas.models.v1.Substance;
+import org.jcvi.jillion.core.io.IOUtil;
 
 /**
  * Created by katzelda on 8/31/16.
@@ -22,7 +23,8 @@ public class JsonExporter implements Exporter<Substance> {
 
     public JsonExporter(OutputStream out) throws IOException{
         Objects.requireNonNull(out);
-      this.out = new BufferedWriter(new OutputStreamWriter(out));
+        //JSON must be in UTF-XX format
+      this.out = new BufferedWriter(new OutputStreamWriter(out, IOUtil.UTF_8_NAME));
     }
     @Override
     public void export(Substance obj) throws IOException {
