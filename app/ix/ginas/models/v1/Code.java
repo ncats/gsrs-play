@@ -13,6 +13,7 @@ import javax.persistence.Table;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import ix.core.models.DynamicFacet;
 import ix.core.models.Indexable;
 import ix.ginas.models.CommonDataElementOfCollection;
@@ -96,7 +97,7 @@ public class Code extends CommonDataElementOfCollection{
 		return false;
 	}
 	
-	@JsonIgnore
+	@JsonProperty("_isClassification")
 	public boolean isClassification(){
 		if(this.codeText!=null){
 			if(this.codeText.contains("|"))return true;
