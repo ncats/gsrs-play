@@ -1,6 +1,8 @@
 package ix.ginas.models.converters;
 
+import java.io.PrintWriter;
 import java.io.StringReader;
+import java.io.StringWriter;
 import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.List;
@@ -31,6 +33,10 @@ public class HTMLStringConverter extends AbstractStringConverter {
             Tidy tidy = new Tidy();
             tidy.setInputEncoding("UTF-8");
             tidy.setXHTML(true);
+            tidy.setWraplen(0);
+            tidy.setPrintBodyOnly(true);
+            tidy.setTidyMark(false);
+            tidy.setErrout(new PrintWriter(new StringWriter()));
             return tidy;
         }
     });
@@ -38,6 +44,7 @@ public class HTMLStringConverter extends AbstractStringConverter {
 
     private static String[] allowedHtmlTags = new String[] {"I", "B", "SUB", "SUP", "SMALL"};
     private static Pattern htmlTagPattern = Pattern.compile("<\\s*/?([^>]+)\\s*>");
+    private static List<Character> badLastChars = Arrays.asList('<', '/', '&');
     private static char[] brackets = "()[]{}".toCharArray();
     private static String[] htmlStrings = {"&amp;", "&larr;", "&rarr;", "&lt;", "&gt;", "&plusmn;", "-",
         "&Alpha;", "&alpha;", "&Beta;", "&beta;", "&Gamma;", "&gamma;",
@@ -88,27 +95,22 @@ public class HTMLStringConverter extends AbstractStringConverter {
      */
     @Override
     public String truncate(String str, int maxBytes){
-        byte[] b = (str + "   ").getBytes();
-        if(maxBytes >= b.length){
+        if(maxBytes >= str.length()){
             return str;
         }
-        boolean lastComplete = false;
-        int sTag = 0;
+        String truncatedStr = "";
+        StringWriter writer = new StringWriter();
+        Tidy tidy = TIDY_POOL.get();
         for(int i = maxBytes; i >= 0; i--){
-            if(lastComplete || (b[i] & 0x80) == 0) {
-                str = new String(Arrays.copyOf(b, i));
-                sTag = StringUtils.countMatches(str, "<");
-                if(sTag == StringUtils.countMatches(str, ">")
-                    && sTag / 2 == StringUtils.countMatches(str, "/")
-                    && StringUtils.countMatches(str, "&") == StringUtils.countMatches(str, ";")) {
-                    return str;
-                }else{
-                    lastComplete = false;
-                }
+            if (badLastChars.contains(str.charAt(i-1))) {
+                continue;
             }
-            if(b[i] == -79){
-                lastComplete = true;
+            tidy.parse(new StringReader("<html><head><title>Test</title></head><body>" + str.substring(0, i) + "</body></html>"), writer);
+            truncatedStr = writer.toString().replace("\n", "");
+            if (tidy.getParseErrors() == 0 && tidy.getParseWarnings() == 0 && truncatedStr.length() <= maxBytes) {
+                return truncatedStr;
             }
+            writer.getBuffer().setLength(0);
         }
         return "";
     }
@@ -124,17 +126,21 @@ public class HTMLStringConverter extends AbstractStringConverter {
     @Override
     public List<String> validationErrors(String str){
         List<String> errors = new ArrayList<String>();
-        Tidy tidy = TIDY_POOL.get();
-        tidy.parseDOM(new StringReader("<html><head><title>Test</title></head><body>" + str + "</body></html>"), null);
-        if (tidy.getParseErrors() > 0 || tidy.getParseWarnings() > 1) {
-            errors.add("contains bad HTML");
-        }
 
         Matcher m = htmlTagPattern.matcher(str.toUpperCase());
         while (m.find()) {
             if (!ArrayUtils.contains(allowedHtmlTags, m.group(1))) {
                 errors.add("contains not allowed HTML tag " + m.group(1));
             }
+        }
+        if (!errors.isEmpty()) {
+            return errors;
+        }
+
+        Tidy tidy = TIDY_POOL.get();
+        tidy.parse(new StringReader("<html><head><title>Test</title></head><body>" + str + "</body></html>"), new StringWriter());
+        if (tidy.getParseErrors() > 0 || tidy.getParseWarnings() > 0) {
+            errors.add("contains bad HTML");
         }
 
         long brackets_count = 0;
