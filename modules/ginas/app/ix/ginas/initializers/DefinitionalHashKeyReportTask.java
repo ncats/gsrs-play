@@ -52,7 +52,7 @@ public class DefinitionalHashKeyReportTask extends ScheduledTaskInitializer {
 
         try(PrintWriter printOut = new PrintWriter(new FileOutputStream(getReportFile()))){
 
-            printOut.println("SUBSTANCE UUID\tType\tName\tApproval ID\tDef Hash\tDef Hash Key");
+            printOut.println("SUBSTANCE UUID\tType\tName\tApproval ID\tDef Hash\tDef Hash Key\tDef Level");
             LogUtil.trace(()->" printed header");
 
             AtomicInteger count = new AtomicInteger(0);
@@ -60,11 +60,12 @@ public class DefinitionalHashKeyReportTask extends ScheduledTaskInitializer {
                     .streamSupplier(ProcessExecutionService.CommonStreamSuppliers.allFor(Substance.class))
                     .consumer((Substance s) ->{
                         //LogUtil.trace(()->" in consumer " +count.incrementAndGet() + " class " + s.substanceClass);
-                        String line =String.format("%s\t%s\t%s\t%s\t%s\t%s", s.getUuid().toString(),
+                        String line =String.format("%s\t%s\t%s\t%s\t%s\t%s\t%s", s.getUuid().toString(),
                                 s.substanceClass,
                                 s.getName(), (s.getApprovalID() ==  null? "[no approval id]" :s.getApprovalID()),
                                 s.getDefHashString(),
-                                s.getDefHashKeyString());
+                                s.getDefHashKeyString(), s.definitionLevel);
+
                         LogUtil.trace(()->line);
                         printOut.println(line);
 

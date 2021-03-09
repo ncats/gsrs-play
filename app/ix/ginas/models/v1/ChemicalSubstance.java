@@ -178,7 +178,7 @@ public class ChemicalSubstance extends Substance implements GinasSubstanceDefini
 
     @Override
     protected void additionalDefinitionalElements(Consumer<DefinitionalElement> consumer) {
-
+        play.Logger.debug("about to fetch def elements for chemical with id " + this.getOrGenerateUUID().toString());
         addStructureDefinitialElements(structure, consumer);
     }
 
