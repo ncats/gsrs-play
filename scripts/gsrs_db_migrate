@@ -1,0 +1,1640 @@
+#!/usr/bin/python3
+import sys
+from sqlalchemy import create_engine, select, BigInteger, Boolean, CheckConstraint, Column, DateTime, Float, ForeignKey, Integer, LargeBinary, String, Table, Text
+from sqlalchemy.orm import relationship
+from sqlalchemy.ext.declarative import declarative_base
+
+Base = declarative_base()
+metadata = Base.metadata
+
+
+class IxCoreAcl(Base):
+    __tablename__ = 'ix_core_acl'
+    __table_args__ = (
+        CheckConstraint('perm in (0, 1, 2, 3, 4, 5, 6)'),
+    )
+
+    id = Column(BigInteger, primary_key=True)
+    perm = Column(Integer)
+
+    ix_core_principals = relationship('IxCorePrincipal', secondary='ix_core_acl_principal')
+    ix_core_groups = relationship('IxCoreGroup', secondary='ix_core_acl_group')
+
+
+class IxCoreEvent(Base):
+    __tablename__ = 'ix_core_event'
+    __table_args__ = (
+        CheckConstraint('unit in (0, 1, 2, 3, 4, 5, 6, 7)'),
+    )
+
+    id = Column(BigInteger, primary_key=True)
+    title = Column(String(255))
+    description = Column(Text)
+    url = Column(String(1024))
+    start_time = Column(BigInteger)
+    end_time = Column(BigInteger)
+    unit = Column(Integer)
+
+    ix_core_values = relationship('IxCoreValue', secondary='ix_core_event_prop')
+    ix_core_xrefs = relationship('IxCoreXref', secondary='ix_core_event_link')
+    ix_core_timelines = relationship('IxCoreTimeline', secondary='ix_core_timeline_event')
+
+
+class IxCoreFigure(Base):
+    __tablename__ = 'ix_core_figure'
+
+    dtype = Column(String(10), nullable=False)
+    id = Column(BigInteger, primary_key=True)
+    caption = Column(String(255))
+    mime_type = Column(String(255))
+    url = Column(String(1024))
+    data = Column(LargeBinary)
+    data_size = Column(Integer)
+    sha1 = Column(String(140))
+    parent_id = Column(ForeignKey('ix_core_figure.id'), index=True)
+
+    parent = relationship('IxCoreFigure', remote_side=[id])
+    ix_core_publications = relationship('IxCorePublication', secondary='ix_core_publication_figure')
+
+
+class IxCoreFiledatum(Base):
+    __tablename__ = 'ix_core_filedata'
+
+    dtype = Column(String(10), nullable=False)
+    id = Column(String(40), primary_key=True)
+    mime_type = Column(String(255))
+    data = Column(LargeBinary)
+    data_size = Column(BigInteger)
+    sha1 = Column(String(140))
+
+
+class IxCoreGroup(Base):
+    __tablename__ = 'ix_core_group'
+
+    id = Column(BigInteger, primary_key=True)
+    name = Column(String(255), unique=True)
+
+    ix_core_principals = relationship('IxCorePrincipal', secondary='ix_core_group_principal')
+
+
+class IxCoreJournal(Base):
+    __tablename__ = 'ix_core_journal'
+
+    id = Column(BigInteger, primary_key=True)
+    issn = Column(String(10))
+    volume = Column(String(255))
+    issue = Column(String(255))
+    year = Column(Integer)
+    month = Column(String(10))
+    title = Column(String(1024))
+    iso_abbr = Column(String(255))
+    factor = Column(Float(53))
+
+
+class IxCoreNamespace(Base):
+    __tablename__ = 'ix_core_namespace'
+    __table_args__ = (
+        CheckConstraint('modifier in (0, 1, 2)'),
+    )
+
+    id = Column(BigInteger, primary_key=True)
+    name = Column(String(255), unique=True)
+    owner_id = Column(ForeignKey('ix_core_principal.id'), index=True)
+    location = Column(String(1024))
+    modifier = Column(Integer)
+
+    owner = relationship('IxCorePrincipal', primaryjoin='IxCoreNamespace.owner_id == IxCorePrincipal.id')
+
+
+class IxCoreOrganization(Base):
+    __tablename__ = 'ix_core_organization'
+
+    id = Column(BigInteger, primary_key=True)
+    duns = Column(String(10))
+    name = Column(String(255))
+    department = Column(String(255))
+    city = Column(String(255))
+    state = Column(String(128))
+    zipcode = Column(String(64))
+    district = Column(String(255))
+    country = Column(String(255))
+    fips = Column(String(3))
+    longitude = Column(Float(53))
+    latitude = Column(Float(53))
+
+
+class IxCorePrincipal(Base):
+    __tablename__ = 'ix_core_principal'
+
+    dtype = Column(String(10), nullable=False)
+    id = Column(BigInteger, primary_key=True)
+#    namespace_id = Column(ForeignKey('ix_core_namespace.id'), index=True)
+    namespace_id = Column(BigInteger)
+    created = Column(DateTime)
+    modified = Column(DateTime)
+    deprecated = Column(Boolean)
+    provider = Column(String(255))
+    username = Column(String(255), unique=True)
+    email = Column(String(255))
+    is_admin = Column(Boolean)
+    uri = Column(String(1024))
+    selfie_id = Column(ForeignKey('ix_core_figure.id'), index=True)
+    version = Column(BigInteger, nullable=False)
+    lastname = Column(String(255))
+    forename = Column(String(255))
+    initials = Column(String(255))
+    prefname = Column(String(255))
+    suffix = Column(String(20))
+    affiliation = Column(Text)
+    orcid = Column(String(255))
+    institution_id = Column(ForeignKey('ix_core_organization.id'), index=True)
+
+    institution = relationship('IxCoreOrganization')
+    namespace = relationship('IxCoreNamespace', primaryjoin='IxCorePrincipal.namespace_id == IxCoreNamespace.id')
+    selfie = relationship('IxCoreFigure')
+
+
+class IxCoreStitch(Base):
+    __tablename__ = 'ix_core_stitch'
+
+    id = Column(BigInteger, primary_key=True)
+    name = Column(String(255))
+    impl = Column(String(1024))
+    description = Column(Text)
+
+
+class IxCoreTimeline(Base):
+    __tablename__ = 'ix_core_timeline'
+
+    id = Column(BigInteger, primary_key=True)
+    name = Column(String(255))
+
+
+t_ix_ginas_controlled_vocab_core_value = Table(
+    'ix_ginas_controlled_vocab_core_value', metadata,
+    Column('ix_ginas_controlled_vocab_id', ForeignKey('ix_ginas_controlled_vocab.id'), primary_key=True, nullable=False),
+    Column('ix_core_value_id', ForeignKey('ix_core_value.id'), primary_key=True, nullable=False)
+)
+
+
+class IxCoreValue(Base):
+    __tablename__ = 'ix_core_value'
+
+    dtype = Column(String(10), nullable=False)
+    id = Column(BigInteger, primary_key=True)
+    label = Column(String(255))
+    term = Column(String(255))
+    href = Column(Text)
+    major_topic = Column(Boolean)
+    heading = Column(String(1024))
+    text = Column(Text)
+    data = Column(LargeBinary)
+    data_size = Column(Integer)
+    sha1 = Column(String(40))
+    mime_type = Column(String(32))
+    intval = Column(BigInteger)
+    numval = Column(Float(53))
+    unit = Column(String(255))
+    lval = Column(Float(53))
+    rval = Column(Float(53))
+    average = Column(Float(53))
+    strval = Column(String(1024))
+
+    ix_ginas_controlled_vocabs = relationship('IxGinasControlledVocab', secondary=t_ix_ginas_controlled_vocab_core_value)
+    ix_ginas_substance = relationship('IxGinasSubstance', secondary='ix_ginas_substance_tags')
+    ix_core_xrefs = relationship('IxCoreXref', secondary='ix_core_xref_property')
+
+
+t_ix_core_acl_group = Table(
+    'ix_core_acl_group', metadata,
+    Column('ix_core_acl_id', ForeignKey('ix_core_acl.id'), primary_key=True, nullable=False),
+    Column('ix_core_group_id', ForeignKey('ix_core_group.id'), primary_key=True, nullable=False)
+)
+
+
+t_ix_core_acl_principal = Table(
+    'ix_core_acl_principal', metadata,
+    Column('ix_core_acl_id', ForeignKey('ix_core_acl.id'), primary_key=True, nullable=False),
+    Column('ix_core_principal_id', ForeignKey('ix_core_principal.id'), primary_key=True, nullable=False)
+)
+
+
+class IxCoreAttribute(Base):
+    __tablename__ = 'ix_core_attribute'
+
+    id = Column(BigInteger, primary_key=True)
+    name = Column(String(255))
+    value = Column(String(1024))
+    namespace_id = Column(ForeignKey('ix_core_namespace.id'), index=True)
+
+    namespace = relationship('IxCoreNamespace')
+    ix_core_stitchs = relationship('IxCoreStitch', secondary='ix_core_stitch_attribute')
+
+
+class IxCoreBackup(Base):
+    __tablename__ = 'ix_core_backup'
+
+    id = Column(BigInteger, primary_key=True)
+    namespace_id = Column(ForeignKey('ix_core_namespace.id'), index=True)
+    created = Column(DateTime)
+    modified = Column(DateTime)
+    deprecated = Column(Boolean)
+    refid = Column(String(255), unique=True)
+    kind = Column(String(255))
+    data = Column(LargeBinary)
+    sha1 = Column(String(255))
+    compressed = Column(Boolean)
+    version = Column(BigInteger, nullable=False)
+
+    namespace = relationship('IxCoreNamespace')
+
+
+class IxCoreCuration(Base):
+    __tablename__ = 'ix_core_curation'
+    __table_args__ = (
+        CheckConstraint('status in (0, 1, 2, 3)'),
+    )
+
+    id = Column(BigInteger, primary_key=True)
+    curator_id = Column(ForeignKey('ix_core_principal.id'), index=True)
+    status = Column(Integer)
+    timestamp = Column(DateTime)
+
+    curator = relationship('IxCorePrincipal')
+
+
+class IxCoreEdit(Base):
+    __tablename__ = 'ix_core_edit'
+
+    id = Column(String(40), primary_key=True)
+    created = Column(BigInteger)
+    refid = Column(String(255))
+    kind = Column(String(255))
+    batch = Column(String(64))
+    editor_id = Column(ForeignKey('ix_core_principal.id'), index=True)
+    path = Column(String(1024))
+    comments = Column(Text)
+    version = Column(String(255))
+    old_value = Column(Text)
+    new_value = Column(Text)
+
+    editor = relationship('IxCorePrincipal')
+
+
+class IxCoreEtag(Base):
+    __tablename__ = 'ix_core_etag'
+
+    id = Column(BigInteger, primary_key=True)
+    namespace_id = Column(ForeignKey('ix_core_namespace.id'), index=True)
+    created = Column(DateTime)
+    modified = Column(DateTime)
+    deprecated = Column(Boolean)
+    etag = Column(String(16), unique=True)
+    uri = Column(String(4000))
+    path = Column(String(255))
+    method = Column(String(10))
+    sha1 = Column(String(40))
+    total = Column(Integer)
+    count = Column(Integer)
+    skip = Column(Integer)
+    top = Column(Integer)
+    status = Column(Integer)
+    query = Column(String(2048))
+    filter = Column(String(4000))
+    version = Column(BigInteger, nullable=False)
+
+    namespace = relationship('IxCoreNamespace')
+
+
+t_ix_core_event_prop = Table(
+    'ix_core_event_prop', metadata,
+    Column('ix_core_event_id', ForeignKey('ix_core_event.id'), primary_key=True, nullable=False),
+    Column('ix_core_value_id', ForeignKey('ix_core_value.id'), primary_key=True, nullable=False)
+)
+
+
+t_ix_core_group_principal = Table(
+    'ix_core_group_principal', metadata,
+    Column('ix_core_group_id', ForeignKey('ix_core_group.id'), primary_key=True, nullable=False),
+    Column('ix_core_principal_id', ForeignKey('ix_core_principal.id'), primary_key=True, nullable=False)
+)
+
+
+class IxCoreInvestigator(Base):
+    __tablename__ = 'ix_core_investigator'
+    __table_args__ = (
+        CheckConstraint('role in (0, 1)'),
+    )
+
+    id = Column(BigInteger, primary_key=True)
+    name = Column(String(255))
+    pi_id = Column(BigInteger)
+    organization_id = Column(ForeignKey('ix_core_organization.id'), index=True)
+    role = Column(Integer)
+
+    organization = relationship('IxCoreOrganization')
+
+
+class IxCorePayload(Base):
+    __tablename__ = 'ix_core_payload'
+
+    id = Column(String(40), primary_key=True)
+    namespace_id = Column(ForeignKey('ix_core_namespace.id'), index=True)
+    created = Column(DateTime)
+    name = Column(String(1024))
+    sha1 = Column(String(40))
+    mime_type = Column(String(128))
+    capacity = Column(BigInteger)
+
+    namespace = relationship('IxCoreNamespace')
+    ix_core_values = relationship('IxCoreValue', secondary='ix_core_payload_property')
+
+
+class IxCorePubauthor(Base):
+    __tablename__ = 'ix_core_pubauthor'
+
+    id = Column(BigInteger, primary_key=True)
+    position = Column(Integer)
+    is_last = Column(Boolean)
+    correspondence = Column(Boolean)
+    author_id = Column(ForeignKey('ix_core_principal.id'), index=True)
+
+    author = relationship('IxCorePrincipal')
+    ix_core_publications = relationship('IxCorePublication', secondary='ix_core_publication_author')
+
+
+class IxCorePublication(Base):
+    __tablename__ = 'ix_core_publication'
+
+    id = Column(BigInteger, primary_key=True)
+    pmid = Column(BigInteger, unique=True)
+    pmcid = Column(String(255), unique=True)
+    title = Column(Text)
+    pages = Column(String(255))
+    doi = Column(String(255))
+    abstract_text = Column(Text)
+    journal_id = Column(ForeignKey('ix_core_journal.id'), index=True)
+
+    journal = relationship('IxCoreJournal')
+    ix_core_values = relationship('IxCoreValue', secondary='ix_core_publication_keyword')
+    ix_core_values1 = relationship('IxCoreValue', secondary='ix_core_publication_mesh')
+
+
+class IxCoreStructure(Base):
+    __tablename__ = 'ix_core_structure'
+    __table_args__ = (
+        CheckConstraint('atropi in (0, 1, 2)'),
+        CheckConstraint('optical in (0, 1, 2, 3, 4)')
+    )
+
+    dtype = Column(String(10), nullable=False)
+    id = Column(String(40), primary_key=True)
+    created = Column(DateTime)
+    last_edited = Column(DateTime)
+    deprecated = Column(Boolean)
+    digest = Column(String(128))
+    molfile = Column(Text)
+    smiles = Column(Text)
+    formula = Column(String(255))
+    stereo = Column(String(255))
+    optical = Column(Integer)
+    atropi = Column(Integer)
+    stereo_comments = Column(Text)
+    stereo_centers = Column(Integer)
+    defined_stereo = Column(Integer)
+    ez_centers = Column(Integer)
+    charge = Column(Integer)
+    mwt = Column(Float(53))
+    count = Column(Integer)
+    version = Column(BigInteger, nullable=False)
+    internal_references = Column(Text)
+    created_by_id = Column(ForeignKey('ix_core_principal.id'), index=True)
+    last_edited_by_id = Column(ForeignKey('ix_core_principal.id'), index=True)
+    record_access = Column(LargeBinary)
+
+    created_by = relationship('IxCorePrincipal', primaryjoin='IxCoreStructure.created_by_id == IxCorePrincipal.id')
+    last_edited_by = relationship('IxCorePrincipal', primaryjoin='IxCoreStructure.last_edited_by_id == IxCorePrincipal.id')
+    ix_core_values = relationship('IxCoreValue', secondary='ix_core_structure_property')
+    ix_core_xrefs = relationship('IxCoreXref', secondary='ix_core_structure_link')
+
+
+t_ix_core_timeline_event = Table(
+    'ix_core_timeline_event', metadata,
+    Column('ix_core_timeline_id', ForeignKey('ix_core_timeline.id'), primary_key=True, nullable=False),
+    Column('ix_core_event_id', ForeignKey('ix_core_event.id'), primary_key=True, nullable=False)
+)
+
+
+class IxCoreUserprof(Base):
+    __tablename__ = 'ix_core_userprof'
+
+    id = Column(BigInteger, primary_key=True)
+    namespace_id = Column(ForeignKey('ix_core_namespace.id'), index=True)
+    created = Column(DateTime)
+    modified = Column(DateTime)
+    deprecated = Column(Boolean)
+    user_id = Column(ForeignKey('ix_core_principal.id'), index=True)
+    active = Column(Boolean)
+    hashp = Column(String(255))
+    salt = Column(String(255))
+    system_auth = Column(Boolean)
+    roles_json = Column(Text)
+    apikey = Column(String(255))
+    version = Column(BigInteger, nullable=False)
+
+    namespace = relationship('IxCoreNamespace')
+    user = relationship('IxCorePrincipal')
+    ix_core_values = relationship('IxCoreValue', secondary='ix_core_userprof_prop')
+
+
+class IxCoreXref(Base):
+    __tablename__ = 'ix_core_xref'
+
+    id = Column(BigInteger, primary_key=True)
+    namespace_id = Column(ForeignKey('ix_core_namespace.id'), index=True)
+    created = Column(DateTime)
+    modified = Column(DateTime)
+    deprecated = Column(Boolean)
+    refid = Column(String(40), nullable=False)
+    kind = Column(String(255), nullable=False)
+    version = Column(BigInteger, nullable=False)
+
+    namespace = relationship('IxCoreNamespace')
+
+
+class IxGinasAmount(Base):
+    __tablename__ = 'ix_ginas_amount'
+
+    uuid = Column(String(40), primary_key=True)
+    current_version = Column(Integer)
+    created = Column(DateTime)
+    created_by_id = Column(ForeignKey('ix_core_principal.id'), index=True)
+    last_edited = Column(DateTime)
+    last_edited_by_id = Column(ForeignKey('ix_core_principal.id'), index=True)
+    deprecated = Column(Boolean)
+    record_access = Column(LargeBinary)
+    internal_references = Column(Text)
+    type = Column(String(255))
+    average = Column(Float(53))
+    high_limit = Column(Float(53))
+    high = Column(Float(53))
+    low_limit = Column(Float(53))
+    low = Column(Float(53))
+    units = Column(String(255))
+    non_numeric_value = Column(String(255))
+    approval_id = Column(String(10))
+    internal_version = Column(BigInteger, nullable=False)
+
+    created_by = relationship('IxCorePrincipal', primaryjoin='IxGinasAmount.created_by_id == IxCorePrincipal.id')
+    last_edited_by = relationship('IxCorePrincipal', primaryjoin='IxGinasAmount.last_edited_by_id == IxCorePrincipal.id')
+
+
+class IxGinasControlledVocab(Base):
+    __tablename__ = 'ix_ginas_controlled_vocab'
+
+    dtype = Column(String(10), nullable=False)
+    id = Column(BigInteger, primary_key=True)
+    namespace_id = Column(ForeignKey('ix_core_namespace.id'), index=True)
+    created = Column(DateTime)
+    modified = Column(DateTime)
+    deprecated = Column(Boolean)
+    domain = Column(String(255), unique=True)
+    vocabulary_term_type = Column(String(255))
+    editable = Column(Boolean)
+    filterable = Column(Boolean)
+    version = Column(BigInteger, nullable=False)
+
+    namespace = relationship('IxCoreNamespace')
+
+
+class IxGinasModification(Base):
+    __tablename__ = 'ix_ginas_modifications'
+
+    uuid = Column(String(40), primary_key=True)
+    current_version = Column(Integer)
+    created = Column(DateTime)
+    created_by_id = Column(ForeignKey('ix_core_principal.id'), index=True)
+    last_edited = Column(DateTime)
+    last_edited_by_id = Column(ForeignKey('ix_core_principal.id'), index=True)
+    deprecated = Column(Boolean)
+    record_access = Column(LargeBinary)
+    internal_references = Column(Text)
+    internal_version = Column(BigInteger, nullable=False)
+
+    created_by = relationship('IxCorePrincipal', primaryjoin='IxGinasModification.created_by_id == IxCorePrincipal.id')
+    last_edited_by = relationship('IxCorePrincipal', primaryjoin='IxGinasModification.last_edited_by_id == IxCorePrincipal.id')
+
+
+class IxGinasSiteLob(Base):
+    __tablename__ = 'ix_ginas_site_lob'
+
+    uuid = Column(String(40), primary_key=True)
+    current_version = Column(Integer)
+    created = Column(DateTime)
+    created_by_id = Column(ForeignKey('ix_core_principal.id'), index=True)
+    last_edited = Column(DateTime)
+    last_edited_by_id = Column(ForeignKey('ix_core_principal.id'), index=True)
+    deprecated = Column(Boolean)
+    record_access = Column(LargeBinary)
+    internal_references = Column(Text)
+    sites_short_hand = Column(Text)
+    sites_json = Column(Text)
+    site_count = Column(BigInteger)
+    site_type = Column(String(255))
+    internal_version = Column(BigInteger, nullable=False)
+
+    created_by = relationship('IxCorePrincipal', primaryjoin='IxGinasSiteLob.created_by_id == IxCorePrincipal.id')
+    last_edited_by = relationship('IxCorePrincipal', primaryjoin='IxGinasSiteLob.last_edited_by_id == IxCorePrincipal.id')
+
+
+class IxGinasSsg1(Base):
+    __tablename__ = 'ix_ginas_ssg1'
+
+    uuid = Column(String(40), primary_key=True)
+    current_version = Column(Integer)
+    created = Column(DateTime)
+    created_by_id = Column(ForeignKey('ix_core_principal.id'), index=True)
+    last_edited = Column(DateTime)
+    last_edited_by_id = Column(ForeignKey('ix_core_principal.id'), index=True)
+    deprecated = Column(Boolean)
+    record_access = Column(LargeBinary)
+    internal_references = Column(Text)
+    internal_version = Column(BigInteger, nullable=False)
+
+    created_by = relationship('IxCorePrincipal', primaryjoin='IxGinasSsg1.created_by_id == IxCorePrincipal.id')
+    last_edited_by = relationship('IxCorePrincipal', primaryjoin='IxGinasSsg1.last_edited_by_id == IxCorePrincipal.id')
+
+
+class IxGinasSubstanceref(Base):
+    __tablename__ = 'ix_ginas_substanceref'
+
+    uuid = Column(String(40), primary_key=True)
+    current_version = Column(Integer)
+    created = Column(DateTime)
+    created_by_id = Column(ForeignKey('ix_core_principal.id'), index=True)
+    last_edited = Column(DateTime)
+    last_edited_by_id = Column(ForeignKey('ix_core_principal.id'), index=True)
+    deprecated = Column(Boolean)
+    record_access = Column(LargeBinary)
+    internal_references = Column(Text)
+    ref_pname = Column(String(1024))
+    refuuid = Column(String(128))
+    substance_class = Column(String(255))
+    approval_id = Column(String(32))
+    internal_version = Column(BigInteger, nullable=False)
+
+    created_by = relationship('IxCorePrincipal', primaryjoin='IxGinasSubstanceref.created_by_id == IxCorePrincipal.id')
+    last_edited_by = relationship('IxCorePrincipal', primaryjoin='IxGinasSubstanceref.last_edited_by_id == IxCorePrincipal.id')
+
+
+class IxGinasSubunit(Base):
+    __tablename__ = 'ix_ginas_subunit'
+
+    uuid = Column(String(40), primary_key=True)
+    current_version = Column(Integer)
+    created = Column(DateTime)
+    created_by_id = Column(ForeignKey('ix_core_principal.id'), index=True)
+    last_edited = Column(DateTime)
+    last_edited_by_id = Column(ForeignKey('ix_core_principal.id'), index=True)
+    deprecated = Column(Boolean)
+    record_access = Column(LargeBinary)
+    internal_references = Column(Text)
+    sequence = Column(Text)
+    subunit_index = Column(Integer)
+    internal_version = Column(BigInteger, nullable=False)
+
+    created_by = relationship('IxCorePrincipal', primaryjoin='IxGinasSubunit.created_by_id == IxCorePrincipal.id')
+    last_edited_by = relationship('IxCorePrincipal', primaryjoin='IxGinasSubunit.last_edited_by_id == IxCorePrincipal.id')
+
+
+class IxCoreEtagref(Base):
+    __tablename__ = 'ix_core_etagref'
+
+    id = Column(BigInteger, primary_key=True)
+    etag_id = Column(ForeignKey('ix_core_etag.id'), index=True)
+    ref_id = Column(BigInteger)
+
+    etag = relationship('IxCoreEtag')
+
+
+t_ix_core_event_link = Table(
+    'ix_core_event_link', metadata,
+    Column('ix_core_event_id', ForeignKey('ix_core_event.id'), primary_key=True, nullable=False),
+    Column('ix_core_xref_id', ForeignKey('ix_core_xref.id'), primary_key=True, nullable=False)
+)
+
+
+t_ix_core_payload_property = Table(
+    'ix_core_payload_property', metadata,
+    Column('ix_core_payload_id', ForeignKey('ix_core_payload.id'), primary_key=True, nullable=False),
+    Column('ix_core_value_id', ForeignKey('ix_core_value.id'), primary_key=True, nullable=False)
+)
+
+
+class IxCorePredicate(Base):
+    __tablename__ = 'ix_core_predicate'
+
+    dtype = Column(String(10), nullable=False)
+    id = Column(BigInteger, primary_key=True)
+    namespace_id = Column(ForeignKey('ix_core_namespace.id'), index=True)
+    created = Column(DateTime)
+    modified = Column(DateTime)
+    deprecated = Column(Boolean)
+    subject_id = Column(ForeignKey('ix_core_xref.id'), index=True)
+    predicate = Column(String(255), nullable=False)
+    version = Column(BigInteger, nullable=False)
+
+    namespace = relationship('IxCoreNamespace')
+    subject = relationship('IxCoreXref')
+    ix_core_xrefs = relationship('IxCoreXref', secondary='ix_core_predicate_object')
+    ix_core_values = relationship('IxCoreValue', secondary='ix_core_predicate_property')
+
+
+class IxCoreProcjob(Base):
+    __tablename__ = 'ix_core_procjob'
+    __table_args__ = (
+        CheckConstraint('status in (0, 1, 2, 3, 4, 5, 6)'),
+    )
+
+    id = Column(BigInteger, primary_key=True)
+    status = Column(Integer)
+    job_start = Column(BigInteger)
+    job_stop = Column(BigInteger)
+    message = Column(Text)
+    statistics = Column(Text)
+    owner_id = Column(ForeignKey('ix_core_principal.id'), index=True)
+    payload_id = Column(ForeignKey('ix_core_payload.id'), index=True)
+    last_update = Column(DateTime)
+    version = Column(BigInteger, nullable=False)
+
+    owner = relationship('IxCorePrincipal')
+    payload = relationship('IxCorePayload')
+    ix_core_values = relationship('IxCoreValue', secondary='ix_core_procjob_key')
+
+
+t_ix_core_publication_author = Table(
+    'ix_core_publication_author', metadata,
+    Column('ix_core_publication_id', ForeignKey('ix_core_publication.id'), primary_key=True, nullable=False),
+    Column('ix_core_pubauthor_id', ForeignKey('ix_core_pubauthor.id'), primary_key=True, nullable=False)
+)
+
+
+t_ix_core_publication_figure = Table(
+    'ix_core_publication_figure', metadata,
+    Column('ix_core_publication_id', ForeignKey('ix_core_publication.id'), primary_key=True, nullable=False),
+    Column('ix_core_figure_id', ForeignKey('ix_core_figure.id'), primary_key=True, nullable=False)
+)
+
+
+t_ix_core_publication_keyword = Table(
+    'ix_core_publication_keyword', metadata,
+    Column('ix_core_publication_id', ForeignKey('ix_core_publication.id'), primary_key=True, nullable=False),
+    Column('ix_core_value_id', ForeignKey('ix_core_value.id'), primary_key=True, nullable=False)
+)
+
+
+t_ix_core_publication_mesh = Table(
+    'ix_core_publication_mesh', metadata,
+    Column('ix_core_publication_id', ForeignKey('ix_core_publication.id'), primary_key=True, nullable=False),
+    Column('ix_core_value_id', ForeignKey('ix_core_value.id'), primary_key=True, nullable=False)
+)
+
+
+class IxCoreSession(Base):
+    __tablename__ = 'ix_core_session'
+
+    id = Column(String(40), primary_key=True)
+    profile_id = Column(ForeignKey('ix_core_userprof.id'), index=True)
+    created = Column(BigInteger)
+    accessed = Column(BigInteger)
+    location = Column(String(255))
+    expired = Column(Boolean)
+
+    profile = relationship('IxCoreUserprof')
+
+
+t_ix_core_stitch_attribute = Table(
+    'ix_core_stitch_attribute', metadata,
+    Column('ix_core_stitch_id', ForeignKey('ix_core_stitch.id'), primary_key=True, nullable=False),
+    Column('ix_core_attribute_id', ForeignKey('ix_core_attribute.id'), primary_key=True, nullable=False)
+)
+
+
+t_ix_core_structure_link = Table(
+    'ix_core_structure_link', metadata,
+    Column('ix_core_structure_id', ForeignKey('ix_core_structure.id'), primary_key=True, nullable=False),
+    Column('ix_core_xref_id', ForeignKey('ix_core_xref.id'), primary_key=True, nullable=False)
+)
+
+
+t_ix_core_structure_property = Table(
+    'ix_core_structure_property', metadata,
+    Column('ix_core_structure_id', ForeignKey('ix_core_structure.id'), primary_key=True, nullable=False),
+    Column('ix_core_value_id', ForeignKey('ix_core_value.id'), primary_key=True, nullable=False)
+)
+
+
+t_ix_core_userprof_prop = Table(
+    'ix_core_userprof_prop', metadata,
+    Column('ix_core_userprof_id', ForeignKey('ix_core_userprof.id'), primary_key=True, nullable=False),
+    Column('ix_core_value_id', ForeignKey('ix_core_value.id'), primary_key=True, nullable=False)
+)
+
+
+t_ix_core_xref_property = Table(
+    'ix_core_xref_property', metadata,
+    Column('ix_core_xref_id', ForeignKey('ix_core_xref.id'), primary_key=True, nullable=False),
+    Column('ix_core_value_id', ForeignKey('ix_core_value.id'), primary_key=True, nullable=False)
+)
+
+
+class IxGinasAgentmod(Base):
+    __tablename__ = 'ix_ginas_agentmod'
+
+    uuid = Column(String(40), primary_key=True)
+    current_version = Column(Integer)
+    created = Column(DateTime)
+    created_by_id = Column(ForeignKey('ix_core_principal.id'), index=True)
+    last_edited = Column(DateTime)
+    last_edited_by_id = Column(ForeignKey('ix_core_principal.id'), index=True)
+    deprecated = Column(Boolean)
+    record_access = Column(LargeBinary)
+    internal_references = Column(Text)
+    owner_uuid = Column(ForeignKey('ix_ginas_modifications.uuid'), index=True)
+    agent_modification_process = Column(String(255))
+    agent_modification_role = Column(String(255))
+    agent_modification_type = Column(String(255))
+    agent_substance_uuid = Column(ForeignKey('ix_ginas_substanceref.uuid'), index=True)
+    amount_uuid = Column(ForeignKey('ix_ginas_amount.uuid'), index=True)
+    modification_group = Column(String(255))
+    internal_version = Column(BigInteger, nullable=False)
+
+    ix_ginas_substanceref = relationship('IxGinasSubstanceref')
+    ix_ginas_amount = relationship('IxGinasAmount')
+    created_by = relationship('IxCorePrincipal', primaryjoin='IxGinasAgentmod.created_by_id == IxCorePrincipal.id')
+    last_edited_by = relationship('IxCorePrincipal', primaryjoin='IxGinasAgentmod.last_edited_by_id == IxCorePrincipal.id')
+    ix_ginas_modification = relationship('IxGinasModification')
+
+
+class IxGinasComponent(Base):
+    __tablename__ = 'ix_ginas_component'
+
+    dtype = Column(String(10), nullable=False)
+    uuid = Column(String(40), primary_key=True)
+    current_version = Column(Integer)
+    created = Column(DateTime)
+    created_by_id = Column(ForeignKey('ix_core_principal.id'), index=True)
+    last_edited = Column(DateTime)
+    last_edited_by_id = Column(ForeignKey('ix_core_principal.id'), index=True)
+    deprecated = Column(Boolean)
+    record_access = Column(LargeBinary)
+    internal_references = Column(Text)
+    type = Column(String(255))
+    substance_uuid = Column(ForeignKey('ix_ginas_substanceref.uuid'), index=True)
+    internal_version = Column(BigInteger, nullable=False)
+    role = Column(String(255))
+    amount_uuid = Column(ForeignKey('ix_ginas_amount.uuid'), index=True)
+
+    ix_ginas_amount = relationship('IxGinasAmount')
+    created_by = relationship('IxCorePrincipal', primaryjoin='IxGinasComponent.created_by_id == IxCorePrincipal.id')
+    last_edited_by = relationship('IxCorePrincipal', primaryjoin='IxGinasComponent.last_edited_by_id == IxCorePrincipal.id')
+    ix_ginas_substanceref = relationship('IxGinasSubstanceref')
+    ix_ginas_mixture = relationship('IxGinasMixture', secondary='ix_ginas_substance_mix_comp')
+    ix_ginas_ssg1 = relationship('IxGinasSsg1', secondary='ix_ginas_substance_ss_comp')
+
+
+#t_ix_ginas_controlled_vocab_core_v = Table(
+#    'ix_ginas_controlled_vocab_core_v', metadata,
+#    Column('ix_ginas_controlled_vocab_id', ForeignKey('ix_ginas_controlled_vocab.id'), primary_key=True, nullable=False),
+#    Column('ix_core_value_id', ForeignKey('ix_core_value.id'), primary_key=True, nullable=False)
+#)
+
+
+class IxGinasGlycosylation(Base):
+    __tablename__ = 'ix_ginas_glycosylation'
+
+    uuid = Column(String(40), primary_key=True)
+    current_version = Column(Integer)
+    created = Column(DateTime)
+    created_by_id = Column(ForeignKey('ix_core_principal.id'), index=True)
+    last_edited = Column(DateTime)
+    last_edited_by_id = Column(ForeignKey('ix_core_principal.id'), index=True)
+    deprecated = Column(Boolean)
+    record_access = Column(LargeBinary)
+    internal_references = Column(Text)
+    c_glycosylation_sites_uuid = Column(ForeignKey('ix_ginas_site_lob.uuid'), index=True)
+    n_glycosylation_sites_uuid = Column(ForeignKey('ix_ginas_site_lob.uuid'), index=True)
+    o_glycosylation_sites_uuid = Column(ForeignKey('ix_ginas_site_lob.uuid'), index=True)
+    glycosylation_type = Column(String(255))
+    internal_version = Column(BigInteger, nullable=False)
+
+    ix_ginas_site_lob = relationship('IxGinasSiteLob', primaryjoin='IxGinasGlycosylation.c_glycosylation_sites_uuid == IxGinasSiteLob.uuid')
+    created_by = relationship('IxCorePrincipal', primaryjoin='IxGinasGlycosylation.created_by_id == IxCorePrincipal.id')
+    last_edited_by = relationship('IxCorePrincipal', primaryjoin='IxGinasGlycosylation.last_edited_by_id == IxCorePrincipal.id')
+    ix_ginas_site_lob1 = relationship('IxGinasSiteLob', primaryjoin='IxGinasGlycosylation.n_glycosylation_sites_uuid == IxGinasSiteLob.uuid')
+    ix_ginas_site_lob2 = relationship('IxGinasSiteLob', primaryjoin='IxGinasGlycosylation.o_glycosylation_sites_uuid == IxGinasSiteLob.uuid')
+
+
+class IxGinasMixture(Base):
+    __tablename__ = 'ix_ginas_mixture'
+
+    uuid = Column(String(40), primary_key=True)
+    current_version = Column(Integer)
+    created = Column(DateTime)
+    created_by_id = Column(ForeignKey('ix_core_principal.id'), index=True)
+    last_edited = Column(DateTime)
+    last_edited_by_id = Column(ForeignKey('ix_core_principal.id'), index=True)
+    deprecated = Column(Boolean)
+    record_access = Column(LargeBinary)
+    internal_references = Column(Text)
+    parent_substance_uuid = Column(ForeignKey('ix_ginas_substanceref.uuid'), index=True)
+    internal_version = Column(BigInteger, nullable=False)
+
+    created_by = relationship('IxCorePrincipal', primaryjoin='IxGinasMixture.created_by_id == IxCorePrincipal.id')
+    last_edited_by = relationship('IxCorePrincipal', primaryjoin='IxGinasMixture.last_edited_by_id == IxCorePrincipal.id')
+    ix_ginas_substanceref = relationship('IxGinasSubstanceref')
+
+
+class IxGinasNucleicacid(Base):
+    __tablename__ = 'ix_ginas_nucleicacid'
+
+    uuid = Column(String(40), primary_key=True)
+    current_version = Column(Integer)
+    created = Column(DateTime)
+    created_by_id = Column(ForeignKey('ix_core_principal.id'), index=True)
+    last_edited = Column(DateTime)
+    last_edited_by_id = Column(ForeignKey('ix_core_principal.id'), index=True)
+    deprecated = Column(Boolean)
+    record_access = Column(LargeBinary)
+    internal_references = Column(Text)
+    modifications_uuid = Column(ForeignKey('ix_ginas_modifications.uuid'), index=True)
+    nucleic_acid_type = Column(String(255))
+    nucleic_acid_sub_type = Column(String(255))
+    sequence_origin = Column(String(255))
+    sequence_type = Column(String(255))
+    internal_version = Column(BigInteger, nullable=False)
+
+    created_by = relationship('IxCorePrincipal', primaryjoin='IxGinasNucleicacid.created_by_id == IxCorePrincipal.id')
+    last_edited_by = relationship('IxCorePrincipal', primaryjoin='IxGinasNucleicacid.last_edited_by_id == IxCorePrincipal.id')
+    ix_ginas_modification = relationship('IxGinasModification')
+    ix_ginas_subunit = relationship('IxGinasSubunit', secondary='ix_ginas_nucleicacid_subunits')
+
+
+class IxGinasPhysicalmod(Base):
+    __tablename__ = 'ix_ginas_physicalmod'
+
+    uuid = Column(String(40), primary_key=True)
+    current_version = Column(Integer)
+    created = Column(DateTime)
+    created_by_id = Column(ForeignKey('ix_core_principal.id'), index=True)
+    last_edited = Column(DateTime)
+    last_edited_by_id = Column(ForeignKey('ix_core_principal.id'), index=True)
+    deprecated = Column(Boolean)
+    record_access = Column(LargeBinary)
+    internal_references = Column(Text)
+    owner_uuid = Column(ForeignKey('ix_ginas_modifications.uuid'), index=True)
+    physical_modification_role = Column(String(255))
+    modification_group = Column(String(255))
+    internal_version = Column(BigInteger, nullable=False)
+
+    created_by = relationship('IxCorePrincipal', primaryjoin='IxGinasPhysicalmod.created_by_id == IxCorePrincipal.id')
+    last_edited_by = relationship('IxCorePrincipal', primaryjoin='IxGinasPhysicalmod.last_edited_by_id == IxCorePrincipal.id')
+    ix_ginas_modification = relationship('IxGinasModification')
+
+
+class IxGinasStrucdiv(Base):
+    __tablename__ = 'ix_ginas_strucdiv'
+
+    uuid = Column(String(40), primary_key=True)
+    current_version = Column(Integer)
+    created = Column(DateTime)
+    created_by_id = Column(ForeignKey('ix_core_principal.id'), index=True)
+    last_edited = Column(DateTime)
+    last_edited_by_id = Column(ForeignKey('ix_core_principal.id'), index=True)
+    deprecated = Column(Boolean)
+    record_access = Column(LargeBinary)
+    internal_references = Column(Text)
+    source_material_class = Column(String(255))
+    source_material_type = Column(String(255))
+    source_material_state = Column(String(255))
+    organism_family = Column(String(255))
+    organism_genus = Column(String(255))
+    organism_species = Column(String(255))
+    organism_author = Column(String(255))
+    part_location = Column(String(255))
+    part = Column(Text)
+    infra_specific_type = Column(String(255))
+    infra_specific_name = Column(String(255))
+    developmental_stage = Column(String(255))
+    fraction_name = Column(String(255))
+    fraction_material_type = Column(String(255))
+    paternal_uuid = Column(ForeignKey('ix_ginas_substanceref.uuid'), index=True)
+    maternal_uuid = Column(ForeignKey('ix_ginas_substanceref.uuid'), index=True)
+    parent_substance_uuid = Column(ForeignKey('ix_ginas_substanceref.uuid'), index=True)
+    internal_version = Column(BigInteger, nullable=False)
+
+    created_by = relationship('IxCorePrincipal', primaryjoin='IxGinasStrucdiv.created_by_id == IxCorePrincipal.id')
+    last_edited_by = relationship('IxCorePrincipal', primaryjoin='IxGinasStrucdiv.last_edited_by_id == IxCorePrincipal.id')
+    ix_ginas_substanceref = relationship('IxGinasSubstanceref', primaryjoin='IxGinasStrucdiv.maternal_uuid == IxGinasSubstanceref.uuid')
+    ix_ginas_substanceref1 = relationship('IxGinasSubstanceref', primaryjoin='IxGinasStrucdiv.parent_substance_uuid == IxGinasSubstanceref.uuid')
+    ix_ginas_substanceref2 = relationship('IxGinasSubstanceref', primaryjoin='IxGinasStrucdiv.paternal_uuid == IxGinasSubstanceref.uuid')
+
+
+class IxGinasStructuralmod(Base):
+    __tablename__ = 'ix_ginas_structuralmod'
+
+    uuid = Column(String(40), primary_key=True)
+    current_version = Column(Integer)
+    created = Column(DateTime)
+    created_by_id = Column(ForeignKey('ix_core_principal.id'), index=True)
+    last_edited = Column(DateTime)
+    last_edited_by_id = Column(ForeignKey('ix_core_principal.id'), index=True)
+    deprecated = Column(Boolean)
+    record_access = Column(LargeBinary)
+    internal_references = Column(Text)
+    owner_uuid = Column(ForeignKey('ix_ginas_modifications.uuid'), index=True)
+    structural_modification_type = Column(String(255))
+    location_type = Column(String(255))
+    residue_modified = Column(String(255))
+    site_container_uuid = Column(ForeignKey('ix_ginas_site_lob.uuid'), index=True)
+    extent = Column(String(255))
+    extent_amount_uuid = Column(ForeignKey('ix_ginas_amount.uuid'), index=True)
+    molecular_fragment_uuid = Column(ForeignKey('ix_ginas_substanceref.uuid'), index=True)
+    moleculare_fragment_role = Column(String(255))
+    modification_group = Column(String(255))
+    internal_version = Column(BigInteger, nullable=False)
+
+    created_by = relationship('IxCorePrincipal', primaryjoin='IxGinasStructuralmod.created_by_id == IxCorePrincipal.id')
+    ix_ginas_amount = relationship('IxGinasAmount')
+    last_edited_by = relationship('IxCorePrincipal', primaryjoin='IxGinasStructuralmod.last_edited_by_id == IxCorePrincipal.id')
+    ix_ginas_substanceref = relationship('IxGinasSubstanceref')
+    ix_ginas_modification = relationship('IxGinasModification')
+    ix_ginas_site_lob = relationship('IxGinasSiteLob')
+
+
+class IxGinasVocabularyTerm(Base):
+    __tablename__ = 'ix_ginas_vocabulary_term'
+
+    dtype = Column(String(10), nullable=False)
+    id = Column(BigInteger, primary_key=True)
+    namespace_id = Column(ForeignKey('ix_core_namespace.id'), index=True)
+    created = Column(DateTime)
+    modified = Column(DateTime)
+    deprecated = Column(Boolean)
+    owner_id = Column(ForeignKey('ix_ginas_controlled_vocab.id'), index=True)
+    value = Column(String(4000))
+    display = Column(String(4000))
+    description = Column(String(4000))
+    regex = Column(String(4000))
+    origin = Column(String(255))
+    filters = Column(Text)
+    hidden = Column(Boolean)
+    selected = Column(Boolean)
+    version = Column(BigInteger, nullable=False)
+    system_category = Column(String(255))
+    fragment_structure = Column(String(255))
+    simplified_structure = Column(String(255))
+
+    namespace = relationship('IxCoreNamespace')
+    owner = relationship('IxGinasControlledVocab')
+
+
+class PolymerClassification(Base):
+    __tablename__ = 'polymer_classification'
+
+    uuid = Column(String(40), primary_key=True)
+    current_version = Column(Integer)
+    created = Column(DateTime)
+    created_by_id = Column(ForeignKey('ix_core_principal.id'), index=True)
+    last_edited = Column(DateTime)
+    last_edited_by_id = Column(ForeignKey('ix_core_principal.id'), index=True)
+    deprecated = Column(Boolean)
+    record_access = Column(LargeBinary)
+    internal_references = Column(Text)
+    polymer_class = Column(String(255))
+    polymer_geometry = Column(String(255))
+    polymer_subclass = Column(Text)
+    source_type = Column(String(255))
+    parent_substance_uuid = Column(ForeignKey('ix_ginas_substanceref.uuid'), index=True)
+    internal_version = Column(BigInteger, nullable=False)
+
+    created_by = relationship('IxCorePrincipal', primaryjoin='PolymerClassification.created_by_id == IxCorePrincipal.id')
+    last_edited_by = relationship('IxCorePrincipal', primaryjoin='PolymerClassification.last_edited_by_id == IxCorePrincipal.id')
+    ix_ginas_substanceref = relationship('IxGinasSubstanceref')
+
+
+t_ix_core_predicate_object = Table(
+    'ix_core_predicate_object', metadata,
+    Column('ix_core_predicate_id', ForeignKey('ix_core_predicate.id'), primary_key=True, nullable=False),
+    Column('ix_core_xref_id', ForeignKey('ix_core_xref.id'), primary_key=True, nullable=False)
+)
+
+
+t_ix_core_predicate_property = Table(
+    'ix_core_predicate_property', metadata,
+    Column('ix_core_predicate_id', ForeignKey('ix_core_predicate.id'), primary_key=True, nullable=False),
+    Column('ix_core_value_id', ForeignKey('ix_core_value.id'), primary_key=True, nullable=False)
+)
+
+
+t_ix_core_procjob_key = Table(
+    'ix_core_procjob_key', metadata,
+    Column('ix_core_procjob_id', ForeignKey('ix_core_procjob.id'), primary_key=True, nullable=False),
+    Column('ix_core_value_id', ForeignKey('ix_core_value.id'), primary_key=True, nullable=False)
+)
+
+
+class IxCoreProcrec(Base):
+    __tablename__ = 'ix_core_procrec'
+    __table_args__ = (
+        CheckConstraint('status in (0, 1, 2, 3, 4)'),
+    )
+
+    id = Column(BigInteger, primary_key=True)
+    rec_start = Column(BigInteger)
+    rec_stop = Column(BigInteger)
+    name = Column(String(128))
+    status = Column(Integer)
+    message = Column(Text)
+    xref_id = Column(ForeignKey('ix_core_xref.id'), index=True)
+    job_id = Column(ForeignKey('ix_core_procjob.id'), index=True)
+    last_update = Column(DateTime, nullable=False)
+
+    job = relationship('IxCoreProcjob')
+    xref = relationship('IxCoreXref')
+    ix_core_values = relationship('IxCoreValue', secondary='ix_core_procrec_prop')
+
+
+class IxGinasLinkage(Base):
+    __tablename__ = 'ix_ginas_linkage'
+
+    uuid = Column(String(40), primary_key=True)
+    current_version = Column(Integer)
+    created = Column(DateTime)
+    created_by_id = Column(ForeignKey('ix_core_principal.id'), index=True)
+    last_edited = Column(DateTime)
+    last_edited_by_id = Column(ForeignKey('ix_core_principal.id'), index=True)
+    deprecated = Column(Boolean)
+    record_access = Column(LargeBinary)
+    internal_references = Column(Text)
+    owner_uuid = Column(ForeignKey('ix_ginas_nucleicacid.uuid'), index=True)
+    linkage = Column(String(255))
+    site_container_uuid = Column(ForeignKey('ix_ginas_site_lob.uuid'), index=True)
+    internal_version = Column(BigInteger, nullable=False)
+
+    created_by = relationship('IxCorePrincipal', primaryjoin='IxGinasLinkage.created_by_id == IxCorePrincipal.id')
+    last_edited_by = relationship('IxCorePrincipal', primaryjoin='IxGinasLinkage.last_edited_by_id == IxCorePrincipal.id')
+    ix_ginas_nucleicacid = relationship('IxGinasNucleicacid')
+    ix_ginas_site_lob = relationship('IxGinasSiteLob')
+
+
+t_ix_ginas_nucleicacid_subunits = Table(
+    'ix_ginas_nucleicacid_subunits', metadata,
+    Column('ix_ginas_nucleicacid_uuid', ForeignKey('ix_ginas_nucleicacid.uuid'), primary_key=True, nullable=False),
+    Column('ix_ginas_subunit_uuid', ForeignKey('ix_ginas_subunit.uuid'), primary_key=True, nullable=False)
+)
+
+
+class IxGinasPhysicalpar(Base):
+    __tablename__ = 'ix_ginas_physicalpar'
+
+    uuid = Column(String(40), primary_key=True)
+    current_version = Column(Integer)
+    created = Column(DateTime)
+    created_by_id = Column(ForeignKey('ix_core_principal.id'), index=True)
+    last_edited = Column(DateTime)
+    last_edited_by_id = Column(ForeignKey('ix_core_principal.id'), index=True)
+    deprecated = Column(Boolean)
+    record_access = Column(LargeBinary)
+    internal_references = Column(Text)
+    owner_uuid = Column(ForeignKey('ix_ginas_physicalmod.uuid'), index=True)
+    parameter_name = Column(String(255))
+    amount_uuid = Column(ForeignKey('ix_ginas_amount.uuid'), index=True)
+    internal_version = Column(BigInteger, nullable=False)
+
+    ix_ginas_amount = relationship('IxGinasAmount')
+    created_by = relationship('IxCorePrincipal', primaryjoin='IxGinasPhysicalpar.created_by_id == IxCorePrincipal.id')
+    last_edited_by = relationship('IxCorePrincipal', primaryjoin='IxGinasPhysicalpar.last_edited_by_id == IxCorePrincipal.id')
+    ix_ginas_physicalmod = relationship('IxGinasPhysicalmod')
+
+
+class IxGinasPolymer(Base):
+    __tablename__ = 'ix_ginas_polymer'
+
+    uuid = Column(String(40), primary_key=True)
+    current_version = Column(Integer)
+    created = Column(DateTime)
+    created_by_id = Column(ForeignKey('ix_core_principal.id'), index=True)
+    last_edited = Column(DateTime)
+    last_edited_by_id = Column(ForeignKey('ix_core_principal.id'), index=True)
+    deprecated = Column(Boolean)
+    record_access = Column(LargeBinary)
+    internal_references = Column(Text)
+    classification_uuid = Column(ForeignKey('polymer_classification.uuid'), index=True)
+    display_structure_id = Column(ForeignKey('ix_core_structure.id'), index=True)
+    idealized_structure_id = Column(ForeignKey('ix_core_structure.id'), index=True)
+    internal_version = Column(BigInteger, nullable=False)
+
+    polymer_classification = relationship('PolymerClassification')
+    created_by = relationship('IxCorePrincipal', primaryjoin='IxGinasPolymer.created_by_id == IxCorePrincipal.id')
+    display_structure = relationship('IxCoreStructure', primaryjoin='IxGinasPolymer.display_structure_id == IxCoreStructure.id')
+    idealized_structure = relationship('IxCoreStructure', primaryjoin='IxGinasPolymer.idealized_structure_id == IxCoreStructure.id')
+    last_edited_by = relationship('IxCorePrincipal', primaryjoin='IxGinasPolymer.last_edited_by_id == IxCorePrincipal.id')
+
+
+class IxGinasProtein(Base):
+    __tablename__ = 'ix_ginas_protein'
+
+    uuid = Column(String(40), primary_key=True)
+    current_version = Column(Integer)
+    created = Column(DateTime)
+    created_by_id = Column(ForeignKey('ix_core_principal.id'), index=True)
+    last_edited = Column(DateTime)
+    last_edited_by_id = Column(ForeignKey('ix_core_principal.id'), index=True)
+    deprecated = Column(Boolean)
+    record_access = Column(LargeBinary)
+    internal_references = Column(Text)
+    protein_type = Column(String(255))
+    protein_sub_type = Column(String(255))
+    sequence_origin = Column(String(255))
+    sequence_type = Column(String(255))
+    disulf_json = Column(Text)
+    glycosylation_uuid = Column(ForeignKey('ix_ginas_glycosylation.uuid'), index=True)
+    internal_version = Column(BigInteger, nullable=False)
+
+    created_by = relationship('IxCorePrincipal', primaryjoin='IxGinasProtein.created_by_id == IxCorePrincipal.id')
+    ix_ginas_glycosylation = relationship('IxGinasGlycosylation')
+    last_edited_by = relationship('IxCorePrincipal', primaryjoin='IxGinasProtein.last_edited_by_id == IxCorePrincipal.id')
+    ix_ginas_subunit = relationship('IxGinasSubunit', secondary='ix_ginas_protein_subunit')
+
+
+t_ix_ginas_substance_mix_comp = Table(
+    'ix_ginas_substance_mix_comp', metadata,
+    Column('ix_ginas_mixture_uuid', ForeignKey('ix_ginas_mixture.uuid'), primary_key=True, nullable=False),
+    Column('ix_ginas_component_uuid', ForeignKey('ix_ginas_component.uuid'), primary_key=True, nullable=False)
+)
+
+
+t_ix_ginas_substance_ss_comp = Table(
+    'ix_ginas_substance_ss_comp', metadata,
+    Column('ix_ginas_ssg1_uuid', ForeignKey('ix_ginas_ssg1.uuid'), primary_key=True, nullable=False),
+    Column('ix_ginas_component_uuid', ForeignKey('ix_ginas_component.uuid'), primary_key=True, nullable=False)
+)
+
+
+class IxGinasSugar(Base):
+    __tablename__ = 'ix_ginas_sugar'
+
+    uuid = Column(String(40), primary_key=True)
+    current_version = Column(Integer)
+    created = Column(DateTime)
+    created_by_id = Column(ForeignKey('ix_core_principal.id'), index=True)
+    last_edited = Column(DateTime)
+    last_edited_by_id = Column(ForeignKey('ix_core_principal.id'), index=True)
+    deprecated = Column(Boolean)
+    record_access = Column(LargeBinary)
+    internal_references = Column(Text)
+    owner_uuid = Column(ForeignKey('ix_ginas_nucleicacid.uuid'), index=True)
+    sugar = Column(String(255))
+    site_container_uuid = Column(ForeignKey('ix_ginas_site_lob.uuid'), index=True)
+    internal_version = Column(BigInteger, nullable=False)
+
+    created_by = relationship('IxCorePrincipal', primaryjoin='IxGinasSugar.created_by_id == IxCorePrincipal.id')
+    last_edited_by = relationship('IxCorePrincipal', primaryjoin='IxGinasSugar.last_edited_by_id == IxCorePrincipal.id')
+    ix_ginas_nucleicacid = relationship('IxGinasNucleicacid')
+    ix_ginas_site_lob = relationship('IxGinasSiteLob')
+
+
+t_ix_core_procrec_prop = Table(
+    'ix_core_procrec_prop', metadata,
+    Column('ix_core_procrec_id', ForeignKey('ix_core_procrec.id'), primary_key=True, nullable=False),
+    Column('ix_core_value_id', ForeignKey('ix_core_value.id'), primary_key=True, nullable=False)
+)
+
+
+class IxGinasMaterial(Base):
+    __tablename__ = 'ix_ginas_material'
+
+    uuid = Column(String(40), primary_key=True)
+    current_version = Column(Integer)
+    created = Column(DateTime)
+    created_by_id = Column(ForeignKey('ix_core_principal.id'), index=True)
+    last_edited = Column(DateTime)
+    last_edited_by_id = Column(ForeignKey('ix_core_principal.id'), index=True)
+    deprecated = Column(Boolean)
+    record_access = Column(LargeBinary)
+    internal_references = Column(Text)
+    owner_uuid = Column(ForeignKey('ix_ginas_polymer.uuid'), index=True)
+    amount_uuid = Column(ForeignKey('ix_ginas_amount.uuid'), index=True)
+    monomer_substance_uuid = Column(ForeignKey('ix_ginas_substanceref.uuid'), index=True)
+    type = Column(String(255))
+    defining = Column(Boolean)
+    internal_version = Column(BigInteger, nullable=False)
+
+    ix_ginas_amount = relationship('IxGinasAmount')
+    created_by = relationship('IxCorePrincipal', primaryjoin='IxGinasMaterial.created_by_id == IxCorePrincipal.id')
+    last_edited_by = relationship('IxCorePrincipal', primaryjoin='IxGinasMaterial.last_edited_by_id == IxCorePrincipal.id')
+    ix_ginas_substanceref = relationship('IxGinasSubstanceref')
+    ix_ginas_polymer = relationship('IxGinasPolymer')
+
+
+class IxGinasOtherlink(Base):
+    __tablename__ = 'ix_ginas_otherlinks'
+
+    uuid = Column(String(40), primary_key=True)
+    current_version = Column(Integer)
+    created = Column(DateTime)
+    created_by_id = Column(ForeignKey('ix_core_principal.id'), index=True)
+    last_edited = Column(DateTime)
+    last_edited_by_id = Column(ForeignKey('ix_core_principal.id'), index=True)
+    deprecated = Column(Boolean)
+    record_access = Column(LargeBinary)
+    internal_references = Column(Text)
+    owner_uuid = Column(ForeignKey('ix_ginas_protein.uuid'), index=True)
+    linkage_type = Column(String(255))
+    site_container_uuid = Column(ForeignKey('ix_ginas_site_lob.uuid'), index=True)
+    internal_version = Column(BigInteger, nullable=False)
+
+    created_by = relationship('IxCorePrincipal', primaryjoin='IxGinasOtherlink.created_by_id == IxCorePrincipal.id')
+    last_edited_by = relationship('IxCorePrincipal', primaryjoin='IxGinasOtherlink.last_edited_by_id == IxCorePrincipal.id')
+    ix_ginas_protein = relationship('IxGinasProtein')
+    ix_ginas_site_lob = relationship('IxGinasSiteLob')
+
+
+t_ix_ginas_protein_subunit = Table(
+    'ix_ginas_protein_subunit', metadata,
+    Column('ix_ginas_protein_uuid', ForeignKey('ix_ginas_protein.uuid'), primary_key=True, nullable=False),
+    Column('ix_ginas_subunit_uuid', ForeignKey('ix_ginas_subunit.uuid'), primary_key=True, nullable=False)
+)
+
+
+class IxGinasSubstance(Base):
+    __tablename__ = 'ix_ginas_substance'
+    __table_args__ = (
+        CheckConstraint('class in (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12)'),
+        CheckConstraint('definition_level in (0, 1, 2, 3)'),
+        CheckConstraint('definition_type in (0, 1)')
+    )
+
+    dtype = Column(String(10), nullable=False)
+    uuid = Column(String(40), primary_key=True)
+    current_version = Column(Integer)
+    created = Column(DateTime)
+    created_by_id = Column(ForeignKey('ix_core_principal.id'), index=True)
+    last_edited = Column(DateTime)
+    last_edited_by_id = Column(ForeignKey('ix_core_principal.id'), index=True)
+    deprecated = Column(Boolean)
+    record_access = Column(LargeBinary)
+    definition_type = Column(Integer)
+    definition_level = Column(Integer)
+    _class = Column('class', Integer)
+    status = Column(String(255))
+    version = Column(String(255))
+    approved_by_id = Column(ForeignKey('ix_core_principal.id'), index=True)
+    approved = Column(DateTime)
+    change_reason = Column(String(255))
+    modifications_uuid = Column(ForeignKey('ix_ginas_modifications.uuid'), index=True)
+    approval_id = Column(String(20))
+    internal_version = Column(BigInteger, nullable=False)
+    structure_id = Column(ForeignKey('ix_core_structure.id'), index=True)
+    mixture_uuid = Column(ForeignKey('ix_ginas_mixture.uuid'), index=True)
+    nucleic_acid_uuid = Column(ForeignKey('ix_ginas_nucleicacid.uuid'), index=True)
+    polymer_uuid = Column(ForeignKey('ix_ginas_polymer.uuid'), index=True)
+    protein_uuid = Column(ForeignKey('ix_ginas_protein.uuid'), index=True)
+    specified_substance_uuid = Column(ForeignKey('ix_ginas_ssg1.uuid'), index=True)
+    structurally_diverse_uuid = Column(ForeignKey('ix_ginas_strucdiv.uuid'), index=True)
+
+    approved_by = relationship('IxCorePrincipal', primaryjoin='IxGinasSubstance.approved_by_id == IxCorePrincipal.id')
+    created_by = relationship('IxCorePrincipal', primaryjoin='IxGinasSubstance.created_by_id == IxCorePrincipal.id')
+    last_edited_by = relationship('IxCorePrincipal', primaryjoin='IxGinasSubstance.last_edited_by_id == IxCorePrincipal.id')
+    ix_ginas_mixture = relationship('IxGinasMixture')
+    ix_ginas_modification = relationship('IxGinasModification')
+    ix_ginas_nucleicacid = relationship('IxGinasNucleicacid')
+    ix_ginas_polymer = relationship('IxGinasPolymer')
+    ix_ginas_protein = relationship('IxGinasProtein')
+    ix_ginas_ssg1 = relationship('IxGinasSsg1')
+    ix_ginas_strucdiv = relationship('IxGinasStrucdiv')
+    structure = relationship('IxCoreStructure')
+
+
+class IxGinasUnit(Base):
+    __tablename__ = 'ix_ginas_unit'
+
+    uuid = Column(String(40), primary_key=True)
+    current_version = Column(Integer)
+    created = Column(DateTime)
+    created_by_id = Column(ForeignKey('ix_core_principal.id'), index=True)
+    last_edited = Column(DateTime)
+    last_edited_by_id = Column(ForeignKey('ix_core_principal.id'), index=True)
+    deprecated = Column(Boolean)
+    record_access = Column(LargeBinary)
+    internal_references = Column(Text)
+    owner_uuid = Column(ForeignKey('ix_ginas_polymer.uuid'), index=True)
+    amap_id = Column(ForeignKey('ix_core_value.id'), index=True)
+    amount_uuid = Column(ForeignKey('ix_ginas_amount.uuid'), index=True)
+    attachment_count = Column(Integer)
+    label = Column(String(255))
+    structure = Column(Text)
+    type = Column(String(255))
+    attachmentmap = Column(Text)
+    internal_version = Column(BigInteger, nullable=False)
+
+    amap = relationship('IxCoreValue')
+    ix_ginas_amount = relationship('IxGinasAmount')
+    created_by = relationship('IxCorePrincipal', primaryjoin='IxGinasUnit.created_by_id == IxCorePrincipal.id')
+    last_edited_by = relationship('IxCorePrincipal', primaryjoin='IxGinasUnit.last_edited_by_id == IxCorePrincipal.id')
+    ix_ginas_polymer = relationship('IxGinasPolymer')
+
+
+class IxGinasCode(Base):
+    __tablename__ = 'ix_ginas_code'
+
+    uuid = Column(String(40), primary_key=True)
+    current_version = Column(Integer)
+    created = Column(DateTime)
+    created_by_id = Column(ForeignKey('ix_core_principal.id'), index=True)
+    last_edited = Column(DateTime)
+    last_edited_by_id = Column(ForeignKey('ix_core_principal.id'), index=True)
+    deprecated = Column(Boolean)
+    record_access = Column(LargeBinary)
+    internal_references = Column(Text)
+    owner_uuid = Column(ForeignKey('ix_ginas_substance.uuid'), index=True)
+    code_system = Column(String(255))
+    code = Column(String(255), nullable=False)
+    comments = Column(Text)
+    code_text = Column(Text)
+    type = Column(String(255))
+    url = Column(Text)
+    internal_version = Column(BigInteger, nullable=False)
+
+    created_by = relationship('IxCorePrincipal', primaryjoin='IxGinasCode.created_by_id == IxCorePrincipal.id')
+    last_edited_by = relationship('IxCorePrincipal', primaryjoin='IxGinasCode.last_edited_by_id == IxCorePrincipal.id')
+    ix_ginas_substance = relationship('IxGinasSubstance')
+
+
+class IxGinasMoiety(Base):
+    __tablename__ = 'ix_ginas_moiety'
+
+    uuid = Column(String(40), primary_key=True)
+    current_version = Column(Integer)
+    created = Column(DateTime)
+    created_by_id = Column(ForeignKey('ix_core_principal.id'), index=True)
+    last_edited = Column(DateTime)
+    last_edited_by_id = Column(ForeignKey('ix_core_principal.id'), index=True)
+    deprecated = Column(Boolean)
+    record_access = Column(LargeBinary)
+    internal_references = Column(Text)
+    owner_uuid = Column(ForeignKey('ix_ginas_substance.uuid'), index=True)
+    structure_id = Column(ForeignKey('ix_core_structure.id'), index=True)
+    count_uuid = Column(ForeignKey('ix_ginas_amount.uuid'), index=True)
+    inner_uuid = Column(String(255), unique=True)
+    internal_version = Column(BigInteger, nullable=False)
+
+    ix_ginas_amount = relationship('IxGinasAmount')
+    created_by = relationship('IxCorePrincipal', primaryjoin='IxGinasMoiety.created_by_id == IxCorePrincipal.id')
+    last_edited_by = relationship('IxCorePrincipal', primaryjoin='IxGinasMoiety.last_edited_by_id == IxCorePrincipal.id')
+    ix_ginas_substance = relationship('IxGinasSubstance')
+    structure = relationship('IxCoreStructure')
+
+
+class IxGinasName(Base):
+    __tablename__ = 'ix_ginas_name'
+
+    uuid = Column(String(40), primary_key=True)
+    current_version = Column(Integer)
+    created = Column(DateTime)
+    created_by_id = Column(ForeignKey('ix_core_principal.id'), index=True)
+    last_edited = Column(DateTime)
+    last_edited_by_id = Column(ForeignKey('ix_core_principal.id'), index=True)
+    deprecated = Column(Boolean)
+    record_access = Column(LargeBinary)
+    internal_references = Column(Text)
+    owner_uuid = Column(ForeignKey('ix_ginas_substance.uuid'), index=True)
+    name = Column(String(255), nullable=False)
+    full_name = Column(Text)
+    std_name = Column(Text)
+    type = Column(String(32))
+    domains = Column(Text)
+    languages = Column(Text)
+    name_jurisdiction = Column(Text)
+    preferred = Column(Boolean)
+    display_name = Column(Boolean)
+    internal_version = Column(BigInteger, nullable=False)
+
+    created_by = relationship('IxCorePrincipal', primaryjoin='IxGinasName.created_by_id == IxCorePrincipal.id')
+    last_edited_by = relationship('IxCorePrincipal', primaryjoin='IxGinasName.last_edited_by_id == IxCorePrincipal.id')
+    ix_ginas_substance = relationship('IxGinasSubstance')
+
+
+class IxGinasNote(Base):
+    __tablename__ = 'ix_ginas_note'
+
+    uuid = Column(String(40), primary_key=True)
+    current_version = Column(Integer)
+    created = Column(DateTime)
+    created_by_id = Column(ForeignKey('ix_core_principal.id'), index=True)
+    last_edited = Column(DateTime)
+    last_edited_by_id = Column(ForeignKey('ix_core_principal.id'), index=True)
+    deprecated = Column(Boolean)
+    record_access = Column(LargeBinary)
+    internal_references = Column(Text)
+    owner_uuid = Column(ForeignKey('ix_ginas_substance.uuid'), index=True)
+    note = Column(Text)
+    internal_version = Column(BigInteger, nullable=False)
+
+    created_by = relationship('IxCorePrincipal', primaryjoin='IxGinasNote.created_by_id == IxCorePrincipal.id')
+    last_edited_by = relationship('IxCorePrincipal', primaryjoin='IxGinasNote.last_edited_by_id == IxCorePrincipal.id')
+    ix_ginas_substance = relationship('IxGinasSubstance')
+
+
+class IxGinasProperty(Base):
+    __tablename__ = 'ix_ginas_property'
+
+    uuid = Column(String(40), primary_key=True)
+    current_version = Column(Integer)
+    created = Column(DateTime)
+    created_by_id = Column(ForeignKey('ix_core_principal.id'), index=True)
+    last_edited = Column(DateTime)
+    last_edited_by_id = Column(ForeignKey('ix_core_principal.id'), index=True)
+    deprecated = Column(Boolean)
+    record_access = Column(LargeBinary)
+    internal_references = Column(Text)
+    owner_uuid = Column(ForeignKey('ix_ginas_substance.uuid'), index=True)
+    name = Column(String(255), nullable=False)
+    type = Column(String(255))
+    property_type = Column(String(255))
+    value_uuid = Column(ForeignKey('ix_ginas_amount.uuid'), index=True)
+    referenced_substance_uuid = Column(ForeignKey('ix_ginas_substanceref.uuid'), index=True)
+    defining = Column(Boolean)
+    internal_version = Column(BigInteger, nullable=False)
+
+    created_by = relationship('IxCorePrincipal', primaryjoin='IxGinasProperty.created_by_id == IxCorePrincipal.id')
+    last_edited_by = relationship('IxCorePrincipal', primaryjoin='IxGinasProperty.last_edited_by_id == IxCorePrincipal.id')
+    ix_ginas_substance = relationship('IxGinasSubstance')
+    ix_ginas_substanceref = relationship('IxGinasSubstanceref')
+    ix_ginas_amount = relationship('IxGinasAmount')
+
+
+class IxGinasReference(Base):
+    __tablename__ = 'ix_ginas_reference'
+
+    uuid = Column(String(40), primary_key=True)
+    current_version = Column(Integer)
+    created = Column(DateTime)
+    created_by_id = Column(ForeignKey('ix_core_principal.id'), index=True)
+    last_edited = Column(DateTime)
+    last_edited_by_id = Column(ForeignKey('ix_core_principal.id'), index=True)
+    deprecated = Column(Boolean)
+    record_access = Column(LargeBinary)
+    owner_uuid = Column(ForeignKey('ix_ginas_substance.uuid'), index=True)
+    citation = Column(Text)
+    doc_type = Column(String(255))
+    document_date = Column(DateTime)
+    public_domain = Column(Boolean)
+    tags = Column(Text)
+    uploaded_file = Column(String(1024))
+    id = Column(String(255))
+    url = Column(Text)
+    internal_version = Column(BigInteger, nullable=False)
+
+    created_by = relationship('IxCorePrincipal', primaryjoin='IxGinasReference.created_by_id == IxCorePrincipal.id')
+    last_edited_by = relationship('IxCorePrincipal', primaryjoin='IxGinasReference.last_edited_by_id == IxCorePrincipal.id')
+    ix_ginas_substance = relationship('IxGinasSubstance')
+
+
+class IxGinasRelationship(Base):
+    __tablename__ = 'ix_ginas_relationship'
+
+    uuid = Column(String(40), primary_key=True)
+    current_version = Column(Integer)
+    created = Column(DateTime)
+    created_by_id = Column(ForeignKey('ix_core_principal.id'), index=True)
+    last_edited = Column(DateTime)
+    last_edited_by_id = Column(ForeignKey('ix_core_principal.id'), index=True)
+    deprecated = Column(Boolean)
+    record_access = Column(LargeBinary)
+    internal_references = Column(Text)
+    owner_uuid = Column(ForeignKey('ix_ginas_substance.uuid'), index=True)
+    amount_uuid = Column(ForeignKey('ix_ginas_amount.uuid'), index=True)
+    comments = Column(Text)
+    interaction_type = Column(String(255))
+    qualification = Column(String(255))
+    related_substance_uuid = Column(ForeignKey('ix_ginas_substanceref.uuid'), index=True)
+    mediator_substance_uuid = Column(ForeignKey('ix_ginas_substanceref.uuid'), index=True)
+    originator_uuid = Column(String(255))
+    type = Column(String(255))
+    internal_version = Column(BigInteger, nullable=False)
+
+    ix_ginas_amount = relationship('IxGinasAmount')
+    created_by = relationship('IxCorePrincipal', primaryjoin='IxGinasRelationship.created_by_id == IxCorePrincipal.id')
+    last_edited_by = relationship('IxCorePrincipal', primaryjoin='IxGinasRelationship.last_edited_by_id == IxCorePrincipal.id')
+    ix_ginas_substanceref = relationship('IxGinasSubstanceref', primaryjoin='IxGinasRelationship.mediator_substance_uuid == IxGinasSubstanceref.uuid')
+    ix_ginas_substance = relationship('IxGinasSubstance')
+    ix_ginas_substanceref1 = relationship('IxGinasSubstanceref', primaryjoin='IxGinasRelationship.related_substance_uuid == IxGinasSubstanceref.uuid')
+
+
+t_ix_ginas_substance_tags = Table(
+    'ix_ginas_substance_tags', metadata,
+    Column('ix_ginas_substance_uuid', ForeignKey('ix_ginas_substance.uuid'), primary_key=True, nullable=False),
+    Column('ix_core_value_id', ForeignKey('ix_core_value.id'), primary_key=True, nullable=False)
+)
+
+
+class IxGinasNameorg(Base):
+    __tablename__ = 'ix_ginas_nameorg'
+
+    uuid = Column(String(40), primary_key=True)
+    current_version = Column(Integer)
+    created = Column(DateTime)
+    created_by_id = Column(ForeignKey('ix_core_principal.id'), index=True)
+    last_edited = Column(DateTime)
+    last_edited_by_id = Column(ForeignKey('ix_core_principal.id'), index=True)
+    deprecated = Column(Boolean)
+    record_access = Column(LargeBinary)
+    internal_references = Column(Text)
+    owner_uuid = Column(ForeignKey('ix_ginas_name.uuid'), index=True)
+    name_org = Column(String(255), nullable=False)
+    deprecated_date = Column(DateTime)
+    internal_version = Column(BigInteger, nullable=False)
+
+    created_by = relationship('IxCorePrincipal', primaryjoin='IxGinasNameorg.created_by_id == IxCorePrincipal.id')
+    last_edited_by = relationship('IxCorePrincipal', primaryjoin='IxGinasNameorg.last_edited_by_id == IxCorePrincipal.id')
+    ix_ginas_name = relationship('IxGinasName')
+
+
+class IxGinasParameter(Base):
+    __tablename__ = 'ix_ginas_parameter'
+
+    uuid = Column(String(40), primary_key=True)
+    current_version = Column(Integer)
+    created = Column(DateTime)
+    created_by_id = Column(ForeignKey('ix_core_principal.id'), index=True)
+    last_edited = Column(DateTime)
+    last_edited_by_id = Column(ForeignKey('ix_core_principal.id'), index=True)
+    deprecated = Column(Boolean)
+    record_access = Column(LargeBinary)
+    internal_references = Column(Text)
+    owner_uuid = Column(ForeignKey('ix_ginas_property.uuid'), index=True)
+    referenced_substance_uuid = Column(ForeignKey('ix_ginas_substanceref.uuid'), index=True)
+    name = Column(String(255), nullable=False)
+    type = Column(String(255))
+    value_uuid = Column(ForeignKey('ix_ginas_amount.uuid'), index=True)
+    internal_version = Column(BigInteger, nullable=False)
+
+    created_by = relationship('IxCorePrincipal', primaryjoin='IxGinasParameter.created_by_id == IxCorePrincipal.id')
+    last_edited_by = relationship('IxCorePrincipal', primaryjoin='IxGinasParameter.last_edited_by_id == IxCorePrincipal.id')
+    ix_ginas_property = relationship('IxGinasProperty')
+    ix_ginas_substanceref = relationship('IxGinasSubstanceref')
+    ix_ginas_amount = relationship('IxGinasAmount')
+
+
+def srs_db_copy(connection_string_src, connection_string_dst, chunk_size):
+    engine_src = create_engine(connection_string_src)
+    engine_dst = create_engine(connection_string_dst)
+
+    for table_name in engine_src.table_names():
+        if table_name.startswith("ix_ginas_controlled_vocab_core"):
+            Base.metadata.tables["ix_ginas_controlled_vocab_core_value"].name = table_name
+            break
+    else:
+        return "Source GSRS database not found."
+
+    dst_controlled_vocab_core_value_table_name = Base.metadata.tables["ix_ginas_controlled_vocab_core_value"].name
+    for table_name in engine_dst.table_names():
+        if table_name.startswith("ix_ginas_controlled_vocab_core"):
+            dst_controlled_vocab_core_value_table_name = table_name
+            break
+    else:
+        return "Destination GSRS database not found. Please initialize database with Evolution."
+        sys.exit()
+
+    with engine_dst.connect() as conn_dst:
+        with engine_src.connect() as conn_src:
+            data = []
+            for table in Base.metadata.sorted_tables:
+                print("Copy table %s"%table.name)
+                data.clear()
+                result = conn_src.execute(select(table.c))
+                if table.name.startswith("ix_ginas_controlled_vocab_core"):
+                    table.name = dst_controlled_vocab_core_value_table_name
+                for row in result:
+                    data.append(dict(row))
+                    if len(data) >= chunk_size:
+                        err = conn_dst.execute(table.insert().values(data))
+                        data.clear()
+                if len(data) > 0:
+                    err = conn_dst.execute(table.insert().values(data))
+
+def main():
+    if len(sys.argv) < 3:
+        print("Usage: %s source_gsrs_db_connection_string destination_gsrs_db_connection_string [chunk_size]"%sys.argv[0])
+        sys.exit()
+    chunk_size = 5
+    if len(sys.argv) > 3:
+        chunk_size = sys.argv[3]
+    status = srs_db_copy(sys.argv[1], sys.argv[2], chunk_size)
+    if status:
+        sys.exit(1)
+
+if __name__ == '__main__':
+    main()
