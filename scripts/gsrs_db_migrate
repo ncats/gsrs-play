@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 import sys
-from sqlalchemy import create_engine, select, BigInteger, Boolean, CheckConstraint, Column, DateTime, Float, ForeignKey, Integer, LargeBinary, String, Table, Text
+from sqlalchemy import create_engine, func, select, BigInteger, Boolean, CheckConstraint, Column, DateTime, Float, ForeignKey, Integer, LargeBinary, Sequence, String, Table, Text
 from sqlalchemy.orm import relationship
 from sqlalchemy.ext.declarative import declarative_base
 
@@ -14,7 +14,7 @@ class IxCoreAcl(Base):
         CheckConstraint('perm in (0, 1, 2, 3, 4, 5, 6)'),
     )
 
-    id = Column(BigInteger, primary_key=True)
+    id = Column(BigInteger, Sequence('ix_core_acl_seq', metadata=Base.metadata), primary_key=True)
     perm = Column(Integer)
 
     ix_core_principals = relationship('IxCorePrincipal', secondary='ix_core_acl_principal')
@@ -27,7 +27,7 @@ class IxCoreEvent(Base):
         CheckConstraint('unit in (0, 1, 2, 3, 4, 5, 6, 7)'),
     )
 
-    id = Column(BigInteger, primary_key=True)
+    id = Column(BigInteger, Sequence('ix_core_event_seq', metadata=Base.metadata), primary_key=True)
     title = Column(String(255))
     description = Column(Text)
     url = Column(String(1024))
@@ -44,7 +44,7 @@ class IxCoreFigure(Base):
     __tablename__ = 'ix_core_figure'
 
     dtype = Column(String(10), nullable=False)
-    id = Column(BigInteger, primary_key=True)
+    id = Column(BigInteger, Sequence('ix_core_figure_seq', metadata=Base.metadata), primary_key=True)
     caption = Column(String(255))
     mime_type = Column(String(255))
     url = Column(String(1024))
@@ -71,7 +71,7 @@ class IxCoreFiledatum(Base):
 class IxCoreGroup(Base):
     __tablename__ = 'ix_core_group'
 
-    id = Column(BigInteger, primary_key=True)
+    id = Column(BigInteger, Sequence('ix_core_group_seq', metadata=Base.metadata), primary_key=True)
     name = Column(String(255), unique=True)
 
     ix_core_principals = relationship('IxCorePrincipal', secondary='ix_core_group_principal')
@@ -80,7 +80,7 @@ class IxCoreGroup(Base):
 class IxCoreJournal(Base):
     __tablename__ = 'ix_core_journal'
 
-    id = Column(BigInteger, primary_key=True)
+    id = Column(BigInteger, Sequence('ix_core_journal_seq', metadata=Base.metadata), primary_key=True)
     issn = Column(String(10))
     volume = Column(String(255))
     issue = Column(String(255))
@@ -97,7 +97,7 @@ class IxCoreNamespace(Base):
         CheckConstraint('modifier in (0, 1, 2)'),
     )
 
-    id = Column(BigInteger, primary_key=True)
+    id = Column(BigInteger, Sequence('ix_core_namespace_seq', metadata=Base.metadata), primary_key=True)
     name = Column(String(255), unique=True)
     owner_id = Column(ForeignKey('ix_core_principal.id'), index=True)
     location = Column(String(1024))
@@ -109,7 +109,7 @@ class IxCoreNamespace(Base):
 class IxCoreOrganization(Base):
     __tablename__ = 'ix_core_organization'
 
-    id = Column(BigInteger, primary_key=True)
+    id = Column(BigInteger, Sequence('ix_core_organization_seq', metadata=Base.metadata), primary_key=True)
     duns = Column(String(10))
     name = Column(String(255))
     department = Column(String(255))
@@ -127,7 +127,7 @@ class IxCorePrincipal(Base):
     __tablename__ = 'ix_core_principal'
 
     dtype = Column(String(10), nullable=False)
-    id = Column(BigInteger, primary_key=True)
+    id = Column(BigInteger, Sequence('ix_core_principal_seq', metadata=Base.metadata), primary_key=True)
 #    namespace_id = Column(ForeignKey('ix_core_namespace.id'), index=True)
     namespace_id = Column(BigInteger)
     created = Column(DateTime)
@@ -157,7 +157,7 @@ class IxCorePrincipal(Base):
 class IxCoreStitch(Base):
     __tablename__ = 'ix_core_stitch'
 
-    id = Column(BigInteger, primary_key=True)
+    id = Column(BigInteger, Sequence('ix_core_stitch_seq', metadata=Base.metadata), primary_key=True)
     name = Column(String(255))
     impl = Column(String(1024))
     description = Column(Text)
@@ -166,7 +166,7 @@ class IxCoreStitch(Base):
 class IxCoreTimeline(Base):
     __tablename__ = 'ix_core_timeline'
 
-    id = Column(BigInteger, primary_key=True)
+    id = Column(BigInteger, Sequence('ix_core_timeline_seq', metadata=Base.metadata), primary_key=True)
     name = Column(String(255))
 
 
@@ -181,7 +181,7 @@ class IxCoreValue(Base):
     __tablename__ = 'ix_core_value'
 
     dtype = Column(String(10), nullable=False)
-    id = Column(BigInteger, primary_key=True)
+    id = Column(BigInteger, Sequence('ix_core_value_seq', metadata=Base.metadata), primary_key=True)
     label = Column(String(255))
     term = Column(String(255))
     href = Column(Text)
@@ -222,7 +222,7 @@ t_ix_core_acl_principal = Table(
 class IxCoreAttribute(Base):
     __tablename__ = 'ix_core_attribute'
 
-    id = Column(BigInteger, primary_key=True)
+    id = Column(BigInteger, Sequence('ix_core_attribute_seq', metadata=Base.metadata), primary_key=True)
     name = Column(String(255))
     value = Column(String(1024))
     namespace_id = Column(ForeignKey('ix_core_namespace.id'), index=True)
@@ -234,7 +234,7 @@ class IxCoreAttribute(Base):
 class IxCoreBackup(Base):
     __tablename__ = 'ix_core_backup'
 
-    id = Column(BigInteger, primary_key=True)
+    id = Column(BigInteger, Sequence('ix_core_backup_seq', metadata=Base.metadata), primary_key=True)
     namespace_id = Column(ForeignKey('ix_core_namespace.id'), index=True)
     created = Column(DateTime)
     modified = Column(DateTime)
@@ -255,7 +255,7 @@ class IxCoreCuration(Base):
         CheckConstraint('status in (0, 1, 2, 3)'),
     )
 
-    id = Column(BigInteger, primary_key=True)
+    id = Column(BigInteger, Sequence('ix_core_curation_seq', metadata=Base.metadata), primary_key=True)
     curator_id = Column(ForeignKey('ix_core_principal.id'), index=True)
     status = Column(Integer)
     timestamp = Column(DateTime)
@@ -284,7 +284,7 @@ class IxCoreEdit(Base):
 class IxCoreEtag(Base):
     __tablename__ = 'ix_core_etag'
 
-    id = Column(BigInteger, primary_key=True)
+    id = Column(BigInteger, Sequence('ix_core_etag_seq', metadata=Base.metadata), primary_key=True)
     namespace_id = Column(ForeignKey('ix_core_namespace.id'), index=True)
     created = Column(DateTime)
     modified = Column(DateTime)
@@ -326,7 +326,7 @@ class IxCoreInvestigator(Base):
         CheckConstraint('role in (0, 1)'),
     )
 
-    id = Column(BigInteger, primary_key=True)
+    id = Column(BigInteger, Sequence('ix_core_investigator_seq', metadata=Base.metadata), primary_key=True)
     name = Column(String(255))
     pi_id = Column(BigInteger)
     organization_id = Column(ForeignKey('ix_core_organization.id'), index=True)
@@ -353,7 +353,7 @@ class IxCorePayload(Base):
 class IxCorePubauthor(Base):
     __tablename__ = 'ix_core_pubauthor'
 
-    id = Column(BigInteger, primary_key=True)
+    id = Column(BigInteger, Sequence('ix_core_pubauthor_seq', metadata=Base.metadata), primary_key=True)
     position = Column(Integer)
     is_last = Column(Boolean)
     correspondence = Column(Boolean)
@@ -366,7 +366,7 @@ class IxCorePubauthor(Base):
 class IxCorePublication(Base):
     __tablename__ = 'ix_core_publication'
 
-    id = Column(BigInteger, primary_key=True)
+    id = Column(BigInteger, Sequence('ix_core_publication_seq', metadata=Base.metadata), primary_key=True)
     pmid = Column(BigInteger, unique=True)
     pmcid = Column(String(255), unique=True)
     title = Column(Text)
@@ -428,7 +428,7 @@ t_ix_core_timeline_event = Table(
 class IxCoreUserprof(Base):
     __tablename__ = 'ix_core_userprof'
 
-    id = Column(BigInteger, primary_key=True)
+    id = Column(BigInteger, Sequence('ix_core_userprof_seq', metadata=Base.metadata), primary_key=True)
     namespace_id = Column(ForeignKey('ix_core_namespace.id'), index=True)
     created = Column(DateTime)
     modified = Column(DateTime)
@@ -450,7 +450,7 @@ class IxCoreUserprof(Base):
 class IxCoreXref(Base):
     __tablename__ = 'ix_core_xref'
 
-    id = Column(BigInteger, primary_key=True)
+    id = Column(BigInteger, Sequence('ix_core_xref_seq', metadata=Base.metadata), primary_key=True)
     namespace_id = Column(ForeignKey('ix_core_namespace.id'), index=True)
     created = Column(DateTime)
     modified = Column(DateTime)
@@ -493,7 +493,7 @@ class IxGinasControlledVocab(Base):
     __tablename__ = 'ix_ginas_controlled_vocab'
 
     dtype = Column(String(10), nullable=False)
-    id = Column(BigInteger, primary_key=True)
+    id = Column(BigInteger, Sequence('ix_ginas_controlled_vocab_seq', metadata=Base.metadata), primary_key=True)
     namespace_id = Column(ForeignKey('ix_core_namespace.id'), index=True)
     created = Column(DateTime)
     modified = Column(DateTime)
@@ -610,7 +610,7 @@ class IxGinasSubunit(Base):
 class IxCoreEtagref(Base):
     __tablename__ = 'ix_core_etagref'
 
-    id = Column(BigInteger, primary_key=True)
+    id = Column(BigInteger, Sequence('ix_core_etagref_seq', metadata=Base.metadata), primary_key=True)
     etag_id = Column(ForeignKey('ix_core_etag.id'), index=True)
     ref_id = Column(BigInteger)
 
@@ -635,7 +635,7 @@ class IxCorePredicate(Base):
     __tablename__ = 'ix_core_predicate'
 
     dtype = Column(String(10), nullable=False)
-    id = Column(BigInteger, primary_key=True)
+    id = Column(BigInteger, Sequence('ix_core_predicate_seq', metadata=Base.metadata), primary_key=True)
     namespace_id = Column(ForeignKey('ix_core_namespace.id'), index=True)
     created = Column(DateTime)
     modified = Column(DateTime)
@@ -656,7 +656,7 @@ class IxCoreProcjob(Base):
         CheckConstraint('status in (0, 1, 2, 3, 4, 5, 6)'),
     )
 
-    id = Column(BigInteger, primary_key=True)
+    id = Column(BigInteger, Sequence('ix_core_procjob_seq', metadata=Base.metadata), primary_key=True)
     status = Column(Integer)
     job_start = Column(BigInteger)
     job_stop = Column(BigInteger)
@@ -976,7 +976,7 @@ class IxGinasVocabularyTerm(Base):
     __tablename__ = 'ix_ginas_vocabulary_term'
 
     dtype = Column(String(10), nullable=False)
-    id = Column(BigInteger, primary_key=True)
+    id = Column(BigInteger, Sequence('ix_ginas_vocabulary_term_seq', metadata=Base.metadata), primary_key=True)
     namespace_id = Column(ForeignKey('ix_core_namespace.id'), index=True)
     created = Column(DateTime)
     modified = Column(DateTime)
@@ -1050,7 +1050,7 @@ class IxCoreProcrec(Base):
         CheckConstraint('status in (0, 1, 2, 3, 4)'),
     )
 
-    id = Column(BigInteger, primary_key=True)
+    id = Column(BigInteger, Sequence('ix_core_procrec_seq', metadata=Base.metadata), primary_key=True)
     rec_start = Column(BigInteger)
     rec_stop = Column(BigInteger)
     name = Column(String(128))
@@ -1624,6 +1624,12 @@ def srs_db_copy(connection_string_src, connection_string_dst, chunk_size):
                         data.clear()
                 if len(data) > 0:
                     err = conn_dst.execute(table.insert().values(data))
+                seq = getattr(table.columns.get("id"), "default", None)
+                if isinstance(seq, Sequence) and engine_dst.dialect.name in ("postgresql", "oracle"):
+                    seq_max = conn_dst.execute(func.max(table.c.id)).fetchone()[0]
+                    if seq_max is not None:
+                        while seq_max > conn_dst.execute(seq):
+                            continue
 
 def main():
     if len(sys.argv) < 3:
