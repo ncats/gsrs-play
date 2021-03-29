@@ -20,7 +20,7 @@ import ix.ginas.models.v1.Substance;
  */
 public class BaseSubstanceIndexValueMaker implements IndexValueMaker<Substance>{
 
-	private static List<String> baseRelTypes = Arrays.asList("ACTIVE MOIETY","BASIS OF STRENGTH","ACTIVE CONSTITUENT ALWAYS PRESENT","SUBSTANCE PART");
+	private List<String> baseRelTypes = Arrays.asList("ACTIVE MOIETY","BASIS OF STRENGTH","ACTIVE CONSTITUENT ALWAYS PRESENT","SUBSTANCE PART");
 
 	@Override
 	public void createIndexableValues(Substance s, Consumer<IndexableValue> consumer) {
@@ -32,7 +32,7 @@ public class BaseSubstanceIndexValueMaker implements IndexValueMaker<Substance>{
 					if (relatedSubstance != null) {
 						Optional<Name> aName = relatedSubstance.getDisplayName();
 						if(aName.isPresent()) {
-							String refPname = aName.get().stdName;
+							String refPname = aName.get().getStandardName();
 							if (refPname != null && !refPname.isEmpty() && !refPname.equals(r.relatedSubstance.refPname)){
 								consumer.accept(IndexableValue.simpleStringValue("root_relationships_baseSubstance_refPname", refPname));
 							}
@@ -48,4 +48,12 @@ public class BaseSubstanceIndexValueMaker implements IndexValueMaker<Substance>{
 			}
 		);
 	}
+
+    public List<String> getBaseRelTypes() {
+        return baseRelTypes;
+    }
+
+    public void setBaseRelTypes(List<String> baseRelTypes) {
+        this.baseRelTypes = baseRelTypes;
+    }
 }
