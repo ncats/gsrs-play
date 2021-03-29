@@ -187,6 +187,7 @@
         	var n = name.replace("\"","");
         	//Needs sanitation
             var searchStr = "root_names_name:\"^" + n + "$\" OR " +
+                            "root_names_stdName:\"^" + n + "$\" OR " +
                             "root_approvalID:\"^" + n + "$\" OR " +
                             "root_codes_BDNUM:\"^" + n + "$\"";
 
