@@ -24,6 +24,7 @@
                 <th>Material Name</th>
                 <th>Amount</th>
                 <th>Type</th>
+                <th>Access</th>
             </tr>
         </thead>       
         
@@ -46,6 +47,15 @@
                 </td>
                 <td><amount value="@GinasApp.getAsJson(m.amount)"></amount></td>
                 <td><span class="badge">@{m.`type`}</span></td>
+                <td>
+                    <div style="text-align:center">
+                    @if(m.isPublic()){
+                        <i uib-tooltip = "Public name" class="fa fa-unlock fa-2x fa-1_1x success"></i>
+                    }else{
+                        <i uib-tooltip = "Not a public name" class="fa fa-lock fa-2x fa-1_1x warning"></i>
+                    }
+                    </div>
+                </td>
             </tr>
         }    
     </table>
@@ -131,7 +141,7 @@
 @fillTable(s: GinasChemicalStructure, stype: String) = {
 	@if(stype == "structure") {
 	    <tr>
-	        <td>@Html(s.htmlFormula())</td>
+	        <td>@Html(s.getHtmlFormula())</td>
 	        <td>@s.mwt</td>
 	        <td><span class="badge">@s.definedStereo / @s.stereoCenters</span></td>
 	        <td><span class="badge">@s.ezCenters</span></td>

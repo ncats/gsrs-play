@@ -15,12 +15,22 @@ Notes&nbsp;<span class="badge"> @notes.length</span></button>
   <thead>
     <tr>
       <th>Note</th>
+      <th>Access</th>
       <th>References</th>
     </tr>
   </thead>
   @for(n <- notes) {
     <tr id = "notes-row-@n.uuid">
       <td><pre class="fixedsize">@n.note</pre></td>
+      <td>
+        <div class="table-responsive" style="text-align:center">
+        @if(n.isPublic()){
+          <i uib-tooltip = "Public name" class="fa fa-unlock fa-2x fa-1_1x success"></i>
+        }else{
+          <i uib-tooltip = "Not a public name" class="fa fa-lock fa-2x fa-1_1x warning"></i>
+        }
+        </div>
+      </td>
       @if(n.getReferences.size > 0){
         <td >
           <button onclick = "addRef('@n.uuid',this,'notes');" class = "btn btn-primary reference-button" >view</button>

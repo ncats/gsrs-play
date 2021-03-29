@@ -39,6 +39,7 @@ public class StructureCacheTest extends AbstractGinasClassServerTest{
 	@Before
 	public void setPersistenceCache(){
 		ts.modifyConfig("ix.cache.useFileDb", usePersistenceCache);
+		ts.modifyConfig("ix.cache.clearpersist", false);
 		ts.restart();
 	}
 

@@ -1,11 +1,14 @@
 package ix.ginas.models.v1;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import javax.persistence.*;
+
+import java.util.function.Predicate;
 
 import com.fasterxml.jackson.annotation.*;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -281,6 +284,10 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
     @JoinTable(name = "ix_ginas_substance_tags")
     public List<Keyword> tags = new ArrayList<Keyword>();
 
+
+
+    private transient Object inSortLock = new Object();
+    private transient boolean inSort = false;
     public void addTag(Keyword tag){
         for(Keyword k:tags){
             if(k.getValue().equals(tag.getValue()))return;
@@ -326,7 +333,7 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
 
     @JsonIgnore
     public List<Code> getOrderedCodes(){
-        return this.codes;
+        return this.codes.stream().sorted().collect(Collectors.toList());
     }
 
     @JsonView(BeanViews.Compact.class)
@@ -457,7 +464,7 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
     public String getName() {
         return getFormattedName(STDNAME_FUNCTION);
     }
-    @JsonProperty("_name-html")
+    @JsonProperty("_nameHTML")
     public String getHtmlName() {
         return getFormattedName(HTMLNAME_FUNCTION);
 
@@ -481,7 +488,7 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
 
         @Override
         public String apply(Name name) {
-            return Util.getStringConverter().toStd(name.name);
+            return name.getStandardName();
         }
     };
 
@@ -585,8 +592,16 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
     @PrePersist
     @PreUpdate
     public void sortLists(){
-        Collections.sort(this.names);
-        Collections.sort(this.codes);
+        //because this is a postLoad it's possible
+        //calling sort causes ebean to fetch the elements which re-triggers postLoad
+        synchronized(inSortLock) {
+            if (!inSort) {
+                inSort=true;
+                Collections.sort(this.names);
+                Collections.sort(this.codes);
+                inSort = false;
+            }
+        }
     }
 
     @PrePersist
@@ -796,6 +811,7 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
     @JsonIgnore
     public boolean addAlternativeSubstanceDefinitionRelationship(Substance sub) {
         for(Relationship sref:getAlternativeDefinitionRelationships()){
+            //GSRS-1668 generate UUID if does not exist yet
             if(sref.relatedSubstance.refuuid.equals(sub.getOrGenerateUUID().toString())){
                 return true;
             }
@@ -1132,7 +1148,16 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
     @JsonIgnore
     @Indexable(facet = true, name = "Reference Count", sortable=true)
     public int getReferenceCount(){
-        return references.size();
+	return (int) references.stream()
+		         .filter(new Predicate<Reference>(){
+				public boolean test(Reference r){
+					if(r.docType.equals("SYSTEM") || r.docType.equals("VALIDATION_MESSAGE")){
+						return false;
+					}
+					return true;
+				}
+			 })
+		.count();
     }
 
     @JsonIgnore

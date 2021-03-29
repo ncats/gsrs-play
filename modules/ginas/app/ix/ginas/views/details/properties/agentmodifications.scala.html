@@ -15,6 +15,7 @@
                     <th>Amount</th>
                     <th>Modification Agent</th>
                     <th>Approved ID</th>
+                    <th>Access</th>
                 </tr>
                 @for(m <- mods) {
                     <tr>
@@ -23,25 +24,33 @@
                             @m.agentModificationProcess
                         }
                         </td> <td>
-                    @if(m.agentModificationRole != null) {
-                        @m.agentModificationRole
-                    }
-                    </td> <td>
-                    @if(m.agentModificationType != null) {
-                        @m.agentModificationType
-                    }
-                    </td> <td>
-                    @if(m.amount != null) {
-                        <amount value="@GinasApp.getAsJson(m.amount)"></amount>
-                    }
-                    </td> <td>
-                    @if(m.agentSubstance != null) {
-                        @Html(m.agentSubstance.getHtmlName())
-                    }
-                        <td>
+                        @if(m.agentModificationRole != null) {
+                            @m.agentModificationRole
+                        }
+                        </td> <td>
+                        @if(m.agentModificationType != null) {
+                            @m.agentModificationType
+                        }
+                        </td> <td>
+                        @if(m.amount != null) {
+                            <amount value="@GinasApp.getAsJson(m.amount)"></amount>
+                        }
+                        </td> <td>
+                        @if(m.agentSubstance != null) {
+                            @Html(m.agentSubstance.getHtmlName())
+                        }
+                        </td> <td>
                         @if(m.agentSubstance != null) {
                             <a href="@ix.ginas.controllers.routes.GinasApp.substance(m.agentSubstance.getLinkingID())">@m.agentSubstance.getLinkingID()</a>
                         }
+                        </td> <td>
+                            <div style="text-align:center">
+                            @if(m.isPublic()){
+                                <i uib-tooltip = "Public name" class="fa fa-unlock fa-2x fa-1_1x success"></i>
+                            }else{
+                                <i uib-tooltip = "Not a public name" class="fa fa-lock fa-2x fa-1_1x warning"></i>
+                            }
+                            </div>
                         </td>
                     </tr>
                 }

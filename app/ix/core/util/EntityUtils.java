@@ -2613,6 +2613,7 @@ public class EntityUtils {
 			return this.kind.getName();
 		}
 
+		@JsonIgnore
 		public Object getIdNative() {
 			return this._id;
 		}
@@ -2621,6 +2622,7 @@ public class EntityUtils {
 			return this._id.toString();
 		}
 
+		@JsonIgnore
 		public EntityInfo<?> getEntityInfo() {
 			return kind;
 		}
@@ -2732,10 +2734,12 @@ public class EntityUtils {
         }
 
         
+        @JsonIgnore
         public EntityFetcher getFetcher() throws Exception{
             return EntityFetcher.of(this);
         }
         
+        @JsonIgnore
         public EntityFetcher getFetcher(CacheType ct) throws Exception{
             return EntityFetcher.of(this, ct);
         }

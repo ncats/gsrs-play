@@ -7,6 +7,7 @@ import static ix.core.search.ArgumentAdapter.ofSingleString;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
+import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -39,6 +40,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.flipkart.zjsonpatch.JsonPatch;
 import ix.core.*;
 import ix.core.controllers.v1.GsrsApiUtil;
+import ix.core.util.LogUtil;
 import ix.core.validator.*;
 import ix.core.adapters.EntityPersistAdapter;
 import ix.core.adapters.InxightTransaction;
@@ -185,6 +187,9 @@ public class EntityFactory extends Controller {
 
 
     static public class EntityMapper extends ObjectMapper {
+
+    	private boolean keyOnly=false;
+
         /**
 		 * Default value
 		 */
@@ -205,13 +210,19 @@ public class EntityFactory extends Controller {
 		public static EntityMapper COMPACT_ENTITY_MAPPER() {
 			return new EntityMapper(BeanViews.Compact.class);
 		}
-		
+		public static EntityMapper KEY_ENTITY_MAPPER() {
+			return new EntityMapper(BeanViews.Key.class);
+		}
+
         public EntityMapper (Class<?>... views) {
             configure (MapperFeature.DEFAULT_VIEW_INCLUSION, true);
             configure (SerializationFeature.WRITE_NULL_MAP_VALUES, false);
             this.setSerializationInclusion(Include.NON_NULL);
             _serializationConfig = getSerializationConfig();
             for (Class<?> v : views) {
+            	if(v.equals(BeanViews.Key.class)){
+            		keyOnly=true;
+            	}
                 _serializationConfig = _serializationConfig.withView(v);
 
             }
@@ -267,6 +278,20 @@ public class EntityFactory extends Controller {
         }
         
         public String toJson (Object obj, boolean pretty) {
+        	if(this.keyOnly){
+        		Key k= EntityWrapper.of(obj).getKey();
+        		try {
+                    return pretty
+                        ? writerWithDefaultPrettyPrinter().writeValueAsString(k)
+                        : writeValueAsString (k);
+                }
+                catch (Exception ex) {
+                	ex.printStackTrace();
+                    Logger.trace("Can't write Json", ex);
+                }
+        	}
+
+
             try {
                 return pretty
                     ? writerWithDefaultPrettyPrinter().writeValueAsString(obj)
@@ -583,9 +608,18 @@ public class EntityFactory extends Controller {
     protected static Result field (Object inst, String field) {
     	//return fieldOld(inst,field);
     	try{
-	    	return atFieldSerialized(inst,PojoPointer.fromURIPath(field));
+    	    String fieldValue;
+    	    if(Boolean.parseBoolean(request().getQueryString("urldecode"))){
+    	        fieldValue = URLDecoder.decode(field, "UTF-8");
+            }else{
+    	       fieldValue = field;
+            }
+
+
+	    	return atFieldSerialized(inst,PojoPointer.fromURIPath(fieldValue));
 
     	}catch(Exception e){
+    	    e.printStackTrace();
     		//GSRS-1414 make this  400 error instead of 500
     		return GsrsApiUtil.badRequest(e);
     	}
@@ -1224,12 +1258,12 @@ public class EntityFactory extends Controller {
 				if("remove".equals(c.op)){
 					removed.add(c.oldValue);
 				}
-				System.out.println(c.op + "\t" + c.oldValue + "\t" + c.newValue);
+            LogUtil.trace(()->c.op + "\t" + c.oldValue + "\t" + c.newValue);
         });
         if(changeStack.isEmpty()){
         	throw new IllegalStateException("No change detected");
         }else{
-        	System.out.println("Found:" + changeStack.size() + " changes");
+            LogUtil.debug(()->"Found:" + changeStack.size() + " changes");
         }
         
         //This is the last line of defense for making sure that the patch worked

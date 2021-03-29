@@ -121,13 +121,22 @@
 			</div>
 		}
 		</td>
-	<td>
-		<button onclick = "addDetails('@n.uuid',this,'names');" class = "btn btn-primary reference-button"
-		@if(n.domains.size == 0 && n.nameJurisdiction.size() == 0 && n.nameOrgs.size() == 0){ disabled } >view</button>
-	</td>
-	<td>
-		<button onclick = "addRef('@n.uuid',this,'names');" class = "btn btn-primary reference-button" @if(n.getReferences.size == 0){ disabled } >view</button>
-	</td>
+		<td>
+			<button onclick = "addDetails('@n.uuid',this,'names');" class = "btn btn-primary reference-button"
+			@if(n.domains.size == 0 && n.nameJurisdiction.size() == 0 && n.nameOrgs.size() == 0){ disabled } >view</button>
+		</td>
+		<td>
+			<div class="table-responsive" style="text-align:center">
+			@if(n.isPublic()){
+				<i uib-tooltip = "Public name" class="fa fa-unlock fa-2x fa-1_1x success"></i>
+			}else{
+				<i uib-tooltip = "Not a public name" class="fa fa-lock fa-2x fa-1_1x warning"></i>
+			}
+			</div>
+		</td>
+		<td>
+			<button onclick = "addRef('@n.uuid',this,'names');" class = "btn btn-primary reference-button" @if(n.getReferences.size == 0){ disabled } >view</button>
+		</td>
 	</tr>
 }
 
@@ -137,9 +146,9 @@
 			<th>Name</th>
 			<th>Type</th>
 			<th>Language</th>
-		<th>Details</th>
+			<th>Details</th>
+			<th>Access</th>
 			<th class = "no-sort">References</th>
-
 		</tr>
 	</thead>
 	<tbody>

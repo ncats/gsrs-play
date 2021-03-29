@@ -185,8 +185,8 @@ public class Structure extends BaseModel implements ForceUpdatableModel{
     @Indexable(name = "Molecular Formula", facet = true)
     public String formula;
 
-    @JsonProperty("_formula-html")
-    public String htmlFormula() {
+    @JsonProperty("_formulaHTML")
+    public String getHtmlFormula() {
         if (formula == null) {
             return "";
         }
@@ -340,6 +340,7 @@ public class Structure extends BaseModel implements ForceUpdatableModel{
     public String getExactHash(){
         String newhash=null;
         for (Value val : this.properties) {
+            if(val==null)continue;
             if (Structure.H_EXACT_HASH.equals(val.label)) {
                 try{
                     newhash=Objects.toString(val.getValue());
@@ -355,6 +356,7 @@ public class Structure extends BaseModel implements ForceUpdatableModel{
     public String getStereoInsensitiveHash(){
         String newhash=null;
         for (Value val : this.properties) {
+            if(val==null)continue;
             if (Structure.H_STEREO_INSENSITIVE_HASH.equals(val.label)) {
                 try{
                     newhash=Objects.toString(val.getValue());

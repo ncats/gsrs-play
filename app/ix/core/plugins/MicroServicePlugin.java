@@ -2,6 +2,7 @@ package ix.core.plugins;
 
 import ix.core.util.CachedSupplier;
 import play.Application;
+import play.Logger;
 import play.Play;
 import play.api.Plugin;
 import play.libs.ws.WS;
@@ -26,7 +27,7 @@ public class MicroServicePlugin implements Plugin {
         Boolean isEnabled = app.configuration().getBoolean("gsrs.microservices.enabled");
         shouldUse = isEnabled ==null? false: isEnabled;
 
-        System.out.println("microservice is enabled ? " + shouldUse);
+        Logger.debug("microservice is enabled ? " + shouldUse);
         if(!shouldUse){
             return;
         }

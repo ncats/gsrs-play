@@ -4,16 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.TreeSet;
 
-import javax.persistence.Basic;
-import javax.persistence.CascadeType;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.Lob;
-import javax.persistence.OneToMany;
-import javax.persistence.PrePersist;
-import javax.persistence.PreUpdate;
-import javax.persistence.Table;
+import javax.persistence.*;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -56,7 +47,7 @@ public class Name extends CommonDataElementOfCollection {
     
     @Lob
     @Basic(fetch=FetchType.EAGER)
-    @JsonView(BeanViews.Internal.class)
+    @JsonView(BeanViews.JsonDiff.class)
     public String stdName;
     
     
@@ -106,14 +97,18 @@ public class Name extends CommonDataElementOfCollection {
     }
 
 
-    @JsonProperty("_name-html")
+    @JsonProperty("_nameHTML")
     public String getHtmlName() {
-        return Util.getStringConverter().toHtml(name);
+        return Util.getStringConverter().toHtml(getName());
     }
-	@JsonProperty("_name")
-	public String getStandardName() {
-		return Util.getStringConverter().toStd(name);
-	}
+
+    @JsonProperty("_name")
+    public String getStandardName() {
+        if(stdName != null) {
+            return stdName;
+        }
+        return Util.getStringConverter().toStd(getName());
+    }
 
     public String getName () {
         return fullName != null ? fullName : name;
@@ -122,13 +117,14 @@ public class Name extends CommonDataElementOfCollection {
     @PrePersist
     @PreUpdate
     public void tidyName () {
-        stdName = Util.getStringConverter().toStd(name);
-        if (name.getBytes().length > 255) {
-            fullName = name;
-            name = Util.getStringConverter().truncate(name,254);
+        if(name != null) {
+            if (name.getBytes().length > 255) {
+                fullName = name;
+                name = Util.getStringConverter().truncate(name, 254);
+            }
         }
     }
-    
+
     public void addLocator(Substance sub, String loc){
     	Reference r = new Reference();
     	r.docType=Name.SRS_LOCATOR;
@@ -234,6 +230,9 @@ public class Name extends CommonDataElementOfCollection {
 	public void setName(String name) {
 		this.fullName=null;
 		this.name=name;
+		//recompute stdname etc
+		//this is also so creating instances from JSON compute the stdname during pojodiff
+		tidyName();
 	}
 	
 	@Override

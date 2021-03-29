@@ -73,7 +73,7 @@ public class RelationshipInvertTest extends AbstractGinasServerTest {
         JsonNode jsA = SubstanceJsonUtil.prepareUnapprovedPublic(JsonUtil.parseJsonFile(invrelate2));
         String uuidA = jsA.get("uuid").asText();
         SubstanceAPI.ValidationResponse validationResultA = api.validateSubstance(js);
-        assertTrue(validationResultA.isValid());
+        assertTrue(validationResultA.getMessages().toString(), validationResultA.isValid());
         ensurePass(api.submitSubstance(jsA));
 
         //confirm that the dangled has a relationship to the dangler 

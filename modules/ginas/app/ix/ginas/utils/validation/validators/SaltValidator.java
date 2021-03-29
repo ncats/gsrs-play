@@ -2,13 +2,13 @@ package ix.ginas.utils.validation.validators;
 
 import ix.core.validator.GinasProcessingMessage;
 import ix.core.validator.ValidatorCallback;
+import ix.ginas.models.v1.Amount;
 import ix.ginas.models.v1.ChemicalSubstance;
 import ix.ginas.models.v1.Moiety;
 import ix.ginas.models.v1.Substance;
 import ix.ginas.utils.validation.ValidationUtils;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
 import play.Logger;
 
 /**
@@ -41,8 +41,15 @@ public class SaltValidator extends AbstractValidatorPlugin<Substance>
 				
 				ChemicalSubstance moietyChemical = new ChemicalSubstance();
 				moietyChemical.structure = moiety.structure;
-				
-				moietyChemical.moieties.add(moiety);
+				//clone the moiety and set fixed values so that we avoid flagging a moiety as not matching
+				Moiety clone = new Moiety();
+				clone.structure =moiety.structure;
+				Amount cloneAmount = new Amount();
+				cloneAmount.average=1.0d;
+				cloneAmount.units = "MOL RATIO";
+				cloneAmount.type = "MOL RATIO";
+				clone.setCountAmount(cloneAmount);
+				moietyChemical.moieties.add(clone);
 				
 				List<Substance> layer1Matches= ValidationUtils.findDefinitionaLayer1lDuplicateCandidates(moietyChemical);
 				Logger.trace("(SaltValidator) total layer1 matches: " + layer1Matches.size());
@@ -68,7 +75,7 @@ public class SaltValidator extends AbstractValidatorPlugin<Substance>
 			}
 			if( !smilesWithPartialMatch.isEmpty()){
 				smilesWithPartialMatch.forEach(s->{
-					callback.addMessage(GinasProcessingMessage.WARNING_MESSAGE("This fragment is present as a separate record in the database but in a different stereochemical form. Please register: " 
+					callback.addMessage(GinasProcessingMessage.WARNING_MESSAGE("This fragment is present as a separate record in the database but in a different form. Please register: "
 									+ s + " as an individual substance") );
 					
 				});

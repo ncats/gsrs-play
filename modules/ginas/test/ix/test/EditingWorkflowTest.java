@@ -962,6 +962,7 @@ public class EditingWorkflowTest extends AbstractGinasServerTest {
 		Changes expectedChanges = new ChangesBuilder(updated, updateFetched)
 
 				.replace("/version").replace("/_name").replace("/lastEdited").replace("/names/0/lastEdited")
+				.replace("/_nameHTML").replace("/names/0/_name").replace("/names/0/_nameHTML")
 
 				.build();
 
@@ -1037,7 +1038,7 @@ public class EditingWorkflowTest extends AbstractGinasServerTest {
 
 		//ugh this work around is because the names don't come back in order!!
 		SubstanceBuilder.from(api.fetchSubstanceJsonByUuid(uuid))
-						.modifyNames( names -> names.sort(new Comparator<Name>{
+						.modifyNames( names -> names.sort(new Comparator<Name>(){
 							@Override
 							public int compare(Name o1, Name o2) {
 								return o1.getCreated().compareTo(o2.getCreated());

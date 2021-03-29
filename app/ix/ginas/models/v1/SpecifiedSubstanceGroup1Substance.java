@@ -52,14 +52,15 @@ public class SpecifiedSubstanceGroup1Substance extends Substance implements Gina
 
 	public List<DefinitionalElement> additionalElementsFor() {
 		List<DefinitionalElement> definitionalElements = new ArrayList<>();
-		Logger.debug("total components " + this.specifiedSubstance.constituents.size());
+    if(this.specifiedSubstance.constituents != null) {
+      Logger.trace("total components " + this.specifiedSubstance.constituents.size());
 		for (int i =0; i <this.specifiedSubstance.constituents.size(); i++)	{
 			SpecifiedSubstanceComponent component = this.specifiedSubstance.constituents.get(i);
 			if( component.substance == null ){
-				Logger.debug("null substance found in component " + i);
+				Logger.trace("null substance found in component " + i);
 				continue;
 			}
-			Logger.debug("processing component " + i + " identified by " + component.substance.refuuid);
+        Logger.trace("processing component " + i + " identified by " + component.substance.refuuid);
 			DefinitionalElement componentRefUuid = DefinitionalElement.of("specifiedSubstance.constituents.substance.refuuid",
                                                                 component.substance.refuuid, 1);
 			definitionalElements.add(componentRefUuid);
@@ -67,16 +68,19 @@ public class SpecifiedSubstanceGroup1Substance extends Substance implements Gina
 			if( component.role != null){
 				DefinitionalElement componentType = DefinitionalElement.of("specifiedSubstance.constituents.role",
 								component.role, 2);
-				Logger.debug("	component.role: " + component.role);
+  				Logger.trace("	component.role: " + component.role);
 				definitionalElements.add(componentType);
 			}
 			if( component.amount != null) {
 				DefinitionalElement constituentAmountElement = DefinitionalElement.of("specifiedsubstancegroup1.constituents.monomerSubstance.amount",
 								component.amount.toString(), 2);
-				Logger.debug("looking at constituent amount " + component.amount.toString());
-				definitionalElements.add(constituentAmountElement);
+          		Logger.trace("looking at constituent amount " + component.amount.toString());
+						definitionalElements.add(constituentAmountElement);
 			}
-			Logger.debug("completed component processing");
+			Logger.trace("completed component processing");
+		  }
+		} else {
+		  Logger.warn("this SSG1 has no constituents");
 		}
 		if( this.modifications != null ){
 			definitionalElements.addAll(this.modifications.getDefinitionalElements().getElements());

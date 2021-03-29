@@ -13,7 +13,10 @@ public class DeprecatedIndexValueMaker implements IndexValueMaker<Substance> {
 
     @Override
     public void createIndexableValues(Substance substance, Consumer<IndexableValue> consumer) {
-        if (substance.deprecated)
+        if (substance.deprecated){
             consumer.accept(IndexableValue.simpleFacetStringValue("Deprecated","Deprecated"));
+        }else{
+        	consumer.accept(IndexableValue.simpleFacetStringValue("Deprecated","Not Deprecated"));
+        }
     }
 }

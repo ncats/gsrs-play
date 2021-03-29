@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonView;
 
@@ -53,7 +54,12 @@ public class ValidationResponse<T> {
 	public boolean isValid(){
 		return valid;
 	}
-	
+
+	//this is for Jackson to find using JavaBean patterns
+	@JsonIgnore
+	public boolean isProblem(){
+		return hasProblem();
+	}
 	public boolean hasProblem(){
 	    return this.getValidationMessages()
 	                .stream()

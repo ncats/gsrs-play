@@ -1,5 +1,6 @@
 package ix.ginas.utils.validation.validators;
 
+import ix.core.util.LogUtil;
 import ix.core.validator.GinasProcessingMessage;
 import ix.core.models.Keyword;
 import ix.core.util.CachedSupplier;
@@ -35,6 +36,8 @@ public class NamesValidator extends AbstractValidatorPlugin<Substance> {
         return repList;
 
     });
+
+    private static String CHANGE_REASON_DISPLAYNAME_CHANGED ="Changed Display Name";
 
     public static class Replacer{
         Pattern p;
@@ -192,6 +195,9 @@ public class NamesValidator extends AbstractValidatorPlugin<Substance> {
 
         Map<String, Set<String>> nameSetByLanguage = new HashMap<>();
 
+        Optional<Name> oldDisplayName= objold!=null ? objold.names.stream().filter(n->n.displayName).findFirst() : Optional.empty();
+        LogUtil.trace(()->String.format("oldDisplayName: present: %b; value: %s", oldDisplayName.isPresent(),
+                oldDisplayName.isPresent() ? oldDisplayName.get().name : ""));
 
         for (Name n : s.names) {
             if(n ==null){
@@ -240,7 +246,7 @@ public class NamesValidator extends AbstractValidatorPlugin<Substance> {
                     Substance s2 = sr.iterator().next();
                     if (!s2.getOrGenerateUUID().toString().equals(s.getOrGenerateUUID().toString())) {
                         GinasProcessingMessage mes = GinasProcessingMessage
-                                .ERROR_MESSAGE(
+                                .WARNING_MESSAGE(
                                         "Name '"
                                                 + n.name
                                                 + "' collides (possible duplicate) with existing name for substance:")
@@ -250,6 +256,18 @@ public class NamesValidator extends AbstractValidatorPlugin<Substance> {
                 }
             } catch (Exception e) {
                 e.printStackTrace();
+            }
+            if(oldDisplayName.isPresent() && n.displayName && !oldDisplayName.get().name.equalsIgnoreCase(n.name)
+                    && s.names.stream().anyMatch(nm->nm.name.equals(oldDisplayName.get().name)) //make sure the old display name is still present
+                &&  (s.changeReason==null || !s.changeReason.equalsIgnoreCase(CHANGE_REASON_DISPLAYNAME_CHANGED))) {
+                GinasProcessingMessage mes = GinasProcessingMessage
+                        .WARNING_MESSAGE(
+                                "Preferred Name has been changed from '"
+                                        + oldDisplayName.get().name
+                                        + "' to '"
+                                        + n.name
+                                        + "'. It is not customary to change the preferred name! Please confirm that this change is intentional by submitting.");
+                callback.addMessage(mes);
             }
         }
 

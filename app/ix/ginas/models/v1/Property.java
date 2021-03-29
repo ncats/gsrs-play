@@ -150,7 +150,16 @@ public class Property extends CommonDataElementOfCollection {
 		return temp;
 	}
 
-
-    
-    
+    @Override
+    public String toString() {
+        return "Property{" +
+                "name='" + name + '\'' +
+                ", type='" + type + '\'' +
+                ", propertyType='" + propertyType + '\'' +
+                ", value=" + value +
+                ", referencedSubstance=" + referencedSubstance +
+                ", defining=" + defining +
+                ", parameters=" + parameters +
+                "} " + super.toString();
+    }
 }
