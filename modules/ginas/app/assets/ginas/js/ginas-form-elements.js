@@ -825,13 +825,13 @@
                 var template;
                 if (scope.format == "subref") {
                     template = angular.element('<div>' +
-                        '<rendered id= {{ref.uuid}} size="200"></rendered><br/><code>{{ref._name}}</code><br/><code>{{ref.source}}</code><br>' +
+                        '<rendered id= {{ref.uuid}} size="200"></rendered><br/><code>{{ref._nameHTML}}</code><br/><code>{{ref.source}}</code><br>' +
                         '<button class = "btn btn-primary" ng-click="$parent.select(ref)">Select</button>' +
                         '</div>');
                 } else if (scope.ref.uuid) {
                     var url = baseurl + 'substance/' + scope.ref.uuid.split('-')[0];
                     template = angular.element('<div>' +
-                        '<rendered id = {{ref.uuid}} size="200"></rendered><br/><code>{{ref._name}}</code><br/><code>G-SRS Duplicate</code><br/>' +
+                        '<rendered id = {{ref.uuid}} size="200"></rendered><br/><code>{{ref._nameHTML}}</code><br/><code>G-SRS Duplicate</code><br/>' +
                         '<div class ="row"><div class="col-md-12"><button class = "btn btn-primary" ng-click="$parent.select(ref)">Apply Structure</button></div></div><br/>' +
                         '<div class="row"><div class="col-md-3 col-md-offset-3"><a class = "btn btn-primary" href = "' + url + '" target="_blank">View</a></div>' +
                         '<div class = "col-md-3"><a class = "btn btn-primary" href = "' + url + '/edit" target="_self">Edit</a></div>' +
@@ -840,7 +840,7 @@
                     template = angular.element('<div><code>No substances found</code></div>');
                 } else {
                     template = angular.element('<div>' +
-                        '<rendered id= {{ref.value.id}} size="200"></rendered><br/><code>{{ref._name}}</code><br/><code>{{ref.source}}</code><br>' +
+                        '<rendered id= {{ref.value.id}} size="200"></rendered><br/><code>{{ref._nameHTML}}</code><br/><code>{{ref.source}}</code><br>' +
                         '<button class = "btn btn-primary" ng-click="$parent.select(ref)">Apply Structure</button>' +
                         '</div>');
                 }
@@ -865,7 +865,7 @@
                 scope.createSubref = function (selectedItem) {
                     var temp = {};
                     temp.refuuid = selectedItem.uuid;
-                    temp.refPname = selectedItem._name;
+                    temp.refPname = selectedItem._nameHTML;
                     temp.approvalID = selectedItem.approvalID;
                     temp.substanceClass = "reference";
                     scope.subref = angular.copy(temp);
@@ -899,7 +899,7 @@
                 scope.createSubref = function (selectedItem) {
                     var subref = {};
                     subref.refuuid = selectedItem.uuid;
-                    subref.refPname = selectedItem._name;
+                    subref.refPname = selectedItem._nameHTML;
                     subref.approvalID = selectedItem.approvalID;
                     subref.substanceClass = "reference";
                     scope.obj[scope.field] = angular.copy(subref);
@@ -976,7 +976,7 @@
                 scope.createSubref = function (selectedItem) {
                     var temp = {};
                     temp.refuuid = selectedItem.uuid;
-                    temp.refPname = selectedItem._name;
+                    temp.refPname = selectedItem._nameHTML;
                     temp.approvalID = selectedItem.approvalID;
                     temp.substanceClass = "reference";
                     if (attrs.definition) {
