@@ -189,6 +189,8 @@ public class Relationship extends CommonDataElementOfCollection {
 	@PostLoad
 	public void fixWhitespaceIssues(){
 
-        this.type = RelationshipUtil.standardizeType(this);
+        if (this.type != null){
+            this.type = RelationshipUtil.standardizeType(this);
+        }
     }
 }
