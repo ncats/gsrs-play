@@ -10,15 +10,14 @@ import java.util.stream.Collectors;
 import gov.nih.ncats.molwitch.Atom;
 import gov.nih.ncats.molwitch.Bond;
 import gov.nih.ncats.molwitch.Chemical;
+import gov.nih.ncats.structureIndexer.StructureIndexer;
+import gov.nih.ncats.structureIndexer.StructureIndexer.*;
 import org.apache.lucene.search.Filter;
 import org.apache.lucene.search.Query;
 
 import play.Application;
 import play.Logger;
 import play.Plugin;
-import tripod.chem.indexer.StructureIndexer;
-import tripod.chem.indexer.StructureIndexer.Codebook;
-import tripod.chem.indexer.StructureIndexer.ResultEnumeration;
 
 public class StructureIndexerPlugin extends Plugin {
     private final Application app;
@@ -162,7 +161,7 @@ public class StructureIndexerPlugin extends Plugin {
 			return delegate.getBasePath();
 		}
 
-		public Codebook[] getCodebooks() {
+		public StructureIndexer.Codebook[] getCodebooks() {
 			return delegate.getCodebooks();
 		}
 
