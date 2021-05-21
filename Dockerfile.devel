@@ -19,6 +19,7 @@ RUN cd /root && \
     chmod -R g=u /root
 WORKDIR /opt/g-srs
 RUN mv /tmp/build/modules/ginas/conf /opt/g-srs/conf
+RUN mv /opt/g-srs/conf/evolutions /opt/g-srs/conf/evolutions.save
 RUN cp /tmp/build/build_extensions.sh /opt/g-srs/bin
 RUN sed -i "s/localhost/db/g" conf/ginas-mysql.conf
 RUN sed -i "s/localhost:5433/db:5432/g" conf/ginas-postgres.conf

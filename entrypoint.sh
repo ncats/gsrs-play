@@ -9,6 +9,12 @@ do
     fi
 done
 
+if [ ! -f conf/evolutions/default/1.sql ]; then
+    if [ -f conf/evolutions.save/default/1.sql ]; then
+        cp conf/evolutions.save/default/1.sql conf/evolutions/default
+    fi
+fi
+
 for dir_name in cache h2 payload sequence structure text
 do
     if [ -d /data/$dir_name ]; then
