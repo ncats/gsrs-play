@@ -11,7 +11,8 @@ import gov.nih.ncats.molwitch.Atom;
 import gov.nih.ncats.molwitch.Bond;
 import gov.nih.ncats.molwitch.Chemical;
 import gov.nih.ncats.structureIndexer.StructureIndexer;
-import gov.nih.ncats.structureIndexer.StructureIndexer.*;
+import gov.nih.ncats.structureIndexer.StructureIndexer.Codebook;
+import gov.nih.ncats.structureIndexer.StructureIndexer.ResultEnumeration;
 import org.apache.lucene.search.Filter;
 import org.apache.lucene.search.Query;
 
@@ -161,7 +162,7 @@ public class StructureIndexerPlugin extends Plugin {
 			return delegate.getBasePath();
 		}
 
-		public StructureIndexer.Codebook[] getCodebooks() {
+		public Codebook[] getCodebooks() {
 			return delegate.getCodebooks();
 		}
 
