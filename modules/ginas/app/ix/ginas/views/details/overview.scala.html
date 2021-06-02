@@ -23,6 +23,18 @@ basically supplies a few <tr> tags with 'record details'
 
 
 <tr>
+	<td>Record Protection Status</td>
+	<td>
+	@if(sub.isPublic()){
+		<div class= "monospace">Public record <i uib-tooltip = "Public record" class="fa fa-unlock fa-2x fa-1_1x success"></i></div>
+	}else{
+		<div class= "monospace">Not a public record <i uib-tooltip = "Not a public record" class="fa fa-lock fa-2x fa-1_1x warning"></i></div>
+	}
+	</td>
+</tr>
+
+
+<tr>
 	<td>Record Status</td>
 	<td>
 	@if(sub.isDeprecated()) {
