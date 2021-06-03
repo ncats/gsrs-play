@@ -214,11 +214,6 @@ public class NamesValidator extends AbstractValidatorPlugin<Substance> {
                 continue;
             }
 
-            for (String errMsg : Util.getStringConverter().validationErrors(name)) {
-                GinasProcessingMessage mes = GinasProcessingMessage
-                            .ERROR_MESSAGE("Name '" + name + "' " + errMsg + ".");
-                    callback.addMessage(mes);
-            }
 
             Iterator<Keyword> iter = n.languages.iterator();
             String uppercasedName = name.toUpperCase();
