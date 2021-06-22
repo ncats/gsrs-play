@@ -35,8 +35,8 @@ public class SubstanceReferenceProcessor implements EntityProcessor<SubstanceRef
                 Logger.debug("SubstanceReference refuuid:" + obj.refuuid);
                 Matcher matcher = fakeIdPattern.matcher(obj.refuuid);
                 if (matcher.find()) {
-                    obj.approvalID = matcher.group(1);
-                    obj.refuuid = null;
+                    obj.setApprovalID(matcher.group(1));
+                    obj.setRefuuid(null);
                     Logger.debug("Replace FAKE_ID with ApprovalID: " + obj.approvalID);
                 } else {
                     relatedSubstance = SubstanceFactory.getSubstance(obj.refuuid);
@@ -51,13 +51,13 @@ public class SubstanceReferenceProcessor implements EntityProcessor<SubstanceRef
         //}
         if (relatedSubstance instanceof Substance) {
             Logger.debug("Found Related Substance");
-            obj.refuuid = relatedSubstance.getUuid().toString();
-            obj.refPname = relatedSubstance.getName();
+            obj.setRefuuid(relatedSubstance.getUuid().toString());
+            obj.setRefPname(relatedSubstance.getName());
             if (obj.refPname.getBytes().length > 1023) {
-                obj.refPname = Util.getStringConverter().truncate(obj.refPname, 1023);
+                obj.setRefPname(Util.getStringConverter().truncate(obj.refPname, 1023));
             }
-            obj.approvalID = relatedSubstance.approvalID;
-            obj.substanceClass = Substance.SubstanceClass.reference.toString();
+            obj.setApprovalID(relatedSubstance.approvalID);
+            obj.setSubstanceClass(Substance.SubstanceClass.reference.toString());
             Logger.debug("Update SubstanceReference: " + obj.getUuid().toString() + " refuuid: " +  obj.refuuid + " ApprovalID: " + obj.approvalID);
         }
     }
