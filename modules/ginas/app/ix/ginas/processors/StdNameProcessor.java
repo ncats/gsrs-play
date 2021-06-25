@@ -8,7 +8,7 @@ public class StdNameProcessor implements EntityProcessor<Name>{
 
     @Override
     public void prePersist(Name obj) {
-        obj.stdName = Util.getStringConverter().toStd(obj.getName());
+        obj.setStdName(Util.getStringConverter().toStd(obj.getName()));
     }
 
     @Override
