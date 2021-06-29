@@ -21,7 +21,7 @@ import org.w3c.tidy.Tidy;
  */
 public class HTMLStringConverter extends AbstractStringConverter {
     /**
-     * JTidy is not thead safe and we need to use this a lot so make a thread-local
+     * JTidy is not thread safe and we need to use this a lot so make a thread-local
      * version.
      */
     private static final ThreadLocal<Tidy> TIDY_POOL = ThreadLocal.withInitial(new Supplier<Tidy>(){
@@ -78,6 +78,10 @@ public class HTMLStringConverter extends AbstractStringConverter {
         return this.replaceFromLists(str, htmlStrings, stdStrings);
     }
 
+    @Override
+    public String toNoHtmlTags(String str) {
+        return (str == null || str.length() ==0) ? str : str.replaceAll("<[a-zA-Z\\/][^>]*>", "");
+    }
     /**
      * Truncate string.
      *
