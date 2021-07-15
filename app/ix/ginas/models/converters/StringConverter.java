@@ -78,4 +78,6 @@ public interface StringConverter {
      * @return ArayList of validation errors messages. 
      */
     List<String> validationErrors(String str);
+
+    public String toNoHtmlTags(String str);
 }

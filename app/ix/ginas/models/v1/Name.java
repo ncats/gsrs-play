@@ -97,9 +97,15 @@ public class Name extends CommonDataElementOfCollection {
     }
 
 
-    @JsonProperty("_name_html")
+    @JsonProperty("_nameHTML")
     public String getHtmlName() {
         return Util.getStringConverter().toHtml(getName());
+    }
+
+    @JsonProperty("_simple_name")
+    public String getSimpleName() {
+        //without HTML
+        return Util.getStringConverter().toNoHtmlTags(getName());
     }
 
     @JsonProperty("_name")

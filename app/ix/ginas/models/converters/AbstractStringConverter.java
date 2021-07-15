@@ -133,4 +133,15 @@ public abstract class AbstractStringConverter implements StringConverter {
     public List<String> validationErrors(String str){
         return new ArrayList<String>();
     }
+
+    /**
+     * return Name without HTML tags -- leaving special characters unchanged.
+     *
+     * @param str string in internal DB storage format;
+     *            will never be null.
+     * @return a string as Standard Name format.
+     */
+    public String toNoHtmlTags(String str){
+        return str;
+    }
 }
