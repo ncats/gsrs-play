@@ -39,6 +39,8 @@ public class NamesValidator extends AbstractValidatorPlugin<Substance> {
 
     private static String CHANGE_REASON_DISPLAYNAME_CHANGED ="Changed Display Name";
 
+    private static List<String> INDICATIONS_OF_WARNING = Arrays.asList("contains unclosed bracket");
+
     public static class Replacer{
         Pattern p;
         String replace;
@@ -215,9 +217,17 @@ public class NamesValidator extends AbstractValidatorPlugin<Substance> {
             }
 
             for (String errMsg : Util.getStringConverter().validationErrors(name)) {
-                GinasProcessingMessage mes = GinasProcessingMessage
+                //some issues within names are considered warnings
+                if( INDICATIONS_OF_WARNING.stream().anyMatch(em-> errMsg.contains(em))){
+                    GinasProcessingMessage mes = GinasProcessingMessage
+                            .WARNING_MESSAGE("Name '" + name + "' " + errMsg + ".");
+                    callback.addMessage(mes);
+                }
+                else {
+                    GinasProcessingMessage mes = GinasProcessingMessage
                             .ERROR_MESSAGE("Name '" + name + "' " + errMsg + ".");
                     callback.addMessage(mes);
+                }
             }
 
             Iterator<Keyword> iter = n.languages.iterator();
