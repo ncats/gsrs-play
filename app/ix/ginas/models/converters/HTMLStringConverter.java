@@ -102,7 +102,7 @@ public class HTMLStringConverter extends AbstractStringConverter {
         StringWriter writer = new StringWriter();
         Tidy tidy = TIDY_POOL.get();
         for(int i = maxBytes; i >= 0; i--){
-            if (badLastChars.contains(str.charAt(i-1))) {
+            if (i > 0 && badLastChars.contains(str.charAt(i-1))) {
                 continue;
             }
             tidy.parse(new StringReader("<html><head><title>Test</title></head><body>" + str.substring(0, i) + "</body></html>"), writer);
