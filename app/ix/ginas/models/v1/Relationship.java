@@ -171,7 +171,7 @@ public class Relationship extends CommonDataElementOfCollection {
     }
 
     public String toSimpleString(){
-    	return type + ":" + relatedSubstance.refPname;
+    	return type + ":" + relatedSubstance.getName();
     }
 
 	@Override
