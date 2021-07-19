@@ -17,7 +17,7 @@ public class NameStringConverterValidator extends AbstractValidatorPlugin<Substa
             if (n == null) {
                 continue;
             }
-            String name = n.name;
+            String name = n.getName();
             for (String errMsg : Util.getStringConverter().validationErrors(name)) {
                 GinasProcessingMessage mes;
 

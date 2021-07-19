@@ -106,7 +106,7 @@ public class NamesValidator extends AbstractValidatorPlugin<Substance> {
                                 .appliableChange(true);
                         callback.addMessage(mes, ()->{
                             for (String loc : locators) {
-                                n.name = n.name.replace("[" + loc + "]", "").trim();
+                                n.name = n.getName().replace("[" + loc + "]", "").trim();
                             }
                             for (String loc : locators) {
                                 n.addLocator(s, loc);
@@ -197,7 +197,7 @@ public class NamesValidator extends AbstractValidatorPlugin<Substance> {
 
         Optional<Name> oldDisplayName= objold!=null ? objold.names.stream().filter(n->n.displayName).findFirst() : Optional.empty();
         LogUtil.trace(()->String.format("oldDisplayName: present: %b; value: %s", oldDisplayName.isPresent(),
-                oldDisplayName.isPresent() ? oldDisplayName.get().name : ""));
+                oldDisplayName.isPresent() ? oldDisplayName.get().getName() : ""));
 
         for (Name n : s.names) {
             if(n ==null){
@@ -236,14 +236,14 @@ public class NamesValidator extends AbstractValidatorPlugin<Substance> {
             //nameSet.add(n.getName());
             try {
                 List<Substance> sr = ix.ginas.controllers.v1.SubstanceFactory
-                        .getSubstancesWithExactName(100, 0, n.name);
+                        .getSubstancesWithExactName(100, 0, n.getName());
                 if (sr != null && !sr.isEmpty()) {
                     Substance s2 = sr.iterator().next();
                     if (!s2.getOrGenerateUUID().toString().equals(s.getOrGenerateUUID().toString())) {
                         GinasProcessingMessage mes = GinasProcessingMessage
                                 .WARNING_MESSAGE(
                                         "Name '"
-                                                + n.name
+                                                + n.getName()
                                                 + "' collides (possible duplicate) with existing name for substance:")
                                 .addLink(GinasUtils.createSubstanceLink(s2));
                         callback.addMessage(mes);
@@ -252,15 +252,15 @@ public class NamesValidator extends AbstractValidatorPlugin<Substance> {
             } catch (Exception e) {
                 e.printStackTrace();
             }
-            if(oldDisplayName.isPresent() && n.displayName && !oldDisplayName.get().name.equalsIgnoreCase(n.name)
-                    && s.names.stream().anyMatch(nm->nm.name.equals(oldDisplayName.get().name)) //make sure the old display name is still present
+            if(oldDisplayName.isPresent() && n.displayName && !oldDisplayName.get().getName().equalsIgnoreCase(n.getName())
+                    && s.names.stream().anyMatch(nm->nm.getName().equals(oldDisplayName.get().getName())) //make sure the old display name is still present
                 &&  (s.changeReason==null || !s.changeReason.equalsIgnoreCase(CHANGE_REASON_DISPLAYNAME_CHANGED))) {
                 GinasProcessingMessage mes = GinasProcessingMessage
                         .WARNING_MESSAGE(
                                 "Preferred Name has been changed from '"
-                                        + oldDisplayName.get().name
+                                        + oldDisplayName.get().getName()
                                         + "' to '"
-                                        + n.name
+                                        + n.getName()
                                         + "'. It is not customary to change the preferred name! Please confirm that this change is intentional by submitting.");
                 callback.addMessage(mes);
             }
@@ -271,7 +271,7 @@ public class NamesValidator extends AbstractValidatorPlugin<Substance> {
 
     static private Set<String> extractLocators(Name n) {
         Pattern p = Pattern.compile("(?:[ \\]])\\[([A-Z0-9]*)\\]");
-        Matcher m = p.matcher(n.name);
+        Matcher m = p.matcher(n.getName());
         Set<String> locators = new LinkedHashSet<String>();
         //TODO isn't while(m.find() ) sufficient?
         if (m.find()) {
