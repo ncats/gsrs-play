@@ -24,6 +24,7 @@ import be.objectify.deadbolt.java.actions.Dynamic;
 import gov.nih.ncats.molwitch.Atom;
 import gov.nih.ncats.molwitch.Chemical;
 import gov.nih.ncats.molwitch.io.ChemFormat;
+import gov.nih.ncats.structureIndexer.StructureIndexer;
 import ix.core.controllers.v1.GsrsApiUtil;
 import ix.core.exporters.OutputFormat;
 import ix.core.validator.GinasProcessingMessage;
@@ -88,7 +89,6 @@ import play.mvc.Call;
 import play.mvc.Result;
 import play.mvc.Results;
 import play.twirl.api.Html;
-import tripod.chem.indexer.StructureIndexer;
 import com.wordnik.swagger.annotations.*;
 
 /**

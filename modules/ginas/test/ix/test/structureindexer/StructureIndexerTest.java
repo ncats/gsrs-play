@@ -87,7 +87,7 @@ public class StructureIndexerTest extends AbstractGinasServerTest{
 		
 		
 		
-		Optional<int[]> hit = MolSearcherFactory.create(p).search(t);
+		Optional<int[]> hit = MolSearcherFactory.create(p).get().search(t);
 		
 		assertEquals("false",""+hit.isPresent());
 	}
@@ -175,7 +175,7 @@ public class StructureIndexerTest extends AbstractGinasServerTest{
 		
 		
 		
-		Optional<int[]> hit = MolSearcherFactory.create(p).search(t);
+		Optional<int[]> hit = MolSearcherFactory.create(p).get().search(t);
 		
 		assertEquals("true",""+hit.isPresent());
 	}
@@ -222,7 +222,7 @@ public class StructureIndexerTest extends AbstractGinasServerTest{
 		
 		
 		
-		Optional<int[]> hit = MolSearcherFactory.create(p).search(t);
+		Optional<int[]> hit = MolSearcherFactory.create(p).get().search(t);
 		
 		assertEquals("true",""+hit.isPresent());
 	}
@@ -269,7 +269,7 @@ public class StructureIndexerTest extends AbstractGinasServerTest{
 		
 		
 		
-		Optional<int[]> hit = MolSearcherFactory.create(p).search(t);
+		Optional<int[]> hit = MolSearcherFactory.create(p).get().search(t);
 		
 		assertEquals("true",""+hit.isPresent());
 	}
@@ -293,7 +293,7 @@ public class StructureIndexerTest extends AbstractGinasServerTest{
 		
 		
 		
-		Optional<int[]> hit = MolSearcherFactory.create(p).search(t);
+		Optional<int[]> hit = MolSearcherFactory.create(p).get().search(t);
 		
 		assertEquals("false",""+hit.isPresent());
 		
@@ -319,7 +319,7 @@ public class StructureIndexerTest extends AbstractGinasServerTest{
 		
 		
 		
-		Optional<int[]> hit = MolSearcherFactory.create(p).search(t);
+		Optional<int[]> hit = MolSearcherFactory.create(p).get().search(t);
 		
 		assertEquals("true",""+hit.isPresent());
 		
@@ -346,7 +346,7 @@ public class StructureIndexerTest extends AbstractGinasServerTest{
 		
 		
 		
-		Optional<int[]> hit = MolSearcherFactory.create(p).search(t);
+		Optional<int[]> hit = MolSearcherFactory.create(p).get().search(t);
 		
 		assertEquals("true",""+hit.isPresent());
 		
@@ -374,7 +374,7 @@ public class StructureIndexerTest extends AbstractGinasServerTest{
 		
 		
 		
-		Optional<int[]> hit = MolSearcherFactory.create(p).search(t);
+		Optional<int[]> hit = MolSearcherFactory.create(p).get().search(t);
 		
 		assertEquals("true",""+hit.isPresent());		
 	}
@@ -402,7 +402,7 @@ public class StructureIndexerTest extends AbstractGinasServerTest{
 		
 		
 		
-		Optional<int[]> hit = MolSearcherFactory.create(p).search(t);
+		Optional<int[]> hit = MolSearcherFactory.create(p).get().search(t);
 		
 		assertEquals("true",""+hit.isPresent());		
 	}
@@ -429,7 +429,7 @@ public class StructureIndexerTest extends AbstractGinasServerTest{
 		
 		
 		
-		Optional<int[]> hit = MolSearcherFactory.create(p).search(t);
+		Optional<int[]> hit = MolSearcherFactory.create(p).get().search(t);
 		
 		assertEquals("true",""+hit.isPresent());		
 	}
@@ -520,7 +520,7 @@ public class StructureIndexerTest extends AbstractGinasServerTest{
 		
 		
 		
-		Optional<int[]> hit = MolSearcherFactory.create(p).search(t);
+		Optional<int[]> hit = MolSearcherFactory.create(p).get().search(t);
 		
 		if(hit.isPresent()){
 			System.out.println(Arrays.toString(hit.get()));
