@@ -44,7 +44,7 @@ public class SubstanceFieldNameDecorator implements FieldNameDecorator{
 			m.put("root_moieties_structure_properties_LyChI_L4" , "Moiety LyChI Level 4"); 
 			m.put("root_moieties_structure_opticalActivity" , "Moiety Optical Activity"); 
 			m.put("root_moieties_structure_stereoComments" , "Moiety Stereo Comments"); 
-			m.put("root_structure_formula" , "Mol Formua"); 
+			m.put("root_structure_formula" , "Mol Formula"); 
 			m.put("root_polymer_monomers_amount_nonNumericValue" , "Monomer Amount Non-Numeric Value"); 
 			m.put("root_polymer_monomers_amount_type" , "Monomer Amount Type"); 
 			m.put("root_polymer_monomers_amount_units" , "Monomer Amount Units"); 
