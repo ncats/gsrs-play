@@ -11,7 +11,7 @@ RUN ./activator -Dconfig.file=modules/ginas/conf/ginas.conf -Dmolwitch=${MOLWITC
 RUN cd /opt && \
     jar xf /tmp/build/modules/ginas/target/universal/ginas-*.zip && \
     mv /opt/ginas-* /opt/g-srs && \
-    chmod 755 /opt/g-srs/bin/ginas
+    chmod 755 /opt/g-srs/bin/*
 RUN cd /root && \
     jar xf /tmp/build/lib/jni-inchi-0.7-jar-with-dependencies.jar && \
     mkdir -p /root/.jnati/repo/jniinchi/1.03_1 && \

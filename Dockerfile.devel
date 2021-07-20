@@ -10,7 +10,8 @@ RUN ./activator -Dconfig.file=modules/ginas/conf/ginas.conf -Dmolwitch=${MOLWITC
 RUN cd /opt && \
     jar xf /tmp/build/modules/ginas/target/universal/ginas-*.zip && \
     mv /opt/ginas-* /opt/g-srs && \
-    chmod 755 /opt/g-srs/bin/ginas
+    cp /tmp/build/build_extensions.sh /opt/g-srs/bin && \
+    chmod 755 /opt/g-srs/bin/*
 RUN cd /root && \
     jar xf /tmp/build/lib/jni-inchi-0.7-jar-with-dependencies.jar && \
     mkdir -p /root/.jnati/repo/jniinchi/1.03_1 && \
@@ -21,7 +22,6 @@ RUN cd /root && \
 WORKDIR /opt/g-srs
 RUN mv /tmp/build/modules/ginas/conf /opt/g-srs/conf
 RUN mv /opt/g-srs/conf/evolutions /opt/g-srs/conf/evolutions.save
-RUN cp /tmp/build/build_extensions.sh /opt/g-srs/bin
 RUN sed -i "s/localhost/db/g" conf/ginas-mysql.conf
 RUN sed -i "s/localhost:5433/db:5432/g" conf/ginas-postgres.conf
 RUN sed -i "s/#evolutionplugin=disabled/evolutionplugin=disabled/g" conf/ginas-*.conf
