@@ -80,7 +80,8 @@ public class HTMLStringConverter extends AbstractStringConverter {
 
     @Override
     public String toNoHtmlTags(String str) {
-        return (str == null || str.length() ==0) ? str : str.replaceAll("<[a-zA-Z\\/][^>]*>", "");
+        //replace HTML tags as well as HTML-ampersand chars
+        return (str == null || str.length() ==0) ? str : str.replaceAll("<[a-zA-Z\\/][^>]*>", "").replaceAll("&([A-z]*|#[0-9a-fA-F]*);", "");
     }
     /**
      * Truncate string.
