@@ -13,3 +13,6 @@
 /lib/jaxb-api-2.3.0.jar
 /lib/jxl.jar
 /lib/io.netty.netty-3.9.9.Final.jar
+ StartGinas.bat
+StartGinas.sh
+app/ix/ginas/models/v1/Name.java.old
