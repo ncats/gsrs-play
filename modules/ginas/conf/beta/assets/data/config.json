@@ -531,5 +531,12 @@
     "root_codes_BDNUM",
     "root_codes_CAS",
     "root_codes_ECHA\\ \\(EC\/EINECS\\)"
-  ]
+  ],
+  "contactEmail": "precisionfda-support@dnanexus.com",
+  "sessionExpirationWarning": {
+    "extendSessionApiUrl": "/api/update_active",
+    "maxSessionDurationMinutes": 30
+  },
+  "googleAnalyticsId": "",
+  "customToolbarComponent": "precisionFDA"
 }
