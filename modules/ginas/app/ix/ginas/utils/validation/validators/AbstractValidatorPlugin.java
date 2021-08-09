@@ -10,6 +10,8 @@ import ix.ginas.utils.validation.ValidatorPlugin;
  */
 public abstract class AbstractValidatorPlugin<T> implements ValidatorPlugin<T> {
 
+    public boolean addNote = true;
+
     @Override
     public boolean supports(T newValue, T oldValue, LoadValidatorInitializer.ValidatorConfig.METHOD_TYPE methodType) {
         if(methodType == LoadValidatorInitializer.ValidatorConfig.METHOD_TYPE.IGNORE){

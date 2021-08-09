@@ -1397,10 +1397,12 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
         boolean added = false;
 
         for(GinasProcessingMessage message: gpm){
-            Note n=this.addValidationNote(message, r);
-            if(n!=null){
-                n.addRestrictGroup(GROUP_ADMIN);
-                added = true;
+            if (message.addAsNote){
+                Note n=this.addValidationNote(message, r);
+                if(n!=null){
+                    n.addRestrictGroup(GROUP_ADMIN);
+                    added = true;
+                }
             }
         }
         if(!added){
