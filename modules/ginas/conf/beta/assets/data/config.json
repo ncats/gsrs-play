@@ -537,6 +537,7 @@
     "extendSessionApiUrl": "/api/update_active",
     "maxSessionDurationMinutes": 30
   },
+  "disableReferenceDocumentUpload": true,
   "googleAnalyticsId": "",
   "customToolbarComponent": "precisionFDA"
 }
