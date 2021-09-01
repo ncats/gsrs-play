@@ -535,9 +535,14 @@
   "contactEmail": "precisionfda-support@dnanexus.com",
   "sessionExpirationWarning": {
     "extendSessionApiUrl": "/api/update_active",
-    "maxSessionDurationMinutes": 30
+    "maxSessionDurationMinutes": 15
   },
   "disableReferenceDocumentUpload": true,
+  "externalSiteWarning": {
+    "enabled": true,
+    "dialogTitle": "Accessing External Site",
+    "dialogMessage" : "You will be making an API call outside of the precisionFDA boundary. Do you want to continue?"
+  },
   "googleAnalyticsId": "",
   "customToolbarComponent": "precisionFDA"
 }
