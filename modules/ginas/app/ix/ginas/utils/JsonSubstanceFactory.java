@@ -3,13 +3,16 @@ package ix.ginas.utils;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.node.TextNode;
 import gov.nih.ncats.molwitch.Chemical;
 import ix.core.validator.GinasProcessingMessage;
 import ix.core.models.Structure;
 import ix.ginas.models.v1.*;
 
 import java.util.List;
+import java.util.UUID;
 
 /**
  * Created by katzelda on 9/7/16.
@@ -22,6 +25,7 @@ public class JsonSubstanceFactory {
     }
     public static Substance makeSubstance(JsonNode tree, List<GinasProcessingMessage> messages) {
 
+        fixReferences(tree);
         JsonNode subclass = tree.get("substanceClass");
         ObjectMapper mapper = new ObjectMapper();
 
@@ -117,6 +121,27 @@ public class JsonSubstanceFactory {
 
             }
             structure.put("stereochemistry", "UNKNOWN");
+        }
+    }
+
+    private static void fixReferences(JsonNode tree) {
+        ArrayNode references = (ArrayNode)tree.at("/references");
+        for (int i = 0; i < references.size(); i++) {
+            ObjectNode ref = (ObjectNode) references.get(i);
+            if (!ref.has("uuid")) {
+                ref.set("uuid", new TextNode(UUID.randomUUID().toString()));
+            }
+        }
+        for (JsonNode refsNode: tree.findValues("references")) {
+            if (refsNode.isArray()) {
+                ArrayNode refs = (ArrayNode) refsNode;
+                for (int i = 0; i < refs.size(); i++) {
+                    JsonNode ref = refs.get(i);
+                    if (ref.isNumber()) {
+                        refs.set(i, references.get(ref.asInt()).get("uuid"));
+                    }
+                }
+            }
         }
     }
 }
