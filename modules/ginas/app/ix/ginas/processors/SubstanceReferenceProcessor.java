@@ -9,6 +9,7 @@ import ix.utils.Util;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -38,18 +39,20 @@ public class SubstanceReferenceProcessor implements EntityProcessor<SubstanceRef
                 Matcher matcher = fakeIdPattern.matcher(obj.refuuid);
                 if (matcher.find()) {
                     obj.setApprovalID(matcher.group(1));
-                    obj.setRefuuid(null);
+                    obj.setRefuuid(UUID.randomUUID().toString());
                 } else {
                     relatedSubstance = SubstanceFactory.getSubstance(obj.refuuid);
                 }
+            } else {
+                obj.setRefuuid(UUID.randomUUID().toString());
             }
         }
         if (relatedSubstance == null) {
             relatedSubstance = SubstanceFactory.getSubstancesWithExactCode(100, 0, obj.approvalID, codeSystem).stream().findFirst().orElse(null);
         }
-        //if (relatedSubstance == null) {
-        //    relatedSubstance = SubstanceFactory.getSubstancesWithExactName(100, 0, obj.refPname).stream().findFirst().orElse(null);
-        //}
+        if (relatedSubstance == null) {
+            relatedSubstance = SubstanceFactory.getSubstancesWithExactName(100, 0, obj.refPname).stream().findFirst().orElse(null);
+        }
         if (relatedSubstance instanceof Substance) {
             obj.setRefuuid(relatedSubstance.getUuid().toString());
             obj.setRefPname(relatedSubstance.getName());
