@@ -971,7 +971,7 @@ public class App extends Authentication {
 					if(Stereo.EPIMERIC.equals(struc.stereoChemistry)
 							||Stereo.RACEMIC.equals(struc.stereoChemistry)
 							||Stereo.MIXED.equals(struc.stereoChemistry)){
-						c.setProperty("BOTTOM_TEXT","relative stereochemistry");
+						c.setProperty("BOTTOM_TEXT","and enantiomer"); //relative stereochemistry
 					}
 				}
 			}

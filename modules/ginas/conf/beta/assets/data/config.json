@@ -1,9 +1,21 @@
 {
-  "version": "2.7.1",
+  "version": "2.8 RC1",
+  "contactEmail": "GSRSSupport@fda.hhs.gov",
+  "displayMatchApplication": "true",
+  "adverseEventShinyHomepageDisplay": "true",
+  "adverseEventShinySubstanceNameDisplay": "true",
+  "adverseEventShinyAdverseEventDisplay": "true",
   "substanceDetailsCards": [
     {
       "card": "substance-overview",
       "title": "overview"
+    },
+    {
+      "card": "fda-substance-product",
+      "title": "Products, Applications, Clinical Trials, Adverse Events",
+      "filters": [
+        {}
+      ]
     },
     {
       "card": "substance-primary-definition",
@@ -19,7 +31,7 @@
     {
       "card": "substance-alternative-definition",
       "type": "SUBSTANCE->SUB_ALTERNATE",
-      "title": "variant concepts",
+      "title": "alternative definitions",
       "filters": [
         {
           "filterName": "exists",
@@ -161,21 +173,6 @@
     },
     {
       "card": "substance-relationships",
-      "type": "IMPURITY",
-      "title": "impurities",
-      "filters": [
-        {
-          "filterName": "exists",
-          "propertyToCheck": "relationships"
-        },
-        {
-          "filterName": "substanceRelationships",
-          "value": "IMPURITY"
-        }
-      ]
-    },
-    {
-      "card": "substance-relationships",
       "type": "METABOLITE",
       "title": "metabolites",
       "filters": [
@@ -186,6 +183,21 @@
         {
           "filterName": "substanceRelationships",
           "value": "METABOLITE"
+        }
+      ]
+    },
+    {
+      "card": "substance-relationships",
+      "type": "IMPURITY",
+      "title": "impurities",
+      "filters": [
+        {
+          "filterName": "exists",
+          "propertyToCheck": "relationships"
+        },
+        {
+          "filterName": "substanceRelationships",
+          "value": "IMPURITY"
         }
       ]
     },
@@ -252,6 +264,16 @@
             "CONSTITUENT",
             "SUB_CONCEPT->SUBSTANCE"
           ]
+        }
+      ]
+    },
+    {
+      "card": "substance-relationships-visualization",
+      "title": "Relationships Visualization",
+      "filters": [
+        {
+          "filterName": "exists",
+          "propertyToCheck": "relationships"
         }
       ]
     },
@@ -452,22 +474,22 @@
       ]
     },
     {
-      "card": "substance-ssg-definition",
-      "title": "definition",
-      "filters": [
-        {
-          "filterName": "exists",
-          "propertyToCheck": "specifiedSubstanceG3.definition"
-        }
-      ]
-    },
-    {
       "card": "substance-ssg-parent-substance",
       "title": "parent substance",
       "filters": [
         {
           "filterName": "exists",
           "propertyToCheck": "specifiedSubstanceG3.parentSubstance"
+        }
+      ]
+    },
+    {
+      "card": "substance-ssg-definition",
+      "title": "definition",
+      "filters": [
+        {
+          "filterName": "exists",
+          "propertyToCheck": "specifiedSubstanceG3.definition"
         }
       ]
     },
@@ -489,22 +511,30 @@
         "Record Status",
         "Substance Class",
         "GInAS Tag",
+        "Relationships",
         "Code System",
         "ATC Level 1",
         "ATC Level 2",
         "ATC Level 3",
         "ATC Level 4",
+        "WHO-SDG Level 1",
+        "WHO-SDG Level 2",
+        "Application Status",
+        "Application Type",
         "DME Reactions",
         "Moiety Type",
         "Molecular Weight",
         "SubstanceStereochemistry",
-        "Relationships",
         "Record Level Access",
         "Display Name Level Access",
         "Definition Level Access",
         "Protein Type",
-        "Protein Subtype",
-        "modified"
+        "modified",
+        "Product Ingredient Type",
+        "Product Name Type",
+        "Product Dosage Form",
+        "Definition Level",
+        "Clinical Trial Count"
       ],
       "admin": [
         "Record Created By",
@@ -516,6 +546,84 @@
         "Family",
         "Parts"
       ]
+    },
+    "applications": {
+      "default": [
+        "Application Type",
+        "Center",
+        "Title",
+        "Has Indications",
+        "Has Ingredients",
+        "Has Products",
+        "Status Date Year",
+        "Submit Date",
+        "Submit Date Year",
+        "Application Number",
+        "Ingredient Name",
+        "Provenance (GSRS)",
+        "Public Domain",
+        "Product Name",
+        "Sponsor Name",
+        "Application Status",
+        "Ingredient Type",
+        "Bdnum",
+        "Application Sub Type",
+        "Indication",
+        "Dosage Form",
+        "Source",
+        "Product Name Deprecated"
+      ],  
+      "admin": [
+        "Record Created By",
+        "Record Last Edited By",
+        "Record Create Date",
+        "Record Last Edited",
+        "Ingredient Created By",
+        "Ingredient Last Edited By",
+        "Ingredient Create Date",
+        "Ingredient Last Edited"
+      ]
+    },
+    "products": {
+      "default": [
+        "Product Name",
+        "Nonproprietary Name",
+        "Product NDC",
+        "Dosage Form Name",
+        "Ingredient Name",
+        "Ingredient Type",
+        "Product Type",
+        "Product Code Type",
+        "Application Number",
+        "Status",
+        "Marketing Category Name",
+        "Route of Admin",
+        "Is Listed",
+        "Labeler Name",
+        "Labeler DUNS Number",
+        "Registrant Name",
+        "Registrant DUNS",
+        "City",
+        "State",
+        "Company Country",
+        "Country Code",
+        "Provenance"
+      ]
+    },
+    "ctclinicaltrial": {
+      "default": [
+        "Has Substances",
+        "CT Matching Complete",
+        "Last Updated Year",
+        "Primary Completion Year",
+        "First Posted Year",
+        "Study Types",
+        "Gender",
+        "Age Groups",
+        "Intervention Type",
+        "Study Results",
+        "Conditions"
+      ]
     }
   },
   "codeSystemOrder": [
@@ -525,9 +633,71 @@
     "EVMPD",
     "NCI"
   ],
+  "relationshipsVisualizationUri": "/ginas/app/beta/substanceRelationshipVisualizer/index.html?uuid=",
+  "navItems": [
+    {
+      "display": "Browse Applications",
+      "path": "browse-applications",
+      "order": 11
+    },
+    {
+      "display": "Browse Products",
+      "path": "browse-products",
+      "order": 12
+    },
+    {
+      "display": "Browse Clinical Trials",
+      "path": "browse-clinical-trials",
+      "order": 13
+    },
+    {
+      "display": "Register",
+      "children": [
+        {
+          "display": "Application",
+          "path": "application/register",
+          "order": 200
+        },
+        {
+          "display": "Product",
+          "path": "product/register",
+          "order": 210
+        },
+        {
+          "display": "Impurities",
+          "path": "impurities/register",
+          "order": 220
+        }
+      ]
+    },
+    {
+      "display": "Help",
+      "order": 60,
+      "children": [
+        {
+          "display": "User Manual",
+          "path": "user-manual",
+          "order": 10
+        },
+        {
+          "display": "Submit a Helpdesk Ticket (JIRA)",
+          "path": "jira-submit",
+          "order": 20
+        },
+        {
+          "display": "Email GSRS Support",
+          "path": "",
+          "order": 30
+        }
+      ]
+    }
+  ],
   "substanceSelectorProperties": [
     "root_names_name",
     "root_approvalID",
-    "root_codes_CAS"
-  ]
+    "root_codes_BDNUM",
+    "root_codes_CAS",
+    "root_codes_ECHA\\ \\(EC\\/EINECS\\)"
+  ],
+  "molecularWeightPropertyName" : "MOL_WEIGHT (calc)"
 }
