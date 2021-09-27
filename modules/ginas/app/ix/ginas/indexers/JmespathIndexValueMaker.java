@@ -41,12 +41,13 @@ public class JmespathIndexValueMaker implements IndexValueMaker<Substance> {
                     while (fields.hasNext()) {
                         Map.Entry<String, JsonNode> field = fields.next();
                         String key = field.getKey();
-                        if (key == null) {
+                        String value = field.getValue().asText(null);
+                        if (key == null || key.isEmpty() || value == null || value.isEmpty()) {
                             continue;
                         } else if (key.startsWith("root_")) {
-                            consumer.accept(IndexableValue.simpleStringValue(key, field.getValue().textValue()));
+                            consumer.accept(IndexableValue.simpleStringValue(key, value));
                         } else {
-                            consumer.accept(IndexableValue.simpleFacetStringValue(key, field.getValue().textValue()));
+                            consumer.accept(IndexableValue.simpleFacetStringValue(key, value));
                         }
                     }
                 }
