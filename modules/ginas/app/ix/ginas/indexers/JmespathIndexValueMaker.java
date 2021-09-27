@@ -3,6 +3,7 @@ package ix.ginas.indexers;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 
 import io.burt.jmespath.JmesPath;
 import io.burt.jmespath.Expression;
@@ -14,6 +15,7 @@ import ix.core.search.text.IndexableValue;
 import ix.ginas.models.v1.Substance;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -32,6 +34,7 @@ public class JmespathIndexValueMaker implements IndexValueMaker<Substance> {
         ObjectMapper mapper = new ObjectMapper();
         try {
             JsonNode tree = mapper.readTree(writer.writeValueAsString(substance));
+            updateReferences(tree);
             for (Expression<JsonNode> expression: expressions) {
                 for (JsonNode result: expression.search(tree)) {
                     Iterator<Map.Entry<String, JsonNode>> fields = result.fields();
@@ -61,6 +64,25 @@ public class JmespathIndexValueMaker implements IndexValueMaker<Substance> {
                     this.expressions.add((Expression<JsonNode>) jmespath.compile((String) expression));
                 } catch (Exception e) {
                     e.printStackTrace();
+                }
+            }
+        }
+    }
+
+    private void updateReferences(JsonNode tree) {
+        ArrayNode references = (ArrayNode)tree.at("/references");
+        Map<String, Integer> refMap = new HashMap<String, Integer>();
+        for (int i = 0; i < references.size(); i++) {
+            refMap.put(references.get(i).get("uuid").textValue(), i);
+        }
+        for (JsonNode refsNode: tree.findValues("references")) {
+            if (refsNode.isArray()) {
+                ArrayNode refs = (ArrayNode) refsNode;
+                for (int i = 0; i < refs.size(); i++) {
+                    JsonNode ref = refs.get(i);
+                    if (ref.isTextual()) {
+                        refs.set(i, references.get(refMap.get(ref.asText())));
+                    }
                 }
             }
         }
