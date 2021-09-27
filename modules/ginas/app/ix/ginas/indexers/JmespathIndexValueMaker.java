@@ -40,7 +40,14 @@ public class JmespathIndexValueMaker implements IndexValueMaker<Substance> {
                     Iterator<Map.Entry<String, JsonNode>> fields = result.fields();
                     while (fields.hasNext()) {
                         Map.Entry<String, JsonNode> field = fields.next();
-                        consumer.accept(IndexableValue.simpleFacetStringValue(field.getKey(), field.getValue().textValue()));
+                        String key = field.getKey();
+                        if (key == null) {
+                            continue;
+                        } else if (key.startsWith("root_")) {
+                            consumer.accept(IndexableValue.simpleStringValue(key, field.getValue().textValue()));
+                        } else {
+                            consumer.accept(IndexableValue.simpleFacetStringValue(key, field.getValue().textValue()));
+                        }
                     }
                 }
             }
