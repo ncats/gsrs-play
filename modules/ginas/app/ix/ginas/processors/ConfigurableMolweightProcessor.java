@@ -216,8 +216,9 @@ public class ConfigurableMolweightProcessor implements EntityProcessor<ChemicalS
                 mw.accumulate(atomicWeights.get(qa));
             }
             else {
-                Logger.debug("Using internal exact mass " + a.getExactMass() + " for atom " + a.getSymbol());
-                mw.accumulate(a.getExactMass());
+                Logger.debug("Using internal exact mass " + a.getExactMass() + " for atom " + a.getSymbol() + " calc "
+                        + getAtomicMass(a));
+                mw.accumulate(getAtomicMass(a));
             }
         });
         double mass = chem.getMass();
@@ -254,5 +255,11 @@ public class ConfigurableMolweightProcessor implements EntityProcessor<ChemicalS
         String formattedNumber = String.format(format, num);
         Logger.trace("formattedNumber: " + formattedNumber);
         return Double.parseDouble(formattedNumber);
+    }
+    
+    private double getAtomicMass(Atom a) {
+        Chemical chem = new Chemical();
+        chem.addAtom(a);
+        return chem.getMass();
     }
 }

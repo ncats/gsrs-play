@@ -1,0 +1,1 @@
+sbt.bat -Dconfig.file=modules/ginas/conf/ginas.conf -Dfile.encoding=UTF-8 ginas/run 
