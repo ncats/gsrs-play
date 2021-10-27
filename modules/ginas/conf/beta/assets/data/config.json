@@ -1,6 +1,16 @@
 {
   "version": "2.7.1 USP",
   "substanceDetailsCards": [
+        {
+      "card": "substance-dictionary",
+      "title": "dictionary",
+      "filters": [
+        {
+          "filterName": "exists",
+          "propertyToCheck": "names"
+        }
+      ]
+    },
     {
       "card": "substance-overview",
       "title": "overview"
@@ -488,6 +498,7 @@
         "Deprecated",
         "Record Status",
         "Substance Class",
+        "INN Stem",
         "GInAS Tag",
         "Code System",
         "ATC Level 1",

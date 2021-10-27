@@ -213,6 +213,7 @@ public class ConfigurableMolweightProcessor implements EntityProcessor<ChemicalS
             Logger.debug(String.format("atom; symbol: %s; mass number: %d", a.getSymbol(), a.getMassNumber()));
             QualifiedAtom qa = new QualifiedAtom(a.getSymbol(), a.getMassNumber());
             if (atomicWeights.containsKey(qa)) {
+				Logger.debug("from supplied atomic weights: " + atomicWeights.get(qa));
                 mw.accumulate(atomicWeights.get(qa));
             }
             else {
