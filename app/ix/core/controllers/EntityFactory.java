@@ -127,7 +127,7 @@ public class EntityFactory extends Controller {
             this.filter = filter;
         }
 
-        private static  Pattern CV_DOMAIN_ONLY_FILTER_PATTERN = Pattern.compile("^domain=\"[A-Za-z0-9_]*\"$");
+        private static  Pattern CV_DOMAIN_ONLY_FILTER_PATTERN = Pattern.compile("^domain=[\"'][A-Za-z0-9_]+[\"']$");
         // TP: 03/01/2016
         // TODO: have someone look into this
         public static String normalizeFilter(String f){
@@ -137,12 +137,13 @@ public class EntityFactory extends Controller {
             if(f ==null){
                 return null;
             }
-            Matcher m = CV_DOMAIN_ONLY_FILTER_PATTERN.matcher(f.trim());
+            String trimmed = f.trim();
+            Matcher m = CV_DOMAIN_ONLY_FILTER_PATTERN.matcher(trimmed);
             if(m.matches()){
-                return f;
+                return trimmed;
             }
             //throw exception?
-        	throw new RuntimeException("invalid filter parameter");
+        	throw new RuntimeException("invalid filter parameter "+ trimmed);
         }
         public <T> Query<T> applyToQuery(Query<T> q){
         	for (String path : this.expand) {

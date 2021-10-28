@@ -157,9 +157,38 @@ public class GinasFactory extends EntityFactory {
 		return getSequence(id, 0);
 	}
 
+	private static String cleanSequence(String input, int max){
+		StringBuilder builder = new StringBuilder(input.length());
+		char[] chars = input.toCharArray();
+		if(max ==0) {
+			for (int i = 0; i < chars.length; i++) {
+				char c = chars[i];
+				//A-Z a-z
+				if ((c >= 'A'  && c <='Z') || (c >= 'a' && c <= 'z')) {
+					builder.append(c);
+				}
+			}
+			return builder.toString();
+		}
+		//handle with max
+		int i = 0;
+		for (;(i < chars.length) && (builder.length()< max); i++) {
+			char c = chars[i];
+			//A-Z a-z
+			if ((c >= 'A'  && c <='Z') || (c >= 'a' && c <= 'z')) {
+				builder.append(c);
+			}
+		}
+		if(i< chars.length){
+			//we got our max already
+			builder.append("...");
+		}
+
+		return builder.toString();
+	}
 	public static String getSequence(String id, int max) {
 		if (id != null) {
-			String seq = null;
+			String seq;
 			try {
 				seq = PayloadFactory.getString(id);
 			} catch (IllegalArgumentException e) {
@@ -169,11 +198,9 @@ public class GinasFactory extends EntityFactory {
 				seq = EntityPersistAdapter.getSequenceIndexer().getSeq(id);
 			}
 			if (seq != null) {
-				seq = seq.replaceAll("[\n\t\\s]", "");
-				if (max > 0 && max + 3 < seq.length()) {
-					return seq.substring(0, max) + "...";
-				}
-				return seq;
+
+				return cleanSequence(seq, max);
+
 			}
 		}
 		return null;
