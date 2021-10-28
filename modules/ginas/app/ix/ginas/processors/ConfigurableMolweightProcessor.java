@@ -85,8 +85,8 @@ public class ConfigurableMolweightProcessor implements EntityProcessor<ChemicalS
         this.oldPropertyName = oldPropertyName;
     }
 
-    private void initAtomicWeights(String filePath) {
-        Logger.debug("starting in initAtomicWeights. ");
+	private void initAtomicWeights(String filePath) {
+        Logger.debug("starting in initAtomicWeights. path: " + filePath);
         atomicWeights = new HashMap<>();
         String commentIntro = "#";
         try {
@@ -113,6 +113,8 @@ public class ConfigurableMolweightProcessor implements EntityProcessor<ChemicalS
                         }
                         Logger.debug("massIndication: " + massIndication);
                         QualifiedAtom qa = new QualifiedAtom(symbol, massIndication);
+                        Logger.trace(String.format("adding atomic weight for symbol %s, massIndication: %d, value: %s",
+                                symbol, massIndication, parsedWt.get().toString()));
                         atomicWeights.put(qa, parsedWt.get());
                     }
                     else {
