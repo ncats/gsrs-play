@@ -175,7 +175,9 @@ public class GinasFactory extends EntityFactory {
 		for (;(i < chars.length) && (builder.length()< max); i++) {
 			char c = chars[i];
 			//A-Z a-z
-			if ((c >= 'A'  && c <='Z') || (c >= 'a' && c <= 'z')) {
+			if ((c >= 'A'  && c <='Z') || (c >= 'a' && c <= 'z')
+					//support for fasta
+					|| '>' == c || Character.isWhitespace(c)) {
 				builder.append(c);
 			}
 		}
