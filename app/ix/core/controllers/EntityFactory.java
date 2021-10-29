@@ -127,18 +127,18 @@ public class EntityFactory extends Controller {
             this.filter = filter;
         }
 
-        private static  Pattern CV_DOMAIN_ONLY_FILTER_PATTERN = Pattern.compile("^domain=[\"'][A-Za-z0-9_]+[\"']$");
+        private static  Pattern FILTER_PATTERN = Pattern.compile("^[A-Za-z0-9_\\.\\ ]+=[\"'][A-Za-z0-9_\\.\\ ]+[\"']$");
         // TP: 03/01/2016
         // TODO: have someone look into this
         public static String normalizeFilter(String f){
             //katzelda Oct 27 2021
-            //possible SQL injection this is only used by the classic UI for filtering CV domains
+            //possible SQL injection this is only used by the classic UI for filtering CV
             //so let's make sure that only those kinds of queries are whitelisted.
             if(f ==null){
                 return null;
             }
             String trimmed = f.trim();
-            Matcher m = CV_DOMAIN_ONLY_FILTER_PATTERN.matcher(trimmed);
+            Matcher m = FILTER_PATTERN.matcher(trimmed);
             if(m.matches()){
                 return trimmed;
             }
