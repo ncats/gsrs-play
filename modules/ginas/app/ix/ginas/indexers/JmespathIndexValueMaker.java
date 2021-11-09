@@ -38,7 +38,6 @@ public class JmespathIndexValueMaker implements IndexValueMaker<Substance> {
             for (Expression<JsonNode> expression: expressions) {
                 JsonNode results = expression.search(tree);
                 if (!results.isArray()) {
-                    ObjectMapper mapper = new ObjectMapper();
                     results = mapper.createArrayNode().add(results);
                 }
                 for (JsonNode result: results) {
