@@ -91,8 +91,10 @@ public class ConfigurableMolweightProcessor implements EntityProcessor<ChemicalS
         String commentIntro = "#";
         try {
             List<String> lines = Files.readAllLines(Paths.get(filePath));
+			Logger.debug("total lines " + lines.size());
             for (int lineNum = 1; lineNum < lines.size(); lineNum++) {
                 String line = lines.get(lineNum);
+				Logger.debug("line: " + line);
                 if (line.trim().isEmpty() || line.trim().startsWith(commentIntro)) {
                     Logger.debug(String.format("line %d is blank", lineNum));
                     continue;
@@ -101,8 +103,10 @@ public class ConfigurableMolweightProcessor implements EntityProcessor<ChemicalS
                 //Logger.debug("lineParts len: " + lineParts.length);
                 String symbol = lineParts[1];
                 String rawAw = lineParts[3];
+				Logger.debug("symbol: " + symbol + "; rawAw: " + rawAw);
                 if (!rawAw.isEmpty()) {
                     Optional<Double> parsedWt = safelyParseDouble(rawAw);
+					Logger.debug("parsedWt.isPresent(): " + parsedWt.isPresent());
                     if (parsedWt.isPresent()) {
                         int massIndication = 0;
                         if (lineParts.length >= 5 && !lineParts[4].isEmpty()) {
