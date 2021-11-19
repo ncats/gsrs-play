@@ -187,7 +187,7 @@ public class BuildInfo {
       libraryDependencies ++= commonDependencies,
       libraryDependencies += "org.webjars" % "angularjs" % "1.5.7",
       libraryDependencies += "org.webjars" % "angular-ui-bootstrap" % "1.3.3",
-      libraryDependencies +=  "org.webjars.npm" % "dojo" % "1.16.1",
+      libraryDependencies += "org.webjars.npm" % "dojo" % "1.16.1",
       libraryDependencies += "org.webjars" % "momentjs" % "2.11.0",
       libraryDependencies += "org.webjars.bower" % "later" % "1.2.0",
       libraryDependencies += "org.webjars.bower" % "prettycron" % "0.10.0",
