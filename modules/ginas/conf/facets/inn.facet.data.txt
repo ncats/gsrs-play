@@ -1,0 +1,11 @@
+Stem	Definition 
+.*abine	arabinofuranosyl derivatives; nucleosides antiviral or antineoplastic agents (see -arabine and -citabine)
+.*ac	anti-inflammatory agents
+.*acetam	amide type nootrope agents (see -racetam)
+.*actide	synthetic polypeptide with a corticotropin-like action
+.*adol.*	analgesics
+.*adom	analgesics
+.*afenone	antiarrhythmics
+.*afil	inhibitors of phosphodiesterase PDE5 with vasodilator action
+.*aj.*	antiarrhythmics
+.*al	aldehydes

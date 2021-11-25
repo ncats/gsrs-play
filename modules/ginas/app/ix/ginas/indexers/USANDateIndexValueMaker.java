@@ -12,9 +12,10 @@ public class USANDateIndexValueMaker implements IndexValueMaker<Substance> {
 
     @Override
     public void createIndexableValues(Substance substance, Consumer<IndexableValue> consumer) {
-
+        play.Logger.trace("starting USANDateIndexValueMaker.createIndexableValues");
         substance.references.forEach(r -> {
             if (r.citation!= null && r.docType.equals(DOCUMENT_TYPE)) {
+                play.Logger.trace("found a value");
                 consumer.accept(IndexableValue
                         .simpleFacetStringValue(FACET_NAME, r.citation));
             }

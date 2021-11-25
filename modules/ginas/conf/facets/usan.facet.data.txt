@@ -1,0 +1,13 @@
+Stem	Definition
+.*abine	(see -arabine, -citabine)
+.*ac	anti-inflammatory agents (acetic acid derivatives)
+.*zolac	anti-inflammatory;  pyrazole acetic acid derivatives
+.*acetam	(see -racetam)
+.*actant	pulmonary surfactants
+.*actide	(see -tide)
+.*adenant	adensosine receptor antagonists
+.*adol.*	analgesics (mixed opiate receptor agonists/antagonists)
+.*adox	antibacterials (quinoline dioxide derivatives)
+.*afenone	antiarrhythmics (propafenone derivatives)
+.*afil	phosphodiesterase type 5 inhibitors (PDE5) inhibitors
+.*denafil	(PDE5) inhibitors containing a sulfonamide moiety

@@ -499,6 +499,7 @@
         "Record Status",
         "Substance Class",
         "INN Stem",
+		"USAN Stem",
 		"USAN DATE",
         "GInAS Tag",
         "Code System",
