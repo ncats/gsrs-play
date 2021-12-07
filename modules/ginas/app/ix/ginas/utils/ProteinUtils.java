@@ -172,8 +172,12 @@ public class ProteinUtils {
 
 	public static double getSubunitWeight(Subunit sub, Set<String> unknownRes){
 		//start with extra water for end groups
-		if(unknownRes==null)unknownRes=new LinkedHashSet<String>();
-		if(sub.sequence==null || sub.sequence.length()==0)return 0.0;
+        if (unknownRes == null) {
+            unknownRes = new LinkedHashSet<String>();
+        }
+        if (sub.sequence == null || sub.sequence.length() == 0) {
+            return 0.0;
+        }
 		double total=18.015;
 		for(char c: sub.sequence.toCharArray()){
 			double w=getSingleAAWeight(c+"");

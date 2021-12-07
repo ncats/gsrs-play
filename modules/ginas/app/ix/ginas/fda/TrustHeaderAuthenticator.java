@@ -10,6 +10,10 @@ import play.Logger;
 import play.Play;
 import play.mvc.Http;
 
+import java.util.Enumeration;
+import java.util.Map;
+import java.lang.reflect.*;
+
 /**
  * Created by katzelda on 5/4/16.
  */
@@ -67,6 +71,21 @@ public class TrustHeaderAuthenticator implements Authenticator {
 	
 	
 	private UserInfo getUserInfoFromHeaders(Http.Request r){
+		System.out.println("in TrustHeaderAuthenticator.getUserInfoFromHeaders");
+		try {
+			Class thisClass = Http.Request.class;
+			Method[] methods = thisClass.getDeclaredMethods();
+
+			for (int i = 0; i < methods.length; i++) {
+				System.out.println(methods[i].toString());
+			}
+		} catch (Throwable e) {
+			System.err.println(e);
+		}
+/*		Map<String, String> headers = r.getHeaders().asMap();
+		for(String key : headers.keySet()) {
+			System.out.println("header key: " + key + "; value: " + headers.get(key));
+		}*/
 		String username = r.getHeader(usernameheader.get());
 		String useremail = r.getHeader(useremailheader.get());
 		return new UserInfo(username, useremail);
