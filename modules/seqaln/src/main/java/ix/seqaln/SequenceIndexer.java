@@ -83,7 +83,7 @@ public class SequenceIndexer {
      * A slightly slimmed down form of CachedSupplier,
      * only repeated here because the seqaln module 
      * can't see the Util class.
-     * 
+     *
      * @author peryeata
      *
      * @param <T> The type to be supplied
@@ -174,7 +174,7 @@ public class SequenceIndexer {
 
     public static class SEG implements Comparable<SEG>, Serializable {
         /**
-         * 
+         *
          */
         private static final long serialVersionUID = 1L;
         private int qi, qj;
@@ -252,7 +252,7 @@ public class SequenceIndexer {
     public static class Alignment implements Comparable<Alignment>, Serializable {
 
         /**
-         * 
+         *
          */
         private static final long serialVersionUID = 1L;
 
@@ -274,16 +274,16 @@ public class SequenceIndexer {
         BitSet bst;
 
         Alignment (SEG segment,
-                String query, 
-                String target,
-                String alignment, 
-                int score, 
-                double iden, 
-                double global,
-                double sub,
-                BitSet qsites,
-                BitSet tsites
-                ) {
+                   String query,
+                   String target,
+                   String alignment,
+                   int score,
+                   double iden,
+                   double global,
+                   double sub,
+                   BitSet qsites,
+                   BitSet tsites
+        ) {
             this.segment = segment;
             this.query = query;
             this.target = target;
@@ -338,7 +338,7 @@ public class SequenceIndexer {
 
     public static class Result implements Serializable{
         /**
-         * 
+         *
          */
         private static final long serialVersionUID = 1L;
         public final CharSequence query;
@@ -361,9 +361,9 @@ public class SequenceIndexer {
         }
 
         public Result setScore(double score, CutoffType cot){
-        	this.score=score;
-        	this.scoreType=cot;
-        	return this;
+            this.score=score;
+            this.scoreType=cot;
+            return this;
         }
 
         @Override
@@ -400,7 +400,7 @@ public class SequenceIndexer {
                 ex.printStackTrace();
                 next = POISON_RESULT; // terminate
             }
-        }           
+        }
 
         public boolean hasMoreElements () {
             return next != POISON_RESULT;
@@ -437,11 +437,11 @@ public class SequenceIndexer {
 
     private File baseDir;
     private Directory indexDir;
-    private Directory kmerDir;    
+    private Directory kmerDir;
     private IndexWriter indexWriter;
-    private IndexWriter kmerWriter;    
+    private IndexWriter kmerWriter;
     private DirectoryReader _kmerReader;
-    private DirectoryReader _indexReader;    
+    private DirectoryReader _indexReader;
     private Analyzer indexAnalyzer;
 
     private ExecutorService threadPool;
@@ -479,7 +479,7 @@ public class SequenceIndexer {
     }
 
     public SequenceIndexer (File dir, boolean readOnly,
-            ExecutorService threadPool) throws IOException {
+                            ExecutorService threadPool) throws IOException {
 
         if (!readOnly) {
             dir.mkdirs();
@@ -499,7 +499,7 @@ public class SequenceIndexer {
         indexDir = new NIOFSDirectory(index, NoLockFactory.getNoLockFactory());
         kmerDir = new NIOFSDirectory (kmer, NoLockFactory.getNoLockFactory());
         if (!readOnly) {
-            indexWriter = new IndexWriter (indexDir, new IndexWriterConfig 
+            indexWriter = new IndexWriter (indexDir, new IndexWriterConfig
                     (LUCENE_VERSION, indexAnalyzer));
             kmerWriter = new IndexWriter
                     (kmerDir, new IndexWriterConfig
@@ -532,7 +532,7 @@ public class SequenceIndexer {
         Map<String, Analyzer> fields = new HashMap<String, Analyzer>();
         fields.put(FIELD_ID, new KeywordAnalyzer ());
         fields.put(FIELD_KMER, new KeywordAnalyzer ());
-        return  new PerFieldAnalyzerWrapper 
+        return  new PerFieldAnalyzerWrapper
                 (new StandardAnalyzer (LUCENE_VERSION), fields);
     }
 
@@ -591,41 +591,41 @@ public class SequenceIndexer {
 
 
     public static class KmerFingerprintWrapper{
-    	public String id;
-    	public int length;
+        public String id;
+        public int length;
 
-    	public Map<Integer, Kmers.HoloFingerprint> kmap = new HashMap<>();
+        public Map<Integer, Kmers.HoloFingerprint> kmap = new HashMap<>();
 
 
-    	public static KmerFingerprintWrapper of(String id, Kmers.HoloFingerprint fp, int length){
-    		KmerFingerprintWrapper k= new KmerFingerprintWrapper();
-    		k.id=id;
-    		k.length=length;
-    		return k;
-    	}
-    	public static KmerFingerprintWrapper of(String id, int length){
-    		KmerFingerprintWrapper k= new KmerFingerprintWrapper();
-    		k.id=id;
-    		k.length=length;
-    		return k;
-    	}
+        public static KmerFingerprintWrapper of(String id, Kmers.HoloFingerprint fp, int length){
+            KmerFingerprintWrapper k= new KmerFingerprintWrapper();
+            k.id=id;
+            k.length=length;
+            return k;
+        }
+        public static KmerFingerprintWrapper of(String id, int length){
+            KmerFingerprintWrapper k= new KmerFingerprintWrapper();
+            k.id=id;
+            k.length=length;
+            return k;
+        }
 
-    	public KmerFingerprintWrapper addHolo(int k, Kmers.HoloFingerprint hfp){
-    		this.kmap.put(k, hfp);
-    		return this;
-    	}
-    	public static KmerFingerprintWrapper create(String id,String seq, int upTo){
-    		KmerFingerprintWrapper kwrap = new KmerFingerprintWrapper();
+        public KmerFingerprintWrapper addHolo(int k, Kmers.HoloFingerprint hfp){
+            this.kmap.put(k, hfp);
+            return this;
+        }
+        public static KmerFingerprintWrapper create(String id,String seq, int upTo){
+            KmerFingerprintWrapper kwrap = new KmerFingerprintWrapper();
 
-    		for(int i=1;i<=upTo;i++){
-    			final int K = i;
-       		 	Kmers kmers = Kmers.create(seq, i);
-       		 	kwrap.kmap.put(i,kmers.holoFingerPrint());
-    	}
-    		kwrap.length=seq.length();
-    		kwrap.id=id;
-    		return kwrap;
-    	}
+            for(int i=1;i<=upTo;i++){
+                final int K = i;
+                Kmers kmers = Kmers.create(seq, i);
+                kwrap.kmap.put(i,kmers.holoFingerPrint());
+            }
+            kwrap.length=seq.length();
+            kwrap.id=id;
+            return kwrap;
+        }
     }
 
 
@@ -672,9 +672,9 @@ public class SequenceIndexer {
             StringBuilder ks = new StringBuilder();
 
             for(int i=1;i<=myKmerSize;i++){
-            	if(i>1)ks.append(",");
-            	ks.append(i);
-            	doc.add(new StringField (FIELD_FP +"_" + i, kwrap.kmap.get(i).encode(),YES));
+                if(i>1)ks.append(",");
+                ks.append(i);
+                doc.add(new StringField (FIELD_FP +"_" + i, kwrap.kmap.get(i).encode(),YES));
             }
             doc.add(new StringField (FIELD_FP_K, ks.toString(),YES));
 
@@ -688,7 +688,7 @@ public class SequenceIndexer {
 
 
 
-           // doc.add(new StringField (FIELD_FP_1MER, onemers.holoFingerPrint().encode(),YES));
+            // doc.add(new StringField (FIELD_FP_1MER, onemers.holoFingerPrint().encode(),YES));
 
 
 
@@ -709,13 +709,13 @@ public class SequenceIndexer {
                     doc2.add(new StringField (FIELD_TAGS,tag,NO));
                 }
                 for (int i = positions.nextSetBit(0);
-                        i>=0; i = positions.nextSetBit(i+1)) {
+                     i>=0; i = positions.nextSetBit(i+1)) {
                     doc2.add(new IntField (FIELD_POSITION, i, YES));
 
                 }
                 kmerWriter.addDocument(doc2);
             }
-           // allKmers.add(KmerTest.of(id,kmers));
+            // allKmers.add(KmerTest.of(id,kmers));
             indexWriter.commit();
             kmerWriter.commit();
         }
@@ -733,12 +733,13 @@ public class SequenceIndexer {
     }
 
     public ResultEnumeration search (final String query,
-            final double identity, final int gap,CutoffType rt, String seqType) {
+                                     final double identity, final int gap,CutoffType rt, String seqType) {
         if (getSize()<=0 || query == null || query.length() == 0) {
             return new ResultEnumeration(null);
         }
         final BlockingQueue<Result> out = new LinkedBlockingQueue<Result>();
-        threadPool.submit(()->{
+
+        (new Thread(()->{
             ix.core.util.StopWatch.timeElapsed(()->{
                 try {
                     search (out, query, identity, gap, rt, seqType);
@@ -749,17 +750,17 @@ public class SequenceIndexer {
                         out.put(POISON_RESULT);// finish
                     }catch (InterruptedException e) {
                         Logger.error(e.getMessage(), e);
-                    } 
+                    }
                 }
             });
-        });
+        })).run();
 
         return new ResultEnumeration (out);
     }
 
     protected void search (BlockingQueue<Result> results,
-            String query, double identity, int gap,CutoffType rt, String seqType)
-                    throws Exception {
+                           String query, double identity, int gap,CutoffType rt, String seqType)
+            throws Exception {
 
         /*
          * this can be expensive if we call search often. having a daemon
@@ -777,11 +778,11 @@ public class SequenceIndexer {
     }
 
     public boolean getUseFingerprint(){
-    	return this.useFingerprints;
+        return this.useFingerprints;
     }
 
     public void  setUseFingerprint(boolean fpuse){
-    	this.useFingerprints=fpuse;
+        this.useFingerprints=fpuse;
     }
 
     private int getKmerSizeForType(String seqType){
@@ -794,43 +795,43 @@ public class SequenceIndexer {
     }
 
     public static class StringAndDouble implements Comparable<StringAndDouble>{
-    	public String s;
-    	public double d;
-    	public static StringAndDouble from(String s, double d){
-    		StringAndDouble sd= new StringAndDouble();
-    		sd.s=s;
-    		sd.d=d;
-    		return sd;
-    	}
+        public String s;
+        public double d;
+        public static StringAndDouble from(String s, double d){
+            StringAndDouble sd= new StringAndDouble();
+            sd.s=s;
+            sd.d=d;
+            return sd;
+        }
 
-		@Override
-		public int compareTo(StringAndDouble arg0) {
-			int c= Double.compare(this.d, arg0.d);
-			if(c==0){
-				return this.s.compareTo(arg0.s);
-			}
-			return c;
-		}
+        @Override
+        public int compareTo(StringAndDouble arg0) {
+            int c= Double.compare(this.d, arg0.d);
+            if(c==0){
+                return this.s.compareTo(arg0.s);
+            }
+            return c;
+        }
 
-		public boolean equals(Object o){
-			if(o == null)return false;
-			if(!(o instanceof StringAndDouble))return false;
-			StringAndDouble other = (StringAndDouble)o;
-			return other.s.equals(this.s) && other.d==this.d;
+        public boolean equals(Object o){
+            if(o == null)return false;
+            if(!(o instanceof StringAndDouble))return false;
+            StringAndDouble other = (StringAndDouble)o;
+            return other.s.equals(this.s) && other.d==this.d;
 
-		}
-		public int hashCode(){
-			return s.hashCode() ^ Double.hashCode(d);
-		}
+        }
+        public int hashCode(){
+            return s.hashCode() ^ Double.hashCode(d);
+        }
 
 
     }
 
 
     protected void search (IndexSearcher kmerSearcher,
-            BlockingQueue<Result> results,
-            String query, double identityStart, int gap, CutoffType rt, String seqType)
-                    throws Exception {
+                           BlockingQueue<Result> results,
+                           String query, double identityStart, int gap, CutoffType rt, String seqType)
+            throws Exception {
 
 
         final int K = getKmerSizeForType(seqType);
@@ -840,7 +841,7 @@ public class SequenceIndexer {
 
 
         if(rt==CutoffType.SUB){
-        	identityStart=Math.max(identityStart, 0.9); //only consider cases where the cutoff is 0.9 or above
+            identityStart=Math.max(identityStart, 0.9); //only consider cases where the cutoff is 0.9 or above
         }
         double identity=identityStart;
 
@@ -850,91 +851,91 @@ public class SequenceIndexer {
 
 
         List<String> tags= new ArrayList<>();
-		if(seqType!=null){
-			//This isn't good, but we're doing this weird right now
-			//and the seqType that gets in from the application isn't always what's expected
-			//TODO: change to using an enum rather than a string
-			if(seqType.toLowerCase().contains("nucleicacid")){
-				tags.addAll(DNA_TAGS);
-				tags.addAll(RNA_TAGS);
-			}else{
-				tags.addAll(PROTEIN_TAGS);
-			}
-		}
+        if(seqType!=null){
+            //This isn't good, but we're doing this weird right now
+            //and the seqType that gets in from the application isn't always what's expected
+            //TODO: change to using an enum rather than a string
+            if(seqType.toLowerCase().contains("nucleicacid")){
+                tags.addAll(DNA_TAGS);
+                tags.addAll(RNA_TAGS);
+            }else{
+                tags.addAll(PROTEIN_TAGS);
+            }
+        }
 
 
         if(useFingerprints && (rt==CutoffType.GLOBAL || rt==CutoffType.SUB)){
-        		int maxDistance = (int)Math.ceil(query.length()*(1-identity));
+            int maxDistance = (int)Math.ceil(query.length()*(1-identity));
 
 
-        		int lowerBoundLength = (int)Math.floor(query.length()*identity);
-        		int upperBoundLength = (int)Math.ceil(query.length()/identity);
-        		if(rt==CutoffType.SUB){
-        			upperBoundLength=Integer.MAX_VALUE;
-        		}
+            int lowerBoundLength = (int)Math.floor(query.length()*identity);
+            int upperBoundLength = (int)Math.ceil(query.length()/identity);
+            if(rt==CutoffType.SUB){
+                upperBoundLength=Integer.MAX_VALUE;
+            }
 
 
-        		List<KmerFingerprintWrapper> res = getFPSequencesWithBounds(lowerBoundLength,upperBoundLength,tags);
-        		for(KmerFingerprintWrapper tup: res){
-        			StringAndDouble score = null;
-        			int d=tup.length-query.length();
-        			int fudge=0;
-        			if(d>=0 && rt==CutoffType.SUB){
-        				fudge=d;
-        			}
-        			for(int i=1;i<=K;i++){
-        				Kmers.HoloFingerprint kqi=qwrap.kmap.get(i);
-                		int maxKmerDistance = maxDistance*(i);
+            List<KmerFingerprintWrapper> res = getFPSequencesWithBounds(lowerBoundLength,upperBoundLength,tags);
+            for(KmerFingerprintWrapper tup: res){
+                StringAndDouble score = null;
+                int d=tup.length-query.length();
+                int fudge=0;
+                if(d>=0 && rt==CutoffType.SUB){
+                    fudge=d;
+                }
+                for(int i=1;i<=K;i++){
+                    Kmers.HoloFingerprint kqi=qwrap.kmap.get(i);
+                    int maxKmerDistance = maxDistance*(i);
 
-            			int[] hammingKd=tup.kmap.get(i).hammingMoreAndLessDistanceTo(kqi);
-        			if((hammingKd[0] <= maxKmerDistance + fudge &&
-        			    hammingKd[1] <= maxKmerDistance  )){
-            				//must have at least one kmer in agreement
-            				if(tup.kmap.get(i).sharedCount(kqi)>0){
-            					score = StringAndDouble.from(tup.id,hammingKd[0]+hammingKd[1]);
-            				}
-            			}else{
-            				score=null;
-            				break;
-            			}
-        			}
-        			if(score!=null){
-        				seqMap.computeIfAbsent(score, k->getSeq(k.s));
-        			}
-        		}
+                    int[] hammingKd=tup.kmap.get(i).hammingMoreAndLessDistanceTo(kqi);
+                    if((hammingKd[0] <= maxKmerDistance + fudge &&
+                            hammingKd[1] <= maxKmerDistance  )){
+                        //must have at least one kmer in agreement
+                        if(tup.kmap.get(i).sharedCount(kqi)>0){
+                            score = StringAndDouble.from(tup.id,hammingKd[0]+hammingKd[1]);
+                        }
+                    }else{
+                        score=null;
+                        break;
+                    }
+                }
+                if(score!=null){
+                    seqMap.computeIfAbsent(score, k->getSeq(k.s));
+                }
+            }
         }else{
 
-        int ndocs = Math.max(1, kmerSearcher.getIndexReader().numDocs());
-        	//Use only for local alignment
-        for (Map.Entry<String, BitSet> entry : kmers.positionEntrySet()) {
-            if(Thread.currentThread().isInterrupted()){
-                return;
-            }
-            String kmer = entry.getKey();
-            TermQuery tq = new TermQuery (new Term (FIELD_KMER, kmer));
-	            Query fullQ=tq;
+            int ndocs = Math.max(1, kmerSearcher.getIndexReader().numDocs());
+            //Use only for local alignment
+            for (Map.Entry<String, BitSet> entry : kmers.positionEntrySet()) {
+                if(Thread.currentThread().isInterrupted()){
+                    return;
+                }
+                String kmer = entry.getKey();
+                TermQuery tq = new TermQuery (new Term (FIELD_KMER, kmer));
+                Query fullQ=tq;
 
-            	if(!tags.isEmpty()){
-            		BooleanQuery bq=new BooleanQuery();
-            		bq.setMinimumNumberShouldMatch(1);
-            		for(String tag: tags){
-                		bq.add(new TermQuery (new Term (FIELD_TAGS, tag)),Occur.SHOULD);
-                	}
-            		BooleanQuery fq=new BooleanQuery();
-            		fq.add(fullQ,Occur.MUST);
-            		fq.add(bq,Occur.MUST);
-            		fullQ=fq;
-            	}
+                if(!tags.isEmpty()){
+                    BooleanQuery bq=new BooleanQuery();
+                    bq.setMinimumNumberShouldMatch(1);
+                    for(String tag: tags){
+                        bq.add(new TermQuery (new Term (FIELD_TAGS, tag)),Occur.SHOULD);
+                    }
+                    BooleanQuery fq=new BooleanQuery();
+                    fq.add(fullQ,Occur.MUST);
+                    fq.add(bq,Occur.MUST);
+                    fullQ=fq;
+                }
 
-	            TopDocs docs = kmerSearcher.search(fullQ, ndocs);
-		            //BitSet positions = entry.getValue();
+                TopDocs docs = kmerSearcher.search(fullQ, ndocs);
+                //BitSet positions = entry.getValue();
 
-            for (int i = 0; i < docs.totalHits; ++i) {
-                Document doc = kmerSearcher.doc(docs.scoreDocs[i].doc);
-                final String id = doc.get(FIELD_ID);
-	                StringAndDouble sd = StringAndDouble.from(id, 0);
-		                seqMap.computeIfAbsent(sd, k->getSeq(k.s));
-		            }
+                for (int i = 0; i < docs.totalHits; ++i) {
+                    Document doc = kmerSearcher.doc(docs.scoreDocs[i].doc);
+                    final String id = doc.get(FIELD_ID);
+                    StringAndDouble sd = StringAndDouble.from(id, 0);
+                    seqMap.computeIfAbsent(sd, k->getSeq(k.s));
+                }
             }
         }
 
@@ -945,187 +946,187 @@ public class SequenceIndexer {
         Map<String,Result> _cachedResults = new ConcurrentHashMap<>();
         int qlength=query.length();
 
-        List<Result> alignedResults = seqMap.entrySet().parallelStream()
+        List<Result> alignedResults = seqMap.entrySet().stream()
                 .filter(e->{
-                            if(rt!=CutoffType.GLOBAL){
-                                return true;
-                            }
+                    if(rt!=CutoffType.GLOBAL){
+                        return true;
+                    }
                     //Don't bother doing the alignment if it's a global cutoff and the lengths
                     //of the strings would make it impossible for there to be overlap
                     int tlength= e.getValue().length();
                     return Math.min(qlength, tlength) >= Math.max(qlength, tlength)*identity;
                 } )
-              .map(entry-> {
+                .map(entry-> {
 
-	              	String tseq = entry.getValue();
-                      //this is a computationally intensive operation
-                      //and concurrentHashMap will block
+                            String tseq = entry.getValue();
+                            //this is a computationally intensive operation
+                            //and concurrentHashMap will block
 
-                      Result cachedResult= _cachedResults.computeIfAbsent(tseq, k -> {
-	              		Result r= new Result(entry.getKey().s,querySeq.toString(), tseq);
-	              		r.setScore(-1, rt);
-                                  try {
+                            Result cachedResult= _cachedResults.computeIfAbsent(tseq, k -> {
+                                Result r= new Result(entry.getKey().s,querySeq.toString(), tseq);
+                                r.setScore(-1, rt);
+                                try {
 
-	                  ResidueSequence targetSeq;
-	                  try {
-	                      targetSeq = alignmentHelper.toSequence(entry.getValue());
-	                  }catch(Exception e){
-	                      //prob a bad seq
-	                      e.printStackTrace();
-                                          return r;
-	                  }
-                                      long start=System.nanoTime();
-	                  PairwiseSequenceAlignment alignment = alignmentHelper.align(querySeq, targetSeq, gap, rt);
-                                      long end=System.nanoTime();
+                                    ResidueSequence targetSeq;
+                                    try {
+                                        targetSeq = alignmentHelper.toSequence(entry.getValue());
+                                    }catch(Exception e){
+                                        //prob a bad seq
+                                        e.printStackTrace();
+                                        return r;
+                                    }
+                                    long start=System.nanoTime();
+                                    PairwiseSequenceAlignment alignment = alignmentHelper.align(querySeq, targetSeq, gap, rt);
+                                    long end=System.nanoTime();
 
-                                      r.setScore(alignment.getPercentIdentity(), rt);
+                                    r.setScore(alignment.getPercentIdentity(), rt);
 
-                                      if (r.score >= identity) {
+                                    if (r.score >= identity) {
 
-	                      ResidueSequence gappedQuery = alignment.getGappedQueryAlignment();
-	                      ResidueSequence gappedSubject = alignment.getGappedSubjectAlignment();
-	                      BitSet qbits = new BitSet((int) querySeq.getLength());
-	                      BitSet tbits = new BitSet((int) targetSeq.getLength());
+                                        ResidueSequence gappedQuery = alignment.getGappedQueryAlignment();
+                                        ResidueSequence gappedSubject = alignment.getGappedSubjectAlignment();
+                                        BitSet qbits = new BitSet((int) querySeq.getLength());
+                                        BitSet tbits = new BitSet((int) targetSeq.getLength());
 
-	                      int qOffset = (int) alignment.getQueryRange().getBegin();
-	                      int tOffset = (int) alignment.getSubjectRange().getBegin();
-	                      Iterator<Residue> qIter = gappedQuery.iterator();
-	                      Iterator<Residue> sIter = gappedSubject.iterator();
-	                      int qGaps=0, sGaps=0;
-	                      int currentOffset=0;
-                                          StringBuilder fullBuilder = new StringBuilder(4 * alignment.getAlignmentLength());
+                                        int qOffset = (int) alignment.getQueryRange().getBegin();
+                                        int tOffset = (int) alignment.getSubjectRange().getBegin();
+                                        Iterator<Residue> qIter = gappedQuery.iterator();
+                                        Iterator<Residue> sIter = gappedSubject.iterator();
+                                        int qGaps=0, sGaps=0;
+                                        int currentOffset=0;
+                                        StringBuilder fullBuilder = new StringBuilder(4 * alignment.getAlignmentLength());
 
-                                          StringBuilder topBuilder = new StringBuilder(100);
-                                          StringBuilder middleBuilder = new StringBuilder(100);
-                                          StringBuilder bottomBuilder = new StringBuilder(100);
+                                        StringBuilder topBuilder = new StringBuilder(100);
+                                        StringBuilder middleBuilder = new StringBuilder(100);
+                                        StringBuilder bottomBuilder = new StringBuilder(100);
 
-                                          int len =query.length();
-	                      int matched=0;
+                                        int len =query.length();
+                                        int matched=0;
 
-                                          int count=0;
-                                          boolean hasDataOnCurrentLine=false;
-                                          if(qIter.hasNext()){
-                                              topBuilder.append(   String.format("Query  %5d  ",qOffset + currentOffset +1));
-                                              middleBuilder.append("              ");
-                                              bottomBuilder.append(String.format("Sbjct  %5d  ",tOffset + currentOffset +1));
+                                        int count=0;
+                                        boolean hasDataOnCurrentLine=false;
+                                        if(qIter.hasNext()){
+                                            topBuilder.append(   String.format("Query  %5d  ",qOffset + currentOffset +1));
+                                            middleBuilder.append("              ");
+                                            bottomBuilder.append(String.format("Sbjct  %5d  ",tOffset + currentOffset +1));
 
-                                          }
-	                      while(qIter.hasNext()){
-                                              hasDataOnCurrentLine = true;
-	                          Residue q = qIter.next();
-	                          Residue s = sIter.next();
-	                          if(q.isGap()){
-	                              qGaps++;
-                                                  if(matched>0){
-                                                	  len++;
-                                                  }
-	                              middleBuilder.append(' ');
-	                          }else if(s.isGap()){
-	                              sGaps++;
-	                              middleBuilder.append(' ');
-	                          }else if(q.equals(s)){
-	                              qbits.set(qOffset+currentOffset - qGaps);
-	                              tbits.set(tOffset+currentOffset - sGaps);
+                                        }
+                                        while(qIter.hasNext()){
+                                            hasDataOnCurrentLine = true;
+                                            Residue q = qIter.next();
+                                            Residue s = sIter.next();
+                                            if(q.isGap()){
+                                                qGaps++;
+                                                if(matched>0){
+                                                    len++;
+                                                }
+                                                middleBuilder.append(' ');
+                                            }else if(s.isGap()){
+                                                sGaps++;
+                                                middleBuilder.append(' ');
+                                            }else if(q.equals(s)){
+                                                qbits.set(qOffset+currentOffset - qGaps);
+                                                tbits.set(tOffset+currentOffset - sGaps);
 
-	                              middleBuilder.append('|');
-	                              matched++;
-	                          }else{
-	                              middleBuilder.append(' ');
-            }
-	                          topBuilder.append(q.getCharacter());
-	                          bottomBuilder.append(s.getCharacter());
-                                              count++;
-                                              if(count % 80 ==0){
-                                                  topBuilder.append(   String.format("  %5d  \n",qOffset + currentOffset - qGaps +1));
-                                                  middleBuilder.append("\n");
-                                                  bottomBuilder.append(String.format("  %5d  \n",tOffset + currentOffset - sGaps +1));
+                                                middleBuilder.append('|');
+                                                matched++;
+                                            }else{
+                                                middleBuilder.append(' ');
+                                            }
+                                            topBuilder.append(q.getCharacter());
+                                            bottomBuilder.append(s.getCharacter());
+                                            count++;
+                                            if(count % 80 ==0){
+                                                topBuilder.append(   String.format("  %5d  \n",qOffset + currentOffset - qGaps +1));
+                                                middleBuilder.append("\n");
+                                                bottomBuilder.append(String.format("  %5d  \n",tOffset + currentOffset - sGaps +1));
 
-                                                  fullBuilder.append(topBuilder).append(middleBuilder).append(bottomBuilder);
-                                                  topBuilder.setLength(0);
-                                                  middleBuilder.setLength(0);
-                                                  bottomBuilder.setLength(0);
-                                                  //check for next line
-                                                  if(qIter.hasNext()){
-                                                      //more data
-                                                      topBuilder.append(   String.format("Query  %5d  ",qOffset + currentOffset -qGaps +2));
-                                                      middleBuilder.append("              ");
-                                                      bottomBuilder.append(String.format("Sbjct  %5d  ",tOffset + currentOffset -sGaps +2));
-                                                  }else{
-                                                      hasDataOnCurrentLine = false;
-                                                  }
-                                              }
-	                          currentOffset++;
+                                                fullBuilder.append(topBuilder).append(middleBuilder).append(bottomBuilder);
+                                                topBuilder.setLength(0);
+                                                middleBuilder.setLength(0);
+                                                bottomBuilder.setLength(0);
+                                                //check for next line
+                                                if(qIter.hasNext()){
+                                                    //more data
+                                                    topBuilder.append(   String.format("Query  %5d  ",qOffset + currentOffset -qGaps +2));
+                                                    middleBuilder.append("              ");
+                                                    bottomBuilder.append(String.format("Sbjct  %5d  ",tOffset + currentOffset -sGaps +2));
+                                                }else{
+                                                    hasDataOnCurrentLine = false;
+                                                }
+                                            }
+                                            currentOffset++;
 
-            }
-                                          if(hasDataOnCurrentLine){
-                                                //end of last line of something
-                                              //current offset is already at +1 so we don't need a +1 for the end of the line
-                                              topBuilder.append(   String.format("  %5d  \n",qOffset + currentOffset -qGaps));
-                                              middleBuilder.append("\n");
-                                              bottomBuilder.append(String.format("  %5d  \n",tOffset + currentOffset -sGaps));
-                                              fullBuilder.append(topBuilder).append(middleBuilder).append(bottomBuilder);
-                                          }
-
-
+                                        }
+                                        if(hasDataOnCurrentLine){
+                                            //end of last line of something
+                                            //current offset is already at +1 so we don't need a +1 for the end of the line
+                                            topBuilder.append(   String.format("  %5d  \n",qOffset + currentOffset -qGaps));
+                                            middleBuilder.append("\n");
+                                            bottomBuilder.append(String.format("  %5d  \n",tOffset + currentOffset -sGaps));
+                                            fullBuilder.append(topBuilder).append(middleBuilder).append(bottomBuilder);
+                                        }
 
 
-	                      Alignment aln = new Alignment(null, query, entry.getValue(),
-
-                                                    fullBuilder.toString(),
-
-	                              matched, matched/(double)query.length(),
-	                              alignment.getPercentIdentity(),
-	                              matched/(double)query.length(), qbits, tbits);
 
 
-                                          r.alignments.add(aln);
-                                          if (rt == CutoffType.SUB) {
-                                        	  double dd=matched / (double) len;
-                                        	  r.setScore(dd, rt);
-            }
-                                      }
-            	  }catch(Exception e){
-            		  e.printStackTrace();
-                                      r.setScore(-1, rt);
+                                        Alignment aln = new Alignment(null, query, entry.getValue(),
 
-                                  }
-                          return r;
-                              });
-                      //we have to make a copy with the  correct ID of the substance we are aligning
-                  //but we can re-use the alignments
+                                                fullBuilder.toString(),
 
-                          Result resultCopy=new Result(entry.getKey().s,cachedResult.query,cachedResult.target);
-	              		resultCopy.alignments.addAll(cachedResult.alignments);
-	              		resultCopy.setScore(cachedResult.score,cachedResult.scoreType);
-	              		return resultCopy;
+                                                matched, matched/(double)query.length(),
+                                                alignment.getPercentIdentity(),
+                                                matched/(double)query.length(), qbits, tbits);
 
-            	  }
 
-              )
-                      .filter(result -> result.score>=identity)
+                                        r.alignments.add(aln);
+                                        if (rt == CutoffType.SUB) {
+                                            double dd=matched / (double) len;
+                                            r.setScore(dd, rt);
+                                        }
+                                    }
+                                }catch(Exception e){
+                                    e.printStackTrace();
+                                    r.setScore(-1, rt);
 
-                      .collect(Collectors.toList());
+                                }
+                                return r;
+                            });
+                            //we have to make a copy with the  correct ID of the substance we are aligning
+                            //but we can re-use the alignments
+
+                            Result resultCopy=new Result(entry.getKey().s,cachedResult.query,cachedResult.target);
+                            resultCopy.alignments.addAll(cachedResult.alignments);
+                            resultCopy.setScore(cachedResult.score,cachedResult.scoreType);
+                            return resultCopy;
+
+                        }
+
+                )
+                .filter(result -> result.score>=identity)
+
+                .collect(Collectors.toList());
         for(Result r : alignedResults) {
             results.put(r);
         }
 
-                  //Sub alignment score
-                  // (local alignment score, multiplied by the fraction of the
-                  //  residues found in the query)
-                  //
-                  //	The purpose of this is to penalize the local identity score
-                  //  such that a strong local alignment that doesn't have much
-                  //  of the query present is not weighted as strongly
+        //Sub alignment score
+        // (local alignment score, multiplied by the fraction of the
+        //  residues found in the query)
+        //
+        //	The purpose of this is to penalize the local identity score
+        //  such that a strong local alignment that doesn't have much
+        //  of the query present is not weighted as strongly
 
-                  //  As an example where we want to have high match
-                  //   Query: ABC
-                  //  Target: XXXXXXXXABCXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-                  //
-                  //	As an example where we want to have a low match
-                  //   Query: XXXXXXXXABCXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-                  //  Target: ABC
-                  //
-                 // double sub=iden*score/(double)query.length();
+        //  As an example where we want to have high match
+        //   Query: ABC
+        //  Target: XXXXXXXXABCXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+        //
+        //	As an example where we want to have a low match
+        //   Query: XXXXXXXXABCXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+        //  Target: ABC
+        //
+        // double sub=iden*score/(double)query.length();
 
 
     }
@@ -1222,71 +1223,71 @@ public class SequenceIndexer {
 
     public List<KmerFingerprintWrapper> getFPSequencesWithBounds(int lowerBound, int upperbound, List<String> mustHaveAtLeastOneTag) {
         try {
-                                seqSearchManager.maybeRefresh();
-                                IndexSearcher searcher = seqSearchManager.acquire();
-                                try {
-                                	NumericRangeQuery<Integer> q= NumericRangeQuery.newIntRange(FIELD_LENGTH, lowerBound, upperbound, true, true);
+            seqSearchManager.maybeRefresh();
+            IndexSearcher searcher = seqSearchManager.acquire();
+            try {
+                NumericRangeQuery<Integer> q= NumericRangeQuery.newIntRange(FIELD_LENGTH, lowerBound, upperbound, true, true);
 
-                                	Query fullQ=q;
+                Query fullQ=q;
 
-                                	if(!mustHaveAtLeastOneTag.isEmpty()){
-                                		BooleanQuery bq=new BooleanQuery();
-                                		bq.setMinimumNumberShouldMatch(1);
-                                		for(String tag: mustHaveAtLeastOneTag){
-                                    		TermQuery tq = new TermQuery (new Term (FIELD_TAGS, tag));
-                                    		bq.add(tq,Occur.SHOULD);
-                                    	}
-                                		BooleanQuery fq=new BooleanQuery();
-                                		fq.add(fullQ,Occur.MUST);
-                                		fq.add(bq,Occur.MUST);
-                                		fullQ=fq;
-                                	}
+                if(!mustHaveAtLeastOneTag.isEmpty()){
+                    BooleanQuery bq=new BooleanQuery();
+                    bq.setMinimumNumberShouldMatch(1);
+                    for(String tag: mustHaveAtLeastOneTag){
+                        TermQuery tq = new TermQuery (new Term (FIELD_TAGS, tag));
+                        bq.add(tq,Occur.SHOULD);
+                    }
+                    BooleanQuery fq=new BooleanQuery();
+                    fq.add(fullQ,Occur.MUST);
+                    fq.add(bq,Occur.MUST);
+                    fullQ=fq;
+                }
 
-                                    TopDocs docs = searcher.search
-                                            (fullQ, Integer.MAX_VALUE);
-                                    //System.out.println("Hits:" + docs.totalHits);
-                                    if (docs.totalHits > 0) {
-                                    	return Arrays.stream(docs.scoreDocs)
-                                    	      .map(d-> {
-                                    	    	  try{
-                                    	    	  	return searcher.doc(d.doc);
-                                    	    	  }catch(Exception e){
-                                    	    		  e.printStackTrace();
-                                    	    		return null;
-                                    	    	  }
-                                    	      })
-                                    	      .filter(d->d!=null)
-                                    	      .map(d->{
-                                    	    	  try{
-                                    	    	//  System.out.println("Fetching...");
-                                    	    	//String fp1enc=d.get(FIELD_FP_1MER);
-                                    	    	String id=d.get(FIELD_ID);
-                                    	    	int len=Integer.parseInt(d.get(FIELD_LENGTH));
-                                    	    	KmerFingerprintWrapper kwrap = KmerFingerprintWrapper.of(id, len);
-
-                                    	    	String ks = d.get(FIELD_FP_K);
-                                    	    	if(ks ==null){
-                                    	    	    return null;
-                                                }
-                                    	    	for(String k:ks.split(",")){
-                                    	    		String fpenc=d.get(FIELD_FP + "_" + k);
-                                    	    	Kmers.HoloFingerprint fp=Kmers.HoloFingerprint.decode(fpenc);
-                                    	    		kwrap.addHolo(Integer.parseInt(k), fp);
-                                    	    	}
-
-                                    	    	return kwrap;
-                                    	    	  }catch(Exception e){
-                                    	    		  e.printStackTrace();
-                                    	    		  return null;
-                                    	    	  }
-                                    	      })
-                                    	      .filter(f->f!=null)
-                                    	      .collect(Collectors.toList());
-                                    }
-                                }finally {
-                                    seqSearchManager.release(searcher);
+                TopDocs docs = searcher.search
+                        (fullQ, Integer.MAX_VALUE);
+                //System.out.println("Hits:" + docs.totalHits);
+                if (docs.totalHits > 0) {
+                    return Arrays.stream(docs.scoreDocs)
+                            .map(d-> {
+                                try{
+                                    return searcher.doc(d.doc);
+                                }catch(Exception e){
+                                    e.printStackTrace();
+                                    return null;
                                 }
-                                return new ArrayList<KmerFingerprintWrapper>();
+                            })
+                            .filter(d->d!=null)
+                            .map(d->{
+                                try{
+                                    //  System.out.println("Fetching...");
+                                    //String fp1enc=d.get(FIELD_FP_1MER);
+                                    String id=d.get(FIELD_ID);
+                                    int len=Integer.parseInt(d.get(FIELD_LENGTH));
+                                    KmerFingerprintWrapper kwrap = KmerFingerprintWrapper.of(id, len);
+
+                                    String ks = d.get(FIELD_FP_K);
+                                    if(ks ==null){
+                                        return null;
+                                    }
+                                    for(String k:ks.split(",")){
+                                        String fpenc=d.get(FIELD_FP + "_" + k);
+                                        Kmers.HoloFingerprint fp=Kmers.HoloFingerprint.decode(fpenc);
+                                        kwrap.addHolo(Integer.parseInt(k), fp);
+                                    }
+
+                                    return kwrap;
+                                }catch(Exception e){
+                                    e.printStackTrace();
+                                    return null;
+                                }
+                            })
+                            .filter(f->f!=null)
+                            .collect(Collectors.toList());
+                }
+            }finally {
+                seqSearchManager.release(searcher);
+            }
+            return new ArrayList<KmerFingerprintWrapper>();
         }catch (Exception ex) {
             ex.printStackTrace();
         }
@@ -1303,8 +1304,8 @@ public class SequenceIndexer {
      * do global alignment on subsequences that have been extracted
      * by the HSP segments
      */
-    static Alignment align (SEG seg, String query, String target, 
-            int match, int gap) {
+    static Alignment align (SEG seg, String query, String target,
+                            int match, int gap) {
         char[] q = query.substring(seg.qi, seg.qj).toUpperCase().toCharArray();
         char[] s = target.substring(seg.ti, seg.tj).toUpperCase().toCharArray();
 
@@ -1414,14 +1415,14 @@ public class SequenceIndexer {
                 qa+rangeq +"[Query]"
                         +"\n"+qq+"\n"
                         +qs+ranget + "[Target]",
-                        score, 
-                        iden,
-                        glob,
-                        sub,
-                        qsites,
-                        tsites
+                score,
+                iden,
+                glob,
+                sub,
+                qsites,
+                tsites
 
-                );
+        );
     }
 
     @SuppressWarnings("unchecked")
