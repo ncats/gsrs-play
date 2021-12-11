@@ -51,8 +51,7 @@ import ix.core.chem.StructureProcessor;
 import ix.core.controllers.ProcessingJobFactory;
 import ix.core.controllers.PayloadFactory;
 import ix.utils.Util;
-import tripod.chem.indexer.StructureIndexer;
-
+import gov.nih.ncats.structureIndexer.StructureIndexer;
 
 public class StructureProcessorPlugin extends Plugin {
     private static final int AKKA_TIMEOUT = 60000;
