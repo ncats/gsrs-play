@@ -118,6 +118,39 @@ cd ginas-alpha_v0-0f75de1-20150618-002011
 Note the `-mem 10000` command, in this case, gives 10,000 MiB, or about 10 GB of maximum 
 java heap memory. It is reccomended that this setting not be below 10000, typically.
 
+### Build a docker image
+All extensions from './modules/extensions' will be compiled and added to the docker image during building process.
+
+```
+docker build --ulimit nofile=65535:65535 -t gsrs-play:latest
+```
+
+### Database Initialization
+```
+mkdir -p /var/lib/gsrs
+docker run -ti --rm -v /var/lib/gsrs:/data gsrs-play:latest java -cp "lib/*" -Dconfig.file=/opt/g-srs/conf/ginas.conf ix.ginas.utils.Evolution
+```
+
+### Running the docker image
+```
+docker run -d -p 9000:9000 -v /var/lib/gsrs:/data -e JAVA_OPTS='-Xms4096m -Xmx4096m -XX:ReservedCodeCacheSize=512m -Dpidfile.path=/dev/null -DapplyEvolutions.default=false -Dconfig.file=/opt/g-srs/conf/ginas.conf' gsrs-play:latest
+```
+
+### Build a development docker image
+Extensions will be a not a part of the docker image, but will be compiled during every start of the docker container.
+Put all your extensions in the 'modules/extensions/app' directory. If your extension has dependencies which are not a part of GSRS, put the JAR files to the 'modules/extensions/lib' directory.
+
+```
+docker build --ulimit nofile=65535:65535 -f Dockerfile.devel -t gsrs-play:devel
+```
+
+### Running of the development image
+
+```
+docker run -ti -v ./modules/extensions:/extensions -p 9000:9000 -e GSRS_DB_RESET=true -e JAVA_OPTS='-Xms4096m -Xmx4096m -XX:ReservedCodeCacheSize=512m -Dpidfile.path=/dev/null -DapplyEvolutions.default=false -Dconfig.file=/opt/g-srs/conf/ginas.conf' gsrs-play:devel
+```
+
+During the start of the container, if the 'modules/extensions/lib/extensions*.jar' file is not present, then the compilation process will be started. After the modules compilation process is finished, you can find the extensions*.jar file in the 'modules/extensions/lib' directory.
 
 ### How To Clean a build
 To clean up the binaries, simply issue:
