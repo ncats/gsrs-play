@@ -31,7 +31,8 @@ object ApplicationBuild extends Build {
     resolvers += Resolver.bintrayRepo("typesafe", "maven-releases"),
     resolvers += Resolver.bintrayRepo("sbt", "sbt-plugin-releases")
   )
-  
+  dependencyOverrides += "org.apache.commons" % "commons-lang3" % "3.6"
+
   val commonDependencies = Seq(
     javaWs,
     javaJdbc,
@@ -47,7 +48,7 @@ object ApplicationBuild extends Build {
     "org.apache.httpcomponents" % "httpclient" %"4.5.2",
     "org.apache.httpcomponents" % "httpcore" %"4.4.4",
     "org.apache.httpcomponents" % "httpclient" %"4.3.1", //required for Ivy bug?
-    "commons-io" % "commons-io" % "2.4",
+    "commons-io" % "commons-io" % "2.11.0",
     "com.flipkart.zjsonpatch" % "zjsonpatch" % "0.4.11",
     "javax.xml.bind" % "jaxb-api" % "2.3.0",    //required for JAVA > 9
     "net.sourceforge.htmlunit" % "htmlunit" % "2.35.0" % Test,
