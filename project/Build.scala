@@ -7,7 +7,7 @@ import com.typesafe.sbt.SbtNativePackager._
 
 object ApplicationBuild extends Build {
   val molwitchImplementation = System.getProperty("molwitch", "cdk")
-  val displayVersion = "2.7.1"
+  val displayVersion = "2.8.1"
   val now = new java.util.Date();
   val branch = "git rev-parse --abbrev-ref HEAD".!!.trim
   val commit = "git rev-parse --short HEAD".!!.trim
@@ -39,6 +39,7 @@ object ApplicationBuild extends Build {
     cache,
     filters,
 
+    "io.github.dan2097" % "jna-inchi-all" % "1.0",
     "org.jcvi.jillion" % "jillion" % "5.3.2",
     "com.fasterxml.jackson.core" % "jackson-core" % "2.9.7",
     "com.fasterxml.jackson.core" % "jackson-databind" % "2.9.7",
