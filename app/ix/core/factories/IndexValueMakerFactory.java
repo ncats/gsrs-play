@@ -27,6 +27,14 @@ public class IndexValueMakerFactory extends AccumlatingInternalMapEntityResource
 		 * using java beans method naming conventions.
 		 */
 		private Map<String, Object> parameters;
+
+		public Map<String, Object> getParameters() {
+			return parameters;
+		}
+
+		public void setParameters(Map<String, Object> parameters) {
+			this.parameters = parameters;
+		}
 	}
 	private static ThreadLocal<ObjectMapper> mapper = new ThreadLocal<ObjectMapper>(){
 		@Override
