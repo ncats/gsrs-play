@@ -124,6 +124,7 @@ public class Java8ForOldEbeanHelper {
 			try {
 				epa.getStructureIndexer().add(k.getIdString(), str.toString());
 			} catch (Exception e) {
+				System.err.println("error computing structue for " + str);
 				e.printStackTrace();
 			}
 		});
