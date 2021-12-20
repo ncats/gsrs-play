@@ -1021,7 +1021,7 @@
                 var namelist = [];
                 for (var i = 0; i < response.data.length; i++) {
                     if (response.data[i].type == 'sys') {
-                        namelist.push($sce.trustAsHtml(response.data[i]._name));
+                        namelist.push($sce.trustAsHtml(response.data[i]._nameHTML));
                     }
                 }
                 $scope.sysNames = namelist;

@@ -1,13 +1,17 @@
 FROM centos:8 AS builder
-RUN dnf -y install dejavu-sans-fonts dejavu-serif-fonts fontconfig git java-1.8.0-openjdk-devel && dnf clean all && fc-cache -f
+ARG MOLWITCH=cdk
+RUN dnf -y install dejavu-sans-fonts dejavu-serif-fonts fontconfig git java-1.8.0-openjdk-devel patch && dnf clean all && fc-cache -f
 COPY . /tmp/build
 WORKDIR /tmp/build
+RUN mkdir -p modules/extensions/lib modules/extensions/patches
+RUN find modules/extensions/patches -type f -name '*.patch' -print0 -exec patch -p1 -i {} \;
+RUN find modules/extensions/lib -type f -name '*' -print0 -exec mv -t lib/ {} \;
 RUN ./activator clean
-RUN ./activator -Dconfig.file=modules/ginas/conf/ginas.conf ginas/dist
+RUN ./activator -Dconfig.file=modules/ginas/conf/ginas.conf -Dmolwitch=${MOLWITCH} ginas/dist
 RUN cd /opt && \
     jar xf /tmp/build/modules/ginas/target/universal/ginas-*.zip && \
     mv /opt/ginas-* /opt/g-srs && \
-    chmod 755 /opt/g-srs/bin/ginas
+    chmod 755 /opt/g-srs/bin/*
 RUN cd /root && \
     jar xf /tmp/build/lib/jni-inchi-0.7-jar-with-dependencies.jar && \
     mkdir -p /root/.jnati/repo/jniinchi/1.03_1 && \
@@ -17,9 +21,12 @@ RUN cd /root && \
     chmod -R g=u /root
 WORKDIR /opt/g-srs
 RUN mv /tmp/build/modules/ginas/conf /opt/g-srs/conf
+RUN mv /opt/g-srs/conf/evolutions /opt/g-srs/conf/evolutions.save
 RUN sed -i "s/localhost/db/g" conf/ginas-mysql.conf
 RUN sed -i "s/localhost:5433/db:5432/g" conf/ginas-postgres.conf
 RUN sed -i "s/#evolutionplugin=disabled/evolutionplugin=disabled/g" conf/ginas-*.conf
+RUN /tmp/build/build_extensions.sh /tmp/build/modules/extensions /opt/g-srs
+RUN find /tmp/build/modules/extensions/lib -type f -name '*.jar' -print0 -exec mv -t lib/ {} \;
 
 FROM centos:8
 RUN dnf -y install dejavu-sans-fonts dejavu-serif-fonts fontconfig java-1.8.0-openjdk-headless && dnf clean all
