@@ -1,12 +1,15 @@
 package ix.ncats.resolvers;
 
 import gov.nih.ncats.molwitch.Chemical;
+import ix.core.plugins.IxCache;
 import ix.core.util.ConfigHelper;
+import ix.core.util.EntityUtils;
 import play.Logger;
 
 import java.io.*;
 import java.net.*;
 import java.util.Objects;
+import java.util.UUID;
 
 import ix.core.models.Structure;
 import ix.core.chem.StructureProcessor;
@@ -88,7 +91,10 @@ public abstract class AbstractStructureResolver implements Resolver<Structure> {
                 return null;
             }
 
-            struc.save();
+        //katzelda2021: we aren't going to save this but need to put it in temp cache
+        UUID uuid = UUID.randomUUID();
+        struc.id = uuid;
+        IxCache.setRaw(uuid.toString(), EntityUtils.EntityWrapper.of(struc).toFullJson());
             return struc;
 
     }
