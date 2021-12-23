@@ -83,7 +83,7 @@ public class JmespathIndexValueMaker implements IndexValueMaker<Substance> {
 
     private void updateReferences(JsonNode tree) {
         ArrayNode references = (ArrayNode)tree.at("/references");
-        Map<String, Integer> refMap = new HashMap<String, Integer>();
+        Map<String, Integer> refMap = new HashMap<>();
         for (int i = 0; i < references.size(); i++) {
             refMap.put(references.get(i).get("uuid").textValue(), i);
         }
@@ -93,7 +93,10 @@ public class JmespathIndexValueMaker implements IndexValueMaker<Substance> {
                 for (int i = 0; i < refs.size(); i++) {
                     JsonNode ref = refs.get(i);
                     if (ref.isTextual()) {
-                        refs.set(i, references.get(refMap.get(ref.asText())));
+                        Integer index = refMap.get(ref.asText());
+                        if(index !=null) {
+                            refs.set(i, references.get(index));
+                        }
                     }
                 }
             }
