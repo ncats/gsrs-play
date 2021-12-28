@@ -25,6 +25,7 @@ import javax.persistence.PreUpdate;
 import gov.nih.ncats.molwitch.MolWitch;
 import gov.nih.ncats.molwitch.Chemical;
 import gov.nih.ncats.molwitch.ChemicalBuilder;
+import gov.nih.ncats.molwitch.inchi.InChiResult;
 import gov.nih.ncats.molwitch.inchi.Inchi;
 import ix.core.EntityProcessor;
 import ix.core.adapters.EntityPersistAdapter;
@@ -111,9 +112,11 @@ public class Java8ForOldEbeanHelper {
 		Chemical build = ChemicalBuilder.createFromSmiles("O=C=O").build();
 		String smiles = build.toSmiles();
 
-		String inchi = Inchi.asStdInchi(build).getKey();
+		InChiResult inChiResult = Inchi.asStdInchi(build);
+		String inchiKey = inChiResult.getKey();
 
-        System.out.println(MolWitch.getModuleName() + " : " + smiles + " inchi = " + inchi);
+        System.out.println(MolWitch.getModuleName() + " : " + smiles + " inchiKey = " + inchiKey);
+        System.out.println("from inchi = " + Inchi.toChemical(inChiResult.getInchi()).toSmiles());
 
 	}
 
