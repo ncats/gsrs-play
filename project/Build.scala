@@ -7,7 +7,7 @@ import com.typesafe.sbt.SbtNativePackager._
 
 object ApplicationBuild extends Build {
   val molwitchImplementation = System.getProperty("molwitch", "cdk")
-  val displayVersion = "2.7.1"
+  val displayVersion = "2.8.1"
   val now = new java.util.Date();
   val branch = "git rev-parse --abbrev-ref HEAD".!!.trim
   val commit = "git rev-parse --short HEAD".!!.trim
@@ -31,7 +31,8 @@ object ApplicationBuild extends Build {
     resolvers += Resolver.bintrayRepo("typesafe", "maven-releases"),
     resolvers += Resolver.bintrayRepo("sbt", "sbt-plugin-releases")
   )
-  
+  dependencyOverrides += "org.apache.commons" % "commons-lang3" % "3.6"
+
   val commonDependencies = Seq(
     javaWs,
     javaJdbc,
@@ -39,6 +40,7 @@ object ApplicationBuild extends Build {
     cache,
     filters,
 
+    "io.github.dan2097" % "jna-inchi-all" % "1.0",
     "org.jcvi.jillion" % "jillion" % "5.3.2",
     "com.fasterxml.jackson.core" % "jackson-core" % "2.9.7",
     "com.fasterxml.jackson.core" % "jackson-databind" % "2.9.7",
@@ -46,7 +48,7 @@ object ApplicationBuild extends Build {
     "org.apache.httpcomponents" % "httpclient" %"4.5.2",
     "org.apache.httpcomponents" % "httpcore" %"4.4.4",
     "org.apache.httpcomponents" % "httpclient" %"4.3.1", //required for Ivy bug?
-    "commons-io" % "commons-io" % "2.4",
+    "commons-io" % "commons-io" % "2.11.0",
     "com.flipkart.zjsonpatch" % "zjsonpatch" % "0.4.11",
     "javax.xml.bind" % "jaxb-api" % "2.3.0",    //required for JAVA > 9
     "net.sourceforge.htmlunit" % "htmlunit" % "2.35.0" % Test,
@@ -187,7 +189,7 @@ public class BuildInfo {
       libraryDependencies ++= commonDependencies,
       libraryDependencies += "org.webjars" % "angularjs" % "1.5.7",
       libraryDependencies += "org.webjars" % "angular-ui-bootstrap" % "1.3.3",
-      libraryDependencies += "org.webjars" % "dojo" % "1.10.0",
+      libraryDependencies += "org.webjars.npm" % "dojo" % "1.16.1",
       libraryDependencies += "org.webjars" % "momentjs" % "2.11.0",
       libraryDependencies += "org.webjars.bower" % "later" % "1.2.0",
       libraryDependencies += "org.webjars.bower" % "prettycron" % "0.10.0",
@@ -199,7 +201,9 @@ public class BuildInfo {
       libraryDependencies += "org.apache.poi" % "poi" % "3.17",
       libraryDependencies += "org.apache.poi" % "poi-ooxml" % "3.17",
       libraryDependencies += "org.apache.poi" % "poi-ooxml-schemas" % "3.17",
-      libraryDependencies +="pl.joegreen" % "lambda-from-string" % "1.6",
+      libraryDependencies += "pl.joegreen" % "lambda-from-string" % "1.6",
+      libraryDependencies += "io.burt" % "jmespath-core" % "0.5.0",
+      libraryDependencies += "io.burt" % "jmespath-jackson" % "0.5.0",
 	  javaOptions ++= Seq("-Xmx4096M", "-Xms512M", "-XX:MaxPermSize=2048M"),
       javacOptions in (Compile, compile) ++= javaBuildOptions,
       javacOptions in (doc) ++= javaDocOptions,

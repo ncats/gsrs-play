@@ -26,3 +26,7 @@ ADD INDEX type_index (type ASC);
 ALTER TABLE ix_core_edit
 ADD INDEX refid_core_edit_index (refid ASC),
 ADD INDEX kind_core_edit_index (kind ASC);
+
+create index ix_ix_ginas_code_code on ix_ginas_code(code);
+create index ix_ix_ginas_code_code_system on ix_ginas_code(code_system);
+create index ix_ix_ginas_code_type on ix_ginas_code(type);

@@ -20,6 +20,8 @@ import java.util.Stack;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Function;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -124,14 +126,24 @@ public class EntityFactory extends Controller {
             this.skip = skip;
             this.filter = filter;
         }
+
+        private static  Pattern FILTER_PATTERN = Pattern.compile("^[A-Za-z0-9_\\.\\ ]+=[\"'][A-Za-z0-9_\\.\\ ]+[\"']$");
         // TP: 03/01/2016
         // TODO: have someone look into this
         public static String normalizeFilter(String f){
-        	if(f!=null){
-        		f=f.replaceAll("\\s*=\\s*null", " is null");
-        		return f;
-        	}
-        	return f;
+            //katzelda Oct 27 2021
+            //possible SQL injection this is only used by the classic UI for filtering CV
+            //so let's make sure that only those kinds of queries are whitelisted.
+            if(f ==null){
+                return null;
+            }
+            String trimmed = f.trim();
+            Matcher m = FILTER_PATTERN.matcher(trimmed);
+            if(m.matches()){
+                return trimmed;
+            }
+            //throw exception?
+        	throw new RuntimeException("invalid filter parameter "+ trimmed);
         }
         public <T> Query<T> applyToQuery(Query<T> q){
         	for (String path : this.expand) {
@@ -139,7 +151,10 @@ public class EntityFactory extends Controller {
                 q = q.fetch(path);
             }
         	if(this.filter!=null){
-        		q = q.where(normalizeFilter(this.filter));
+                String filteredQuery = normalizeFilter(this.filter);
+                if(filteredQuery !=null) {
+                    q = q.where(filteredQuery);
+                }
         	}
 
             if (!this.order.isEmpty()) {
