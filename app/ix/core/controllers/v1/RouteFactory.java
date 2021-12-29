@@ -5,6 +5,7 @@ import static ix.core.search.ArgumentAdapter.getLastDoubleOrElse;
 import static ix.core.search.ArgumentAdapter.getLastIntegerOrElse;
 import static ix.core.search.ArgumentAdapter.getLastStringOrElse;
 
+import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
@@ -12,13 +13,14 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import ix.core.chem.ChemCleaner;
-import ix.core.chem.PolymerDecode;
-import ix.core.chem.StructureProcessor;
-import ix.core.chem.StructureProcessorTask;
+import gov.nih.ncats.molwitch.Atom;
+import gov.nih.ncats.molwitch.Bond;
+import gov.nih.ncats.molwitch.Chemical;
+import ix.core.chem.*;
 import ix.core.controllers.search.SearchRequest;
 import ix.ginas.models.v1.Amount;
 import ix.ginas.models.v1.Moiety;
@@ -354,10 +356,130 @@ public class RouteFactory extends Controller {
         }
     }
 
+    private static interface SimpleStandardizer{
+        public Chemical standardize(Chemical c);
+        public static SimpleStandardizer REMOVE_HYDROGENS() {
+            return (c)->{
+                c.removeNonDescriptHydrogens();
+                return c;
+            };
+        }
+        public static SimpleStandardizer ADD_HYDROGENS() {
+            return (c)->{
+                // TODO:
+                // In CDK, this doesn't generate coordinates for the Hs, meaning you have to have an additional
+                // clean call. Also, this method doesn't do anything for query molecules in CDK.
+                //
+                // Both of the above problems will need to be fixed for this to work well.
+                //
 
+                c.makeHydrogensExplicit();
+                return c;
+            };
+        }
+        public static SimpleStandardizer STEREO_FLATTEN() {
+            return (c)->{
+                Chemical cc = c.copy();
+
+
+                cc.getAllStereocenters().forEach(sc->{
+                    Atom aa =sc.getCenterAtom();
+                    @SuppressWarnings("unchecked")
+                    Stream<Bond> sbonds = (Stream<Bond>) aa.getBonds().stream();
+
+                    sbonds.forEach(bb->{
+                        if(bb.getBondType().getOrder()==1) {
+                            if(!bb.getStereo().equals(Bond.Stereo.NONE)) {
+                                bb.setStereo(Bond.Stereo.NONE);
+                            }
+                        }
+                    });
+                });
+
+
+                try {
+                    //TODO molwitch bug makes this export/import
+                    //necessary
+                    return Chemical.parseMol(cc.toMol());
+                } catch (IOException e) {
+                    return cc;
+                }
+            };
+        }
+        public static SimpleStandardizer CLEAN() {
+            return (c)->{
+                try {
+                    ChemAligner.align2DClean(c);
+//                    c.generateCoordinates();
+                } catch (Exception e) {
+//                    e.printStackTrace();
+                }
+                return c;
+            };
+        }
+
+        public default SimpleStandardizer and(SimpleStandardizer std2) {
+            SimpleStandardizer _this=this;
+            return (c)->{
+                return std2.standardize(_this.standardize(c));
+            };
+        }
+
+        public default String standardize(String mol) {
+
+            try {
+                Chemical c=Chemical.parseMol(mol);
+                c=this.standardize(c);
+                return c.toMol();
+            } catch (Exception e) {
+                Logger.warn("issue standardizing mol", e);
+                return mol;
+            }
+
+        }
+
+    }
+    //TODO: could be its own microservice?
+    private enum StructureStandardizerPresets{
+        REMOVE_HYDROGENS(SimpleStandardizer.REMOVE_HYDROGENS()),
+        ADD_HYDROGENS(SimpleStandardizer.ADD_HYDROGENS()),
+        STEREO_FLATTEN(SimpleStandardizer.STEREO_FLATTEN()),
+        CLEAN(SimpleStandardizer.CLEAN());
+        public SimpleStandardizer std;
+        StructureStandardizerPresets(SimpleStandardizer s){
+            this.std=s;
+        }
+        public SimpleStandardizer getStandardizer() {
+            return this.std;
+        }
+        public static Optional<StructureStandardizerPresets> value(String s){
+            try {
+                return Optional.of(StructureStandardizerPresets.valueOf(s.toUpperCase()));
+            }catch(Exception e) {
+                return Optional.empty();
+            }
+        }
+    }
 
         @BodyParser.Of(value = BodyParser.Text.class, maxLength = 1024 * 1024)
         public static Result interpretStructure(String contextIgnored) {
+
+            String[] standardize = Optional.ofNullable(request().getQueryString("standardize"))
+                    .orElse("NONE")
+                    .split(",");
+            SimpleStandardizer simpStd=Arrays.stream(standardize)
+                    .filter(s->!s.equals("NONE"))
+                    .map(val->val.toUpperCase())
+                    .map(val->StructureStandardizerPresets.value(val))
+                    .filter(v->v.isPresent())
+                    .map(v->v.get())
+                    .map(std->std.getStandardizer())
+                    .reduce(SimpleStandardizer::and).orElse(null);
+
+            String mode = Optional.ofNullable(request().getQueryString("mode"))
+                    .orElse("default");
+
+            boolean isQuery="query".equalsIgnoreCase(mode);
             ObjectMapper mapper = EntityFactory.EntityMapper.FULL_ENTITY_MAPPER();
             ObjectNode node = mapper.createObjectNode();
             try {
@@ -367,7 +489,8 @@ public class RouteFactory extends Controller {
                     List<Structure> moieties = new ArrayList<Structure>();
 
                     try {
-                        Structure struc = StructureProcessor.instrument(payload, moieties, false); // don't
+
+                        Structure struc = StructureProcessor.instrument(payload, moieties, false, isQuery); // don't
                         // standardize!
                         // we should be really use the PersistenceQueue to do this
                         // so that it doesn't block
@@ -375,6 +498,9 @@ public class RouteFactory extends Controller {
                         // in fact, it probably shouldn't be saving this at all
                         if (payload.contains("\n") && payload.contains("M  END")) {
                             struc.molfile = payload;
+                        }
+                        if(simpStd!=null) {
+                            struc.molfile=simpStd.standardize(struc.molfile);
                         }
 
                         StructureFactory.saveTempStructure(struc);

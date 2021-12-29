@@ -31,7 +31,8 @@ public class InchiStructureHasher implements StructureHasher{
             keyValueConsumer.accept(Structure.H_STEREO_INSENSITIVE_HASH, connectionOnly);
         }catch(IOException e){
             e.printStackTrace();
-            throw new IllegalArgumentException("error parsing mol",e);
+            System.err.println(mol);
+            throw new IllegalArgumentException("error computing inchi",e);
         }
     }
 }

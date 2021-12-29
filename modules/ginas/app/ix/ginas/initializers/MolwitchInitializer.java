@@ -28,6 +28,7 @@ public class MolwitchInitializer implements Initializer{
         try {
             Java8ForOldEbeanHelper.makeChemkitCall();
         }catch(Exception e){
+            e.printStackTrace();
             System.err.println(System.getProperty("java.class.path"));
             throw new IllegalStateException("molwitch implementation could not be found", e);
         }

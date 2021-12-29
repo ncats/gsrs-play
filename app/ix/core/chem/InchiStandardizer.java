@@ -48,7 +48,7 @@ public class InchiStandardizer implements StructureStandardizer{
     public Chemical standardize(Chemical orig, Supplier<String> molSupplier, Consumer<Value> valueConsumer) throws IOException {
         int maxAtoms = ATOM_LIMIT_SUPPLIER.get();
 
-        if(orig.getAtomCount() > maxAtoms || orig.hasPseudoAtoms()){
+        if(orig.getAtomCount() > maxAtoms || orig.hasPseudoAtoms() || orig.hasQueryAtoms()){
             return orig;
         }
         try {
@@ -59,6 +59,7 @@ public class InchiStandardizer implements StructureStandardizer{
                            )));
             return chem;
         }catch(Exception e){
+            System.err.println("error standardizing\n "+ molSupplier.get());
             e.printStackTrace();
             return orig;
         }
