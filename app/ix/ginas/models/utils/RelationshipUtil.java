@@ -136,7 +136,9 @@ Exception Details:
         r.setAccess(groups);
         //new String so ebean sees it's a new object
         //just in case...
-        r.comments = new String(other.comments);
+        if(other.comments !=null) {
+            r.comments = new String(other.comments);
+        }
 
         if(other.amount !=null) {
             try {
