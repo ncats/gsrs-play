@@ -128,8 +128,14 @@ public class EntityFactory extends Controller {
         }
 
         private static  Pattern FILTER_PATTERN = Pattern.compile("^[A-Za-z0-9_\\.\\ ]+=[\"'][A-Za-z0-9_\\.\\ ]+[\"']$");
-        // TP: 03/01/2016
-        // TODO: have someone look into this
+        private static Pattern SPECIAL_VERSION_FILTER_PATTERN = Pattern.compile("^path=null AND version='\\d+'$");
+
+        /**
+         * inspect the filter parameter which does a "where" clause and make sure it's
+         * not a SQL injection attack and do some minor clean up of =null to "is null".
+         * @param f
+         * @return
+         */
         public static String normalizeFilter(String f){
             //katzelda Oct 27 2021
             //possible SQL injection this is only used by the classic UI for filtering CV
@@ -138,9 +144,21 @@ public class EntityFactory extends Controller {
                 return null;
             }
             String trimmed = f.trim();
+
             Matcher m = FILTER_PATTERN.matcher(trimmed);
+            String ret= null;
+
             if(m.matches()){
-                return trimmed;
+                ret= trimmed;
+            }
+            //Jan 2022 used by some test code to filter by version
+            if(SPECIAL_VERSION_FILTER_PATTERN.matcher(trimmed).matches()){
+                ret= trimmed;
+
+
+            }
+            if(ret !=null){
+                return ret.replace("=null", " is null");
             }
             //throw exception?
         	throw new RuntimeException("invalid filter parameter "+ trimmed);
@@ -869,7 +887,7 @@ public class EntityFactory extends Controller {
     
 	protected static Result edits(Object id, Class<?>... cls) {
 		List<Edit> edits = getEdits(id,cls);
-		
+
 		if (!edits.isEmpty()) {
 			ObjectMapper mapper = getEntityMapper();
 			return Java8Util.ok(mapper.valueToTree(edits));
@@ -894,7 +912,7 @@ public class EntityFactory extends Controller {
                 .orderBy()
                 .desc("created");
 		
-		fe.applyToQuery(q);
+		q = fe.applyToQuery(q);
 		
 		
 		List<Edit> tmpedits = q.findList();
