@@ -14,10 +14,7 @@ import ix.core.controllers.AdminFactory;
 import ix.core.controllers.PrincipalFactory;
 import ix.core.controllers.UserProfileFactory;
 import ix.core.factories.AuthenticatorFactory;
-import ix.core.models.Principal;
-import ix.core.models.Role;
-import ix.core.models.Session;
-import ix.core.models.UserProfile;
+import ix.core.models.*;
 import ix.core.plugins.IxCache;
 import ix.core.util.CachedSupplier;
 import ix.core.util.ConfigHelper;
@@ -49,7 +46,9 @@ public class Authentication extends Controller {
     
     public static CachedSupplier<Boolean> autoRegisterActive = 
     		ConfigHelper.supplierOf("ix.authentication.autoregisteractive", false);
-    		
+
+	public static CachedSupplier<Boolean> autoRegisterActive2 =
+			ConfigHelper.supplierOf("ix.authentication.autoregisterandmakeactive", false);
     static CachedSupplier<Model.Finder<UUID, Session>> _sessions =
     		Util.finderFor(UUID.class, Session.class);
     
@@ -81,32 +80,41 @@ public class Authentication extends Controller {
     }
     
     static UserProfile setSessionUser(String username){
-    	return setSessionUser(username,null);
+    	return setSessionUser(username,null, null );
     }
     
     
-    public static UserProfile setUserProfileSessionUsing(String username, String email){
-    	return setSessionUser(username,email);
+    public static UserProfile setUserProfileSessionUsing(String username, String email, String firstName){
+		Logger.debug("in setUserProfileSessionUsing");
+    	return setSessionUser(username,email, firstName);
     }
     
     
     //Set and trust username / email as user
     //Only call after authenticated
-    private static UserProfile setSessionUser(String username, String email){
-        
+    private static UserProfile setSessionUser(String username, String email, String userFirstName){
+        Logger.debug("in UserProfile");
         UserProfile profile= getUserProfileOrElse(username, ()->{
-        	if(autoRegister.get()){
+			Logger.debug("autoRegister.get(): " + autoRegister.get());
+			Logger.debug("autoRegisterActive.get(): " + autoRegisterActive.get());
+			Logger.debug("autoRegisterActive2.get(): " + autoRegisterActive2.get());
+
+			if(autoRegister.get()){
         		try(Transaction tx = Ebean.beginTransaction()){
 	        		Logger.info("Autoregistering user:" + username);
 	        		Principal p = new Principal(username, email);
+					Logger.trace("created Principal");
 	        		p= PrincipalFactory.registerIfAbsent(p);
+					Logger.trace("registered Principal");
 	        		UserProfile up = p.getUserProfile();
 	        		if(up==null){
 	        			up = new UserProfile(p);
 	        		}
-	        		if(autoRegisterActive.get()){
-	                	up.active = true;	
+	        		if(true){ //temporarily!
+	                	up.active = true;
+						Logger.debug("set user to active");
 	        		}else{
+						Logger.debug("setting user to active not configured");
 	        			up.active = false;
 	        		}
 	        		up.systemAuth=false;
@@ -127,7 +135,9 @@ public class Authentication extends Controller {
         if(profile==null){
         	throw new IllegalStateException("Unable to set session for user:" + username);
         }
-        
+
+		profile.properties.add( new Keyword("userFirstName", userFirstName));
+		Logger.trace("added property with user first name " + userFirstName);
         Transaction tx = Ebean.beginTransaction();
         try {
         	if (!profile.active) {
@@ -139,6 +149,9 @@ public class Authentication extends Controller {
         } catch (Exception ex) {
             Logger.trace
                     ("Can't update UserProfile for user " + username, ex);
+			Logger.trace("stack trace:");
+			Arrays.stream(ex.getStackTrace()).forEach(se->Logger.trace(String.format("file: %s; line: %d",
+					se.getFileName(), se.getLineNumber())));
             throw new IllegalStateException(ex);
         } finally {
             Ebean.endTransaction();
@@ -191,7 +204,7 @@ public class Authentication extends Controller {
     
     public static UserProfile directlogin(String username, String password) throws Exception{
     	//Principal cred;
-
+		Logger.debug("in directlogin");
 		AuthenticationCredentials credentials = AuthenticationCredentials.create(username, password);
 
 		UserProfile up = authenticate(credentials);
@@ -237,6 +250,7 @@ public class Authentication extends Controller {
 
 
 	private static UserProfile fetchProfile(String username) {
+		Logger.debug("fetchProfile with username: " + username);
 		return tokens.get().computeUserIfAbsent(username, f->{
 			return UserProfileFactory.getUserProfileForUsername(username);
 		});

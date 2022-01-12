@@ -24,17 +24,18 @@ public class ATCIndexValueMaker implements IndexValueMaker<Substance> {
 	        	if(act ==null){
 	        		continue;
 				}
+				Logger.debug("in ATCIndexValueMaker, act: " + act);
 	            String[] parts = act.split("\\|");
-	            if(parts.length>0){
+	            if(parts.length>1){
 	            	consumer.accept(IndexableValue.simpleFacetStringValue("ATC Level 1", parts[1].trim()).suggestable());
 	            }
-	            if(parts.length>1){
+	            if(parts.length>3){
 	            	consumer.accept(IndexableValue.simpleFacetStringValue("ATC Level 2", parts[2].trim()).suggestable());
 	            }
-	            if(parts.length>2){
+	            if(parts.length>3){
 	            	consumer.accept(IndexableValue.simpleFacetStringValue("ATC Level 3", parts[3].trim()).suggestable());
 	            }
-	            if(parts.length>3){
+	            if(parts.length>4){
 	            	consumer.accept(IndexableValue.simpleFacetStringValue("ATC Level 4", parts[4].trim()).suggestable());
 	            }
 	        }

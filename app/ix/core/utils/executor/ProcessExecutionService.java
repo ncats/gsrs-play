@@ -274,6 +274,7 @@ public class ProcessExecutionService {
      * Deletes cache, etc for faster re-indexing
      */
     public static void nukeEverything(){
+		Logger.debug("in nukeEverything");
     	Application app = Play.application();
         Logger.info("SHUTTING DOWN");
         // Util.debugSpin(3000);
@@ -304,8 +305,27 @@ public class ProcessExecutionService {
             e1.printStackTrace();
         }
 
-        structureDir.mkdirs();
-
+		Logger.info("structureDir exists before mkdir? "+ structureDir.exists());
+		structureDir.mkdirs();
+		Logger.info("structureDir exists after mkdir? "+ structureDir.exists());
+		{
+			File text = app.plugin(IxContext.class).text();
+			Logger.info("text exists before? " + text.exists());
+			File structure = app.plugin(IxContext.class).structure();
+			Logger.info("structure exists before? " + structure.exists());
+			File sequence = app.plugin(IxContext.class).sequence();
+			Logger.info("sequence exists before? "+ sequence.exists());
+		}
+		app.plugin(IxContext.class).onStart();
+		Logger.info("completed app.plugin(IxContext.class).onStart()");
+		{
+			File text = app.plugin(IxContext.class).text();
+			Logger.info("text exists? " + text.exists());
+			File structure = app.plugin(IxContext.class).structure();
+			Logger.info("structure exists? " + structure.exists());
+			File sequence = app.plugin(IxContext.class).sequence();
+			Logger.info("sequence exists? "+ sequence.exists());
+		}
         app.plugin(SequenceIndexerPlugin.class).onStart();
         app.plugin(StructureIndexerPlugin.class).onStart();
         app.plugin(TextIndexerPlugin.class).onStart();
@@ -314,6 +334,7 @@ public class ProcessExecutionService {
     
 
     public void reindexAll(ProcessListener listener) throws Exception{
+		Logger.debug("reindexAll");
     	buildProcess(Object.class)
     		.consumer(CommonConsumers.REINDEX_FAST.consumer())
     		.streamSupplier(CommonStreamSuppliers.allBackups())

@@ -25,7 +25,7 @@ public class ReindexTaskInitializer extends ScheduledTaskInitializer{
 
 	@Override
 	public void run(TaskListener l){
-		
+		play.Logger.debug("reindex task run");
             try {
                 l.message("Initializing reindexing");
                 ProcessListener listen = ProcessListener.onCountChange((sofar,total)->{

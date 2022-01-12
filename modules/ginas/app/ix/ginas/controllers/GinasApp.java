@@ -88,7 +88,7 @@ import play.mvc.Call;
 import play.mvc.Result;
 import play.mvc.Results;
 import play.twirl.api.Html;
-import tripod.chem.indexer.StructureIndexer;
+import gov.nih.ncats.structureIndexer.StructureIndexer;
 import com.wordnik.swagger.annotations.*;
 
 /**

@@ -56,17 +56,8 @@ public class ResaveBackupsTaskInitializer extends ScheduledTaskInitializer
 					.streamSupplier(CommonStreamSuppliers.allFor(cls))
 					.consumer((T s) ->
 					{
-						try{
-							if( s instanceof ix.ginas.models.v1.Substance){
-								String id = ((ix.ginas.models.v1.Substance) s).uuid.toString();
-								play.Logger.debug("going to process substance for backup: " + id);
-							}
 						BackupProcessor.getInstance()
 								.postUpdate(s);
-						}
-						catch(Exception ex){
-							play.Logger.error("Error mustering substance for backup: ", ex);
-						}
 					})
 					.listener(listen)
 					.build()
