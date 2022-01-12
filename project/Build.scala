@@ -42,7 +42,7 @@ object ApplicationBuild extends Build {
 
     "io.github.dan2097" % "jna-inchi-all" % "1.0",
     "org.jcvi.jillion" % "jillion" % "5.3.2",
-     "org.apache.logging.log4j" % "log4j-core" % "2.17.1"
+     "org.apache.logging.log4j" % "log4j-core" % "2.17.1",
 
     "com.fasterxml.jackson.core" % "jackson-core" % "2.9.7",
     "com.fasterxml.jackson.core" % "jackson-databind" % "2.9.7",
