@@ -14,7 +14,6 @@ import java.io.Serializable;
 import gov.nih.ncats.molwitch.Chemical;
 import gov.nih.ncats.molwitch.io.ChemicalReader;
 import gov.nih.ncats.molwitch.io.ChemicalReaderFactory;
-import gov.nih.ncats.structureIndexer.StructureIndexer;
 import ix.core.util.TimeUtil;
 import play.Logger;
 import play.Plugin;
@@ -52,7 +51,7 @@ import ix.core.chem.StructureProcessor;
 import ix.core.controllers.ProcessingJobFactory;
 import ix.core.controllers.PayloadFactory;
 import ix.utils.Util;
-
+import gov.nih.ncats.structureIndexer.StructureIndexer;
 
 public class StructureProcessorPlugin extends Plugin {
     private static final int AKKA_TIMEOUT = 60000;

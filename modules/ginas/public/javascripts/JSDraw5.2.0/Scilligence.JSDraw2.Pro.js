@@ -30,7 +30,7 @@ JSDraw2.password = { encrypt: true, key: null, iv: null };
 //////////////////////////////////////////////////////////////////////////////////
 // Place the license code below
 
-JSDraw2.licensecode = null;
+JSDraw2.licensecode='405562533916781761723242424242424131213141512181';
 
 
 

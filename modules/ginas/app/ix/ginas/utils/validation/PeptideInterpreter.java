@@ -33,14 +33,14 @@ public class PeptideInterpreter {
 			.setKekulization(ChemFormat.KekulizationEncoding.KEKULE);
 	public static Map<String, String> AAmap = new HashMap<String, String>();
 	public static Map<String, String> AAmap3Let = new HashMap<String, String>();
-	public static Map<String, Integer> AAmapCHI = new HashMap<String, Integer>();
+	public static Map<String, Chirality> AAmapCHI = new HashMap<String, Chirality>();
 	public static Map<String, Integer> modFreq = new HashMap<String,Integer>();
 	public static Map<String, String> modName = new HashMap<String,String>();
 	public static Map<String, String> modMap = new HashMap<String,String>();
 
 	public static int modNumber=1;
 	public static String aminoAcids = "P\tC1C[Ne]C1;A\tO=C(O)[C@@H](N)C;C\tSC[C@H](N)C(O)=O;D\tOC(C[C@H](N)C(O)=O)=O;E\tO=C(O)[C@@H](N)CCC(O)=O;F\tN[C@H](C(O)=O)CC1=CC=CC=C1;G\tO=C(O)CN;H\tN[C@@H](CC1=CN=CN1)C(O)=O;I\tO=C(O)[C@@H](N)[C@H](C)CC;K\tN[C@H](C(O)=O)CCCCN;L\tN[C@@H](CC(C)C)C(O)=O;M\tOC([C@@H](N)CCSC)=O;N\tNC(C[C@H](N)C(O)=O)=O;P\tO=C([C@@H]1CCCN1)O;Q\tOC([C@@H](N)CCC(N)=O)=O;R\tO=C(O)[C@@H](N)CCCNC(N)=N;R\tN[C@H](C(=O)O)CCCN=C(N)N;S\tOC([C@@H](N)CO)=O;T\tC[C@H]([C@@H](C(=O)O)N)O;V\tN[C@H](C(O)=O)C(C)C;W\tO=C(O)[C@@H](N)CC1=CNC2=C1C=CC=C2;Y\tN[C@@H](CC1=CC=C(O)C=C1)C(O)=O;W\tN[C@@H](CC1=CNC2=C1C=CC=C2)C(O)=O;H\tN[C@H](C(=O)O)Cc1c[nH]cn1;I\tO=C(O)[C@@H](N)[C@@H](C)CC;H\tN[C@@H](CC1=CNC=N1)C(O)=O";
-	public static String aminoAcidsLet = "A	Ala;R	Arg;N	Asn;D	Asp;C	Cys;E	Glu;Q	Gln;G	Gly;H	His;I	Ile;L	Leu;K	Lys;M	Met;F	Phe;P	Pro;S	Ser;T	Thr;W	Trp;Y	Tyr;V	Val";
+	public static String aminoAcidsLet = "A\tAla;R\tArg;N\tAsn;D\tAsp;C\tCys;E\tGlu;Q\tGln;G\tGly;H\tHis;I\tIle;L\tLeu;K\tLys;M\tMet;F\tPhe;P\tPro;S\tSer;T\tThr;W\tTrp;Y\tTyr;V\tVal";
 
 	static {
 
@@ -57,7 +57,7 @@ public class PeptideInterpreter {
 				c.aromatize();
 				c.setAtomMapToPosition();
 				int[] pos = longestPeptideBackbone(c,1);
-				int chi=c.getAtom(pos[0]).getChirality().getParity();
+				Chirality chi=c.getAtom(pos[0]).getChirality();
 				AAmapCHI.put(s.split("\t")[0], chi);
 			} catch (Exception e1) {
 				e1.printStackTrace();
@@ -739,7 +739,7 @@ public class PeptideInterpreter {
 					subunit--;
 					continue;
 				}
-				Map<Integer,Integer> chi = new HashMap<>();
+				Map<Integer,Chirality> chi = new HashMap<>();
 				Map<Integer,Integer> alphaAtomIndexToSeqIndex = new LinkedHashMap<>();
 
 				Chemical c2 = c.copy();
@@ -752,7 +752,7 @@ public class PeptideInterpreter {
 					alphaAtomIndexToSeqIndex.put(amap,k++);
 
 //					System.out.println("Found:" + atom.getChirality());
-					chi.put(amap, atom.getChirality().getParity());
+					chi.put(amap, atom.getChirality());
 				}
 				contractPeptide(c2,seq);
 				List<Bond> toRemove = new ArrayList<>();
@@ -906,14 +906,15 @@ public class PeptideInterpreter {
 					}else{
 						boolean mod = (modName.get(let)!=null);
 						if (!mod){
-							int chi1 =(chi.get(s));
-							int chi2 =(let!=null)?(AAmapCHI.get(let)):0;
+						    Chirality chi1 =(chi.get(s));
+							Chirality chi2 =(let!=null)?(AAmapCHI.get(let)):Chirality.Parity_Either;
 
 							if(chi1!=chi2 &&
-									(chi1==gov.nih.ncats.molwitch.Chirality.R.getParity() ||
-											chi1==gov.nih.ncats.molwitch.Chirality.S.getParity())
+                                    (chi1.equals(gov.nih.ncats.molwitch.Chirality.R) ||
+                                            chi1.equals(gov.nih.ncats.molwitch.Chirality.S)) &&
+                                    !chi2.equals(Chirality.Parity_Either) &&
+                                    !chi2.equals(Chirality.Non_Chiral)
 							){
-								
 								let=let.toLowerCase();
 							}
 						}

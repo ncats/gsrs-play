@@ -72,13 +72,17 @@ public class StructureProcessor {
             (String mol, Collection<Structure> components) {
         return instrument (mol, components, true);
     }
-
     public static Structure instrument
             (String mol, Collection<Structure> components, boolean standardize) {
+        return instrument (mol, components, standardize, false);
+    }
+
+    public static Structure instrument
+            (String mol, Collection<Structure> components, boolean standardize, boolean isQuery) {
         Structure struc = new Structure ();
         struc.digest = digest (mol);
         try {        	
-            instrument (struc, components, Chemical.parse(mol), standardize);
+            instrument (struc, components, Chemical.parse(mol), standardize, isQuery);
         }catch (Exception ex) {
             ex.printStackTrace();
             System.err.println("Trouble reading structure:");
@@ -377,13 +381,20 @@ public class StructureProcessor {
      * @param mol
      * @param standardize
      */
-    static void instrument (Structure struc,
+    public static void instrument (Structure struc,
                             Collection<Structure> components,
                             Chemical mol,
                             boolean standardize) {
+        instrument(struc, components, mol, standardize, false);
+    }
+    public static void instrument (Structure struc,
+                            Collection<Structure> components,
+                            Chemical mol,
+                            boolean standardize,
+                            boolean isQuery) {
         StructureProcessorTask settings = new StructureProcessorTask.Builder()
                 .structure(struc)
-                .query(false)
+                .query(isQuery)
                 .mol(mol)
                 .components(components)
                 .build();

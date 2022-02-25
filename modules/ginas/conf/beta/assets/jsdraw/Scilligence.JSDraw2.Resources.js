@@ -1,3 +1,7 @@
+//GSRS addition 12/01/2021
+scil.Utils._scripturl=null; //this helps ensure temporary cached settings aren't honored
+scil.Utils._loadedAdditions=true; //flag that this extra file is loaded
+
 scil.Utils.imgSrc = function (button, wrapasinurl) {
 var s = null;
 if (button != null)

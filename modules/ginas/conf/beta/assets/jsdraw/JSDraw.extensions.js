@@ -882,29 +882,34 @@ var callback = function(){
       document.addEventListener("DOMContentLoaded", callback);
     }
     
-    function afterSketcherMade(){
-        document.querySelectorAll("[cmd=save]").parent("td").remove();
-        document.querySelectorAll("[cmd=open]").parent("td").remove();
-        document.querySelectorAll("[cmd=new]").parent("td").next().remove();
-        document.querySelectorAll("[cmd=bracket]").click();
-        document.querySelectorAll("[cmd=select]").click();
-        document.querySelectorAll("[cmd=rectangle]").parent("td").next().remove();
-        document.querySelectorAll("[cmd=rectangle]").parent("td").remove();
+   function afterSketcherMade(){
+        document.querySelectorAll("[cmd=save]")[0].closest("td").remove();
+        document.querySelectorAll("[cmd=open]")[0].closest("td").remove();
+        document.querySelectorAll("[cmd=new]")[0].closest("td").nextElementSibling.remove();
+        document.querySelectorAll("[cmd=bracket]")[0].click();
+        document.querySelectorAll("[cmd=select]")[0].click();
+        document.querySelectorAll("[cmd=rectangle]")[0].closest("td").nextElementSibling.remove();
+        document.querySelectorAll("[cmd=rectangle]")[0].closest("td").remove();
         //arrow
-        document.querySelectorAll("[cmd=arrow]").parent("td").prev().remove();
-        document.querySelectorAll("[cmd=arrow]").parent("td").next().remove();
-        document.querySelectorAll("[cmd=arrow]").parent("td").remove();
+        document.querySelectorAll("[cmd=arrow]")[0].closest("td").previousElementSibling.remove();
+        document.querySelectorAll("[cmd=arrow]")[0].closest("td").nextElementSibling.remove();
+        document.querySelectorAll("[cmd=arrow]")[0].closest("td").remove();
     
         //helm_nucleotide
-        document.querySelectorAll("[cmd=helm_nucleotide]").parent("td").next().remove();
-        document.querySelectorAll("[cmd=helm_nucleotide]").parent("td").remove();
+        document.querySelectorAll("[cmd=helm_nucleotide]")[0].closest("td").nextElementSibling.remove();
+        document.querySelectorAll("[cmd=helm_nucleotide]")[0].closest("td").remove();
     
         //seq
-        document.querySelectorAll("[cmd=seq]").parent("td").next().remove();
-        document.querySelectorAll("[cmd=seq]").parent("td").next().remove();
-        document.querySelectorAll("[cmd=seq]").parent("td").remove();
+        document.querySelectorAll("[cmd=seq]")[0].closest("td").nextElementSibling.remove();
+        document.querySelectorAll("[cmd=seq]")[0].closest("td").nextElementSibling.remove();
+        document.querySelectorAll("[cmd=seq]")[0].closest("td").remove();
     
         //pubchem
-        document.querySelectorAll("[cmd=pubchem]").parent("td").next().remove();
-        document.querySelectorAll("[cmd=pubchem]").parent("td").remove();
+        document.querySelectorAll("[cmd=pubchem]")[0].closest("td").nextElementSibling.remove();
+        document.querySelectorAll("[cmd=pubchem]")[0].closest("td").remove();
+     
+        // This prevents atom list dialog from being tied to an old now deactivated form:
+        // Note that this is still an issue if there is more than one editor being used at one
+        // time. JSDraw will need to fix.
+        JSDraw2.Editor.atomlistDlg=null;
     }

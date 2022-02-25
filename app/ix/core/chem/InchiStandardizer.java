@@ -48,17 +48,23 @@ public class InchiStandardizer implements StructureStandardizer{
     public Chemical standardize(Chemical orig, Supplier<String> molSupplier, Consumer<Value> valueConsumer) throws IOException {
         int maxAtoms = ATOM_LIMIT_SUPPLIER.get();
 
-        if(orig.getAtomCount() > maxAtoms || orig.hasPseudoAtoms()){
+        if(orig.getAtomCount() > maxAtoms || orig.hasPseudoAtoms() || orig.hasQueryAtoms()){
             return orig;
         }
         try {
             String inchi = orig.toInchi().getInchi();
             Chemical chem= Inchi.toChemical(inchi);
+            //some inchi->chemical flavors have very bad clean functions and don't compute stereo or coords correctly
+            //which can lead to wrong molecules so do a double check that we get the right inchi back
+            if(!chem.toInchi().getInchi().equals(inchi)){
+                return orig;
+            }
             valueConsumer.accept(
                     (new Text(Structure.F_SMILES,chem.toSmiles(CANONICAL_SMILES_SPEC)
                            )));
             return chem;
         }catch(Exception e){
+            System.err.println("error standardizing\n "+ molSupplier.get());
             e.printStackTrace();
             return orig;
         }
