@@ -1,6 +1,8 @@
 FROM centos:8 AS builder
-ARG MOLWITCH=cdk
+RUN sed -i -e "s|mirrorlist=|#mirrorlist=|g" /etc/yum.repos.d/CentOS-*
+RUN sed -i -e "s|#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g" /etc/yum.repos.d/CentOS-*
 RUN dnf -y install dejavu-sans-fonts dejavu-serif-fonts fontconfig git java-1.8.0-openjdk-devel patch && dnf clean all && fc-cache -f
+ARG MOLWITCH=cdk
 COPY . /tmp/build
 WORKDIR /tmp/build
 RUN mkdir -p modules/extensions/lib modules/extensions/patches
@@ -29,6 +31,8 @@ RUN /tmp/build/build_extensions.sh /tmp/build/modules/extensions /opt/g-srs
 RUN find /tmp/build/modules/extensions/lib -type f -name '*.jar' -print0 -exec mv -t lib/ {} \;
 
 FROM centos:8
+RUN sed -i -e "s|mirrorlist=|#mirrorlist=|g" /etc/yum.repos.d/CentOS-*
+RUN sed -i -e "s|#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g" /etc/yum.repos.d/CentOS-*
 RUN dnf -y install dejavu-sans-fonts dejavu-serif-fonts fontconfig java-1.8.0-openjdk-headless && dnf clean all
 COPY --from=builder /opt /opt
 COPY --from=builder /root /root
