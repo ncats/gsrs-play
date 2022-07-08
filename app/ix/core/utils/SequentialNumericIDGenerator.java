@@ -1,6 +1,4 @@
-package ix.ginas.utils;
-
-
+package ix.core.utils;
 
 public abstract class SequentialNumericIDGenerator<T> extends AbstractNoDependencyIDGenerator<T, String> implements NamedIdGenerator<T, String> {
 

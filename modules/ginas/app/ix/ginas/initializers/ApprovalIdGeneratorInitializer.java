@@ -4,10 +4,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.type.TypeFactory;
 import ix.core.initializers.Initializer;
 import ix.core.util.IOUtil;
+import ix.core.utils.NamedIdGenerator;
 import ix.ginas.models.v1.Substance;
 import ix.ginas.utils.DefaultApprovalIDGenerator;
 import ix.ginas.utils.GinasUtils;
-import ix.ginas.utils.NamedIdGenerator;
 import play.Application;
 import play.Logger;
 

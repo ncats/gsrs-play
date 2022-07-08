@@ -11,6 +11,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import ix.core.initializers.Initializer;
+import ix.core.initializers.ScheduledTaskInitializer;
 import ix.core.models.BaseModel;
 import ix.core.plugins.SchedulerPlugin.TaskListener;
 import ix.core.processors.BackupProcessor;

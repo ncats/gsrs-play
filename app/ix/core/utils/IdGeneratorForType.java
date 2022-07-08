@@ -1,4 +1,4 @@
-package ix.ginas.utils;
+package ix.core.utils;
 
 /**
  * An ID Generator which may use properties of a given type

@@ -8,6 +8,10 @@ import java.text.DateFormat;
 import java.util.Arrays;
 import java.util.Date;
 
+import ix.core.exporters.Spreadsheet;
+import ix.core.exporters.Spreadsheet.SpreadsheetRow;
+import ix.core.exporters.SpreadsheetCell;
+
 /**
  * Created by katzelda on 8/23/16.
  */

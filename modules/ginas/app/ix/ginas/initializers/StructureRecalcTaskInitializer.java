@@ -6,6 +6,7 @@
 package ix.ginas.initializers;
 
 import ix.core.chem.StructureProcessorTask;
+import ix.core.initializers.ScheduledTaskInitializer;
 import ix.core.models.Structure;
 import ix.core.plugins.SchedulerPlugin.TaskListener;
 import ix.core.utils.executor.ProcessExecutionService;
