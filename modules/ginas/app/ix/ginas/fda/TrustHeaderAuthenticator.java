@@ -40,7 +40,6 @@ import java.util.Map;
  */
 public class TrustHeaderAuthenticator implements Authenticator {
 
-	private final String AUTHENTICATION_FAILURE_URL ="https://store.usp.org/product/3934707";
 	CachedSupplier<Boolean> trustheader = CachedSupplier.of(() -> {
 		return Play.application()
 				.configuration()
@@ -97,7 +96,7 @@ public class TrustHeaderAuthenticator implements Authenticator {
 
 	@Override
 	public UserProfile authenticate(AuthenticationCredentials credentials) {
-		Logger.debug("in TrustHeaderAuthenticator authenticate");
+		Logger.trace("in TrustHeaderAuthenticator authenticate");
 		if(!trustheader.get())return null;
 		if(usernameheader.get()==null)return null;
 
@@ -112,9 +111,7 @@ public class TrustHeaderAuthenticator implements Authenticator {
 			if (ui!= null && ui.username != null) {
 				return Authentication.setUserProfileSessionUsing(ui.username, ui.email, ui.firstName);
 			}
-			Logger.debug("redirecting to " + AUTHENTICATION_FAILURE_URL);
-			play.mvc.Result result =play.mvc.Controller.redirect(AUTHENTICATION_FAILURE_URL);
-			Logger.debug("redirect result: " + result);
+			Logger.trace("allowing caller to handle redirection ");
 		} catch (Exception e) {
 			Logger.warn("Error authenticating", e);
 		}
@@ -139,24 +136,23 @@ public class TrustHeaderAuthenticator implements Authenticator {
 
 
 	private UserInfo getUserInfoFromHeaders(Http.Request r){
-		Logger.debug("starting in getUserInfoFromHeaders");
+		Logger.trace("starting in getUserInfoFromHeaders");
 		String username = r.getHeader(usernameheader.get());
 		String useremail = r.getHeader(useremailheader.get());
-		Logger.debug("uuidheader: " + uuidheader.get());
 		String uuid =r.getHeader(uuidheader.get());
 		String firstName = r.getHeader(firstnameheader.get());
 		String lastName = r.getHeader(lastnameheader.get());
 		String groupMembership =r.getHeader(groupmembershipheader.get());
-		Logger.debug("groupmembershipheader: " + groupmembershipheader.get()
-			+ "; value: " + groupMembership);
+		/*Logger.debug("groupmembershipheader: " + groupmembershipheader.get()
+			+ "; value: " + groupMembership);*/
 
 		groupMembership =formatGroups(groupMembership);
 		//todo: remove this debug info!
 		String msg = String.format("username: %s; useremail: %s; firstName: %s, lastName: %s, groups: %s",
 				username, useremail, firstName, lastName, groupMembership);
-		Logger.debug(msg);
+		Logger.trace(msg);
 		if( groupMembership==null ||groupMembership.length()==0) {
-			Logger.debug("No group memberships found for user " + username);
+			Logger.trace("No group memberships found for user " + username);
 		}
 		String initialToken = getFirstAuthenticationToken();
 
@@ -184,7 +180,7 @@ public class TrustHeaderAuthenticator implements Authenticator {
 		return String.join(",", cleanGroups);
 	}
 	private boolean getAuthorizationInfo(String bearerToken, String uuid, String email, String groupInfo) {
-		Logger.debug("starting in getAuthorizationInfo");
+		Logger.trace("starting in getAuthorizationInfo");
 		Map<String, String> headers = new HashMap<>();
 		String bearerValue = String.format("Bearer %s",bearerToken);
 		headers.put("Authorization", bearerValue);
@@ -200,9 +196,8 @@ public class TrustHeaderAuthenticator implements Authenticator {
 		}
 		Logger.trace("authorizationRequest: " + authorizationRequest);
 		String authorizationUrl = subscriptionurl.get(); //authorization means checking the subscription status of the user
-		Logger.debug("authorizationUrl: " + authorizationUrl);
+		//Logger.debug("authorizationUrl: " + authorizationUrl);
 		String authorizationData = performPostUsingClient(authorizationUrl, authorizationRequest, headers, null);
-		Logger.debug("in getAuthorizationInfo, authorizationData: " + authorizationData);
 		return parseRawAuth(authorizationData);
 	}
 
@@ -221,7 +216,7 @@ public class TrustHeaderAuthenticator implements Authenticator {
 				Logger.error("applicationsNode null!");
 				return false;
 			}
-			Logger.debug("applicationNode: " + applicationsNode.asText());
+			//Logger.debug("applicationNode: " + applicationsNode.asText());
 			List<JsonNode> applicationRecords =applicationsNode.findValues("records");
 			JsonNode productNode =applicationRecords.get(0).findValue("products");
 			if(productNode == null) {
@@ -254,7 +249,7 @@ public class TrustHeaderAuthenticator implements Authenticator {
 	}
 
 	private String getFirstAuthenticationToken() {
-		Logger.debug("starting in getFirstAuthenticationToken");
+		Logger.trace("starting in getFirstAuthenticationToken");
 		String requestData="grant_type=client_credentials";
 		Map<String, String> headers = new HashMap<>();
 		headers.put("Authorization", "Basic " +  initialtokensupplier.get());
@@ -274,10 +269,10 @@ public class TrustHeaderAuthenticator implements Authenticator {
 			JsonNode node = mapper.readValue(info, JsonNode.class);
 			JsonNode tokenNode= node.get("access_token");
 			if( tokenNode!= null && tokenNode.asText() != null) {
-				Logger.debug("tokenNode: " + tokenNode.asText());
+				Logger.trace("tokenNode: " + tokenNode.asText());
 				return tokenNode.asText();
 			} else {
-				Logger.debug("tokenNode not parsed");
+				Logger.warn("tokenNode not parsed");
 			}
 		} catch (JsonProcessingException e) {
 			e.printStackTrace();
@@ -287,7 +282,7 @@ public class TrustHeaderAuthenticator implements Authenticator {
 
 	private static String performPostUsingClient(String url, String data, Map<String, String> headers,
 												 List<NameValuePair> parameters) {
-		Logger.debug("starting in performPostUsingClient");
+		Logger.trace("starting in performPostUsingClient");
 		HttpClient client = HttpClients.createDefault();
 				//HttpClientBuilder.create().build();
 		HttpPost post = new HttpPost(url);
@@ -325,7 +320,7 @@ public class TrustHeaderAuthenticator implements Authenticator {
 			}
 			is.close();
 			String result = textBuilder.toString();
-			Logger.debug("got result: " + result);
+			Logger.trace("got result: " + result);
 			return result;
 		} catch (IOException ex) {
 			Logger.error( "Error making httpClient call: " + ex.getMessage());

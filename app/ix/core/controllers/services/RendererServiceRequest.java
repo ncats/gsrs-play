@@ -55,10 +55,12 @@ public class RendererServiceRequest extends AbstractService {
             }
         }
 
+/*
         if(size>250){
             if(!Structure.Stereo.ACHIRAL.equals(struc.stereoChemistry))
                 newDisplay.put(RendererOptions.DrawOptions.DRAW_STEREO_LABELS.name(), true);
         }
+*/
 
         RendererRequestObj requestObj = new RendererRequestObj();
         requestObj.structure = fixMolIfNeeded(struc);

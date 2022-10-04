@@ -1,6 +1,7 @@
 package ix.ncats.controllers;
 
 import java.awt.Dimension;
+import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -773,10 +774,12 @@ public class App extends Authentication {
 	}
 
 	public static Result renderParam (final String value, final int size) {
+		System.out.printf("in renderParam with size: %d\n", size);
 		return render(value, size);
 	}
 
 	public static Result render (final String value, final int size) {
+		System.out.printf("starting this render (final String value, final int size) %d\n", size);
 		String key = Util.sha1(value)+"::"+size;
 		try {
 
@@ -823,6 +826,11 @@ public class App extends Authentication {
 	public static byte[] render (Chemical chem, String format,
 								 int size, int[] amap, Map<String, Boolean> newDisplay, Boolean drawStereo)
 					throws Exception {
+		System.out.printf("starting render with chem and format %s and size %d\n", format, size);
+
+		String rawImageHeight = RequestHelper.request().getQueryString("imageHeight");
+		String rawImageWidth =RequestHelper.request().getQueryString("imageWidth");
+
 
 		try {
 			RendererOptions rendererOptons = _rendererPlugin.get().newRendererOptions();
@@ -856,7 +864,7 @@ public class App extends Authentication {
 				rendererOptons.setDrawOption(RendererOptions.DrawOptions.DRAW_STEREO_LABELS, false);
 
 		}else{
-				if (size > 250 /*&& !highlight*/) {
+				/*if (size > 250 *//*&& !highlight*//*) {
 					//katzelda March 21 2019
 					//after talking to Tyler we should just always
 					//turn on stereo labels because the renderer will determine if there's stereo
@@ -871,9 +879,10 @@ public class App extends Authentication {
 //					e.printStackTrace();
 //					Logger.error("Can't generate stereo flags for structure", e);
 //				}
-			}
+			}*/
 		}
 			if (drawStereo != null) {
+				System.out.printf("Using drawStereo: %b\n", drawStereo);
 				rendererOptons.setDrawOption(RendererOptions.DrawOptions.DRAW_STEREO_LABELS, drawStereo);
 
 		}
@@ -894,30 +903,69 @@ public class App extends Authentication {
 			Chem.fixMetals(chem);
 
 
-		ByteArrayOutputStream bos = new ByteArrayOutputStream ();       
+		ByteArrayOutputStream bos = new ByteArrayOutputStream ();
 
-		if (format.equals("svg")) {
-			SVGGraphics2D svg = new SVGGraphics2D
-					(bos, new Dimension (size, size));
-				try {
-			svg.startExport();
+			if( rawImageHeight!=null && rawImageHeight.length() >0 && rawImageWidth!=null && rawImageWidth.length()>0 )
+			{
+				int imageHeight = Integer.parseInt(rawImageHeight);
+				int imageWidth = Integer.parseInt(rawImageWidth);
+				renderInner(renderer, chem, imageWidth, imageHeight, format, bos);
+			}else {
+				int lower = size / 2;
+				int upper = 2 * size;
+				double baseBondLength = 75;
+				double bondLength = baseBondLength;//(size/100)*baseBondLength;
+				System.out.println("lower: " + lower + "; upper: " + upper + "; bond length: " + bondLength);
+				Rectangle2D.Double rect = renderer.getApproximateBoundsFor(chem, upper, lower, upper, lower, bondLength);
 
-					renderer.render(svg, chem, 0, 0, size, size, false);
-			svg.endExport();
-				} finally {
-			svg.dispose();
+				int width = (int) Math.round(rect.getWidth());
+				int height = (int) Math.round(rect.getHeight());
+				if (format.equals("svg")) {
+					SVGGraphics2D svg = new SVGGraphics2D
+							(bos, new Dimension(size, size));
+					try {
+						svg.startExport();
+						renderer.render(svg, chem, 0, 0, size, size, false);
+						svg.endExport();
+					} finally {
+						svg.dispose();
+					}
+				} else {
+					BufferedImage bi = renderer.createImage(chem, width, height, false);
+					System.out.println("rendering using height: " + height + " and width: " + width);
+
+					//bi = renderer.createImage(chem, size);
+
+					ImageIO.write(bi, format, bos);
 				}
-		}else {
-				BufferedImage bi = renderer.createImage(chem, size);
-				ImageIO.write(bi, format, bos);
-		}
-
+			}
 		return bos.toByteArray();
 		}catch(Exception e){
 			e.printStackTrace();
 			throw e;
 		}
 	}
+
+	private static void renderInner(ChemicalRenderer renderer, Chemical chem, int width, int height, String format, ByteArrayOutputStream bos)
+		throws IOException {
+		System.out.println("in renderInner");
+		if (format.equals("svg")) {
+			SVGGraphics2D svg = new SVGGraphics2D
+					(bos, new Dimension(width, height));
+			try {
+				svg.startExport();
+				renderer.render(svg, chem, 0, 0, width, height, false);
+				svg.endExport();
+			} finally {
+				svg.dispose();
+			}
+		}else {
+			BufferedImage bi = renderer.createImage(chem, width, height, false);
+			System.out.println("rendering using height: " + height + " and width: " + width);
+			ImageIO.write(bi, format, bos);
+		}
+	}
+
 	private static Boolean getStereoFlagFromRequest() {
 		return getStereoFlagFromRequest( request());
 	}
@@ -957,6 +1005,9 @@ public class App extends Authentication {
 			return struc.molfile;
 		}
 	}
+	/*
+	Handles API requests?
+	 */
 	public static byte[] render (Structure struc, String format, int size, int[] amap)
 			throws Exception {
 		Map<String, Boolean> newDisplay = new HashMap<>();
@@ -971,7 +1022,7 @@ public class App extends Authentication {
 					if(Stereo.EPIMERIC.equals(struc.stereoChemistry)
 							||Stereo.RACEMIC.equals(struc.stereoChemistry)
 							||Stereo.MIXED.equals(struc.stereoChemistry)){
-						c.setProperty("BOTTOM_TEXT","and enantiomer"); //relative stereochemistry
+						c.setProperty("BOTTOM_TEXT","relative stereochemistry");
 					}
 				}
 			}
@@ -988,10 +1039,10 @@ public class App extends Authentication {
 			}               
 		}
 
-		if(size>250){
+		/*if(size>250){
 			if(!Stereo.ACHIRAL.equals(struc.stereoChemistry))
 				newDisplay.put(RendererOptions.DrawOptions.DRAW_STEREO_LABELS.name(), true);
-		}
+		}*/
 		if(newDisplay.size()==0)newDisplay=null;
 
 		

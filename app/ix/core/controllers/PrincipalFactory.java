@@ -97,6 +97,7 @@ public class PrincipalFactory extends EntityFactory {
     public static synchronized Principal registerIfAbsent(Principal org) {
         Principal results = byUserName(org.username);
         if (results == null) {
+            Logger.trace("registerIfAbsent going to create Principal");
             try {
             	Transaction t=Ebean.currentTransaction();
                 org.save();
@@ -110,7 +111,7 @@ public class PrincipalFactory extends EntityFactory {
                 }
                 return org;
             } catch (Exception ex) {
-                Logger.trace("Can't register principal: " + org.username, ex);
+                Logger.warn("Can't register principal: " + org.username, ex);
                 throw new IllegalArgumentException(ex);
             }
         }

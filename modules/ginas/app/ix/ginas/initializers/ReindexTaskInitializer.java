@@ -56,7 +56,7 @@ public class ReindexTaskInitializer extends ScheduledTaskInitializer{
 
 	@Override
 	public String getDescription() {		
-		return "Reindex all core entities from backup tables";
+		return "Reindex all core entities from backup tables\\nMake sure that autoscaling is turned off before running!";
 	}
 	
 	@Override

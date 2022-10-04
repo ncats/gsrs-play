@@ -52,7 +52,8 @@ public class GinasGlobal extends Global {
 	
 	private static Predicate<Http.Request> intercept=(h)->false;
 
-	
+	private final String AUTHENTICATION_FAILURE_URL ="https://store.usp.org/product/3934707";
+
 	private void logHeaders(Http.Request req){
 		Logger.debug("HEADERS ON REQUEST ===================");
 		String allheaders="";
@@ -87,6 +88,7 @@ public class GinasGlobal extends Global {
 													  //IS this due to a proxy?
 
 			UserProfile p = Authentication.getUserProfile();
+			Logger.debug("UserProfile from Authentication: " + ((p==null) ? "null" : p.user.email));
 			
 			String uri=req.uri();
 			char[] cs = uri.toCharArray();
@@ -101,9 +103,13 @@ public class GinasGlobal extends Global {
 			}
 
 
-			if(p ==null && !Authentication.allowNonAuthenticated()){
+			if(p ==null && !Authentication.allowNonAuthenticated() ){
+				//!req.uri().contains("/ginas/app/beta/unathorized")
+				Logger.debug("in LoginWrapper detected non-authenticated or unauthorized user. uri: " + req.uri());
+				play.mvc.Result result = play.mvc.Controller.redirect(AUTHENTICATION_FAILURE_URL);
+				return wrapResult(result);
 
-				UserProfile u=Authentication.getAdministratorContact();
+				/*UserProfile u=Authentication.getAdministratorContact();
 				AccessLogger.info("NOT_AUTHENTICATED {} {} {} \"{}\"", req.remoteAddress(),
 						real != null ? real : "", req.method(), req.uri());
 				if(u!=null){
@@ -112,7 +118,7 @@ public class GinasGlobal extends Global {
 							+ " to be granted access."));
 				}else{
 					return wrapResult(GinasApp.error(401, "You are not authorized to see this resource. Please contact an administrator to be granted access."));
-				}
+				}*/
 			}
 
 			String username = (p ==null) ? "GUEST" : Optional.ofNullable(p.user).map(u->u.username).orElse("GUEST");

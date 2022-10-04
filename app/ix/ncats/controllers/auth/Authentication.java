@@ -261,6 +261,7 @@ public class Authentication extends Controller {
     public static UserProfile getUserProfile() {
         Session session = getSession();
         if(session!=null){
+			Logger.debug("session not null in getUserProfile");
         	if(session.profile!=null){
         		return session.profile;
         	}
@@ -271,13 +272,14 @@ public class Authentication extends Controller {
         Set<Authenticator> authenticators= AuthenticatorFactory
         	.getInstance(Play.application())
         	.getRegisteredResourcesFor(AuthenticatorFactory.RESOURCE_CLASS);
-        
+		Logger.debug("in getUserProfile, size of authenticators: " + authenticators.size());
         Optional<UserProfile> opup=authenticators.stream()
         		.map(au->au.authenticate(cred))
         		.filter(Objects::nonNull)
         		.findFirst();
         
         if(opup.isPresent()){
+			Logger.debug("is present");
         	setUserSessionDirectly(opup.get());
         }
         return opup.orElse(null);

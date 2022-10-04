@@ -17,3 +17,5 @@
 StartGinas.sh
 app/ix/ginas/models/v1/Name.java.old
 /nbproject/private/
+/gsrs27/target/**
+/gsrs27/modules/ginas/target/**
