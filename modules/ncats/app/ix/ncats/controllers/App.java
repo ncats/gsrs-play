@@ -828,9 +828,11 @@ public class App extends Authentication {
 					throws Exception {
 		System.out.printf("starting render with chem and format %s and size %d\n", format, size);
 
-		String rawImageHeight = RequestHelper.request().getQueryString("imageHeight");
-		String rawImageWidth =RequestHelper.request().getQueryString("imageWidth");
-
+		String rawMinWidth=RequestHelper.request().getQueryString("minWidth");
+		String rawMaxWidth=RequestHelper.request().getQueryString("maxWidth");
+		String rawMinHeight=RequestHelper.request().getQueryString("minHeight");
+		String rawMaxHeight=RequestHelper.request().getQueryString("maxHeight");
+		String rawBondLength =RequestHelper.request().getQueryString("bondLength");
 
 		try {
 			RendererOptions rendererOptons = _rendererPlugin.get().newRendererOptions();
@@ -904,12 +906,37 @@ public class App extends Authentication {
 
 
 		ByteArrayOutputStream bos = new ByteArrayOutputStream ();
-
-			if( rawImageHeight!=null && rawImageHeight.length() >0 && rawImageWidth!=null && rawImageWidth.length()>0 )
+			String defaultBondLength="10.0";
+			if( (rawMinWidth!=null && rawMinWidth.length() >0)
+					|| (rawMaxWidth!=null && rawMaxWidth.length()>0)
+					|| (rawMinHeight != null && rawMinHeight.length() >0)
+					|| (rawMaxHeight != null && rawMaxHeight.length() >0)
+					|| (rawBondLength!=null && rawBondLength.length() >0) )
 			{
-				int imageHeight = Integer.parseInt(rawImageHeight);
-				int imageWidth = Integer.parseInt(rawImageWidth);
-				renderInner(renderer, chem, imageWidth, imageHeight, format, bos);
+				if( rawMinWidth==null || rawMinWidth.length() ==0){
+					rawMinWidth=Integer.toString(size);
+				}
+				if( rawMaxWidth==null || rawMaxWidth.length()==0){
+					rawMaxWidth=Integer.toString(size);
+				}
+
+				if( rawMinHeight==null || rawMinHeight.length() ==0){
+					rawMinHeight=Integer.toString(size);
+				}
+				if( rawMaxHeight==null || rawMaxHeight.length()==0){
+					rawMaxHeight=Integer.toString(size);
+				}
+				if( rawBondLength==null || rawBondLength.length()==0){
+					rawBondLength=defaultBondLength;
+				}
+				
+				int minWidth = Integer.parseInt(rawMinWidth);
+				int maxWidth = Integer.parseInt(rawMaxWidth);
+				int minHeight = Integer.parseInt(rawMinHeight);
+				int maxHeight = Integer.parseInt(rawMaxHeight);
+				double bondLength= Double.parseDouble(rawBondLength);
+
+				renderInner(renderer, chem, minWidth, maxWidth, minHeight, maxHeight, bondLength, format, bos);
 			}else {
 				int lower = size / 2;
 				int upper = 2 * size;
@@ -946,9 +973,15 @@ public class App extends Authentication {
 		}
 	}
 
-	private static void renderInner(ChemicalRenderer renderer, Chemical chem, int width, int height, String format, ByteArrayOutputStream bos)
+	private static void renderInner(ChemicalRenderer renderer, Chemical chem, int minWidth, int maxWidth, int minHeight, int maxHeight,
+									double bondLength, String format, ByteArrayOutputStream bos)
 		throws IOException {
-		System.out.println("in renderInner");
+		System.out.printf("in renderInner, minWidth: %d, maxWidth: %d minHeight: %d, maxHeight: %d, bondLength: %f\n",
+				minWidth, maxWidth, minHeight, maxHeight, bondLength);
+		Rectangle2D.Double rect = renderer.getApproximateBoundsFor(chem, maxWidth, minWidth, maxHeight, minHeight, bondLength);
+		int width = (int) Math.round(rect.getWidth());
+		int height = (int) Math.round(rect.getHeight());
+
 		if (format.equals("svg")) {
 			SVGGraphics2D svg = new SVGGraphics2D
 					(bos, new Dimension(width, height));
