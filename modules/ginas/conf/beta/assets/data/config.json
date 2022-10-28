@@ -29,7 +29,7 @@
     {
       "card": "substance-alternative-definition",
       "type": "SUBSTANCE->SUB_ALTERNATE",
-      "title": "alternative definitions",
+      "title": "variant concepts",
       "filters": [
         {
           "filterName": "exists",
@@ -171,21 +171,6 @@
     },
     {
       "card": "substance-relationships",
-      "type": "METABOLITE",
-      "title": "metabolites",
-      "filters": [
-        {
-          "filterName": "exists",
-          "propertyToCheck": "relationships"
-        },
-        {
-          "filterName": "substanceRelationships",
-          "value": "METABOLITE"
-        }
-      ]
-    },
-    {
-      "card": "substance-relationships",
       "type": "IMPURITY",
       "title": "impurities",
       "filters": [
@@ -196,6 +181,21 @@
         {
           "filterName": "substanceRelationships",
           "value": "IMPURITY"
+        }
+      ]
+    },
+    {
+      "card": "substance-relationships",
+      "type": "METABOLITE",
+      "title": "metabolites",
+      "filters": [
+        {
+          "filterName": "exists",
+          "propertyToCheck": "relationships"
+        },
+        {
+          "filterName": "substanceRelationships",
+          "value": "METABOLITE"
         }
       ]
     },
@@ -499,8 +499,6 @@
         "Record Status",
         "Substance Class",
         "INN Stem",
-		"USAN Stem",
-		"USAN DATE",
         "GInAS Tag",
         "Code System",
         "ATC Level 1",

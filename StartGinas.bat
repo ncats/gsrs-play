@@ -1,1 +1,1 @@
-sbt.bat -Dconfig.file=modules/ginas/conf/ginas.conf -Dfile.encoding=UTF-8 -Dmolwitch=jchem3 ginas/run > logs/nohup.out 2> logs/errors.out
+sbt.bat -Dconfig.file=modules/ginas/conf/ginas.conf -Dfile.encoding=UTF-8 -Dmolwitch=cdk ginas/run > logs/nohup.out 2> logs/errors.out

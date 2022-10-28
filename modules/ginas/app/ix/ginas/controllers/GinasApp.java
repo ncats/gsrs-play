@@ -2222,7 +2222,7 @@ public class GinasApp extends App {
     @Dynamic(value = IxDynamicResourceHandler.CAN_SEARCH, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
     public static Result structure(final String id, final String format, final int size, final String contextId, final String version) {
     	UUID uuid;
-    	
+        play.Logger.trace("in GinasApp.structure");
     	
     	if (!UUIDUtil.isUUID(id)) {
         	Optional<UUID> t= SubstanceFactory.resolveID(id);

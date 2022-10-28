@@ -85,7 +85,7 @@ import play.mvc.BodyParser;
 import play.mvc.Call;
 import play.mvc.Http.Request;
 import play.mvc.Result;
-
+import ix.core.chem.StructureRenderingParameters;
 
 /**
  * Basic plumbing for an App
@@ -774,13 +774,26 @@ public class App extends Authentication {
 	}
 
 	public static Result renderParam (final String value, final int size) {
-		System.out.printf("in renderParam with size: %d\n", size);
+		play.Logger.trace(String.format("in renderParam with size: %d\n", size));
 		return render(value, size);
 	}
 
 	public static Result render (final String value, final int size) {
-		System.out.printf("starting this render (final String value, final int size) %d\n", size);
-		String key = Util.sha1(value)+"::"+size;
+		play.Logger.trace(String.format("starting this render (final String value, final int size) %d\n", size));
+		String rawMinWidth=RequestHelper.request().getQueryString("minWidth");
+		String rawMaxWidth=RequestHelper.request().getQueryString("maxWidth");
+		String rawMinHeight=RequestHelper.request().getQueryString("minHeight");
+		String rawMaxHeight=RequestHelper.request().getQueryString("maxHeight");
+		String rawBondLength =RequestHelper.request().getQueryString("bondLength");
+
+		StructureRenderingParameters parameterSet = new StructureRenderingParameters();
+		parameterSet.setMinHeight(rawMinHeight);
+		parameterSet.setMaxHeight(rawMaxHeight);
+		parameterSet.setMinWidth(rawMinWidth);
+		parameterSet.setMaxWidth(rawMaxWidth);
+		parameterSet.setBondLength(rawBondLength);
+
+		String key = Util.sha1(value)+"::"+size + "::" + parameterSet.toString();
 		try {
 
 			byte[] resp = getOrElse (getTextIndexer().lastModified(), key, TypedCallable.of(() ->{
@@ -1043,6 +1056,7 @@ public class App extends Authentication {
 	 */
 	public static byte[] render (Structure struc, String format, int size, int[] amap)
 			throws Exception {
+		play.Logger.trace("in public static byte[] render");
 		Map<String, Boolean> newDisplay = new HashMap<>();
 		newDisplay.put(RendererOptions.DrawOptions.DRAW_STEREO_LABELS_AS_RELATIVE.name(),
 				Stereo.RACEMIC.equals(struc.stereoChemistry));
@@ -1114,6 +1128,7 @@ public class App extends Authentication {
 			final int size,
 			final String atomMap) {
 
+		play.Logger.trace("in App.structure");
 					Structure struc = StructureFactory.getStructure(id);
 		if(struc==null){
 			return notFound("Not a valid structure " + id);
@@ -1133,11 +1148,26 @@ public class App extends Authentication {
 	 */
 	public static Result structure(Structure struc, final String format, final int size, final String atomMap) {
 
+		play.Logger.trace("in App.structure");
 		final int[] amap = stringToIntArray(atomMap);
 		if (format.equals("svg") || format.equals("png")) {
+			String rawMinWidth=RequestHelper.request().getQueryString("minWidth");
+			String rawMaxWidth=RequestHelper.request().getQueryString("maxWidth");
+			String rawMinHeight=RequestHelper.request().getQueryString("minHeight");
+			String rawMaxHeight=RequestHelper.request().getQueryString("maxHeight");
+			String rawBondLength =RequestHelper.request().getQueryString("bondLength");
+
+			StructureRenderingParameters parameterSet = new StructureRenderingParameters();
+			parameterSet.setMinHeight(rawMinHeight);
+			parameterSet.setMaxHeight(rawMaxHeight);
+			parameterSet.setMinWidth(rawMinWidth);
+			parameterSet.setMaxWidth(rawMaxWidth);
+			parameterSet.setBondLength(rawBondLength);
+
 			final String key = Structure.class.getName() + "/" + size + "/" + struc.id + "." + format + ":" + atomMap
 					+ "||" + struc.version + "%" + RendererOptions.createDefault().hashCode()+ "|" + RequestHelper.request().getQueryString("stereo")
-                                        + "|" + RequestHelper.request().getQueryString("version");
+                                        + "|" + RequestHelper.request().getQueryString("version") +"|" +parameterSet.toString();
+			play.Logger.trace("key: " + key);
 			String mime = format.equals("svg") ? "image/svg+xml" : "image/png";
 			Boolean showStereo = getStereoFlagFromRequest();
 			try {
