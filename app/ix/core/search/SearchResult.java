@@ -365,7 +365,7 @@ public class SearchResult {
 	 * return a list.
 	 */
 	public void waitForFinish() throws Exception{
-		this.getMatchesFuture().get();
+		//this.getMatchesFuture().get();
 		return;
 	}
 	

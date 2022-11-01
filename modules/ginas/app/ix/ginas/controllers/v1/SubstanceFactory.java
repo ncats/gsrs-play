@@ -77,8 +77,8 @@ import play.mvc.Results;
 
 @NamedResource(name = "substances", type = Substance.class, description = "Resource for handling of GInAS substances"
 
-,searchRequestBuilderClass = ix.ginas.controllers.v1.SubstanceFactory.SubstanceSearchRequestBuilder.class
-		)
+		,searchRequestBuilderClass = ix.ginas.controllers.v1.SubstanceFactory.SubstanceSearchRequestBuilder.class
+)
 public class SubstanceFactory extends EntityFactory {
 	private static final String CODE_TYPE_PRIMARY = "PRIMARY";
 	public static final double SEQUENCE_IDENTITY_CUTOFF = 0.95;
@@ -104,14 +104,14 @@ public class SubstanceFactory extends EntityFactory {
 
 	}
 	/**
-	 * Get a Substance by it's UUID
+	 * Get a Substance by its UUID
 	 * @param uuid
 	 * @return
 	 */
 	public static Substance getSubstance(String uuid) {
 		if (uuid == null ||!UUIDUtil.isUUID(uuid)) {
 			return null;
-	}
+		}
 		return getSubstance(UUID.fromString(uuid));
 	}
 	/**
@@ -142,8 +142,8 @@ public class SubstanceFactory extends EntityFactory {
 
 		}
 		return IntStream.concat(IntStream.of(Integer.parseInt(subVersion)),edits.stream()
-				.mapToInt(e-> Integer.parseInt(e.version))
-		)
+						.mapToInt(e-> Integer.parseInt(e.version))
+				)
 				.max();
 	}
 
@@ -293,37 +293,37 @@ public class SubstanceFactory extends EntityFactory {
 
 					@Override
 					public Substance apply(Edit e) {
-						
-							try{
-								return (Substance) EntityUtils
+
+						try{
+							return (Substance) EntityUtils
 									.getEntityInfoFor(e.kind)
 									.fromJsonNode(e.getOldValueReference().rawJson());
-							}catch(Exception ex){
-								throw new IllegalArgumentException(ex);
-							}
+						}catch(Exception ex){
+							throw new IllegalArgumentException(ex);
+						}
 					}
-					
+
 				}).orElse(null);
 	}
 
 	public static Optional<ProteinSubstance> getProteinSubstancesFromSubunitID(String suid){
 
 		return SubstanceFactory.protfinder.get()
-		                .where()
-                        .eq("protein.subunits.uuid", suid)
-                        .findList()
-                        .stream()
-                        .findFirst();
+				.where()
+				.eq("protein.subunits.uuid", suid)
+				.findList()
+				.stream()
+				.findFirst();
 	}
 
 	public static Optional<NucleicAcidSubstance> getNucleicAcidSubstancesFromSubunitID(String suid){
 
 		return SubstanceFactory.nucfinder.get()
-		                .where()
-                        .eq("nucleicAcid.subunits.uuid", suid)
-                        .findList()
-                        .stream()
-                        .findFirst();
+				.where()
+				.eq("nucleicAcid.subunits.uuid", suid)
+				.findList()
+				.stream()
+				.findFirst();
 	}
 
 	public static Optional<Tuple<Substance, Subunit>> getSubstanceAndSubunitFromSubunitID(String suid){
@@ -331,27 +331,27 @@ public class SubstanceFactory extends EntityFactory {
 		UUID suUUID = UUID.fromString(suid);
 
 		Tuple<Substance,Subunit> tuple= getProteinSubstancesFromSubunitID(suid)
-							.map(s->{
-								//Need to use the getter or it won't lazy-load
-								Subunit sunit = s.protein.getSubunits()
-								        .stream()
+				.map(s->{
+					//Need to use the getter or it won't lazy-load
+					Subunit sunit = s.protein.getSubunits()
+							.stream()
 //										.peek(su->System.out.println(su.uuid + "?=" + suUUID))
-								        .filter(su->su.uuid.equals(suUUID))
-										.findFirst()
-										.orElse(null);
-								return Tuple.of((Substance)s,sunit);
-							})
-							.orElse(getNucleicAcidSubstancesFromSubunitID(suid)
-									.map(s->{
-										Subunit sunit = s.nucleicAcid.getSubunits()
-										        .stream()
-												.filter(su->su.uuid.equals(suUUID))
-												.findFirst()
-												.orElse(null);
-										return Tuple.of((Substance)s,sunit);
-									})
-									.orElse(null)
-									);
+							.filter(su->su.uuid.equals(suUUID))
+							.findFirst()
+							.orElse(null);
+					return Tuple.of((Substance)s,sunit);
+				})
+				.orElse(getNucleicAcidSubstancesFromSubunitID(suid)
+						.map(s->{
+							Subunit sunit = s.nucleicAcid.getSubunits()
+									.stream()
+									.filter(su->su.uuid.equals(suUUID))
+									.findFirst()
+									.orElse(null);
+							return Tuple.of((Substance)s,sunit);
+						})
+						.orElse(null)
+				);
 		return Optional.ofNullable(tuple);
 	}
 
@@ -382,26 +382,26 @@ public class SubstanceFactory extends EntityFactory {
 			throw e;
 		}
 	}
-	
+
 	public static Optional<UUID> resolveID(String s){
 //		System.out.println("Trying to resolve:" + s);
 		List<UUID> uuidlist=resolve(s)
-		      .stream()
-		      .map(sub->sub.uuid)
-		      .collect(Collectors.toList());
+				.stream()
+				.map(sub->sub.uuid)
+				.collect(Collectors.toList());
 //		System.out.println("Found:" + uuidlist.size());
 		if(uuidlist.size()==1)return Optional.of(uuidlist.get(0));
-		
+
 		return Optional.empty();
-		
+
 	}
 
 	public static List<Substance> getSubstanceWithAlternativeDefinition(Substance altSub) {
 		List<Substance> sublist = new ArrayList<Substance>();
 		sublist = finder.get().where()
 				.and(com.avaje.ebean.Expr.eq("relationships.relatedSubstance.refuuid",
-						altSub.getOrGenerateUUID().toString()),
-				com.avaje.ebean.Expr.eq("relationships.type", Substance.ALTERNATE_SUBSTANCE_REL)).findList();
+								altSub.getOrGenerateUUID().toString()),
+						com.avaje.ebean.Expr.eq("relationships.type", Substance.ALTERNATE_SUBSTANCE_REL)).findList();
 
 		List<Substance> realList = new ArrayList<Substance>();
 		for (Substance sub : sublist) {
@@ -417,11 +417,11 @@ public class SubstanceFactory extends EntityFactory {
 
 	/**
 	 * Returns the substance corresponding to the supplied uuid or approvalID.
-	 * 
+	 *
 	 * If either is null, it will not be used in resolving. This method returns
 	 * first based on the UUID, and falls back to the approvalID if nothing is
 	 * found.
-	 * 
+	 *
 	 * @param approvalID
 	 * @param uuid
 	 * @return
@@ -501,9 +501,9 @@ public class SubstanceFactory extends EntityFactory {
 	// TODO: Doesn't support top/skip
 	public static List<Substance> getSubstancesWithExactCode(int top, int skip, String code, String codeSystem) {
 		return finder.get().where(Util.andAll(
-				 com.avaje.ebean.Expr.eq("codes.code", code),
-				 com.avaje.ebean.Expr.eq("codes.codeSystem", codeSystem),
-				 com.avaje.ebean.Expr.eq("codes.type", CODE_TYPE_PRIMARY)
+						com.avaje.ebean.Expr.eq("codes.code", code),
+						com.avaje.ebean.Expr.eq("codes.codeSystem", codeSystem),
+						com.avaje.ebean.Expr.eq("codes.type", CODE_TYPE_PRIMARY)
 				))
 				.findList();
 	}
@@ -521,11 +521,11 @@ public class SubstanceFactory extends EntityFactory {
 		return count(finder.get());
 	}
 
-	
+
 	public static Result stream(String field, int top, int skip){
 		return stream(field, top, skip, finder.get());
 	}
-	
+
 	public static Result page(int top, int skip) {
 		return page(top, skip, null);
 	}
@@ -590,7 +590,7 @@ public class SubstanceFactory extends EntityFactory {
 		}
 
 		return GinasApp.exportDirect(etagId, format, publicOnly ? 1 : 0,
-                new EtagExportService<UUID, Substance>(request()).generateExportFrom("substances", etagObj),
+				new EtagExportService<UUID, Substance>(request()).generateExportFrom("substances", etagObj),
 				fname, etagObj.uri);
 
 	}
@@ -601,7 +601,7 @@ public class SubstanceFactory extends EntityFactory {
 		Class subClass = getClassFromJson(value);
 		DefaultSubstanceValidator sv = DefaultSubstanceValidator
 				.NEW_SUBSTANCE_VALIDATOR(GinasProcessingStrategy.ACCEPT_APPLY_ALL_WARNINGS().markFailed());
-		
+
 		return create(subClass, finder.get(), sv);
 	}
 
@@ -626,31 +626,31 @@ public class SubstanceFactory extends EntityFactory {
 			cls = json.get("substanceClass").asText();
 			Substance.SubstanceClass type = Substance.SubstanceClass.valueOf(cls);
 			switch (type) {
-			case chemical:
-				subClass = ChemicalSubstance.class;
-				break;
-			case protein:
-				subClass = ProteinSubstance.class;
-				break;
-			case mixture:
-				subClass = MixtureSubstance.class;
-				break;
-			case polymer:
-				subClass = PolymerSubstance.class;
-				break;
-			case nucleicAcid:
-				subClass = NucleicAcidSubstance.class;
-				break;
-			case structurallyDiverse:
-				subClass = StructurallyDiverseSubstance.class;
-				break;
-			case specifiedSubstanceG1:
-				subClass = SpecifiedSubstanceGroup1Substance.class;
-				break;
-			case concept:
-			default:
-				subClass = Substance.class;
-				break;
+				case chemical:
+					subClass = ChemicalSubstance.class;
+					break;
+				case protein:
+					subClass = ProteinSubstance.class;
+					break;
+				case mixture:
+					subClass = MixtureSubstance.class;
+					break;
+				case polymer:
+					subClass = PolymerSubstance.class;
+					break;
+				case nucleicAcid:
+					subClass = NucleicAcidSubstance.class;
+					break;
+				case structurallyDiverse:
+					subClass = StructurallyDiverseSubstance.class;
+					break;
+				case specifiedSubstanceG1:
+					subClass = SpecifiedSubstanceGroup1Substance.class;
+					break;
+				case concept:
+				default:
+					subClass = Substance.class;
+					break;
 			}
 		} catch (Exception ex) {
 			Logger.warn("Unknown substance class: " + cls + "; treating as generic substance!");
@@ -676,30 +676,30 @@ public class SubstanceFactory extends EntityFactory {
 		Class<? extends Substance> subClass = getClassFromJson(json);
 		return updateEntity(json, subClass, sv);
 	}
-	
-	
+
+
 	public static Result patch(UUID uuid) throws Exception {
-	    DefaultSubstanceValidator sv = DefaultSubstanceValidator
-                .UPDATE_SUBSTANCE_VALIDATOR(GinasProcessingStrategy.ACCEPT_APPLY_ALL_WARNINGS());
-	    
-	    Key k = Key.of(Substance.class, uuid);
-	    return EntityFactory.patch(k, sv);
+		DefaultSubstanceValidator sv = DefaultSubstanceValidator
+				.UPDATE_SUBSTANCE_VALIDATOR(GinasProcessingStrategy.ACCEPT_APPLY_ALL_WARNINGS());
+
+		Key k = Key.of(Substance.class, uuid);
+		return EntityFactory.patch(k, sv);
 	}
-	
-	
-	
+
+
+
 	public static Result update(UUID uuid, String field) throws Exception {
 		DefaultSubstanceValidator sv = DefaultSubstanceValidator
 				.UPDATE_SUBSTANCE_VALIDATOR(GinasProcessingStrategy.ACCEPT_APPLY_ALL_WARNINGS());
 		if (!request().method().equalsIgnoreCase("PUT")) {
-            return badRequest("Only PUT is accepted!");
-        }
+			return badRequest("Only PUT is accepted!");
+		}
 
-        String content = request().getHeader("Content-Type");
-        if (content == null || (content.indexOf("application/json") < 0 && content.indexOf("text/json") < 0)) {
-            return badRequest("Mime type \"" + content + "\" not supported!");
-        }
-		
+		String content = request().getHeader("Content-Type");
+		if (content == null || (content.indexOf("application/json") < 0 && content.indexOf("text/json") < 0)) {
+			return badRequest("Mime type \"" + content + "\" not supported!");
+		}
+
 		// if(true)return ok("###");
 		try {
 			JsonNode value = request().body().asJson();
@@ -707,7 +707,7 @@ public class SubstanceFactory extends EntityFactory {
 			//System.out.println("Got:" + value.toString());
 			Key k=Key.of(subClass, uuid);
 			PojoPointer pp = PojoPointer.fromURIPath(field);
-			
+
 			return EntityFactory.updateField(k, pp, value, sv);
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -759,9 +759,9 @@ public class SubstanceFactory extends EntityFactory {
 				csub.save();
 				return Optional.of(csub);
 			}
-			
-		
-			
+
+
+
 		});
 		if(changed==null){
 			throw new IllegalStateException("Approval encountered an error");
@@ -793,7 +793,7 @@ public class SubstanceFactory extends EntityFactory {
 
 	/**
 	 * Resolve the given term to a list of substances, by using the following attempts at resolution:
-	 * 
+	 *
 	 * <ol>
 	 * <li>Resolve to UUID</li>
 	 * <li>Resolve to first 8 characters of UUID</li>
@@ -801,7 +801,7 @@ public class SubstanceFactory extends EntityFactory {
 	 * <li>Resolve to exact name match</li>
 	 * <li>Resolve to exact code match</li>
 	 * </ol>
-	 * 
+	 *
 	 * @param name
 	 * @return List of substances which resolve to the first criteria above which returns a non-empty set.
 	 */
@@ -811,13 +811,13 @@ public class SubstanceFactory extends EntityFactory {
 		}
 		if(UUIDUtil.isUUID(name)) {
 
-		try {
-			Substance s = finder.get().byId(UUID.fromString(name));
-			if (s != null) {
-				List<Substance> retlist = new ArrayList<Substance>();
-				retlist.add(s);
-				return retlist;
-			}
+			try {
+				Substance s = finder.get().byId(UUID.fromString(name));
+				if (s != null) {
+					List<Substance> retlist = new ArrayList<Substance>();
+					retlist.add(s);
+					return retlist;
+				}
 			} catch (Exception e) {
 			}
 		}
@@ -884,125 +884,125 @@ public class SubstanceFactory extends EntityFactory {
 		s.approvedBy = user;
 		s.status = Substance.STATUS_APPROVED;
 	}
-	
+
 	public static List<Edit> getEdits(UUID uuid) {
 		return getEdits(uuid, Substance.getAllClasses());
 	}
-	
-	public static Result structureSearch(String q, 
-										 String type, 
-										 double cutoff, 
-										 int top, 
-										 int skip, 
+
+	public static Result structureSearch(String q,
+										 String type,
+										 double cutoff,
+										 int top,
+										 int skip,
 										 int fdim,
 										 String field) throws Exception{
 		SearchResultContext context;
-		
+
 		if(type.toLowerCase().startsWith("sub")){
 			context = App.substructure(q,
-					/*min=*/ 1,
-					new StructureSearchResultProcessor())
+							/*min=*/ 1,
+							new StructureSearchResultProcessor())
 					.getFocused(top, skip, fdim, field);
 		}else if(type.toLowerCase().startsWith("sim")){
-			context = App.similarity(q, 
-					cutoff,
-					/*min=*/ 1, 
-					new StructureSearchResultProcessor())
+			context = App.similarity(q,
+							cutoff,
+							/*min=*/ 1,
+							new StructureSearchResultProcessor())
 					.getFocused(top, skip, fdim, field);
 		}else if(type.toLowerCase().startsWith("fle")){
-		    //I don't like this section of the code
-		    
-		    //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-		    //NEEDS CLEANUP
-		    //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-            Structure struc2 = StructureProcessor.instrument(q, null, true); // don't
-                                                                             // standardize
-            String hash = struc2.getStereoInsensitiveHash();
-            SearchRequest request = new SearchRequest.Builder()
-                   .kind(Substance.class)
-                   .fdim(fdim)
-                   .query(hash)
-                   .top(Integer.MAX_VALUE)
-                   .build()
-                   ;
-            TextSearchTask task = new TextSearchTask(request);
-            context = App.search(task, task.getProcessor());
-            
-            
+			//I don't like this section of the code
+
+			//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+			//NEEDS CLEANUP
+			//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+			Structure struc2 = StructureProcessor.instrument(q, null, true); // don't
+			// standardize
+			String hash = struc2.getStereoInsensitiveHash();
+			SearchRequest request = new SearchRequest.Builder()
+					.kind(Substance.class)
+					.fdim(fdim)
+					.query(hash)
+					.top(Integer.MAX_VALUE)
+					.build()
+					;
+			TextSearchTask task = new TextSearchTask(request);
+			context = App.search(task, task.getProcessor());
+
+
 		}else if(type.toLowerCase().startsWith("exa")){
-		    //I don't like this section of the code
-            
-            //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-            //NEEDS CLEANUP
-            //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-            Structure struc2 = StructureProcessor.instrument(q, null, true); // don't
-                                                                             // standardize
-            String hash = "root_structure_properties_term:" + struc2.getExactHash();
-            SearchRequest request = new SearchRequest.Builder()
-                   .kind(Substance.class)
-                   .fdim(fdim)
-                   .query(hash)
-                   .top(Integer.MAX_VALUE)
-                   .build()
-                   ;
-            TextSearchTask task = new TextSearchTask(request);
-            context = App.search(task, task.getProcessor());
-        }else{
+			//I don't like this section of the code
+
+			//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+			//NEEDS CLEANUP
+			//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+			Structure struc2 = StructureProcessor.instrument(q, null, true); // don't
+			// standardize
+			String hash = "root_structure_properties_term:" + struc2.getExactHash();
+			SearchRequest request = new SearchRequest.Builder()
+					.kind(Substance.class)
+					.fdim(fdim)
+					.query(hash)
+					.top(Integer.MAX_VALUE)
+					.build()
+					;
+			TextSearchTask task = new TextSearchTask(request);
+			context = App.search(task, task.getProcessor());
+		}else{
 			throw new UnsupportedOperationException("Unsupported search type:" + type);
 		}
-		
-        return detailedSearch(context);
+
+		return detailedSearch(context);
 	}
 
-    public static Result sequenceSearch(String q, CutoffType type, double cutoff, int top, int skip, int fdim,
-            String field, String seqType) throws Exception {
-        SearchResultContext context;
-        ResultProcessor processor;
-        if("Protein".equalsIgnoreCase(seqType)){
+	public static Result sequenceSearch(String q, CutoffType type, double cutoff, int top, int skip, int fdim,
+										String field, String seqType) throws Exception {
+		SearchResultContext context;
+		ResultProcessor processor;
+		if("Protein".equalsIgnoreCase(seqType)){
 			processor = new ix.ginas.controllers.GinasApp.GinasSequenceResultProcessor();
 		}else{
 			processor = new ix.ginas.controllers.GinasApp.GinasNucleicSequenceResultProcessor();
 		}
-        context =App.sequence(q, cutoff,type, 1, processor, seqType)
-                    .getFocused(top, skip, fdim, field);
-        
-        return detailedSearch(context);
-    }
-    
-    private static Result detailedSearch(SearchResultContext context) throws InterruptedException, ExecutionException{
-    	return Java8FactoryHelper.substanceFactoryDetailedSearch(context);
-    }
+		context =App.sequence(q, cutoff,type, 1, processor, seqType)
+				.getFocused(top, skip, fdim, field);
+
+		return detailedSearch(context);
+	}
+
+	private static Result detailedSearch(SearchResultContext context) throws InterruptedException, ExecutionException{
+		return Java8FactoryHelper.substanceFactoryDetailedSearch(context);
+	}
 
 
-    /**
-     * <p>Fetch a list of {@link Tuple}s of {@link ProteinSubstance}s and {@link Subunit}s
-     * which exactly match the supplied {@link Subunit} on sequence (case insensitive)
-     * using the lucene index. This is not a very rigorous search, in that it won't find
-     * matches that are approximately the same (e.g. minor sequence change), but it will
-     * find those matches that are exactly the same much faster than the {@link SequenceIndexer}
-     * will. </p>
-     *
-     * <p>
-     * Note: This uses a {@link Future} from {@link SearchResult#getMatchesFuture()}, with a defualt value
-     * of 10 seconds. It will throw an Exception any time such a search would throw an exception.
-     * </p>
-     *
-     *
-     *
-     * @param su
-     *   The {@link Subunit} to search for. The only element used of the {@link Subunit} is
-     *   the sequence.
-     * @return
-     *   A list of {@link ProteinSubstance} and {@link Subunit} {@link Tuple}s which match the supplied
-     *   {@link Subunit}. Returns an empty list otherwise.
-     * @throws TimeoutException
-     * @throws ExecutionException
-     * @throws InterruptedException
-     * @throws IOException
-     */
+	/**
+	 * <p>Fetch a list of {@link Tuple}s of {@link ProteinSubstance}s and {@link Subunit}s
+	 * which exactly match the supplied {@link Subunit} on sequence (case insensitive)
+	 * using the lucene index. This is not a very rigorous search, in that it won't find
+	 * matches that are approximately the same (e.g. minor sequence change), but it will
+	 * find those matches that are exactly the same much faster than the {@link SequenceIndexer}
+	 * will. </p>
+	 *
+	 * <p>
+	 * Note: This uses a {@link Future} from {@link SearchResult#getMatchesFuture()}, with a defualt value
+	 * of 10 seconds. It will throw an Exception any time such a search would throw an exception.
+	 * </p>
+	 *
+	 *
+	 *
+	 * @param su
+	 *   The {@link Subunit} to search for. The only element used of the {@link Subunit} is
+	 *   the sequence.
+	 * @return
+	 *   A list of {@link ProteinSubstance} and {@link Subunit} {@link Tuple}s which match the supplied
+	 *   {@link Subunit}. Returns an empty list otherwise.
+	 * @throws TimeoutException
+	 * @throws ExecutionException
+	 * @throws InterruptedException
+	 * @throws IOException
+	 */
 
 
-    public static List<Tuple<ProteinSubstance, Subunit>> executeSimpleExactProteinSubunitSearch(Subunit su) throws InterruptedException, ExecutionException, TimeoutException, IOException {
+	public static List<Tuple<ProteinSubstance, Subunit>> executeSimpleExactProteinSubunitSearch(Subunit su) throws InterruptedException, ExecutionException, TimeoutException, IOException {
 		String q = "root_protein_subunits_sequence:" + su.sequence;
 		SearchRequest request = new SearchRequest.Builder()
 				.kind(ProteinSubstance.class)
@@ -1012,56 +1012,56 @@ public class SubstanceFactory extends EntityFactory {
 				.build();
 
 		SearchResult sr=request.execute();
-    	Future<List> fut=sr.getMatchesFuture();
+		Future<List> fut=sr.getMatchesFuture();
 
 
-    	Stream<Tuple<ProteinSubstance, Subunit>> presults =	fut.get(10_000, TimeUnit.MILLISECONDS)
-    										   .stream()
-    										   .map(s->(ProteinSubstance)s)
-    										   .flatMap(sub->{
-    						                		  ProteinSubstance ps = (ProteinSubstance)sub;
-    						                		  return ps.protein.getSubunits()
-    							                                 .stream()
-    							                                 .filter(sur->sur.sequence.equalsIgnoreCase(su.sequence))
-    							                                 .map(sur->Tuple.of(sub,sur));
-    						                      });
-    	presults=presults.map(t->Tuple.of(t.v().uuid,t).withKEquality())
-    							    	         .distinct()
-    							    	         .map(t->t.v());
+		Stream<Tuple<ProteinSubstance, Subunit>> presults =	sr.getMatches()
+				.stream()
+				.map(s->(ProteinSubstance)s)
+				.flatMap(sub->{
+					ProteinSubstance ps = (ProteinSubstance)sub;
+					return ps.protein.getSubunits()
+							.stream()
+							.filter(sur->sur.sequence.equalsIgnoreCase(su.sequence))
+							.map(sur->Tuple.of(sub,sur));
+				});
+		presults=presults.map(t->Tuple.of(t.v().uuid,t).withKEquality())
+				.distinct()
+				.map(t->t.v());
 
-    	return presults.collect(Collectors.toList());
+		return presults.collect(Collectors.toList());
 
-    }
+	}
 
-    /**
-     * <p>Fetch a list of {@link Tuple}s of {@link NucleicAcidSubstance}s and {@link Subunit}s
-     * which exactly match the supplied {@link Subunit} on sequence (case insensitive)
-     * using the lucene index. This is not a very rigorous search, in that it won't find
-     * matches that are approximately the same (e.g. minor sequence change), but it will
-     * find those matches that are exactly the same much faster than the {@link SequenceIndexer}
-     * will. </p>
-     *
-     * <p>
-     * Note: This uses a {@link Future} from {@link SearchResult#getMatchesFuture()}, with a defualt value
-     * of 10 seconds. It will throw an Exception any time such a search would throw an exception.
-     * </p>
-     *
-     *
-     *
-     * @param su
-     *   The {@link Subunit} to search for. The only element used of the {@link Subunit} is
-     *   the sequence.
-     * @return
-     *   A list of {@link NucleicAcidSubstance} and {@link Subunit} {@link Tuple}s which match the supplied
-     *   {@link Subunit}. Returns an empty list otherwise.
-     * @throws TimeoutException
-     * @throws ExecutionException
-     * @throws InterruptedException
-     * @throws IOException
-     */
+	/**
+	 * <p>Fetch a list of {@link Tuple}s of {@link NucleicAcidSubstance}s and {@link Subunit}s
+	 * which exactly match the supplied {@link Subunit} on sequence (case insensitive)
+	 * using the lucene index. This is not a very rigorous search, in that it won't find
+	 * matches that are approximately the same (e.g. minor sequence change), but it will
+	 * find those matches that are exactly the same much faster than the {@link SequenceIndexer}
+	 * will. </p>
+	 *
+	 * <p>
+	 * Note: This uses a {@link Future} from {@link SearchResult#getMatchesFuture()}, with a defualt value
+	 * of 10 seconds. It will throw an Exception any time such a search would throw an exception.
+	 * </p>
+	 *
+	 *
+	 *
+	 * @param su
+	 *   The {@link Subunit} to search for. The only element used of the {@link Subunit} is
+	 *   the sequence.
+	 * @return
+	 *   A list of {@link NucleicAcidSubstance} and {@link Subunit} {@link Tuple}s which match the supplied
+	 *   {@link Subunit}. Returns an empty list otherwise.
+	 * @throws TimeoutException
+	 * @throws ExecutionException
+	 * @throws InterruptedException
+	 * @throws IOException
+	 */
 
 
-    public static List<Tuple<NucleicAcidSubstance, Subunit>> executeSimpleExactNucleicAcidSubunitSearch(Subunit su) throws InterruptedException, ExecutionException, TimeoutException, IOException {
+	public static List<Tuple<NucleicAcidSubstance, Subunit>> executeSimpleExactNucleicAcidSubunitSearch(Subunit su) throws InterruptedException, ExecutionException, TimeoutException, IOException {
 		String q = "root_nucleicAcid_subunits_sequence:" + su.sequence;
 		SearchRequest request = new SearchRequest.Builder()
 				.kind(ProteinSubstance.class)
@@ -1071,101 +1071,101 @@ public class SubstanceFactory extends EntityFactory {
 				.build();
 
 		SearchResult sr=request.execute();
-    	Future<List> fut=sr.getMatchesFuture();
+		Future<List> fut=sr.getMatchesFuture();
 
 
-    	Stream<Tuple<NucleicAcidSubstance, Subunit>> presults =	fut.get(10_000, TimeUnit.MILLISECONDS)
-    										   .stream()
-    										   .map(s->(NucleicAcidSubstance)s)
-    										   .flatMap(sub->{
-    											   NucleicAcidSubstance ps = (NucleicAcidSubstance)sub;
-    						                		  return ps.nucleicAcid.getSubunits()
-    							                                 .stream()
-    							                                 .filter(sur->sur.sequence.equalsIgnoreCase(su.sequence))
-    							                                 .map(sur->Tuple.of(sub,sur));
-    						                      });
-    	presults=presults.map(t->Tuple.of(t.v().uuid,t).withKEquality())
-    							    	         .distinct()
-    							    	         .map(t->t.v());
+		Stream<Tuple<NucleicAcidSubstance, Subunit>> presults =	fut.get(10_000, TimeUnit.MILLISECONDS)
+				.stream()
+				.map(s->(NucleicAcidSubstance)s)
+				.flatMap(sub->{
+					NucleicAcidSubstance ps = (NucleicAcidSubstance)sub;
+					return ps.nucleicAcid.getSubunits()
+							.stream()
+							.filter(sur->sur.sequence.equalsIgnoreCase(su.sequence))
+							.map(sur->Tuple.of(sub,sur));
+				});
+		presults=presults.map(t->Tuple.of(t.v().uuid,t).withKEquality())
+				.distinct()
+				.map(t->t.v());
 
-    	return presults.collect(Collectors.toList());
+		return presults.collect(Collectors.toList());
 
-    }
+	}
 
-    private static class TextSearchTask implements SearcherTask{
+	private static class TextSearchTask implements SearcherTask{
 
-        private SearchRequest request;
-        private String key;
-        
-        
-        public TextSearchTask(SearchRequest request){
-            this.request=request;
-            String q = request.getQuery();
-            request.getOptions().asQueryParams();
-            key=Util.sha1("search" + q, request.getOptions().asQueryParams(), 
-                                        "kind",
-                                        "filter",
-                                        "facet",
-                                        "order", 
-                                        "fdim");
-        }
-        @Override
-        public String getKey() {
-            return key;
-        }
-
-        @Override
-        public void search(ResultProcessor processor) throws Exception {
-            //do nothing. Nothing needs to be processed
-        }
-
-        @Override
-        public long getLastUpdatedTime() {
-            return Play.application().plugin(TextIndexerPlugin.class).getIndexer().lastModified();
-        }
-        
-        
-        public ResultProcessor getProcessor(){
-            return new SearchResultWrappingResultProcessor(this.request);
-        }
-    }
-    
+		private SearchRequest request;
+		private String key;
 
 
-    private static class SearchResultWrappingResultProcessor implements ResultProcessor<Object, Object>{
-        private CachedSupplier<SearchResultContext> result;
-        
-        public SearchResultWrappingResultProcessor(SearchRequest request){
-            result=CachedSupplier.ofCallable(new Callable<SearchResultContext>(){
+		public TextSearchTask(SearchRequest request){
+			this.request=request;
+			String q = request.getQuery();
+			request.getOptions().asQueryParams();
+			key=Util.sha1("search" + q, request.getOptions().asQueryParams(),
+					"kind",
+					"filter",
+					"facet",
+					"order",
+					"fdim");
+		}
+		@Override
+		public String getKey() {
+			return key;
+		}
+
+		@Override
+		public void search(ResultProcessor processor) throws Exception {
+			//do nothing. Nothing needs to be processed
+		}
+
+		@Override
+		public long getLastUpdatedTime() {
+			return Play.application().plugin(TextIndexerPlugin.class).getIndexer().lastModified();
+		}
+
+
+		public ResultProcessor getProcessor(){
+			return new SearchResultWrappingResultProcessor(this.request);
+		}
+	}
+
+
+
+	private static class SearchResultWrappingResultProcessor implements ResultProcessor<Object, Object>{
+		private CachedSupplier<SearchResultContext> result;
+
+		public SearchResultWrappingResultProcessor(SearchRequest request){
+			result=CachedSupplier.ofCallable(new Callable<SearchResultContext>(){
 
 				@Override
 				public SearchResultContext call() throws Exception {
-					return new SearchResultContext(SearchFactory.search(request));		            
+					return new SearchResultContext(SearchFactory.search(request));
 				}
-            	
-            });
-        }
-        @Override
-        public Stream map(Object result) {
-               throw new UnsupportedOperationException(this.getClass() + " doesn't support mapping");
-        }
 
-        @Override
-        public SearchResultContext getContext() {
-                return result.get();
-        }
+			});
+		}
+		@Override
+		public Stream map(Object result) {
+			throw new UnsupportedOperationException(this.getClass() + " doesn't support mapping");
+		}
 
-        @Override
-        public void setUnadaptedResults(Iterator results) {
-            throw new UnsupportedOperationException(this.getClass() + " doesn't support setting an iterator");            
-        }
+		@Override
+		public SearchResultContext getContext() {
+			return result.get();
+		}
 
-        @Override
-        public Iterator getUnadaptedResults() {
-            throw new UnsupportedOperationException(this.getClass() + " doesn't support getting an iterator");
-        }
-        
-    }
+		@Override
+		public void setUnadaptedResults(Iterator results) {
+			throw new UnsupportedOperationException(this.getClass() + " doesn't support setting an iterator");
+		}
+
+		@Override
+		public Iterator getUnadaptedResults() {
+			throw new UnsupportedOperationException(this.getClass() + " doesn't support getting an iterator");
+		}
+
+	}
 	private static Pattern QUERY_SPLIT_PATTERN = Pattern.compile("&");
 	private static Map<String, List<String>> splitQuery(String query) {
 		if (query == null || query.trim().isEmpty()) {
@@ -1184,5 +1184,5 @@ public class SubstanceFactory extends EntityFactory {
 		return new AbstractMap.SimpleImmutableEntry<>(key, value);
 	}
 
-    
+
 }
