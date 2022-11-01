@@ -457,11 +457,14 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
         return names.stream().min(Util.getComparatorFor(Name.class));
     }
 
-
+    @JsonIgnore
+    public String getName() {
+        return getFormattedName(NAME_FUNCTION);
+    }
 
     @JsonProperty("_name")
     @Indexable(suggest = true, name = "Display Name", sortable=true)
-    public String getName() {
+    public String getStandardName() {
         return getFormattedName(STDNAME_FUNCTION);
     }
     @JsonProperty("_nameHTML")
@@ -481,7 +484,7 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
 
         @Override
         public String apply(Name name) {
-            return name.name;
+            return name.getName();
         }
     };
     private static Function<Name, String > STDNAME_FUNCTION = new Function<Name, String>(){
@@ -501,7 +504,7 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
         if(this.isAlternativeDefinition()){
             SubstanceReference subref=this.getPrimaryDefinitionReference();
             if(subref!=null){
-                String name1=subref.getHtmlName();
+                String name1=nameFunction.apply(new Name(subref.refPname));
                 if(name1!=null){
                     return Substance.DEFAULT_ALTERNATIVE_NAME + " for [" + name1 + "]";
                 }
@@ -802,7 +805,7 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
      */
     public SubstanceReference asSubstanceReference(){
         SubstanceReference subref=new SubstanceReference();
-        subref.refPname=this.getName();
+        subref.refPname=this.getFormattedName(NAME_FUNCTION);
         subref.refuuid=this.getOrGenerateUUID().toString();
         subref.approvalID=this.approvalID;
         return subref;
@@ -978,7 +981,7 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
         if(uuid!=null){
             return uuid.toString();
         }
-        return getName();
+        return getStandardName();
     }
 
     @PreUpdate
@@ -1233,8 +1236,8 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
         if (approvalID != null) {
             c.setProperty("APPROVAL_ID", approvalID);
         }
-        c.setProperty("NAME", getName());
-        c.setName(getName());
+        c.setProperty("NAME", getStandardName());
+        c.setName(getStandardName());
         StringBuilder sb = new StringBuilder();
 
         for (Name n : getOfficialNames()) {
