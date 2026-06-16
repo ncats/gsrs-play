@@ -1,6 +1,7 @@
 package ix.ginas.initializers;
 
 import ix.core.initializers.Initializer;
+import ix.core.initializers.ScheduledTaskInitializer;
 import ix.core.plugins.CronExpressionBuilder;
 import ix.core.plugins.SchedulerPlugin;
 import ix.core.plugins.SchedulerPlugin.TaskListener;

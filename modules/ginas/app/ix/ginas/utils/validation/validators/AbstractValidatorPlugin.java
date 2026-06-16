@@ -1,9 +1,9 @@
 package ix.ginas.utils.validation.validators;
 
+import ix.core.validator.ValidatorPlugin;
 import ix.core.UserFetcher;
 import ix.core.models.UserProfile;
-import ix.ginas.initializers.LoadValidatorInitializer;
-import ix.ginas.utils.validation.ValidatorPlugin;
+import ix.core.initializers.LoadValidatorInitializer;
 
 /**
  * Created by katzelda on 5/7/18.

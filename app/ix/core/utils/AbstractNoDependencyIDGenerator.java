@@ -1,4 +1,4 @@
-package ix.ginas.utils;
+package ix.core.utils;
 
 /**
  * An ID Generator that can generate a new ID without relying on any

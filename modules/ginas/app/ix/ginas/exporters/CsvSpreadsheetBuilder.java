@@ -5,6 +5,8 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Objects;
 
+import ix.core.exporters.Spreadsheet;
+
 /**
  * Created by katzelda on 8/22/16.
  */

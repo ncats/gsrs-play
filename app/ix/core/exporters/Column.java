@@ -1,4 +1,4 @@
-package ix.ginas.exporters;
+package ix.core.exporters;
 
 /**
  * Created by katzelda on 8/19/16.

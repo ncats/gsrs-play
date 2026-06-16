@@ -19,7 +19,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 
 import ix.core.util.IOUtil;
 import ix.core.exporters.OutputFormat;
-import ix.ginas.exporters.SubstanceExporterFactory;
+import ix.core.exporters.SubstanceExporterFactory;
 import org.apache.poi.util.DefaultTempFileCreationStrategy;
 import org.apache.poi.util.TempFile;
 import org.apache.poi.util.TempFileCreationStrategy;

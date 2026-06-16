@@ -1,8 +1,7 @@
-package ix.ginas.utils.validation;
+package ix.core.validator;
 
-import ix.core.validator.Validator;
 import ix.core.util.CachedSupplier;
-import ix.ginas.initializers.LoadValidatorInitializer;
+import ix.core.initializers.LoadValidatorInitializer;
 
 import java.util.LinkedHashMap;
 import java.util.List;

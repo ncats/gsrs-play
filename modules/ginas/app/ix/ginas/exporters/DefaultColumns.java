@@ -1,5 +1,7 @@
 package ix.ginas.exporters;
 
+import ix.core.exporters.Column;
+
 /**
  * Created by katzelda on 8/19/16.
  */

@@ -1,4 +1,4 @@
-package ix.ginas.exporters;
+package ix.core.exporters;
 
 import java.util.function.BiFunction;
 

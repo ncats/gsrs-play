@@ -1,5 +1,6 @@
 package ix.ginas.exporters;
 
+import ix.core.exporters.Spreadsheet.SpreadsheetRow;
 import java.io.IOException;
 import java.util.Arrays;
 

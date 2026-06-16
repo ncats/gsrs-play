@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Objects;
 
 import gov.nih.ncats.molwitch.Chemical;
+import ix.core.exporters.Exporter;
 import ix.ginas.models.v1.Substance;
 import ix.core.validator.GinasProcessingMessage;
 

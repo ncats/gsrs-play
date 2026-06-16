@@ -1,4 +1,4 @@
-package ix.ginas.initializers;
+package ix.core.initializers;
 
 import java.io.BufferedOutputStream;
 import java.io.File;

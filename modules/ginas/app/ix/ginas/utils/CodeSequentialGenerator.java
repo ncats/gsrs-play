@@ -6,6 +6,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import gov.nih.ncats.common.util.CachedSupplier;
+import ix.core.utils.SequentialNumericIDGenerator;
 import ix.ginas.controllers.v1.CodeFactory;
 import ix.ginas.models.v1.Code;
 import ix.ginas.models.v1.Reference;

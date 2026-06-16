@@ -7,6 +7,7 @@ import java.util.stream.Stream;
 
 import gov.nih.ncats.molwitch.Chemical;
 import gov.nih.ncats.molwitch.inchi.Inchi;
+import ix.core.exporters.*;
 import ix.core.models.Group;
 import ix.core.models.Structure;
 import ix.core.util.CachedSupplier;

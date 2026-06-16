@@ -16,6 +16,7 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import ix.core.initializers.Initializer;
+import ix.core.initializers.ScheduledTaskInitializer;
 import ix.core.models.BaseModel;
 import ix.core.models.Keyword;
 import ix.core.plugins.SchedulerPlugin;

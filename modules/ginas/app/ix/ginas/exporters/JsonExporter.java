@@ -9,6 +9,7 @@ import java.util.Objects;
 import com.fasterxml.jackson.databind.ObjectWriter;
 
 import ix.core.controllers.EntityFactory;
+import ix.core.exporters.Exporter;
 import ix.ginas.models.v1.Substance;
 
 /**

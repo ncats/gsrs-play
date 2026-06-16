@@ -2,7 +2,7 @@ package ix.ginas.utils.validation.validators;
 
 import ix.core.validator.GinasProcessingMessage;
 import ix.core.validator.ValidatorCallback;
-import ix.ginas.initializers.LoadValidatorInitializer;
+import ix.core.initializers.LoadValidatorInitializer;
 import ix.ginas.models.v1.Reference;
 import ix.ginas.models.v1.Substance;
 
