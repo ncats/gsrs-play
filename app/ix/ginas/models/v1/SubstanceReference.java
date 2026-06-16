@@ -5,10 +5,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.PostLoad;
-import javax.persistence.Table;
+import javax.persistence.*;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -57,7 +54,7 @@ public class SubstanceReference extends GinasCommonSubData {
         if(refuuid!=null){
                 return refuuid;
         }
-        return refPname;
+        return Util.getStringConverter().toStd(refPname);
     }
     
     /**
@@ -78,18 +75,34 @@ public class SubstanceReference extends GinasCommonSubData {
 
     @JsonProperty("_nameHTML")
     public String getHtmlName(){
-        return Util.getStringConverter().toHtml(getName());
+        return Util.getStringConverter().toHtml(refPname);
     }
 
     public String getName(){
-    	if(refPname!=null)
-    		return refPname;
-    	String rep= getLinkingID();
-    	if(rep==null){
-    		return "NO_NAME";
-    	}
-    	return rep;
+        if(refPname!=null)
+            return Util.getStringConverter().toStd(refPname);
+        String rep= getLinkingID();
+        if(rep==null){
+            return "NO_NAME";
+        }
+        return rep;
     }
+
+    @PrePersist
+    @PreUpdate
+    public void tidyRefPname () {
+        Optional<SubstanceReference> osr=GinasPortalGun.getUpdatedSubstanceReference(this);
+        if(osr.isPresent()){
+            SubstanceReference newRef = osr.get();
+            refPname=newRef.refPname;
+        }
+        if(refPname != null) {
+            if (refPname.getBytes().length > 1023) {
+                refPname = Util.getStringConverter().truncate(refPname, 1023);
+            }
+        }
+    }
+
 
     @Override
     public String toString() {
