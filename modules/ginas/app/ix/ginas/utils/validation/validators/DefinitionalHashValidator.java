@@ -75,13 +75,15 @@ public class DefinitionalHashValidator  extends AbstractValidatorPlugin<Substanc
 												String message =
 													"WARNING! You have made a change to the fundamental definition of a validated substance. Are you sure you want to proceed with this change?";
 												callback.addMessage(GinasProcessingMessage
-													.WARNING_MESSAGE(message));
+													.WARNING_MESSAGE(message)
+													.addNote(this.addNote));
 												return;
 										}
 								}
 								String message= createDiffMessage(diff);
 								callback.addMessage(GinasProcessingMessage
-										.WARNING_MESSAGE(message));
+										.WARNING_MESSAGE(message)
+										.addNote(this.addNote));
 								Logger.trace("in DefinitionalHashValidator, apending message " + message);
 						} else {
 								Logger.trace("diffs empty ");

@@ -23,6 +23,7 @@ public class GinasProcessingMessage implements ValidationMessage {
 	}
 	public boolean suggestedChange=false;
 	public boolean appliedChange=false;
+	public boolean addAsNote=true;
 	public List<Link> links = new ArrayList<Link>();
 	
 	private boolean possibleDuplicate=false;
@@ -33,7 +34,12 @@ public class GinasProcessingMessage implements ValidationMessage {
 		this.messageType=mtype;
 		this.message=msg;
 	}
-	
+
+	public GinasProcessingMessage addNote(boolean b){
+		this.addAsNote=b;
+		return this;
+	}
+
 	public GinasProcessingMessage appliableChange(boolean b){
 		this.suggestedChange=b;
 		return this;

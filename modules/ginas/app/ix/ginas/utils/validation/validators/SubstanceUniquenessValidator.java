@@ -50,7 +50,7 @@ public class SubstanceUniquenessValidator extends AbstractValidatorPlugin<Substa
 					mes= GinasProcessingMessage.WARNING_MESSAGE(messageText);
 				}
 				mes.addLink(GinasUtils.createSubstanceLink(possibleMatch));
-				callback.addMessage(mes);
+				callback.addMessage(mes.addNote(this.addNote));
 			}
 		}
 		else {
@@ -65,7 +65,7 @@ public class SubstanceUniquenessValidator extends AbstractValidatorPlugin<Substa
 					GinasProcessingMessage mes = GinasProcessingMessage.WARNING_MESSAGE(message);
 					Logger.debug("in SubstanceUniquenessValidator after message creation");
 					mes.addLink(GinasUtils.createSubstanceLink(possibleMatch));
-					callback.addMessage(mes);
+					callback.addMessage(mes.addNote(this.addNote));
 				}
 			}
 		}
